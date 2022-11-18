@@ -1,0 +1,117 @@
+{
+  "type": "record",
+  "name": "Value",
+  "namespace": "dev.system.config",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "schema_name",
+      "type": "string"
+    },
+    {
+      "name": "table_name",
+      "type": "string"
+    },
+    {
+      "name": "entity_version",
+      "type": {
+        "type": "int",
+        "connect.default": 1
+      },
+      "default": 1
+    },
+    {
+      "name": "notes",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "fk_creator",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "fk_last_modifier",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "tmsp_creation",
+      "type": [
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.default": "1970-01-01T00:00:00Z",
+          "connect.name": "io.debezium.time.ZonedTimestamp"
+        },
+        "null"
+      ],
+      "default": "1970-01-01T00:00:00Z"
+    },
+    {
+      "name": "tmsp_last_modification",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.name": "io.debezium.time.ZonedTimestamp"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "sys_period",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "key",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "config",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.name": "io.debezium.data.Json"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ],
+  "connect.name": "dev.system.config.Value"
+}

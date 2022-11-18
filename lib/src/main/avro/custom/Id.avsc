@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "Id",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Integer Id number with generic purpose",
+  "fields": [
+    {
+      "name": "id",
+      "type": {
+        "type": "int"
+      }
+    }
+  ]
+}
