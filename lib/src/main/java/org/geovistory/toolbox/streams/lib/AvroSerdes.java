@@ -1,16 +1,10 @@
 package org.geovistory.toolbox.streams.lib;
 
-import io.apicurio.registry.rest.client.request.Parameters;
-import io.apicurio.registry.serde.SerdeConfig;
 import io.apicurio.registry.serde.avro.AvroKafkaDeserializer;
-import io.apicurio.registry.serde.avro.AvroKafkaSerdeConfig;
 import io.apicurio.registry.serde.avro.AvroKafkaSerializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.geovistory.toolbox.streams.avro.Id;
-import org.geovistory.toolbox.streams.avro.ProfileIds;
-
-import java.util.HashMap;
+import org.geovistory.toolbox.streams.avro.*;
 
 
 public class AvroSerdes {
@@ -30,6 +24,7 @@ public class AvroSerdes {
         serdes.configure(AvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
     public static Serde<dev.projects.project.Key> ProProjectKey() {
         AvroKafkaSerializer<dev.projects.project.Key> serializer = new AvroKafkaSerializer<>();
         AvroKafkaDeserializer<dev.projects.project.Key> deserializer = new AvroKafkaDeserializer<>();
@@ -67,6 +62,35 @@ public class AvroSerdes {
         AvroKafkaDeserializer<Id> deserializer = new AvroKafkaDeserializer<>();
         Serde<Id> serdes = Serdes.serdeFrom(serializer, deserializer);
         serdes.configure(AvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+
+    public static Serde<ProjectProfileId> ProjectProfileIdKey() {
+        AvroKafkaSerializer<ProjectProfileId> serializer = new AvroKafkaSerializer<>();
+        AvroKafkaDeserializer<ProjectProfileId> deserializer = new AvroKafkaDeserializer<>();
+        Serde<ProjectProfileId> serdes = Serdes.serdeFrom(serializer, deserializer);
+        serdes.configure(AvroSerdesConfig.INSTANCE.getConfig(), true);
+
+        return serdes;
+    }
+
+    public static Serde<Dummy> DummyValue() {
+        AvroKafkaSerializer<Dummy> serializer = new AvroKafkaSerializer<>();
+        AvroKafkaDeserializer<Dummy> deserializer = new AvroKafkaDeserializer<>();
+        Serde<Dummy> serdes = Serdes.serdeFrom(serializer, deserializer);
+        serdes.configure(AvroSerdesConfig.INSTANCE.getConfig(), false);
+
+        return serdes;
+    }
+
+
+    public static Serde<BooleanMap> BooleanMapValue() {
+        AvroKafkaSerializer<BooleanMap> serializer = new AvroKafkaSerializer<>();
+        AvroKafkaDeserializer<BooleanMap> deserializer = new AvroKafkaDeserializer<>();
+        Serde<BooleanMap> serdes = Serdes.serdeFrom(serializer, deserializer);
+        serdes.configure(AvroSerdesConfig.INSTANCE.getConfig(), false);
+
         return serdes;
     }
 

@@ -6,35 +6,18 @@ flowchart TD
     7a-->8a
     8a-->9a
     1c-->2a
-    2a-->3a
-    3a-->4a
-    1b-->5a
-    5a-->6a
-    4a-->10a
-    6a-->9a
+    2a-->10a
+    1b-->9a
     9a-->10a
     10a-->10b
     subgraph 1
         direction RL
         1a[project]
-        1b[config]
+        1b[required_profiles]
         1c[dfh_profile_proj_rel]
     end
     subgraph __2
        2a([Filter])
-    end
-    subgraph __3
-        3a([Group])
-    end
-    subgraph __4
-        4a([Aggregate])
-    end
-
-    subgraph __5
-       5a([Filter])
-    end
-    subgraph __6
-       6a([Map])
     end
     subgraph __9
        9a([LeftJoin])
@@ -52,18 +35,14 @@ flowchart TD
 
 ```
 
-| Step |                                                                       |
-|------|-----------------------------------------------------------------------|
-| 1    | input topics                                                          |
-| 2    | Filter: only enabled profiles project relations                       |
-| 3    | Group: by project                                                     |
-| 4    | Aggregate: Key: project, Val: array of profiles                       |
-| 5    | Filter: only rows with key = SYS_CONFIG                               |
-| 6    | Map: Key=constant Val=array of required profiles from sys config json |
-| 8    | ToTable: to table                                                     |
-| 7    | Map: Key=project id, Value=project id (we only need project ids)      |
-| 9    | LeftJoin: projects (left) with config (right) with required profiles  |
-| 10   | LeftJoin: 10 (left) with 4 (right) to project_profiles                |
+| Step |                                                                  |
+|------|------------------------------------------------------------------|
+| 1    | input topics                                                     |
+| 2    | Filter: only enabled profiles project relations                  |
+| 7    | Map: Key=project id, Value=project id (we only need project ids) |
+| 8    | ToTable: to table                                                |
+| 9    | LeftJoin: projects (left) with required_profiles (right)         |
+| 10   | LeftJoin: 9 (left) with 2 (right) to project_profiles            |
 
 ## Input Topics
 
@@ -73,7 +52,7 @@ _{ns}= dev / stag / prod_
 |------------------------------------|----------------------|--------|
 | {ns}.projects.project              | project              | KTable |
 | {ns}.projects.dfh_profile_proj_rel | dfh_profile_proj_rel | KTable |
-| {ns}.system.config                 | config               | KTable |
+| {ns}.ts.required_profiles          | required_profiles    | KTable |
 
 ## Output topic
 
@@ -83,7 +62,7 @@ _{ns}= dev / stag / prod_
 
 ## Output model
 
-| name  | description                                                           |
-|-------|-----------------------------------------------------------------------|
-| Key   | id of geovistory project                                              |
-| Value | Array of OntoME profile ids enabled by project or required by system. |
+| name  | description            |
+|-------|------------------------|
+| Key   | project and profile id |
+| Value | true                   |

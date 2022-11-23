@@ -3,10 +3,10 @@ package org.geovistory.toolbox.streams.app;
 
 import io.apicurio.registry.serde.SerdeConfig;
 import io.apicurio.registry.serde.avro.AvroKafkaSerdeConfig;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
-import org.assertj.core.api.ListAssert;
-import org.geovistory.toolbox.streams.avro.Id;
-import org.geovistory.toolbox.streams.avro.ProfileIds;
+import org.geovistory.toolbox.streams.avro.Dummy;
+import org.geovistory.toolbox.streams.avro.ProjectProfileId;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.AvroSerdes;
 import org.junit.jupiter.api.AfterEach;
@@ -17,11 +17,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.util.ArrayList;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.util.Lists.newArrayList;
 
 @Testcontainers
 class ProjectProfilesTopologyTest {
@@ -33,9 +31,9 @@ class ProjectProfilesTopologyTest {
 
     private TopologyTestDriver testDriver;
     private TestInputTopic<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> profileProjectTopic;
-    private TestInputTopic<dev.system.config.Key, dev.system.config.Value> configTopic;
+    private TestInputTopic<Integer, Integer> requiredProfilesTopic;
     private TestInputTopic<dev.projects.project.Key, dev.projects.project.Value> projectTopic;
-    private TestOutputTopic<Id, ProfileIds> outputTopic;
+    private TestOutputTopic<ProjectProfileId, Dummy> outputTopic;
 
     @BeforeEach
     void setup() {
@@ -70,15 +68,15 @@ class ProjectProfilesTopologyTest {
                 AvroSerdes.ProProfileProjRelKey().serializer(),
                 AvroSerdes.ProProfileProjRelValue().serializer());
 
-        configTopic = testDriver.createInputTopic(
-                ProjectProfilesTopology.input.TOPICS.config,
-                AvroSerdes.SysConfigKey().serializer(),
-                AvroSerdes.SysConfigValue().serializer());
+        requiredProfilesTopic = testDriver.createInputTopic(
+                ProjectProfilesTopology.input.TOPICS.required_profiles,
+                Serdes.Integer().serializer(),
+                Serdes.Integer().serializer());
 
         outputTopic = testDriver.createOutputTopic(
                 ProjectProfilesTopology.output.TOPICS.projects_with_aggregated_profiles,
-                AvroSerdes.IdKey().deserializer(),
-                AvroSerdes.ProfileIdsValue().deserializer());
+                AvroSerdes.ProjectProfileIdKey().deserializer(),
+                AvroSerdes.DummyValue().deserializer());
     }
 
     @AfterEach
@@ -92,18 +90,11 @@ class ProjectProfilesTopologyTest {
         var pVal = dev.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-      /*  var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
-                .setKey("SYS_CONFIG")
-                .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5, 97]}}").build();
-        configTopic.pipeInput(cKey, cVal);
-*/
+
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
-        assertThat(outRecords).hasSize(1);
-        var projectId = new Id(20);
-        var profileIds = outRecords.get(projectId).getProfileIds();
-        assertThat(profileIds).hasSize(0);
+        assertThat(outRecords).hasSize(0);
+
     }
 
     @Test
@@ -120,10 +111,8 @@ class ProjectProfilesTopologyTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var projectId = new Id(20);
-        var profileIds = outRecords.get(projectId).getProfileIds();
-        assertThat(profileIds).hasSize(1);
-        assertThat(profileIds.get(0)).isEqualTo(100);
+        var id = new ProjectProfileId(20, 100);
+        assertThat(outRecords.containsKey(id)).isTrue();
     }
 
     @Test
@@ -132,19 +121,13 @@ class ProjectProfilesTopologyTest {
         var pVal = dev.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
-                .setKey("SYS_CONFIG")
-                .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5]}}").build();
-        configTopic.pipeInput(cKey, cVal);
+        requiredProfilesTopic.pipeInput(5, 5);
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var projectId = new Id(20);
-        var profileIds = outRecords.get(projectId).getProfileIds();
-        assertThat(profileIds).hasSize(1);
-        assertThat(profileIds.get(0)).isEqualTo(5);
+        var id = new ProjectProfileId(20, 5);
+        assertThat(outRecords.containsKey(id)).isTrue();
     }
 
     @Test
@@ -162,19 +145,15 @@ class ProjectProfilesTopologyTest {
         ppVal.setFkProfile(101);
         profileProjectTopic.pipeInput(ppKey, ppVal);
 
-        var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
-                .setKey("SYS_CONFIG")
-                .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5, 97]}}").build();
-        configTopic.pipeInput(cKey, cVal);
+        requiredProfilesTopic.pipeInput(5, 5);
+        requiredProfilesTopic.pipeInput(97, 97);
 
         var outRecords = outputTopic.readKeyValuesToMap();
-        assertThat(outRecords).hasSize(1);
-        var projectId = new Id(20);
-        var profileIds = outRecords.get(projectId).getProfileIds();
-        assertThat(profileIds).hasSize(4);
-        var expected = newArrayList(100, 101, 5, 97);
-        assertThat(profileIds).containsExactlyInAnyOrderElementsOf(expected);
+        assertThat(outRecords).hasSize(4);
+        assertThat(outRecords.containsKey(new ProjectProfileId(20, 100))).isTrue();
+        assertThat(outRecords.containsKey(new ProjectProfileId(20, 101))).isTrue();
+        assertThat(outRecords.containsKey(new ProjectProfileId(20, 5))).isTrue();
+        assertThat(outRecords.containsKey(new ProjectProfileId(20, 97))).isTrue();
     }
 
     @Test
@@ -192,7 +171,7 @@ class ProjectProfilesTopologyTest {
         ppVal.setFkProfile(101);
         profileProjectTopic.pipeInput(ppKey, ppVal);
 
-        // add remove first record (tombstone)
+        // add remove first record
         ppKey.setPkEntity(1);
         ppVal = null;
         profileProjectTopic.pipeInput(ppKey, ppVal);
@@ -200,10 +179,8 @@ class ProjectProfilesTopologyTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var projectId = new Id(20);
-        var profileIds = outRecords.get(projectId).getProfileIds();
-        assertThat(profileIds).hasSize(1);
-        assertThat(profileIds.get(0)).isEqualTo(101);
+        assertThat(outRecords.containsKey(new ProjectProfileId(20, 100))).isFalse();
+        assertThat(outRecords.containsKey(new ProjectProfileId(20, 101))).isTrue();
     }
 
     @Test
@@ -222,29 +199,23 @@ class ProjectProfilesTopologyTest {
         profileProjectTopic.pipeInput(ppKey, ppVal);
 
         var outRecords = outputTopic.readKeyValuesToMap();
-        var profileIds = outRecords.get(new Id(20)).getProfileIds();
-        assertThat(profileIds).hasSize(0);
+        assertThat(outRecords).hasSize(0);
     }
 
     @Test
     void testRemoveRequiredProfile() {
         var pKey = new dev.projects.project.Key(20);
         var pVal = dev.projects.project.Value.newBuilder().build();
+
         projectTopic.pipeInput(pKey, pVal);
 
-        var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
-                .setKey("SYS_CONFIG")
-                .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5]}}").build();
-        configTopic.pipeInput(cKey, cVal);
+        requiredProfilesTopic.pipeInput(5, 5);
 
-        cVal.setConfig("{\"ontome\": {\"requiredOntomeProfiles\": []}}");
-        configTopic.pipeInput(cKey, cVal);
+        Integer n = null;
+        requiredProfilesTopic.pipeInput(5, n);
 
         var outRecords = outputTopic.readKeyValuesToMap();
-        assertThat(outRecords).hasSize(1);
-        var profileIds = outRecords.get(new Id(20)).getProfileIds();
-        assertThat(profileIds).hasSize(0);
+        assertThat(outRecords).hasSize(0);
     }
 
 
@@ -264,8 +235,7 @@ class ProjectProfilesTopologyTest {
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
-        assertThat(outRecords).hasSize(1);
-        assertThat(outRecords.get(new Id(20))).isEqualTo(null);
+        assertThat(outRecords).hasSize(0);
     }
 
 

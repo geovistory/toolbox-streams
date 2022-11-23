@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "BooleanMap",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Map with string keys and boolean values",
+  "fields": [
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values": "boolean",
+        "default": {}
+      },
+      "default": {}
+    }
+  ]
+}

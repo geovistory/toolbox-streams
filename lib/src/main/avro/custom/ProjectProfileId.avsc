@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "ProjectProfileId",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "OntoMe profile id",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "profile_id",
+      "type": {
+        "type": "int"
+      }
+    }
+  ]
+}

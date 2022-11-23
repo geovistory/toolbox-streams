@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "Dummy",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Dummy value",
+  "fields": [
+    {
+      "name": "dummy",
+      "type": {
+        "type": "boolean",
+        "default": true
+      },
+      "default": true
+    }
+  ]
+}
