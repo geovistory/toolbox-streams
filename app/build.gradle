@@ -4,7 +4,11 @@
 
 plugins {
     id 'org.geovistory.toolbox.streams.java-application-conventions'
+
+    // Used to containerize the project
+    id 'com.google.cloud.tools.jib' version '3.3.0'
 }
+
 
 dependencies {
 
@@ -24,4 +28,57 @@ application {
     mainClass = 'org.geovistory.toolbox.streams.app.App'
 }
 
+jar {
+    manifest.attributes('Main-Class': application.mainClassName)
+}
 
+jib {
+    to {
+        image = getDockerImageTag()
+    }
+    container {
+        jvmFlags = []
+        mainClass = application.mainClassName
+        format = 'OCI'
+    }
+}
+
+
+/**
+ * Get docker tag suffix from semanti version and pull request metadata.
+ * @return for example "0.2.3" or "0.1.0-pr-12.0"
+ */
+String getDockerTagSuffix() {
+    if (pullRequestNumber) return "${project.semanticVersion.version.get()}-pr-${pullRequestNumber}.${pullRequestPushCount}"
+    else return "${project.semanticVersion.version.get()}"
+}
+/**
+ * Get docker image tag
+ * @return for example "ghcr.io/geovistory/toolbox-streams:0.1.0"
+ */
+String getDockerImageTag() {
+    return 'ghcr.io/geovistory/toolbox-streams:' + getDockerTagSuffix()
+}
+
+task("printDockerImageTag") {
+    doLast {
+        println getDockerImageTag()
+    }
+}
+
+// inspired by https://discuss.gradle.org/t/how-to-get-gradle-variables-in-my-java-method/37580/2
+task generateJava {
+    ext.outputDir = "$buildDir/generated/java"
+    inputs.property('getDockerTagSuffix', getDockerTagSuffix())
+    outputs.dir outputDir
+    doLast {
+        mkdir "$outputDir/org/geovistory/toolbox/streams/app"
+        file("$outputDir/org/geovistory/toolbox/streams/app/BuildProperties.java").text =
+                """|package org.geovistory.toolbox.streams.app;
+               |public class BuildProperties {
+               |    public static String getDockerTagSuffix() { return "${project.version}"; }
+               |}""".stripMargin()
+    }
+}
+compileJava.dependsOn generateJava
+sourceSets.main.java.srcDir generateJava.outputDir

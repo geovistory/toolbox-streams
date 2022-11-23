@@ -15,21 +15,16 @@ class App {
     public static void main(String[] args) {
 
         StreamsBuilder builder = new StreamsBuilder();
-        StreamsBuilder b2 = ProjectProfilesTopology.addProcessors(builder);
-        StreamsBuilder b3 = ProjectProfilesTopology.addProcessors(b2);
-        Topology topology = ProjectProfilesTopology.build(b3);
-
+        Topology topology = ProjectProfilesTopology.build(builder);
         Properties props = getConfig();
 
         // build the topology
-        System.out.println("Starting FooBar App!");
+        System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
         KafkaStreams streams = new KafkaStreams(topology, props);
         // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
         // start streaming!
         streams.start();
-        System.out.println("After Starting FooBar App!");
-
     }
 
     private static Properties getConfig() {
