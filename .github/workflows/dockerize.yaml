@@ -83,6 +83,7 @@ jobs:
       - uses: EndBug/add-and-commit@v5
         with:
           message: 'chore(): update pr metadata'
+          tag: $(gradle -q app:printDockerImageTag)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
