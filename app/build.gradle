@@ -66,6 +66,12 @@ task("printDockerImageTag") {
     }
 }
 
+task("printDockerTagSuffix") {
+    doLast {
+        println getDockerTagSuffix()
+    }
+}
+
 // inspired by https://discuss.gradle.org/t/how-to-get-gradle-variables-in-my-java-method/37580/2
 task generateJava {
     ext.outputDir = "$buildDir/generated/java"

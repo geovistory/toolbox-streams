@@ -79,11 +79,16 @@ jobs:
       - name: Push docker image
         run: docker push $(gradle -q app:printDockerImageTag)
 
+      - name: Extract docker tag suffix
+        id: extract_docker_tag_suffix
+        run: |
+          echo ::set-output name=value::$(gradle -q app:printDockerTagSuffix)
+
       # commit the PR metadata updates
       - uses: EndBug/add-and-commit@v5
         with:
           message: 'chore(): update pr metadata'
-          tag: $(gradle -q app:printDockerImageTag)
+          tag: v${{ steps.extract_docker_tag_suffix.outputs.value }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
