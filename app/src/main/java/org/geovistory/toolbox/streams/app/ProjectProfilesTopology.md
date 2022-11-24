@@ -52,18 +52,18 @@ flowchart TD
 
 ```
 
-| Step |                                                                       |
-|------|-----------------------------------------------------------------------|
-| 1    | input topics                                                          |
-| 2    | Filter: only enabled profiles project relations                       |
-| 3    | Group: by project                                                     |
-| 4    | Aggregate: Key: project, Val: array of profiles                       |
-| 5    | Filter: only rows with key = SYS_CONFIG                               |
-| 6    | Map: Key=constant Val=array of required profiles from sys config json |
-| 8    | ToTable: to table                                                     |
-| 7    | Map: Key=project id, Value=project id (we only need project ids)      |
-| 9    | LeftJoin: projects (left) with config (right) with required profiles  |
-| 10   | LeftJoin: 10 (left) with 4 (right) to project_profiles                |
+| Step |                                                                         |
+|------|-------------------------------------------------------------------------|
+| 1    | input topics                                                            |
+| 2    | Filter: only enabled profiles project relations                         |
+| 3    | Group: by project                                                       |
+| 4    | Aggregate: Key: project, Val: array of profiles                         |
+| 5    | Filter: only rows with key = SYS_CONFIG                                 |
+| 6    | Map: Key=constant Val=array of required profiles from sys config json   |
+| 8    | ToTable: to table                                                       |
+| 7    | Map: Key=project id, Value=project id (we only need project ids)        |
+| 9    | LeftJoin: projects (left) with config (right) with required profiles    |
+| 10   | LeftJoin: 10 (left) with 4 (right) to projects_with_aggregated_profiles |
 
 ## Input Topics
 
@@ -77,9 +77,9 @@ _{ns}= dev / stag / prod_
 
 ## Output topic
 
-| name                     | label in diagram |
-|--------------------------|------------------|
-| {ns}.ts.project_profiles | project_profiles |
+| name                                      | label in diagram                  |
+|-------------------------------------------|-----------------------------------|
+| {ns}.ts.projects_with_aggregated_profiles | projects_with_aggregated_profiles |
 
 ## Output model
 

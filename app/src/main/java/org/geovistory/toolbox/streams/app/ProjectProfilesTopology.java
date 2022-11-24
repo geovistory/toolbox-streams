@@ -133,6 +133,8 @@ public class ProjectProfilesTopology {
                 Materialized.with(Serdes.Integer(), ListSerdes.IntegerList())
         );
 
+
+
         /* SINK PROCESSOR */
         finalTable.toStream()
                 .map((key, value) -> new KeyValue<>(new Id(key), value == null ? null : new ProfileIds(value)))

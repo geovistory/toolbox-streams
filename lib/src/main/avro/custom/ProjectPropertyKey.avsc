@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "ProjectPropertyKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of project property",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "domain_id",
+      "type": "int"
+    },
+    {
+      "name": "range_id",
+      "type": "int"
+    }
+  ]
+}
