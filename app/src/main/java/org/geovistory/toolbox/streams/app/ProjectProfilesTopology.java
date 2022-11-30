@@ -7,15 +7,16 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
-import org.geovistory.toolbox.streams.avro.Id;
-import org.geovistory.toolbox.streams.avro.ProfileIds;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AvroSerdes;
 import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 
 public class ProjectProfilesTopology {
@@ -32,6 +33,8 @@ public class ProjectProfilesTopology {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
         String REQUIRED_ONTOME_PROFILES = "REQUIRED_ONTOME_PROFILES";
+        var avroSerdes = new AvroSerdes();
+        var listSerdes = new ListSerdes();
 
         /* SOURCE PROCESSORS */
 
@@ -39,26 +42,26 @@ public class ProjectProfilesTopology {
         // register projects
         KStream<dev.projects.project.Key, dev.projects.project.Value> projects = builder
                 .stream(input.TOPICS.project,
-                        Consumed.with(AvroSerdes.ProProjectKey(), AvroSerdes.ProProjectValue()));
+                        Consumed.with(avroSerdes.ProProjectKey(), avroSerdes.ProProjectValue()));
 
         // register dfh_profile_proj_rel
         KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> dfhProfileProjRels = builder
                 .table(input.TOPICS.dfh_profile_proj_rel,
-                        Consumed.with(AvroSerdes.ProProfileProjRelKey(), AvroSerdes.ProProfileProjRelValue()));
+                        Consumed.with(avroSerdes.ProProfileProjRelKey(), avroSerdes.ProProfileProjRelValue()));
 
         // register config
         KStream<dev.system.config.Key, dev.system.config.Value> config = builder
                 .stream(input.TOPICS.config,
-                        Consumed.with(AvroSerdes.SysConfigKey(), AvroSerdes.SysConfigValue()));
+                        Consumed.with(avroSerdes.SysConfigKey(), avroSerdes.SysConfigValue()));
 
         /* STREAM PROCESSORS */
 
 
-// 2)
+        // 2)
         var profilesByProject = dfhProfileProjRels
                 // Filter: only enabled profiles project relations
-                .filter((k, v) -> v.getEnabled())
-// 3)
+                .filter((k, v) -> v.getEnabled() && !Objects.equals(v.getDeleted$1(), "true"))
+                // 3)
                 // Group: by project
                 .groupBy(
                         (k, v) -> new KeyValue<>(v.getFkProject(), v.getFkProfile()),
@@ -68,7 +71,7 @@ public class ProjectProfilesTopology {
                                 Serdes.Integer()
                         )
                 );
-// 4)
+        // 4)
         // Aggregate: key: project, value: array of profiles
         KTable<Integer, List<Integer>> projectsWithEnabledProfiles = profilesByProject.aggregate(
                 // initializer
@@ -84,14 +87,14 @@ public class ProjectProfilesTopology {
                     return agg;
                 },
                 Named.as(inner.TOPICS.projects_with_enabled_profiles_store),
-                Materialized.with(Serdes.Integer(), ListSerdes.IntegerList())
+                Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
         );
 
-// 5)
+        // 5)
         // Key: constant "REQUIRED_ONTOME_PROFILES", Value: List of profile ids
         KTable<String, List<Integer>> requiredProfiles = config
                 .filter(((k, v) -> v.getKey().equals(SYS_CONFIG)))
-// 6)
+                // 6)
                 .map((k, v) -> {
                     List<Integer> p = new ArrayList<>();
                     try {
@@ -103,14 +106,14 @@ public class ProjectProfilesTopology {
                 })
                 .toTable(
                         Materialized
-                                .with(Serdes.String(), ListSerdes.IntegerList()));
-// 7)
+                                .with(Serdes.String(), listSerdes.IntegerList()));
+        // 7)
         // Key: project, Val: project
         KTable<Integer, Integer> projectKeys = projects.map((k, v) -> new KeyValue<>(k.getPkEntity(), v == null ? null : k.getPkEntity()))
-// 8)
+                // 8)
                 .toTable(Materialized
                         .with(Serdes.Integer(), Serdes.Integer()));
-// 9)
+        // 9)
         // Key: project, Val: required profiles
         KTable<Integer, List<Integer>> projectsWithRequiredProfiles = projectKeys.leftJoin(
                 requiredProfiles,
@@ -119,26 +122,59 @@ public class ProjectProfilesTopology {
                         leftVal == null ?
                                 null : rightVal == null ?
                                 new ArrayList<>() : rightVal,
-                Materialized.with(Serdes.Integer(), ListSerdes.IntegerList())
+                Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
         );
 
-// 10)
+        // 10)
         // Key: project, Val: profiles (required + enabled)
-        KTable<Integer, List<Integer>> finalTable = projectsWithRequiredProfiles.leftJoin(
+        KTable<Integer, List<Integer>> projectWithProfiles = projectsWithRequiredProfiles.leftJoin(
                 projectsWithEnabledProfiles,
                 (value1, value2) -> {
                     if (value2 != null) value1.addAll(value2);
                     return value1;
                 },
-                Materialized.with(Serdes.Integer(), ListSerdes.IntegerList())
+                Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
         );
-
-
+        // 11
+        var finalStream = projectWithProfiles.toStream().mapValues(
+                        (readOnlyKey, value) -> {
+                            var map = BooleanMap.newBuilder().build();
+                            var __deleted = false;
+                            if (value != null) value.forEach(profileId -> map.getItem().put(profileId.toString(), __deleted));
+                            return map;
+                        }
+                )
+                // 12
+                .groupByKey(Grouped.with(Serdes.Integer(), avroSerdes.BooleanMapValue()))
+                //13
+                .reduce((aggValue, newValue) -> {
+                    aggValue.getItem().forEach((profileId, __deleted) -> {
+                        // compare oldValue with newValue and mark profiles of oldValue
+                        // as deleted, if they are absent in newValue
+                        if (!__deleted) newValue.getItem().putIfAbsent(profileId, true);
+                    });
+                    return newValue;
+                })
+                .toStream()
+                // 14
+                .flatMap(
+                        (projectId, profilesMap) -> {
+                            List<KeyValue<ProjectProfileKey, ProjectProfileValue>> result = new LinkedList<>();
+                            profilesMap.getItem().forEach((profileId, deleted) -> {
+                                var k = ProjectProfileKey.newBuilder()
+                                        .setProjectId(projectId).setProfileId(Integer.parseInt(profileId)).build();
+                                var v = ProjectProfileValue.newBuilder()
+                                        .setProjectId(projectId).setProfileId(Integer.parseInt(profileId))
+                                        .setDeleted$1(deleted).build();
+                                result.add(KeyValue.pair(k, v));
+                            });
+                            return result;
+                        }
+                );
 
         /* SINK PROCESSOR */
-        finalTable.toStream()
-                .map((key, value) -> new KeyValue<>(new Id(key), value == null ? null : new ProfileIds(value)))
-                .to(output.TOPICS.projects_with_aggregated_profiles, Produced.with(AvroSerdes.IdKey(), AvroSerdes.ProfileIdsValue()));
+        finalStream.to(output.TOPICS.project_profile,
+                Produced.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
         return builder;
 
@@ -162,6 +198,7 @@ public class ProjectProfilesTopology {
     public enum output {
         TOPICS;
         public final String projects_with_aggregated_profiles = Utils.prefixed("projects_with_aggregated_profiles");
+        public final String project_profile = Utils.prefixed("project_profile");
     }
 
 }

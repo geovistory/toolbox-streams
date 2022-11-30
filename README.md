@@ -8,3 +8,17 @@ root
 |- lib # models and serdes
 |- utilities # helpers for developers
 ```
+
+## Development
+
+### Requirements
+
+- Kafka
+- Apicurio Registry
+
+### Environment
+
+
+## Deployment
+
+### App ID

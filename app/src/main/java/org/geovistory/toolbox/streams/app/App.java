@@ -15,7 +15,9 @@ class App {
     public static void main(String[] args) {
 
         StreamsBuilder builder = new StreamsBuilder();
-        Topology topology = ProjectProfilesTopology.build(builder);
+        var a = ProjectProfilesTopology.addProcessors(builder);
+        ProjectPropertyTopology.addProcessors(a);
+        var topology = a.build();
         Properties props = getConfig();
 
         // build the topology
