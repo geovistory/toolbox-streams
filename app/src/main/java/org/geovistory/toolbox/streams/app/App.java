@@ -6,9 +6,8 @@ package org.geovistory.toolbox.streams.app;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.errors.StreamsException;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-
 import java.util.Properties;
 
 class App {
@@ -22,11 +21,17 @@ class App {
 
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
-        KafkaStreams streams = new KafkaStreams(topology, props);
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-        // start streaming!
-        streams.start();
+
+         try(KafkaStreams streams = new KafkaStreams(topology, props)){
+            // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
+            Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+            // start streaming!
+            streams.start();
+        }
+        catch(StreamsException e) {
+            System.out.println(e.getMessage());
+            System.exit(1);
+        }
     }
 
     private static Properties getConfig() {
@@ -38,8 +43,9 @@ class App {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appConfig.getApplicationId());
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, appConfig.getKafkaBootstrapServers());
         props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
-   /*
+
         props.put(StreamsConfig.STATE_DIR_CONFIG, appConfig.getStateDir());
+        /*
         props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, AvroSerde.class);
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, AvroSerde.class);
