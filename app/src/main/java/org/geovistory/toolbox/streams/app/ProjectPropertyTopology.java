@@ -141,19 +141,13 @@ public class ProjectPropertyTopology {
     public enum input {
         TOPICS;
         public final String project_profile = ProjectProfilesTopology.output.TOPICS.project_profile;
-        public final String api_property = Utils.prefixed("data_for_history.api_property");
-    }
-
-    public enum inner {
-        TOPICS;
-        public final String profiles_grouped_by_projects = Utils.prefixed("profiles_grouped_by_projects");
-        public final String projects_with_enabled_profiles_store = Utils.prefixed("projects_with_aggregated_profiles_store");
+        public final String api_property = Utils.dbPrefixed("data_for_history.api_property");
     }
 
 
     public enum output {
         TOPICS;
-        public final String project_property = Utils.prefixed("project_property");
+        public final String project_property = Utils.tsPrefixed("project_property");
     }
 
 }

@@ -8,10 +8,10 @@ public enum AppEnvConfig {
     INSTANCE();
 
     // url of the apicurio registry
-    private String apicurioRegistryUrl;
+    private final String apicurioRegistryUrl;
 
     // kafka bootstrap servers (comma separated)
-    private String kafkaBootstrapServers;
+    private final String kafkaBootstrapServers;
 
     AppEnvConfig() {
         Dotenv dotenv = Dotenv
@@ -21,17 +21,17 @@ public enum AppEnvConfig {
 
 
         this.apicurioRegistryUrl = Utils.coalesce(
-                System.getProperty("KS_APICURIO_REGISTRY_URL"),
-                System.getenv("KS_APICURIO_REGISTRY_URL"),
-                dotenv.get("KS_APICURIO_REGISTRY_URL"),
+                System.getProperty("TS_APICURIO_REGISTRY_URL"),
+                System.getenv("TS_APICURIO_REGISTRY_URL"),
+                dotenv.get("TS_APICURIO_REGISTRY_URL"),
                 "http://localhost:8080/apis/registry/v2"
         );
         System.out.println("apicurioRegistryUrl: " + apicurioRegistryUrl);
 
         this.kafkaBootstrapServers = Utils.coalesce(
-                System.getProperty("KS_BOOTSTRAP_SERVERS"),
-                System.getenv("KS_BOOTSTRAP_SERVERS"),
-                dotenv.get("KS_BOOTSTRAP_SERVERS"),
+                System.getProperty("TS_BOOTSTRAP_SERVERS"),
+                System.getenv("TS_BOOTSTRAP_SERVERS"),
+                dotenv.get("TS_BOOTSTRAP_SERVERS"),
                 "http://localhost:9092"
         );
         System.out.println("kafkaBootstrapServers: " + kafkaBootstrapServers);
@@ -39,23 +39,12 @@ public enum AppEnvConfig {
 
     }
 
-    public AppEnvConfig getInstance() {
-        return INSTANCE;
-    }
-
     public String getApicurioRegistryUrl() {
         return apicurioRegistryUrl;
-    }
-
-    public void setApicurioRegistryUrl(String apicurioRegistryUrl) {
-        this.apicurioRegistryUrl = apicurioRegistryUrl;
     }
 
     public String getKafkaBootstrapServers() {
         return kafkaBootstrapServers;
     }
 
-    public void setKafkaBootstrapServers(String kafkaBootstrapServers) {
-        this.kafkaBootstrapServers = kafkaBootstrapServers;
-    }
 }

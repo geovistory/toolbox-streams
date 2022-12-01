@@ -183,22 +183,21 @@ public class ProjectProfilesTopology {
 
     public enum input {
         TOPICS;
-        public final String dfh_profile_proj_rel = Utils.prefixed("projects.dfh_profile_proj_rel");
-        public final String project = Utils.prefixed("projects.project");
-        public final String config = Utils.prefixed("system.config");
+        public final String dfh_profile_proj_rel = Utils.dbPrefixed("projects.dfh_profile_proj_rel");
+        public final String project = Utils.dbPrefixed("projects.project");
+        public final String config = Utils.dbPrefixed("system.config");
     }
 
     public enum inner {
         TOPICS;
-        public final String profiles_grouped_by_projects = Utils.prefixed("profiles_grouped_by_projects");
-        public final String projects_with_enabled_profiles_store = Utils.prefixed("projects_with_aggregated_profiles_store");
+        public final String profiles_grouped_by_projects = Utils.tsPrefixed("profiles_grouped_by_projects");
+        public final String projects_with_enabled_profiles_store = Utils.tsPrefixed("projects_with_aggregated_profiles_store");
     }
 
 
     public enum output {
         TOPICS;
-        public final String projects_with_aggregated_profiles = Utils.prefixed("projects_with_aggregated_profiles");
-        public final String project_profile = Utils.prefixed("project_profile");
+        public final String project_profile = Utils.tsPrefixed("project_profile");
     }
 
 }
