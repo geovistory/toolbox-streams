@@ -8,6 +8,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.errors.StreamsException;
 import org.geovistory.toolbox.streams.lib.AppConfig;
+
 import java.util.Properties;
 
 class App {
@@ -22,16 +23,14 @@ class App {
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
 
-         try(KafkaStreams streams = new KafkaStreams(topology, props)){
-            // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-            Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-            // start streaming!
-            streams.start();
-        }
-        catch(StreamsException e) {
-            System.out.println(e.getMessage());
-            System.exit(1);
-        }
+        // create the streams app
+        KafkaStreams streams = new KafkaStreams(topology, props);
+
+        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
+        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+        // start streaming!
+        streams.start();
+
     }
 
     private static Properties getConfig() {
