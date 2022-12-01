@@ -8,7 +8,6 @@ import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.AvroSerdes;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +55,7 @@ class ProjectProfilesTopologyTest {
         // Specify using specific (generated) Avro schema classes
         props.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, "true");
 
-        Topology topology = ProjectProfilesTopology.build(new StreamsBuilder());
+        Topology topology = ProjectProfilesTopology.buildStandalone(new StreamsBuilder());
 
         testDriver = new TopologyTestDriver(topology, props);
 

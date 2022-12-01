@@ -16,8 +16,8 @@ class App {
 
         StreamsBuilder builder = new StreamsBuilder();
         var a = ProjectProfilesTopology.addProcessors(builder);
-        ProjectPropertyTopology.addProcessors(a);
-        var topology = a.build();
+        var b = ProjectPropertyTopology.addProcessors(a.builder(), a.projectProfileStream());
+        var topology = b.build();
         Properties props = getConfig();
 
         // build the topology

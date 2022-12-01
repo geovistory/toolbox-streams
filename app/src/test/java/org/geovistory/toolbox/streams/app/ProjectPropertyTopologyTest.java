@@ -1,11 +1,6 @@
 package org.geovistory.toolbox.streams.app;
 
 
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.client5.http.classic.methods.HttpGet;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.client5.http.classic.methods.HttpUriRequest;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
 import io.apicurio.registry.serde.SerdeConfig;
 import io.apicurio.registry.serde.avro.AvroKafkaSerdeConfig;
 import org.apache.kafka.streams.*;
@@ -19,7 +14,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -60,7 +54,7 @@ class ProjectPropertyTopologyTest {
         // Specify using specific (generated) Avro schema classes
         props.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, "true");
 
-        Topology topology = ProjectPropertyTopology.build(new StreamsBuilder());
+        Topology topology = ProjectPropertyTopology.buildStandalone(new StreamsBuilder());
 
         testDriver = new TopologyTestDriver(topology, props);
 

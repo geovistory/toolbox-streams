@@ -18,32 +18,31 @@ import java.util.Objects;
 public class ProjectPropertyTopology {
 
     public static void main(String[] args) {
-        System.out.println(build(new StreamsBuilder()).describe());
+        System.out.println(buildStandalone(new StreamsBuilder()).describe());
     }
 
-    public static Topology build(StreamsBuilder builder) {
-        return addProcessors(builder).build();
+    public static Topology buildStandalone(StreamsBuilder builder) {
+        var avroSerdes = new AvroSerdes();
+        // 1)
+        // register project_profile
+        var projectProfile = builder
+                .stream(input.TOPICS.project_profile,
+                        Consumed.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
+
+        return addProcessors(builder, projectProfile).build();
     }
 
-    public static StreamsBuilder addProcessors(StreamsBuilder builder) {
+    public static StreamsBuilder addProcessors(StreamsBuilder builder, KStream<ProjectProfileKey, ProjectProfileValue> projectProfile) {
 
         var avroSerdes = new AvroSerdes();
         var listSerdes = new ListSerdes();
 
-
         /* SOURCE PROCESSORS */
-
-        // 1)
-        // register project_profile
-        KStream<ProjectProfileKey, ProjectProfileValue> projectProfile = builder
-                .stream(input.TOPICS.project_profile,
-                        Consumed.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
         // register api_property
         KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiProperty = builder
                 .table(input.TOPICS.api_property,
                         Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue()));
-
 
         /* STREAM PROCESSORS */
 
@@ -143,7 +142,6 @@ public class ProjectPropertyTopology {
         public final String project_profile = ProjectProfilesTopology.output.TOPICS.project_profile;
         public final String api_property = Utils.dbPrefixed("data_for_history.api_property");
     }
-
 
     public enum output {
         TOPICS;

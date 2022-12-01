@@ -18,18 +18,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-
 public class ProjectProfilesTopology {
 
     public static void main(String[] args) {
-        System.out.println(build(new StreamsBuilder()).describe());
+        System.out.println(buildStandalone(new StreamsBuilder()).describe());
     }
 
-    public static Topology build(StreamsBuilder builder) {
-        return addProcessors(builder).build();
+    public static Topology buildStandalone(StreamsBuilder builder) {
+        return addProcessors(builder).builder().build();
     }
 
-    public static StreamsBuilder addProcessors(StreamsBuilder builder) {
+    public static Returner addProcessors(StreamsBuilder builder) {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
         String REQUIRED_ONTOME_PROFILES = "REQUIRED_ONTOME_PROFILES";
@@ -136,7 +135,8 @@ public class ProjectProfilesTopology {
                 Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
         );
         // 11
-        var finalStream = projectWithProfiles.toStream().mapValues(
+        KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream;
+        projectProfileStream = projectWithProfiles.toStream().mapValues(
                         (readOnlyKey, value) -> {
                             var map = BooleanMap.newBuilder().build();
                             var __deleted = false;
@@ -173,13 +173,12 @@ public class ProjectProfilesTopology {
                 );
 
         /* SINK PROCESSOR */
-        finalStream.to(output.TOPICS.project_profile,
+        projectProfileStream.to(output.TOPICS.project_profile,
                 Produced.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
-        return builder;
+        return new Returner(builder, projectProfileStream);
 
     }
-
 
     public enum input {
         TOPICS;
@@ -188,16 +187,20 @@ public class ProjectProfilesTopology {
         public final String config = Utils.dbPrefixed("system.config");
     }
 
+
     public enum inner {
         TOPICS;
         public final String profiles_grouped_by_projects = Utils.tsPrefixed("profiles_grouped_by_projects");
         public final String projects_with_enabled_profiles_store = Utils.tsPrefixed("projects_with_aggregated_profiles_store");
     }
 
-
     public enum output {
         TOPICS;
         public final String project_profile = Utils.tsPrefixed("project_profile");
+    }
+
+    record Returner(StreamsBuilder builder,
+                    KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream) {
     }
 
 }
