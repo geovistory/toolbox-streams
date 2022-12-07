@@ -28,7 +28,7 @@ public enum AppConfig {
         // load .env for local development
         Dotenv dotenv = Dotenv
                 .configure()
-                .ignoreIfMissing()
+              //  .ignoreIfMissing()
                 .load();
 
 
@@ -70,7 +70,7 @@ public enum AppConfig {
                 dotenv.get("TS_OUTPUT_TOPIC_NAME_PREFIX"),
                 "dev"
         );
-        System.out.println("topicPrefix: " + outputTopicPrefix);
+        System.out.println("outputTopicPrefix: " + outputTopicPrefix);
 
         this.inputTopicPrefix = Utils.coalesce(
                 System.getProperty("TS_INPUT_TOPIC_NAME_PREFIX"),
@@ -78,7 +78,7 @@ public enum AppConfig {
                 dotenv.get("TS_INPUT_TOPIC_NAME_PREFIX"),
                 "dev"
         );
-        System.out.println("topicPrefix: " + inputTopicPrefix);
+        System.out.println("inputTopicPrefix: " + inputTopicPrefix);
     }
 
     public AppConfig getInstance() {
