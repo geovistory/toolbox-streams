@@ -28,7 +28,7 @@ public enum AppConfig {
         // load .env for local development
         Dotenv dotenv = Dotenv
                 .configure()
-              //  .ignoreIfMissing()
+                .ignoreIfMissing()
                 .load();
 
 
