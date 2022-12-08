@@ -5,10 +5,11 @@ public class Utils {
      * tsPrefixed
      *
      * @param name the string to be prefixed
-     * @return string with format {prefix}.{name}
+     * @return string with format {prefix}_{name}
      */
     public static String tsPrefixed(String name) {
-        return AppConfig.INSTANCE.getOutputTopicPrefix() + "." + name;
+        var topicName = AppConfig.INSTANCE.getOutputTopicPrefix() + "_" + name;
+        return topicName.replace('.', '_');
     }
 
     /**

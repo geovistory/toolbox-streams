@@ -13,10 +13,7 @@ import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class ProjectProfilesTopology {
 
@@ -173,7 +170,8 @@ public class ProjectProfilesTopology {
                 );
 
         /* SINK PROCESSOR */
-        projectProfileStream.to(output.TOPICS.project_profile,
+        var admin = new Admin();
+        projectProfileStream.to(admin.createTopic(output.TOPICS.project_profile),
                 Produced.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
         return new Returner(builder, projectProfileStream);
