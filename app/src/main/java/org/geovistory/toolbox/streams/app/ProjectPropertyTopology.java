@@ -128,8 +128,7 @@ public class ProjectPropertyTopology {
                     return KeyValue.pair(k, projectPropertyValue);
                 }).toList());
 
-        var admin = new Admin();
-        projectPropertyStream.to(admin.createTopic(output.TOPICS.project_property),
+        projectPropertyStream.to(output.TOPICS.project_property,
                 Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()));
 
         return builder;

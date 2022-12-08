@@ -20,10 +20,16 @@ class App {
         var topology = b.build();
         Properties props = getConfig();
 
+        // create the output topics
+        var admin = new Admin();
+        admin.createTopic(ProjectProfilesTopology.output.TOPICS.project_profile);
+        admin.createTopic(ProjectPropertyTopology.output.TOPICS.project_property);
+
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
 
         // create the streams app
+        //noinspection resource
         KafkaStreams streams = new KafkaStreams(topology, props);
 
         // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)

@@ -7,13 +7,18 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
-import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.avro.BooleanMap;
+import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
+import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
 import org.geovistory.toolbox.streams.lib.AvroSerdes;
 import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
 public class ProjectProfilesTopology {
 
@@ -170,8 +175,7 @@ public class ProjectProfilesTopology {
                 );
 
         /* SINK PROCESSOR */
-        var admin = new Admin();
-        projectProfileStream.to(admin.createTopic(output.TOPICS.project_profile),
+        projectProfileStream.to(output.TOPICS.project_profile,
                 Produced.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
         return new Returner(builder, projectProfileStream);
