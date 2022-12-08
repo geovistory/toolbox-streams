@@ -24,12 +24,12 @@ class App {
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
 
         // create the streams app
-        try (KafkaStreams streams = new KafkaStreams(topology, props)) {
-            // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-            Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-            // start streaming!
-            streams.start();
-        }
+        KafkaStreams streams = new KafkaStreams(topology, props);
+
+        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
+        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+        // start streaming!
+        streams.start();
     }
 
     private static Properties getConfig() {
