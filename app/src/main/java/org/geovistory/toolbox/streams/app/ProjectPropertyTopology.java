@@ -49,20 +49,30 @@ public class ProjectPropertyTopology {
 // 2)
 
         var projectsByProfile = projectProfile
-                .mapValues((readOnlyKey, value) -> {
-                    var v = BooleanMap.newBuilder().build();
-                    v.getItem().put(value.getProjectId() + "", value.getDeleted$1());
-                    return v;
-                }).groupBy((key, value) -> key.getProfileId(),
-                        Grouped.with(Serdes.Integer(), avroSerdes.BooleanMapValue()));
-        var profileWithProjects = projectsByProfile.reduce((aggValue, newValue) -> {
-            aggValue.getItem().forEach((projectId, __deleted) -> {
-                // compare oldValue with newValue and mark projects of oldValue
-                // as deleted, if they are absent in newValue
-                if (!__deleted) newValue.getItem().putIfAbsent(projectId, true);
-            });
-            return newValue;
-        });
+                .toTable(
+                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
+                )
+                .groupBy((key, value) -> {
+                            /*var v = BooleanMap.newBuilder().build();
+                            v.getItem().put(value.getProjectId() + "", value.getDeleted$1());*/
+                            return KeyValue.pair(key.getProfileId(), value);
+                        },
+                        Grouped.with(Serdes.Integer(), avroSerdes.ProjectProfileValue()));
+
+        var profileWithProjects = projectsByProfile.aggregate(
+                /* initializer */
+                () -> BooleanMap.newBuilder().build(),
+                /* adder */
+                (aggKey, newValue, aggValue) -> {
+                    aggValue.getItem().put(newValue.getProjectId() + "", newValue.getDeleted$1());
+                    return aggValue;
+                },
+                /* subtractor */
+                (aggKey, oldValue, aggValue) -> aggValue,
+                Named.as(inner.TOPICS.profile_with_projects),
+                Materialized.with(Serdes.Integer(), avroSerdes.BooleanMapValue())
+        );
+
 
         KGroupedTable<Integer, List<dev.data_for_history.api_property.Value>> groupedTable = apiProperty.groupBy(
                 (key, value) -> {
@@ -140,6 +150,12 @@ public class ProjectPropertyTopology {
         TOPICS;
         public final String project_profile = ProjectProfilesTopology.output.TOPICS.project_profile;
         public final String api_property = Utils.dbPrefixed("data_for_history.api_property");
+    }
+
+
+    public enum inner {
+        TOPICS;
+        public final String profile_with_projects = Utils.tsPrefixed("profile_with_projects");
     }
 
     public enum output {
