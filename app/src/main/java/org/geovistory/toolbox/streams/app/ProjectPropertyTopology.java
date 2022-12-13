@@ -56,10 +56,10 @@ public class ProjectPropertyTopology {
                 }).groupBy((key, value) -> key.getProfileId(),
                         Grouped.with(Serdes.Integer(), avroSerdes.BooleanMapValue()));
         var profileWithProjects = projectsByProfile.reduce((aggValue, newValue) -> {
-            aggValue.getItem().forEach((profileId, __deleted) -> {
+            aggValue.getItem().forEach((projectId, __deleted) -> {
                 // compare oldValue with newValue and mark projects of oldValue
                 // as deleted, if they are absent in newValue
-                if (!__deleted) newValue.getItem().putIfAbsent(profileId, true);
+                if (!__deleted) newValue.getItem().putIfAbsent(projectId, true);
             });
             return newValue;
         });

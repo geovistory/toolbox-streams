@@ -84,16 +84,16 @@ class ProjectPropertyTopologyTest {
     @Test
     void testOneProjectProfileAndOneApiProperty() {
         // add project profile rel
-        var pKey = ProjectProfileKey.newBuilder()
+        var ppKey = ProjectProfileKey.newBuilder()
                 .setProjectId(1)
                 .setProfileId(97)
                 .build();
-        var pVal = ProjectProfileValue.newBuilder()
+        var ppVal = ProjectProfileValue.newBuilder()
                 .setProjectId(1)
                 .setProfileId(97)
                 .setDeleted$1(false)
                 .build();
-        projectProfilesTopic.pipeInput(pKey, pVal);
+        projectProfilesTopic.pipeInput(ppKey, ppVal);
 
         // add property
         var apKey = new dev.data_for_history.api_property.Key(1);
@@ -110,13 +110,13 @@ class ProjectPropertyTopologyTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var projectPropertyKey = ProjectPropertyKey.newBuilder().
-                setProjectId(1)
+        var projectPropertyKey = ProjectPropertyKey.newBuilder()
+                .setProjectId(1)
                 .setDomainId(33)
                 .setPropertyId(44)
                 .setRangeId(55)
                 .build();
-        assertThat(outRecords.containsKey(projectPropertyKey)).isTrue();
+        assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isFalse();
     }
 
 
@@ -169,11 +169,71 @@ class ProjectPropertyTopologyTest {
                 .setPropertyId(44)
                 .setRangeId(55)
                 .build();
-        assertThat(outRecords.containsKey(projectPropertyKey)).isTrue();
+        assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isFalse();
         projectPropertyKey.setPropertyId(45);
-        assertThat(outRecords.containsKey(projectPropertyKey)).isTrue();
+        assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isFalse();
         projectPropertyKey.setPropertyId(46);
-        assertThat(outRecords.containsKey(projectPropertyKey)).isTrue();
+        assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isFalse();
+    }
+
+    @Test
+    void testOneProfileInTwoProjects() {
+        // add first project profile rel
+        var pKey = ProjectProfileKey.newBuilder()
+                .setProjectId(1)
+                .setProfileId(97)
+                .build();
+        var pVal = ProjectProfileValue.newBuilder()
+                .setProjectId(1)
+                .setProfileId(97)
+                .setDeleted$1(false)
+                .build();
+        projectProfilesTopic.pipeInput(pKey, pVal);
+
+        // add second project profile rel
+        pKey.setProjectId(2);
+        pVal.setProjectId(2);
+        projectProfilesTopic.pipeInput(pKey, pVal);
+
+
+        // add first property
+        var apKey = new dev.data_for_history.api_property.Key(1);
+        var apVal = dev.data_for_history.api_property.Value.newBuilder()
+                .setDfhAncestorProperties(new ArrayList<>())
+                .setDfhParentProperties(new ArrayList<>())
+                .setDfhFkProfile(97)
+                .setDfhPropertyDomain(33)
+                .setDfhPkProperty(44)
+                .setDfhPropertyRange(55)
+                .build();
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+
+      /*  // add second property
+        apKey.setPkEntity(2);
+        apVal.setDfhPkProperty(45);
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+        // add third property
+        apVal.setDfhPkProperty(46);
+        apiPropertyTopic.pipeInput(apKey, apVal);*/
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(2);
+
+        // assert property in project 1
+        var projectPropertyKey = ProjectPropertyKey.newBuilder()
+                .setProjectId(1)
+                .setDomainId(33)
+                .setPropertyId(44)
+                .setRangeId(55)
+                .build();
+        assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isFalse();
+
+        // assert property in project 2
+        projectPropertyKey.setProjectId(2);
+        assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isFalse();
     }
 
     @Test
@@ -254,7 +314,6 @@ class ProjectPropertyTopologyTest {
         assertThat(outRecords.get(0).value().getDeleted$1()).isFalse();
         assertThat(outRecords.get(outRecords.size() - 1).value().getDeleted$1()).isTrue();
     }
-
 
 
 }
