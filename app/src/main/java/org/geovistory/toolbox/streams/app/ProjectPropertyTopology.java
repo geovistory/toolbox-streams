@@ -1,10 +1,12 @@
 package org.geovistory.toolbox.streams.app;
 
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AvroSerdes;
 import org.geovistory.toolbox.streams.lib.ListSerdes;
@@ -87,11 +89,13 @@ public class ProjectPropertyTopology {
                 },
                 (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(inner.TOPICS.profile_with_properties),
-                Materialized.with(Serdes.Integer(), listSerdes.DfhApiPropertyValueList())
+                Materialized.<Integer, List<dev.data_for_history.api_property.Value>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_properties)
+                        .withKeySerde(Serdes.Integer())
+                        .withValueSerde(listSerdes.DfhApiPropertyValueList())
         );
 
 
-        var projectPropertiesPerProfile = profileWithProperties.join(
+        KTable<Integer, List<ProjectPropertyValue>> projectPropertiesPerProfile = profileWithProperties.join(
                 profileWithProjects,
                 (propertiesOfProfile, projectsOfProfile) -> {
                     List<ProjectPropertyValue> projectPropertyValues = new ArrayList<>();
@@ -111,24 +115,30 @@ public class ProjectPropertyTopology {
                     return projectPropertyValues;
                 },
                 Named.as(inner.TOPICS.project_with_properties),
-                Materialized.with(Serdes.Integer(), listSerdes.ProjectPropertyValueList())
+                Materialized.<Integer, List<ProjectPropertyValue>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_with_properties)
+                        .withKeySerde(Serdes.Integer())
+                        .withValueSerde(listSerdes.ProjectPropertyValueList())
         );
 
 // 3)
 
-        var projectPropertyStream = projectPropertiesPerProfile
-                .toStream()
+        var projectPropertyFlat = projectPropertiesPerProfile
+                .toStream(
+                        Named.as(inner.TOPICS.project_properties_stream)
+                )
                 .flatMap((key, value) -> value.stream().map(projectPropertyValue -> {
-                    var k = ProjectPropertyKey.newBuilder()
-                            .setPropertyId(projectPropertyValue.getPropertyId())
-                            .setProjectId(projectPropertyValue.getProjectId())
-                            .setDomainId(projectPropertyValue.getDomainId())
-                            .setRangeId(projectPropertyValue.getRangeId())
-                            .build();
-                    return KeyValue.pair(k, projectPropertyValue);
-                }).toList());
+                                    var k = ProjectPropertyKey.newBuilder()
+                                            .setPropertyId(projectPropertyValue.getPropertyId())
+                                            .setProjectId(projectPropertyValue.getProjectId())
+                                            .setDomainId(projectPropertyValue.getDomainId())
+                                            .setRangeId(projectPropertyValue.getRangeId())
+                                            .build();
+                                    return KeyValue.pair(k, projectPropertyValue);
+                                }
+                        ).toList(),
+                        Named.as(inner.TOPICS.project_properties_flat));
 
-        projectPropertyStream.to(output.TOPICS.project_property,
+        projectPropertyFlat.to(output.TOPICS.project_property,
                 Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()));
 
         return builder;
@@ -148,6 +158,8 @@ public class ProjectPropertyTopology {
         public final String profile_with_projects = Utils.tsPrefixed("profile_with_projects");
         public final String profile_with_properties = Utils.tsPrefixed("profile_with_properties");
         public final String project_with_properties = Utils.tsPrefixed("project_with_properties");
+        public final String project_properties_stream = Utils.tsPrefixed("project_properties_stream");
+        public final String project_properties_flat = Utils.tsPrefixed("project_properties_flat");
     }
 
     public enum output {
