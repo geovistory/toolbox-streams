@@ -74,33 +74,20 @@ public class ProjectPropertyTopology {
         );
 
 
-        KGroupedTable<Integer, List<dev.data_for_history.api_property.Value>> groupedTable = apiProperty.groupBy(
-                (key, value) -> {
-                    List<dev.data_for_history.api_property.Value> returnVal = new ArrayList<>();
-                    returnVal.add(value);
-                    return KeyValue.pair(value.getDfhFkProfile(), returnVal);
-                },
+        KGroupedTable<Integer, dev.data_for_history.api_property.Value> groupedTable = apiProperty.groupBy(
+                (key, value) -> KeyValue.pair(value.getDfhFkProfile(), value),
                 Grouped.with(
-                        Serdes.Integer(), listSerdes.DfhApiPropertyValueList()
+                        Serdes.Integer(), avroSerdes.DfhApiPropertyValue()
                 ));
-        var profileWithProperties = groupedTable.reduce(
-                (aggValue, newValue) -> {
-                    aggValue.forEach((prop) -> {
-                        // compare oldValue with newValue and mark items of oldValue
-                        // as deleted if...
-                        if (
-                            // ...they are not marked as deleted in oldValue
-                                !Objects.equals(prop.getDeleted$1(), "true")
-                                        // ...and they are absent in newValue
-                                        && newValue.stream().noneMatch(o -> o.getPkEntity() == prop.getPkEntity())
-                        ) {
-                            prop.setDeleted$1("true");
-                            newValue.add(prop);
-                        }
-                    });
-                    return newValue;
+        var profileWithProperties = groupedTable.aggregate(
+                ArrayList::new,
+                (aggKey, newValue, aggValue) -> {
+                    aggValue.add(newValue);
+                    return aggValue;
                 },
-                (aggValue, oldValue) -> aggValue
+                (aggKey, oldValue, aggValue) -> aggValue,
+                Named.as(inner.TOPICS.profile_with_properties),
+                Materialized.with(Serdes.Integer(), listSerdes.DfhApiPropertyValueList())
         );
 
 
@@ -108,17 +95,19 @@ public class ProjectPropertyTopology {
                 profileWithProjects,
                 (propertiesOfProfile, projectsOfProfile) -> {
                     List<ProjectPropertyValue> projectPropertyValues = new ArrayList<>();
-                    propertiesOfProfile.forEach(property -> projectsOfProfile.getItem().forEach((projectId, deleted) -> {
-                        var markAsDeleted = deleted || Objects.equals(property.getDeleted$1(), "true");
-                        var v = ProjectPropertyValue.newBuilder()
-                                .setProjectId(Integer.parseInt(projectId))
-                                .setDomainId(property.getDfhPropertyDomain())
-                                .setPropertyId(property.getDfhPkProperty())
-                                .setRangeId(property.getDfhPropertyRange())
-                                .setDeleted$1(markAsDeleted)
-                                .build();
-                        projectPropertyValues.add(v);
-                    }));
+                    propertiesOfProfile.forEach(property -> projectsOfProfile.getItem()
+                            .forEach((projectId, projectIsDeleted) -> {
+                                var propertyIsDeleted = Objects.equals(property.getDeleted$1(), "true");
+                                var projectPropertyIsDeleted = projectIsDeleted || propertyIsDeleted;
+                                var v = ProjectPropertyValue.newBuilder()
+                                        .setProjectId(Integer.parseInt(projectId))
+                                        .setDomainId(property.getDfhPropertyDomain())
+                                        .setPropertyId(property.getDfhPkProperty())
+                                        .setRangeId(property.getDfhPropertyRange())
+                                        .setDeleted$1(projectPropertyIsDeleted)
+                                        .build();
+                                projectPropertyValues.add(v);
+                            }));
                     return projectPropertyValues;
                 },
                 Materialized.with(Serdes.Integer(), listSerdes.ProjectPropertyValueList())
@@ -156,6 +145,7 @@ public class ProjectPropertyTopology {
     public enum inner {
         TOPICS;
         public final String profile_with_projects = Utils.tsPrefixed("profile_with_projects");
+        public final String profile_with_properties = Utils.tsPrefixed("profile_with_properties");
     }
 
     public enum output {

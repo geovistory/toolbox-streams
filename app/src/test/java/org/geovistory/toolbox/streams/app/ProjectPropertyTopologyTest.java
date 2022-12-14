@@ -309,10 +309,16 @@ class ProjectPropertyTopologyTest {
         apiPropertyTopic.pipeInput(apKey, apVal);
 
         assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readRecordsToList();
-        assertThat(outRecords).hasSize(3);
-        assertThat(outRecords.get(0).value().getDeleted$1()).isFalse();
-        assertThat(outRecords.get(outRecords.size() - 1).value().getDeleted$1()).isTrue();
+        var outRecords = outputTopic.readKeyValuesToMap();
+
+        assertThat(outRecords).hasSize(1);
+        var projectPropertyKey = ProjectPropertyKey.newBuilder()
+                .setProjectId(1)
+                .setDomainId(33)
+                .setPropertyId(44)
+                .setRangeId(55)
+                .build();
+        assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isTrue();
     }
 
 
