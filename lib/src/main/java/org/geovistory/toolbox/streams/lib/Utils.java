@@ -2,13 +2,24 @@ package org.geovistory.toolbox.streams.lib;
 
 public class Utils {
     /**
-     * prefixed
+     * tsPrefixed
+     *
+     * @param name the string to be prefixed
+     * @return string with format {prefix}_{name}
+     */
+    public static String tsPrefixed(String name) {
+        var topicName = AppConfig.INSTANCE.getOutputTopicPrefix() + "_" + name;
+        return topicName.replace('.', '_');
+    }
+
+    /**
+     * dbPrefixed
      *
      * @param name the string to be prefixed
      * @return string with format {prefix}.{name}
      */
-    public static String prefixed(String name) {
-        return AppConfig.INSTANCE.getTopicPrefix() + "." + name;
+    public static String dbPrefixed(String name) {
+        return AppConfig.INSTANCE.getInputTopicPrefix() + "." + name;
     }
 
     @SafeVarargs

@@ -3,10 +3,10 @@
  */
 package org.geovistory.toolbox.streams.app;
 
+import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.Topology;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
 import java.util.Properties;
@@ -15,12 +15,23 @@ class App {
     public static void main(String[] args) {
 
         StreamsBuilder builder = new StreamsBuilder();
-        Topology topology = ProjectProfilesTopology.build(builder);
+        var a = ProjectProfilesTopology.addProcessors(builder);
+        var b = ProjectPropertyTopology.addProcessors(a.builder(), a.projectProfileStream());
+        var topology = b.build();
         Properties props = getConfig();
+
+        // create the output topics
+        var admin = new Admin();
+        admin.createTopic(ProjectProfilesTopology.output.TOPICS.project_profile);
+        admin.createTopic(ProjectPropertyTopology.output.TOPICS.project_property);
 
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
+
+        // create the streams app
+        //noinspection resource
         KafkaStreams streams = new KafkaStreams(topology, props);
+
         // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
         // start streaming!
@@ -36,8 +47,10 @@ class App {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appConfig.getApplicationId());
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, appConfig.getKafkaBootstrapServers());
         props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
-   /*
+
         props.put(StreamsConfig.STATE_DIR_CONFIG, appConfig.getStateDir());
+        props.put(StreamsConfig.TOPIC_PREFIX + TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_COMPACT);
+        /*
         props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, AvroSerde.class);
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, AvroSerde.class);

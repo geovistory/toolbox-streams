@@ -15,7 +15,6 @@ public enum AvroSerdesConfig {
 
         // configure org.geovistory.toolbox.streams.lib.AvroSerdes config
         this.config = new HashMap<>();
-        this.config.put(SerdeConfig.REGISTRY_URL, AppConfig.INSTANCE.getApicurioRegistryUrl());
         this.config.put(SerdeConfig.AUTO_REGISTER_ARTIFACT, true);
         this.config.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, true);
 
@@ -26,6 +25,7 @@ public enum AvroSerdesConfig {
     }
 
     public Map<String, Object> getConfig() {
+        this.config.put(SerdeConfig.REGISTRY_URL, AppConfig.INSTANCE.getApicurioRegistryUrl());
         return config;
     }
 }

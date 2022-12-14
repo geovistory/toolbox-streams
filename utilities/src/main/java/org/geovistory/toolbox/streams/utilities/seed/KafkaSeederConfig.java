@@ -7,24 +7,23 @@ import io.apicurio.registry.serde.strategy.TopicIdStrategy;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.geovistory.toolbox.streams.utilities.config.AppEnvConfig;
+import org.geovistory.toolbox.streams.lib.AppConfig;
 
 import java.util.Properties;
 
 public class KafkaSeederConfig {
 
     public static String fooTopicName = "testfoo";
-    public static String barTopicName = "testbar";
 
     public static Properties getConsumerConfig(String TOPIC_NAME) {
         Properties config = new Properties();
 
         // Configure the client with the URL of Apicurio Registry
-        config.putIfAbsent(SerdeConfig.REGISTRY_URL, AppEnvConfig.INSTANCE.getApicurioRegistryUrl());
+        config.putIfAbsent(SerdeConfig.REGISTRY_URL, AppConfig.INSTANCE.getApicurioRegistryUrl());
 
         // Configure Kafka settings
-        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, AppEnvConfig.INSTANCE.getKafkaBootstrapServers());
-        config.putIfAbsent(ConsumerConfig.GROUP_ID_CONFIG, "Consumer-" + TOPIC_NAME);
+        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, AppConfig.INSTANCE.getKafkaBootstrapServers());
+        config.putIfAbsent(ConsumerConfig.GROUP_ID_CONFIG, "Consumer-3-" + TOPIC_NAME);
         config.putIfAbsent(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
         config.putIfAbsent(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         config.putIfAbsent(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -41,10 +40,10 @@ public class KafkaSeederConfig {
         Properties config = new Properties();
 
         // Configure the client with the URL of Apicurio Registry
-        config.putIfAbsent(SerdeConfig.REGISTRY_URL, AppEnvConfig.INSTANCE.getApicurioRegistryUrl());
+        config.putIfAbsent(SerdeConfig.REGISTRY_URL, AppConfig.INSTANCE.getApicurioRegistryUrl());
 
         // Configure the client with the serializer, and the strategy to look up the schema in Apicurio Registry
-        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, AppEnvConfig.INSTANCE.getKafkaBootstrapServers());
+        config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, AppConfig.INSTANCE.getKafkaBootstrapServers());
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AvroKafkaSerializer.class.getName());
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, AvroKafkaSerializer.class.getName());
 
