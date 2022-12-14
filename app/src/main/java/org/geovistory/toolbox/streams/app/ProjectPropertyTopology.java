@@ -110,6 +110,7 @@ public class ProjectPropertyTopology {
                             }));
                     return projectPropertyValues;
                 },
+                Named.as(inner.TOPICS.project_with_properties),
                 Materialized.with(Serdes.Integer(), listSerdes.ProjectPropertyValueList())
         );
 
@@ -146,6 +147,7 @@ public class ProjectPropertyTopology {
         TOPICS;
         public final String profile_with_projects = Utils.tsPrefixed("profile_with_projects");
         public final String profile_with_properties = Utils.tsPrefixed("profile_with_properties");
+        public final String project_with_properties = Utils.tsPrefixed("project_with_properties");
     }
 
     public enum output {

@@ -7,6 +7,7 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.processor.StateStore;
 import org.geovistory.toolbox.streams.avro.BooleanMap;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
@@ -87,7 +88,7 @@ public class ProjectProfilesTopology {
                     agg.remove(v);
                     return agg;
                 },
-                Named.as(inner.TOPICS.projects_with_enabled_profiles_store),
+                Named.as(inner.TOPICS.projects_with_enabled_profiles),
                 Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
         );
 
@@ -106,6 +107,7 @@ public class ProjectProfilesTopology {
                     return new KeyValue<>(REQUIRED_ONTOME_PROFILES, p);
                 })
                 .toTable(
+                        Named.as(inner.TOPICS.required_profiles),
                         Materialized
                                 .with(Serdes.String(), listSerdes.IntegerList()));
         // 7)
@@ -115,6 +117,10 @@ public class ProjectProfilesTopology {
                 .toTable(Materialized
                         .with(Serdes.Integer(), Serdes.Integer()));
         // 9)
+        Materialized<Integer, List<Integer>, StateStore> m = Materialized.as(inner.TOPICS.projects_with_required_profiles);
+        m.withKeySerde(Serdes.Integer());
+        m.withValueSerde(listSerdes.IntegerList());
+
         // Key: project, Val: required profiles
         KTable<Integer, List<Integer>> projectsWithRequiredProfiles = projectKeys.leftJoin(
                 requiredProfiles,
@@ -123,7 +129,9 @@ public class ProjectProfilesTopology {
                         leftVal == null ?
                                 null : rightVal == null ?
                                 new ArrayList<>() : rightVal,
-                Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
+                Named.as(inner.TOPICS.projects_with_required_profiles),
+                Materialized
+                        .with(Serdes.Integer(), listSerdes.IntegerList())
         );
 
         // 10)
@@ -134,6 +142,7 @@ public class ProjectProfilesTopology {
                     if (value2 != null) value1.addAll(value2);
                     return value1;
                 },
+                Named.as(inner.TOPICS.projects_with_profiles),
                 Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
         );
         // 11
@@ -193,7 +202,11 @@ public class ProjectProfilesTopology {
     public enum inner {
         TOPICS;
         public final String profiles_grouped_by_projects = Utils.tsPrefixed("profiles_grouped_by_projects");
-        public final String projects_with_enabled_profiles_store = Utils.tsPrefixed("projects_with_aggregated_profiles_store");
+        public final String projects_with_enabled_profiles = Utils.tsPrefixed("projects_with_enabled_profiles");
+        public final String projects_with_required_profiles = Utils.tsPrefixed("projects_with_required_profiles");
+        public final String projects_with_profiles = Utils.tsPrefixed("projects_with_profiles");
+        public final String required_profiles = Utils.tsPrefixed("required_profiles");
+
     }
 
     public enum output {
