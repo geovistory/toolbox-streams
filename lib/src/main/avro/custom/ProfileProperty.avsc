@@ -1,0 +1,40 @@
+{
+  "type": "record",
+  "name": "ProfileProperty",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Profile Property Value",
+  "fields": [
+    {
+      "name": "profile_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "domain_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "range_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

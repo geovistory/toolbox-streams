@@ -42,9 +42,17 @@ public class ProjectPropertyTopology {
         /* SOURCE PROCESSORS */
 
         // register api_property
-        KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiProperty = builder
+        KTable<dev.data_for_history.api_property.Key, ProfileProperty> apiProperty = builder
                 .table(input.TOPICS.api_property,
-                        Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue()));
+                        Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue()))
+                .mapValues((readOnlyKey, value) -> ProfileProperty.newBuilder()
+                        .setProfileId(value.getDfhFkProfile())
+                        .setPropertyId(value.getDfhPkProperty())
+                        .setDomainId(value.getDfhPropertyDomain())
+                        .setRangeId(value.getDfhPropertyRange())
+                        .setDeleted$1(Objects.equals(value.getDeleted$1(), "true"))
+                        .build()
+                );
 
         /* STREAM PROCESSORS */
 
@@ -75,47 +83,59 @@ public class ProjectPropertyTopology {
                 Materialized.with(Serdes.Integer(), avroSerdes.BooleanMapValue())
         );
 
-
-        KGroupedTable<Integer, dev.data_for_history.api_property.Value> groupedTable = apiProperty.groupBy(
-                (key, value) -> KeyValue.pair(value.getDfhFkProfile(), value),
-                Grouped.with(
-                        Serdes.Integer(), avroSerdes.DfhApiPropertyValue()
-                ));
+        KGroupedTable<Integer, ProfileProperty> groupedTable = apiProperty
+                .groupBy(
+                        (key, value) -> KeyValue.pair(value.getProfileId(), value),
+                        Grouped.with(
+                                Serdes.Integer(), avroSerdes.ProfilePropertyValue()
+                        ));
         var profileWithProperties = groupedTable.aggregate(
-                ArrayList::new,
+                () -> ProfilePropertyMap.newBuilder().build(),
                 (aggKey, newValue, aggValue) -> {
-                    aggValue.add(newValue);
+                    var key = newValue.getProfileId() + "_" + newValue.getPropertyId() + "_" + newValue.getDomainId() + "_" + newValue.getRangeId();
+                    aggValue.getMap().put(key, newValue);
                     return aggValue;
                 },
                 (aggKey, oldValue, aggValue) -> aggValue,
-                Named.as(inner.TOPICS.profile_with_properties),
-                Materialized.<Integer, List<dev.data_for_history.api_property.Value>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_properties)
+                Named.as(inner.TOPICS.profile_with_properties)
+                ,
+                Materialized.<Integer, ProfilePropertyMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_properties)
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(listSerdes.DfhApiPropertyValueList())
+                        .withValueSerde(avroSerdes.ProfilePropertyMapValue())
         );
 
 
+        // join properties (of a profile) with projects (of a profile) on the profile id
         KTable<Integer, List<ProjectPropertyValue>> projectPropertiesPerProfile = profileWithProperties.join(
                 profileWithProjects,
                 (propertiesOfProfile, projectsOfProfile) -> {
+
+                    // declare list
                     List<ProjectPropertyValue> projectPropertyValues = new ArrayList<>();
-                    propertiesOfProfile.forEach(property -> projectsOfProfile.getItem()
+
+                    // for each property of profile...
+                    propertiesOfProfile.getMap().values().forEach(property -> projectsOfProfile
+                            .getItem()
+
+                            // ... loop over each project of the profile ...
                             .forEach((projectId, projectIsDeleted) -> {
-                                var propertyIsDeleted = Objects.equals(property.getDeleted$1(), "true");
-                                var projectPropertyIsDeleted = projectIsDeleted || propertyIsDeleted;
+                                var projectPropertyIsDeleted = projectIsDeleted || property.getDeleted$1();
+
                                 var v = ProjectPropertyValue.newBuilder()
                                         .setProjectId(Integer.parseInt(projectId))
-                                        .setDomainId(property.getDfhPropertyDomain())
-                                        .setPropertyId(property.getDfhPkProperty())
-                                        .setRangeId(property.getDfhPropertyRange())
+                                        .setDomainId(property.getDomainId())
+                                        .setPropertyId(property.getPropertyId())
+                                        .setRangeId(property.getRangeId())
                                         .setDeleted$1(projectPropertyIsDeleted)
                                         .build();
+
+                                // ... and add one project-property
                                 projectPropertyValues.add(v);
                             }));
                     return projectPropertyValues;
                 },
-                Named.as(inner.TOPICS.project_with_properties),
-                Materialized.<Integer, List<ProjectPropertyValue>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_with_properties)
+                Named.as(inner.TOPICS.profile_with_project_properties),
+                Materialized.<Integer, List<ProjectPropertyValue>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_project_properties)
                         .withKeySerde(Serdes.Integer())
                         .withValueSerde(listSerdes.ProjectPropertyValueList())
         );
@@ -155,11 +175,11 @@ public class ProjectPropertyTopology {
 
     public enum inner {
         TOPICS;
-        public final String profile_with_projects = Utils.tsPrefixed("profile_with_projects");
-        public final String profile_with_properties = Utils.tsPrefixed("profile_with_properties");
-        public final String project_with_properties = Utils.tsPrefixed("project_with_properties");
-        public final String project_properties_stream = Utils.tsPrefixed("project_properties_stream");
-        public final String project_properties_flat = Utils.tsPrefixed("project_properties_flat");
+        public final String profile_with_projects = "profile_with_projects";
+        public final String profile_with_properties = "profile_with_properties";
+        public final String profile_with_project_properties = "profile_with_project_properties";
+        public final String project_properties_stream = "project_properties_stream";
+        public final String project_properties_flat = "project_properties_flat";
     }
 
     public enum output {

@@ -3,10 +3,12 @@ package org.geovistory.toolbox.streams.app;
 
 import io.apicurio.registry.serde.SerdeConfig;
 import io.apicurio.registry.serde.avro.AvroKafkaSerdeConfig;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.AvroSerdes;
+import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -15,6 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +35,8 @@ class ProjectPropertyTopologyTest {
     private TopologyTestDriver testDriver;
     private TestInputTopic<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiPropertyTopic;
     private TestInputTopic<ProjectProfileKey, ProjectProfileValue> projectProfilesTopic;
+
+    private TestOutputTopic<Integer, List<ProjectPropertyValue>> innerTopicProfileWithProjectProperties;
     private TestOutputTopic<ProjectPropertyKey, ProjectPropertyValue> outputTopic;
 
     @BeforeEach
@@ -44,7 +49,8 @@ class ProjectPropertyTopologyTest {
         System.out.println("apicurioRegistryUrl " + apicurioRegistryUrl);
 
         Properties props = new Properties();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
+        var appId = "test";
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
 
@@ -59,6 +65,7 @@ class ProjectPropertyTopologyTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         var avroSerdes = new AvroSerdes();
+        var listSerdes = new ListSerdes();
 
         apiPropertyTopic = testDriver.createInputTopic(
                 ProjectPropertyTopology.input.TOPICS.api_property,
@@ -69,6 +76,11 @@ class ProjectPropertyTopologyTest {
                 ProjectPropertyTopology.input.TOPICS.project_profile,
                 avroSerdes.ProjectProfileKey().serializer(),
                 avroSerdes.ProjectProfileValue().serializer());
+
+        innerTopicProfileWithProjectProperties = testDriver.createOutputTopic(
+                appId + "-" + ProjectPropertyTopology.inner.TOPICS.profile_with_project_properties + "-changelog",
+                Serdes.Integer().deserializer(),
+                listSerdes.ProjectPropertyValueList().deserializer());
 
         outputTopic = testDriver.createOutputTopic(
                 ProjectPropertyTopology.output.TOPICS.project_property,
@@ -321,5 +333,43 @@ class ProjectPropertyTopologyTest {
         assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isTrue();
     }
 
+    @Test
+    void testRedundantProperties() {
+        // add project profile rel
+        var pKey = ProjectProfileKey.newBuilder()
+                .setProjectId(1)
+                .setProfileId(97)
+                .build();
+        var pVal = ProjectProfileValue.newBuilder()
+                .setProjectId(1)
+                .setProfileId(97)
+                .setDeleted$1(false)
+                .build();
+        projectProfilesTopic.pipeInput(pKey, pVal);
+
+        // add property
+        var apKey = new dev.data_for_history.api_property.Key(1);
+        var apVal = dev.data_for_history.api_property.Value.newBuilder()
+                .setPkEntity(1)
+                .setDfhAncestorProperties(new ArrayList<>())
+                .setDfhParentProperties(new ArrayList<>())
+                .setDfhFkProfile(97)
+                .setDfhPropertyDomain(33)
+                .setDfhPkProperty(44)
+                .setDfhPropertyRange(55)
+                .build();
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+        // add redundant property
+        apKey.setPkEntity(2);
+        apKey.setPkEntity(2);
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+        assertThat(innerTopicProfileWithProjectProperties.isEmpty()).isFalse();
+        var outRecords = innerTopicProfileWithProjectProperties.readKeyValuesToMap();
+
+        var profileId = (Integer) 97;
+        assertThat(outRecords.get(profileId).size()).isEqualTo(1);
+    }
 
 }
