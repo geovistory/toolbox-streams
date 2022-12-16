@@ -8,7 +8,7 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.AvroSerdes;
+import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -24,7 +24,7 @@ public class ProjectPropertyTopology {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var avroSerdes = new AvroSerdes();
+        var avroSerdes = new ConfluentAvroSerdes();
         // 1)
         // register project_profile
         var projectProfile = builder
@@ -36,7 +36,7 @@ public class ProjectPropertyTopology {
 
     public static StreamsBuilder addProcessors(StreamsBuilder builder, KStream<ProjectProfileKey, ProjectProfileValue> projectProfile) {
 
-        var avroSerdes = new AvroSerdes();
+        var avroSerdes = new ConfluentAvroSerdes();
         var listSerdes = new ListSerdes();
 
         /* SOURCE PROCESSORS */

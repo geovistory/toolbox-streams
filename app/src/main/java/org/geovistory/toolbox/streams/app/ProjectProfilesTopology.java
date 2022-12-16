@@ -12,7 +12,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.BooleanMap;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
-import org.geovistory.toolbox.streams.lib.AvroSerdes;
+import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
@@ -36,7 +36,7 @@ public class ProjectProfilesTopology {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
         String REQUIRED_ONTOME_PROFILES = "REQUIRED_ONTOME_PROFILES";
-        var avroSerdes = new AvroSerdes();
+        var avroSerdes = new ConfluentAvroSerdes();
         var listSerdes = new ListSerdes();
 
         /* SOURCE PROCESSORS */

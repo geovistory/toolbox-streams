@@ -15,11 +15,15 @@ dependencies {
     // Avro
     implementation "org.apache.avro:avro:1.11.0"
 
+    // Confluent Avro Serdes
+    implementation group: 'io.confluent', name: 'kafka-streams-avro-serde', version: '7.3.0'
+
     // Apicurio Avro Serdes
     implementation group: 'io.apicurio', name: 'apicurio-registry-serdes-avro-serde', version: '2.3.1.Final'
+
 }
 
-task foosToFile(type: JavaExec) {
+tasks.register('foosToFile') {
     mainClass.set "org.geovistory.toolbox.streams.utilities.ProduceFooFile"
     classpath = sourceSets.main.runtimeClasspath
 }

@@ -1,33 +1,30 @@
 package org.geovistory.toolbox.streams.app;
 
 
-import io.apicurio.registry.serde.SerdeConfig;
-import io.apicurio.registry.serde.avro.AvroKafkaSerdeConfig;
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.AvroSerdes;
+import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.util.Lists.newArrayList;
 
-@Testcontainers
 class ProjectProfilesTopologyTest {
 
     // will be shared between test methods
-    @Container
+    /*@Container
     private static final GenericContainer<?> APICURIO_CONTAINER = new GenericContainer<>(DockerImageName.parse("apicurio/apicurio-registry-mem:2.3.1.Final"))
             .withExposedPorts(8080);
+*/
+
+
+    private static final String SCHEMA_REGISTRY_SCOPE = ProjectProfilesTopologyTest.class.getName();
+    private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
 
     private TopologyTestDriver testDriver;
     private TestInputTopic<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> profileProjectTopic;
@@ -38,28 +35,32 @@ class ProjectProfilesTopologyTest {
     @BeforeEach
     void setup() {
 
-        String address = APICURIO_CONTAINER.getHost();
+      /*  String address = APICURIO_CONTAINER.getHost();
         Integer port = APICURIO_CONTAINER.getFirstMappedPort();
         String apicurioRegistryUrl = "http://" + address + ":" + port + "/apis/registry/v2";
         AppConfig.INSTANCE.setApicurioRegistryUrl(apicurioRegistryUrl);
         System.out.println("apicurioRegistryUrl " + apicurioRegistryUrl);
-
+*/
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
+        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
+
+/*
         // URL for Apicurio Registry connection (including basic auth parameters)
         props.put(SerdeConfig.REGISTRY_URL, apicurioRegistryUrl);
 
         // Specify using specific (generated) Avro schema classes
         props.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, "true");
+*/
 
         Topology topology = ProjectProfilesTopology.buildStandalone(new StreamsBuilder());
 
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new AvroSerdes();
+        var avroSerdes = new ConfluentAvroSerdes();
 
         projectTopic = testDriver.createInputTopic(
                 ProjectProfilesTopology.input.TOPICS.project,

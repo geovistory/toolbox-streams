@@ -21,6 +21,9 @@ dependencies {
     // for .env
     implementation 'io.github.cdimascio:dotenv-java:2.2.4'
 
+    // Confluent Avro Serdes
+    implementation group: 'io.confluent', name: 'kafka-streams-avro-serde', version: '7.3.0'
+
     // Apicurio Avro Serdes
     implementation group: 'io.apicurio', name: 'apicurio-registry-serdes-avro-serde', version: '2.3.1.Final'
 }

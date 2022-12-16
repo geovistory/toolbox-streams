@@ -2,14 +2,12 @@ package org.geovistory.toolbox.streams.utilities.consume;
 
 import dev.projects.project.Key;
 import dev.projects.project.Value;
-import io.apicurio.registry.serde.SerdeConfig;
-import io.apicurio.registry.serde.avro.AvroKafkaDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.Serdes;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
 import java.time.Duration;
@@ -19,19 +17,19 @@ import java.util.Properties;
 /**
  * Helper class to consume avro messages from a topic
  */
-public class ConsumeAvroTopic {
+public class ConsumeConfluentAvroTopic {
 
     public static void main(String[] args) {
 
         // Assign topicName to string variable
-        String topicName = "ts_dev_0_1_0_pr_12_2-profile_with_project_properties-changelog";
+        String topicName = "dev.projects.project";
 
         // create instance for properties to access producer configs
         //Properties props = KafkaSeederConfig.getConsumerConfig(topicName);
         Properties config = new Properties();
 
-        // Configure the client with the URL of Apicurio Registry
-        config.putIfAbsent(SerdeConfig.REGISTRY_URL, AppConfig.INSTANCE.getApicurioRegistryUrl());
+        // Configure the client with the URL of Schema Registry
+        config.putIfAbsent("schema.registry.url", AppConfig.INSTANCE.getSchemaRegistryUrl());
 
         // Configure Kafka settings
         config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, AppConfig.INSTANCE.getKafkaBootstrapServers());
@@ -41,13 +39,8 @@ public class ConsumeAvroTopic {
         config.putIfAbsent(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         // Configure the client with the serializer, and the strategy to look up the schema in Apicurio Registry
-        config.putIfAbsent(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-//                AvroKafkaDeserializer.class.getName());
-                Serdes.Integer().deserializer().getClass().getName());
-
-
-        config.putIfAbsent(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                AvroKafkaDeserializer.class.getName());
+        config.putIfAbsent(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
+        config.putIfAbsent(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
 
         try (KafkaConsumer<Key, Value> consumer = new KafkaConsumer
                 <>(config)) {
