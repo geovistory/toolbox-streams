@@ -3,6 +3,7 @@
  */
 package org.geovistory.toolbox.streams.app;
 
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -24,6 +25,9 @@ class App {
         var admin = new Admin();
         admin.createTopic(ProjectProfilesTopology.output.TOPICS.project_profile);
         admin.createTopic(ProjectPropertyTopology.output.TOPICS.project_property);
+
+        // create intermediate topic with large max. message
+        admin.createTopic(ProjectPropertyTopology.inner.TOPICS.profile_with_project_properties, 20971760);
 
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
@@ -54,8 +58,8 @@ class App {
 
         // See this for producer configs:
         // https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#ak-consumers-producer-and-admin-client-configuration-parameters
+        props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "20971760");
         /*
-        props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "5242880");
 
         props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, AvroSerde.class);
