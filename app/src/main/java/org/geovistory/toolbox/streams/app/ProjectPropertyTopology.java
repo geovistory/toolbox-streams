@@ -9,11 +9,8 @@ import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 
@@ -37,7 +34,6 @@ public class ProjectPropertyTopology {
     public static StreamsBuilder addProcessors(StreamsBuilder builder, KStream<ProjectProfileKey, ProjectProfileValue> projectProfile) {
 
         var avroSerdes = new ConfluentAvroSerdes();
-        var listSerdes = new ListSerdes();
 
         /* SOURCE PROCESSORS */
 
@@ -106,12 +102,12 @@ public class ProjectPropertyTopology {
 
 
         // join properties (of a profile) with projects (of a profile) on the profile id
-        KTable<Integer, List<ProjectPropertyValue>> projectPropertiesPerProfile = profileWithProperties.join(
+        KTable<Integer, ProjectPropertyMap> projectPropertiesPerProfile = profileWithProperties.join(
                 profileWithProjects,
                 (propertiesOfProfile, projectsOfProfile) -> {
 
-                    // declare list
-                    List<ProjectPropertyValue> projectPropertyValues = new ArrayList<>();
+                    // instanciate new map
+                    ProjectPropertyMap projectPropertyValues = ProjectPropertyMap.newBuilder().build();
 
                     // for each property of profile...
                     propertiesOfProfile.getMap().values().forEach(property -> projectsOfProfile
@@ -128,16 +124,16 @@ public class ProjectPropertyTopology {
                                         .setRangeId(property.getRangeId())
                                         .setDeleted$1(projectPropertyIsDeleted)
                                         .build();
-
+                                var key = projectId + "_" + property.getDomainId() + "_" + property.getPropertyId() + "_" + property.getRangeId();
                                 // ... and add one project-property
-                                projectPropertyValues.add(v);
+                                projectPropertyValues.getMap().put(key, v);
                             }));
                     return projectPropertyValues;
                 },
                 Named.as(inner.TOPICS.profile_with_project_properties),
-                Materialized.<Integer, List<ProjectPropertyValue>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_project_properties)
+                Materialized.<Integer, ProjectPropertyMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_project_properties)
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(listSerdes.ProjectPropertyValueList())
+                        .withValueSerde(avroSerdes.ProjectPropertyMapValue())
         );
 
 // 3)
@@ -146,7 +142,7 @@ public class ProjectPropertyTopology {
                 .toStream(
                         Named.as(inner.TOPICS.project_properties_stream)
                 )
-                .flatMap((key, value) -> value.stream().map(projectPropertyValue -> {
+                .flatMap((key, value) -> value.getMap().values().stream().map(projectPropertyValue -> {
                                     var k = ProjectPropertyKey.newBuilder()
                                             .setPropertyId(projectPropertyValue.getPropertyId())
                                             .setProjectId(projectPropertyValue.getProjectId())
