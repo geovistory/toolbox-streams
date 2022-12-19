@@ -38,9 +38,13 @@ public class ProjectPropertyTopology {
         /* SOURCE PROCESSORS */
 
         // register api_property
-        KTable<dev.data_for_history.api_property.Key, ProfileProperty> apiProperty = builder
+        var apiPropertyTable = builder
                 .table(input.TOPICS.api_property,
-                        Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue()))
+                        Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue()));
+
+        /* STREAM PROCESSORS */
+        // 2)
+        KTable<dev.data_for_history.api_property.Key, ProfileProperty> apiPropertyProjected = apiPropertyTable
                 .mapValues((readOnlyKey, value) -> ProfileProperty.newBuilder()
                         .setProfileId(value.getDfhFkProfile())
                         .setPropertyId(value.getDfhPkProperty())
@@ -50,49 +54,14 @@ public class ProjectPropertyTopology {
                         .build()
                 );
 
-        /* STREAM PROCESSORS */
-
-// 2)
-        var projectProfileTable = projectProfile
-                .toTable(
-                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
-                );
-/*
-
-        var projectsByProfile = projectProfile
-                .toTable(
-                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
-                )
-                .groupBy((key, value) -> {
-                            */
-/*var v = BooleanMap.newBuilder().build();
-                            v.getItem().put(value.getProjectId() + "", value.getDeleted$1());*//*
-
-                            return KeyValue.pair(key.getProfileId(), value);
-                        },
-                        Grouped.with(Serdes.Integer(), avroSerdes.ProjectProfileValue()));
-*/
-
-       /* var profileWithProjects = projectsByProfile.aggregate(
-                *//* initializer *//*
-                () -> BooleanMap.newBuilder().build(),
-                *//* adder *//*
-                (aggKey, newValue, aggValue) -> {
-                    aggValue.getItem().put(newValue.getProjectId() + "", newValue.getDeleted$1());
-                    return aggValue;
-                },
-                *//* subtractor *//*
-                (aggKey, oldValue, aggValue) -> aggValue,
-                Named.as(inner.TOPICS.profile_with_projects),
-                Materialized.with(Serdes.Integer(), avroSerdes.BooleanMapValue())
-        );*/
-
-        KGroupedTable<Integer, ProfileProperty> propertyByProfileIdGrouped = apiProperty
+        // 3) GroupBy
+        KGroupedTable<Integer, ProfileProperty> propertyByProfileIdGrouped = apiPropertyProjected
                 .groupBy(
                         (key, value) -> KeyValue.pair(value.getProfileId(), value),
                         Grouped.with(
                                 Serdes.Integer(), avroSerdes.ProfilePropertyValue()
                         ));
+        // 3) Aggregate
         var propertyByProfileIdAggregated = propertyByProfileIdGrouped.aggregate(
                 () -> ProfilePropertyMap.newBuilder().build(),
                 (aggKey, newValue, aggValue) -> {
@@ -108,6 +77,14 @@ public class ProjectPropertyTopology {
                         .withValueSerde(avroSerdes.ProfilePropertyMapValue())
         );
 
+
+        // 4)
+        var projectProfileTable = projectProfile
+                .toTable(
+                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
+                );
+
+        // 5)
         var projectPropertiesPerProfile = projectProfileTable.join(
                 propertyByProfileIdAggregated,
                 ProjectProfileValue::getProfileId,
@@ -132,42 +109,6 @@ public class ProjectPropertyTopology {
                     return projectProperyMap;
                 }
         );
-
-/*
-        // join properties (of a profile) with projects (of a profile) on the profile id
-        KTable<Integer, ProjectPropertyMap> projectPropertiesPerProfile = propertyByProfileIdAggregated.join(
-                profileWithProjects,
-                (propertiesOfProfile, projectsOfProfile) -> {
-
-                    // instanciate new map
-                    ProjectPropertyMap projectPropertyValues = ProjectPropertyMap.newBuilder().build();
-
-                    // for each property of profile...
-                    propertiesOfProfile.getMap().values().forEach(property -> projectsOfProfile
-                            .getItem()
-
-                            // ... loop over each project of the profile ...
-                            .forEach((projectId, projectIsDeleted) -> {
-                                var projectPropertyIsDeleted = projectIsDeleted || property.getDeleted$1();
-
-                                var v = ProjectPropertyValue.newBuilder()
-                                        .setProjectId(Integer.parseInt(projectId))
-                                        .setDomainId(property.getDomainId())
-                                        .setPropertyId(property.getPropertyId())
-                                        .setRangeId(property.getRangeId())
-                                        .setDeleted$1(projectPropertyIsDeleted)
-                                        .build();
-                                var key = projectId + "_" + property.getDomainId() + "_" + property.getPropertyId() + "_" + property.getRangeId();
-                                // ... and add one project-property
-                                projectPropertyValues.getMap().put(key, v);
-                            }));
-                    return projectPropertyValues;
-                },
-                Named.as(inner.TOPICS.profile_with_project_properties),
-                Materialized.<Integer, ProjectPropertyMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_project_properties)
-                        .withKeySerde(Serdes.Integer())
-                        .withValueSerde(avroSerdes.ProjectPropertyMapValue())
-        );*/
 
 // 3)
 
