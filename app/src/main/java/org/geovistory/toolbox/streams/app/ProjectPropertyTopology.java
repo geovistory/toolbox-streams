@@ -53,39 +53,47 @@ public class ProjectPropertyTopology {
         /* STREAM PROCESSORS */
 
 // 2)
+        var projectProfileTable = projectProfile
+                .toTable(
+                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
+                );
+/*
 
         var projectsByProfile = projectProfile
                 .toTable(
                         Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
                 )
                 .groupBy((key, value) -> {
-                            /*var v = BooleanMap.newBuilder().build();
-                            v.getItem().put(value.getProjectId() + "", value.getDeleted$1());*/
+                            */
+/*var v = BooleanMap.newBuilder().build();
+                            v.getItem().put(value.getProjectId() + "", value.getDeleted$1());*//*
+
                             return KeyValue.pair(key.getProfileId(), value);
                         },
                         Grouped.with(Serdes.Integer(), avroSerdes.ProjectProfileValue()));
+*/
 
-        var profileWithProjects = projectsByProfile.aggregate(
-                /* initializer */
+       /* var profileWithProjects = projectsByProfile.aggregate(
+                *//* initializer *//*
                 () -> BooleanMap.newBuilder().build(),
-                /* adder */
+                *//* adder *//*
                 (aggKey, newValue, aggValue) -> {
                     aggValue.getItem().put(newValue.getProjectId() + "", newValue.getDeleted$1());
                     return aggValue;
                 },
-                /* subtractor */
+                *//* subtractor *//*
                 (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(inner.TOPICS.profile_with_projects),
                 Materialized.with(Serdes.Integer(), avroSerdes.BooleanMapValue())
-        );
+        );*/
 
-        KGroupedTable<Integer, ProfileProperty> groupedTable = apiProperty
+        KGroupedTable<Integer, ProfileProperty> propertyByProfileIdGrouped = apiProperty
                 .groupBy(
                         (key, value) -> KeyValue.pair(value.getProfileId(), value),
                         Grouped.with(
                                 Serdes.Integer(), avroSerdes.ProfilePropertyValue()
                         ));
-        var profileWithProperties = groupedTable.aggregate(
+        var propertyByProfileIdAggregated = propertyByProfileIdGrouped.aggregate(
                 () -> ProfilePropertyMap.newBuilder().build(),
                 (aggKey, newValue, aggValue) -> {
                     var key = newValue.getProfileId() + "_" + newValue.getPropertyId() + "_" + newValue.getDomainId() + "_" + newValue.getRangeId();
@@ -100,9 +108,34 @@ public class ProjectPropertyTopology {
                         .withValueSerde(avroSerdes.ProfilePropertyMapValue())
         );
 
+        var projectPropertiesPerProfile = projectProfileTable.join(
+                propertyByProfileIdAggregated,
+                ProjectProfileValue::getProfileId,
+                (projectProfileValue, profilePropertyMap) -> {
+                    var projectProperyMap = ProjectPropertyMap.newBuilder().build();
+                    profilePropertyMap.getMap().values()
+                            .forEach(property -> {
+                                var projectId = projectProfileValue.getProjectId();
+                                var projectPropertyIsDeleted = projectProfileValue.getDeleted$1() || property.getDeleted$1();
 
+                                var v = ProjectPropertyValue.newBuilder()
+                                        .setProjectId(projectId)
+                                        .setDomainId(property.getDomainId())
+                                        .setPropertyId(property.getPropertyId())
+                                        .setRangeId(property.getRangeId())
+                                        .setDeleted$1(projectPropertyIsDeleted)
+                                        .build();
+                                var key = projectId + "_" + property.getDomainId() + "_" + property.getPropertyId() + "_" + property.getRangeId();
+                                // ... and add one project-property
+                                projectProperyMap.getMap().put(key, v);
+                            });
+                    return projectProperyMap;
+                }
+        );
+
+/*
         // join properties (of a profile) with projects (of a profile) on the profile id
-        KTable<Integer, ProjectPropertyMap> projectPropertiesPerProfile = profileWithProperties.join(
+        KTable<Integer, ProjectPropertyMap> projectPropertiesPerProfile = propertyByProfileIdAggregated.join(
                 profileWithProjects,
                 (propertiesOfProfile, projectsOfProfile) -> {
 
@@ -134,7 +167,7 @@ public class ProjectPropertyTopology {
                 Materialized.<Integer, ProjectPropertyMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_project_properties)
                         .withKeySerde(Serdes.Integer())
                         .withValueSerde(avroSerdes.ProjectPropertyMapValue())
-        );
+        );*/
 
 // 3)
 
@@ -171,9 +204,7 @@ public class ProjectPropertyTopology {
 
     public enum inner {
         TOPICS;
-        public final String profile_with_projects = "profile_with_projects";
         public final String profile_with_properties = "profile_with_properties";
-        public final String profile_with_project_properties = "profile_with_project_properties";
         public final String project_properties_stream = "project_properties_stream";
         public final String project_properties_flat = "project_properties_flat";
     }
