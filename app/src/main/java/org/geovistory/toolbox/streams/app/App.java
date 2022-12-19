@@ -26,12 +26,6 @@ class App {
         admin.createTopic(ProjectProfilesTopology.output.TOPICS.project_profile);
         admin.createTopic(ProjectPropertyTopology.output.TOPICS.project_property);
 
-        // create intermediate topic with large max. message
-        admin.createTopic(
-                AppConfig.INSTANCE.getApplicationId() + "-" + ProjectPropertyTopology.inner.TOPICS.profile_with_project_properties + "-changelog",
-                20971760
-        );
-
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
 
