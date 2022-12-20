@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.app;
+package org.geovistory.toolbox.streams.topologies;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
@@ -14,7 +14,7 @@ import org.geovistory.toolbox.streams.lib.Utils;
 import java.util.Objects;
 
 
-public class ProjectPropertyTopology {
+public class ProjectProperty {
 
     public static void main(String[] args) {
         System.out.println(buildStandalone(new StreamsBuilder()).describe());
@@ -138,7 +138,7 @@ public class ProjectPropertyTopology {
 
     public enum input {
         TOPICS;
-        public final String project_profile = ProjectProfilesTopology.output.TOPICS.project_profile;
+        public final String project_profile = ProjectProfiles.output.TOPICS.project_profile;
         public final String api_property = Utils.dbPrefixed("data_for_history.api_property");
     }
 

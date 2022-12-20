@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "ProfileClass",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Profile Class Value",
+  "fields": [
+    {
+      "name": "profile_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "class_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

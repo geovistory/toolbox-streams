@@ -22,8 +22,3 @@ dependencies {
     implementation group: 'io.apicurio', name: 'apicurio-registry-serdes-avro-serde', version: '2.3.1.Final'
 
 }
-
-tasks.register('foosToFile') {
-    mainClass.set "org.geovistory.toolbox.streams.utilities.ProduceFooFile"
-    classpath = sourceSets.main.runtimeClasspath
-}

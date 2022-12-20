@@ -1,7 +1,8 @@
-package org.geovistory.toolbox.streams.app;
+package org.geovistory.toolbox.streams.topology;
 
 
 import org.apache.kafka.streams.*;
+import org.geovistory.toolbox.streams.topologies.ProjectProperty;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
 import org.geovistory.toolbox.streams.avro.ProjectPropertyKey;
@@ -19,7 +20,7 @@ import java.util.Properties;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
-class ProjectPropertyTopologyTest {
+class ProjectPropertyTest {
 
 /*
     // will be shared between test methods
@@ -30,7 +31,7 @@ class ProjectPropertyTopologyTest {
 
 */
 
-    private static final String SCHEMA_REGISTRY_SCOPE = ProjectPropertyTopologyTest.class.getName();
+    private static final String SCHEMA_REGISTRY_SCOPE = ProjectPropertyTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
     private TestInputTopic<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiPropertyTopic;
@@ -61,24 +62,24 @@ class ProjectPropertyTopologyTest {
         props.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, "true");
 */
 
-        Topology topology = ProjectPropertyTopology.buildStandalone(new StreamsBuilder());
+        Topology topology = ProjectProperty.buildStandalone(new StreamsBuilder());
 
         testDriver = new TopologyTestDriver(topology, props);
 
         var avroSerdes = new ConfluentAvroSerdes();
 
         apiPropertyTopic = testDriver.createInputTopic(
-                ProjectPropertyTopology.input.TOPICS.api_property,
+                ProjectProperty.input.TOPICS.api_property,
                 avroSerdes.DfhApiPropertyKey().serializer(),
                 avroSerdes.DfhApiPropertyValue().serializer());
 
         projectProfilesTopic = testDriver.createInputTopic(
-                ProjectPropertyTopology.input.TOPICS.project_profile,
+                ProjectProperty.input.TOPICS.project_profile,
                 avroSerdes.ProjectProfileKey().serializer(),
                 avroSerdes.ProjectProfileValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectPropertyTopology.output.TOPICS.project_property,
+                ProjectProperty.output.TOPICS.project_property,
                 avroSerdes.ProjectPropertyKey().deserializer(),
                 avroSerdes.ProjectPropertyValue().deserializer());
     }

@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.app;
+package org.geovistory.toolbox.streams.topologies;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-public class ProjectProfilesTopology {
+public class ProjectProfiles {
 
     public static void main(String[] args) {
         System.out.println(buildStandalone(new StreamsBuilder()).describe());
@@ -32,7 +32,7 @@ public class ProjectProfilesTopology {
         return addProcessors(builder).builder().build();
     }
 
-    public static Returner addProcessors(StreamsBuilder builder) {
+    public static ProjectProfilesReturnValue addProcessors(StreamsBuilder builder) {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
         String REQUIRED_ONTOME_PROFILES = "REQUIRED_ONTOME_PROFILES";
@@ -189,7 +189,7 @@ public class ProjectProfilesTopology {
         projectProfileStream.to(output.TOPICS.project_profile,
                 Produced.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
-        return new Returner(builder, projectProfileStream);
+        return new ProjectProfilesReturnValue(builder, projectProfileStream);
 
     }
 
@@ -217,8 +217,5 @@ public class ProjectProfilesTopology {
         public final String project_profile = Utils.tsPrefixed("project_profile");
     }
 
-    record Returner(StreamsBuilder builder,
-                    KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream) {
-    }
 
 }
