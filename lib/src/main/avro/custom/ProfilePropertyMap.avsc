@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "ProfilePropertyMap",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "ProfilePropertyMap",
+  "fields": [
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values" : "org.geovistory.toolbox.streams.avro.ProfileProperty",
+        "default": {}
+      },
+      "default": {}
+    }
+  ]
+}

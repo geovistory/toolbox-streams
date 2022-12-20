@@ -2,7 +2,7 @@
   "type": "record",
   "name": "ProjectPropertyValue",
   "namespace": "org.geovistory.toolbox.streams.avro",
-  "doc": "Key of project property",
+  "doc": "Value of project property",
   "fields": [
     {
       "name": "project_id",

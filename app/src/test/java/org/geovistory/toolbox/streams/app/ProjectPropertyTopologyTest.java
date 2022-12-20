@@ -1,18 +1,17 @@
 package org.geovistory.toolbox.streams.app;
 
 
-import io.apicurio.registry.serde.SerdeConfig;
-import io.apicurio.registry.serde.avro.AvroKafkaSerdeConfig;
 import org.apache.kafka.streams.*;
-import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
+import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
+import org.geovistory.toolbox.streams.avro.ProjectPropertyKey;
+import org.geovistory.toolbox.streams.avro.ProjectPropertyValue;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.AvroSerdes;
-import org.junit.jupiter.api.*;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
+import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.ArrayList;
 import java.util.Properties;
@@ -22,13 +21,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 class ProjectPropertyTopologyTest {
 
+/*
     // will be shared between test methods
     @Container
     private static final GenericContainer<?> APICURIO_CONTAINER = new GenericContainer<>(DockerImageName.parse("apicurio/apicurio-registry-mem:2.3.1.Final"))
             .withExposedPorts(8080)
             .waitingFor(Wait.forHttp("/"));
 
+*/
 
+    private static final String SCHEMA_REGISTRY_SCOPE = ProjectPropertyTopologyTest.class.getName();
+    private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
     private TestInputTopic<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiPropertyTopic;
     private TestInputTopic<ProjectProfileKey, ProjectProfileValue> projectProfilesTopic;
@@ -37,28 +40,32 @@ class ProjectPropertyTopologyTest {
     @BeforeEach
     void setup() {
 
-        String address = APICURIO_CONTAINER.getHost();
+       /* String address = APICURIO_CONTAINER.getHost();
         Integer port = APICURIO_CONTAINER.getFirstMappedPort();
         String apicurioRegistryUrl = "http://" + address + ":" + port + "/apis/registry/v2";
         AppConfig.INSTANCE.setApicurioRegistryUrl(apicurioRegistryUrl);
-        System.out.println("apicurioRegistryUrl " + apicurioRegistryUrl);
+        System.out.println("apicurioRegistryUrl " + apicurioRegistryUrl);*/
 
         Properties props = new Properties();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
+        var appId = "test";
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
+        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
+/*
         // URL for Apicurio Registry connection (including basic auth parameters)
         props.put(SerdeConfig.REGISTRY_URL, apicurioRegistryUrl);
 
         // Specify using specific (generated) Avro schema classes
         props.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, "true");
+*/
 
         Topology topology = ProjectPropertyTopology.buildStandalone(new StreamsBuilder());
 
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new AvroSerdes();
+        var avroSerdes = new ConfluentAvroSerdes();
 
         apiPropertyTopic = testDriver.createInputTopic(
                 ProjectPropertyTopology.input.TOPICS.api_property,
@@ -321,5 +328,43 @@ class ProjectPropertyTopologyTest {
         assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isTrue();
     }
 
+  /*  @Test
+    void testRedundantProperties() {
+        // add project profile rel
+        var pKey = ProjectProfileKey.newBuilder()
+                .setProjectId(1)
+                .setProfileId(97)
+                .build();
+        var pVal = ProjectProfileValue.newBuilder()
+                .setProjectId(1)
+                .setProfileId(97)
+                .setDeleted$1(false)
+                .build();
+        projectProfilesTopic.pipeInput(pKey, pVal);
 
+        // add property
+        var apKey = new dev.data_for_history.api_property.Key(1);
+        var apVal = dev.data_for_history.api_property.Value.newBuilder()
+                .setPkEntity(1)
+                .setDfhAncestorProperties(new ArrayList<>())
+                .setDfhParentProperties(new ArrayList<>())
+                .setDfhFkProfile(97)
+                .setDfhPropertyDomain(33)
+                .setDfhPkProperty(44)
+                .setDfhPropertyRange(55)
+                .build();
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+        // add redundant property
+        apKey.setPkEntity(2);
+        apVal.setPkEntity(2);
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+        assertThat(innerTopicProfileWithProjectProperties.isEmpty()).isFalse();
+        var outRecords = innerTopicProfileWithProjectProperties.readKeyValuesToMap();
+
+        var profileId = (Integer) 97;
+        assertThat(outRecords.get(profileId).getMap().size()).isEqualTo(1);
+    }
+*/
 }

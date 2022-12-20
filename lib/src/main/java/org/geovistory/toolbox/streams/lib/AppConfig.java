@@ -9,6 +9,9 @@ public enum AppConfig {
     // url of the apicurio registry
     private String apicurioRegistryUrl;
 
+    // url of the confluent schema registry
+    private String schemaRegistryUrl;
+
     // kafka bootstrap servers (comma separated)
     private final String kafkaBootstrapServers;
 
@@ -39,6 +42,15 @@ public enum AppConfig {
                 "http://localhost:8080/apis/registry/v2"
         );
         System.out.println("apicurioRegistryUrl: " + apicurioRegistryUrl);
+
+        this.schemaRegistryUrl = Utils.coalesce(
+                System.getProperty("TS_SCHEMA_REGISTRY_URL"),
+                System.getenv("TS_SCHEMA_REGISTRY_URL"),
+                dotenv.get("TS_SCHEMA_REGISTRY_URL"),
+                "http://localhost:8081/"
+        );
+        System.out.println("schemaRegistryUrl: " + schemaRegistryUrl);
+
 
         this.kafkaBootstrapServers = Utils.coalesce(
                 System.getProperty("TS_BOOTSTRAP_SERVERS"),
@@ -113,4 +125,11 @@ public enum AppConfig {
         return inputTopicPrefix;
     }
 
+    public String getSchemaRegistryUrl() {
+        return schemaRegistryUrl;
+    }
+
+    public void setSchemaRegistryUrl(String schemaRegistryUrl) {
+        this.schemaRegistryUrl = schemaRegistryUrl;
+    }
 }

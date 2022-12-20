@@ -3,14 +3,16 @@ package org.geovistory.toolbox.streams.app;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.BooleanMap;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
-import org.geovistory.toolbox.streams.lib.AvroSerdes;
+import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
@@ -34,7 +36,7 @@ public class ProjectProfilesTopology {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
         String REQUIRED_ONTOME_PROFILES = "REQUIRED_ONTOME_PROFILES";
-        var avroSerdes = new AvroSerdes();
+        var avroSerdes = new ConfluentAvroSerdes();
         var listSerdes = new ListSerdes();
 
         /* SOURCE PROCESSORS */
@@ -87,7 +89,7 @@ public class ProjectProfilesTopology {
                     agg.remove(v);
                     return agg;
                 },
-                Named.as(inner.TOPICS.projects_with_enabled_profiles_store),
+                Named.as(inner.TOPICS.projects_with_enabled_profiles),
                 Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
         );
 
@@ -106,14 +108,17 @@ public class ProjectProfilesTopology {
                     return new KeyValue<>(REQUIRED_ONTOME_PROFILES, p);
                 })
                 .toTable(
+                        Named.as(inner.TOPICS.required_profiles),
                         Materialized
                                 .with(Serdes.String(), listSerdes.IntegerList()));
         // 7)
         // Key: project, Val: project
         KTable<Integer, Integer> projectKeys = projects.map((k, v) -> new KeyValue<>(k.getPkEntity(), v == null ? null : k.getPkEntity()))
                 // 8)
-                .toTable(Materialized
-                        .with(Serdes.Integer(), Serdes.Integer()));
+                .toTable(
+                        Named.as(inner.TOPICS.project_keys),
+                        Materialized
+                                .with(Serdes.Integer(), Serdes.Integer()));
         // 9)
         // Key: project, Val: required profiles
         KTable<Integer, List<Integer>> projectsWithRequiredProfiles = projectKeys.leftJoin(
@@ -123,7 +128,10 @@ public class ProjectProfilesTopology {
                         leftVal == null ?
                                 null : rightVal == null ?
                                 new ArrayList<>() : rightVal,
-                Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
+                Materialized
+                        .<Integer, List<Integer>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.projects_with_required_profiles)
+                        .withKeySerde(Serdes.Integer())
+                        .withValueSerde(listSerdes.IntegerList())
         );
 
         // 10)
@@ -134,6 +142,7 @@ public class ProjectProfilesTopology {
                     if (value2 != null) value1.addAll(value2);
                     return value1;
                 },
+                Named.as(inner.TOPICS.projects_with_profiles),
                 Materialized.with(Serdes.Integer(), listSerdes.IntegerList())
         );
         // 11
@@ -147,7 +156,9 @@ public class ProjectProfilesTopology {
                         }
                 )
                 // 12
-                .groupByKey(Grouped.with(Serdes.Integer(), avroSerdes.BooleanMapValue()))
+                .groupByKey(
+                        Grouped.with(Serdes.Integer(), avroSerdes.BooleanMapValue())
+                )
                 //13
                 .reduce((aggValue, newValue) -> {
                     aggValue.getItem().forEach((profileId, __deleted) -> {
@@ -193,7 +204,12 @@ public class ProjectProfilesTopology {
     public enum inner {
         TOPICS;
         public final String profiles_grouped_by_projects = Utils.tsPrefixed("profiles_grouped_by_projects");
-        public final String projects_with_enabled_profiles_store = Utils.tsPrefixed("projects_with_aggregated_profiles_store");
+        public final String projects_with_enabled_profiles = Utils.tsPrefixed("projects_with_enabled_profiles");
+        public final String projects_with_required_profiles = Utils.tsPrefixed("projects_with_required_profiles");
+        public final String projects_with_profiles = Utils.tsPrefixed("projects_with_profiles");
+        public final String required_profiles = Utils.tsPrefixed("required_profiles");
+        public final String project_keys = Utils.tsPrefixed("project_keys");
+
     }
 
     public enum output {

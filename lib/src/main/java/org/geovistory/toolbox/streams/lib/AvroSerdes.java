@@ -75,7 +75,6 @@ public class AvroSerdes {
     }
 
 
-
     public Serde<ProjectProfileKey> ProjectProfileKey() {
         AvroKafkaSerializer<ProjectProfileKey> serializer = new AvroKafkaSerializer<>();
         AvroKafkaDeserializer<ProjectProfileKey> deserializer = new AvroKafkaDeserializer<>();
@@ -118,4 +117,19 @@ public class AvroSerdes {
         return serdes;
     }
 
+    public Serde<ProfileProperty> ProfilePropertyValue() {
+        AvroKafkaSerializer<ProfileProperty> serializer = new AvroKafkaSerializer<>();
+        AvroKafkaDeserializer<ProfileProperty> deserializer = new AvroKafkaDeserializer<>();
+        Serde<ProfileProperty> serdes = Serdes.serdeFrom(serializer, deserializer);
+        serdes.configure(AvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProfilePropertyMap> ProfilePropertyMapValue() {
+        AvroKafkaSerializer<ProfilePropertyMap> serializer = new AvroKafkaSerializer<>();
+        AvroKafkaDeserializer<ProfilePropertyMap> deserializer = new AvroKafkaDeserializer<>();
+        Serde<ProfilePropertyMap> serdes = Serdes.serdeFrom(serializer, deserializer);
+        serdes.configure(AvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 }

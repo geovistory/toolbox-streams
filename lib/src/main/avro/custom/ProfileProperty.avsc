@@ -1,17 +1,29 @@
 {
   "type": "record",
-  "name": "ProjectProfileValue",
+  "name": "ProfileProperty",
   "namespace": "org.geovistory.toolbox.streams.avro",
-  "doc": "ProjectProfileValue",
+  "doc": "Profile Property Value",
   "fields": [
     {
-      "name": "project_id",
+      "name": "profile_id",
       "type": {
         "type": "int"
       }
     },
     {
-      "name": "profile_id",
+      "name": "domain_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "range_id",
       "type": {
         "type": "int"
       }

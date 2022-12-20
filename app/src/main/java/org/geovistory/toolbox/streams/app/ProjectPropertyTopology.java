@@ -1,17 +1,16 @@
 package org.geovistory.toolbox.streams.app;
 
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.AvroSerdes;
-import org.geovistory.toolbox.streams.lib.ListSerdes;
+import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 
@@ -22,7 +21,7 @@ public class ProjectPropertyTopology {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var avroSerdes = new AvroSerdes();
+        var avroSerdes = new ConfluentAvroSerdes();
         // 1)
         // register project_profile
         var projectProfile = builder
@@ -34,100 +33,102 @@ public class ProjectPropertyTopology {
 
     public static StreamsBuilder addProcessors(StreamsBuilder builder, KStream<ProjectProfileKey, ProjectProfileValue> projectProfile) {
 
-        var avroSerdes = new AvroSerdes();
-        var listSerdes = new ListSerdes();
+        var avroSerdes = new ConfluentAvroSerdes();
 
         /* SOURCE PROCESSORS */
 
         // register api_property
-        KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiProperty = builder
+        var apiPropertyTable = builder
                 .table(input.TOPICS.api_property,
                         Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue()));
 
         /* STREAM PROCESSORS */
+        // 2)
+        KTable<dev.data_for_history.api_property.Key, ProfileProperty> apiPropertyProjected = apiPropertyTable
+                .mapValues((readOnlyKey, value) -> ProfileProperty.newBuilder()
+                        .setProfileId(value.getDfhFkProfile())
+                        .setPropertyId(value.getDfhPkProperty())
+                        .setDomainId(value.getDfhPropertyDomain())
+                        .setRangeId(value.getDfhPropertyRange())
+                        .setDeleted$1(Objects.equals(value.getDeleted$1(), "true"))
+                        .build()
+                );
 
-// 2)
+        // 3) GroupBy
+        KGroupedTable<Integer, ProfileProperty> propertyByProfileIdGrouped = apiPropertyProjected
+                .groupBy(
+                        (key, value) -> KeyValue.pair(value.getProfileId(), value),
+                        Grouped.with(
+                                Serdes.Integer(), avroSerdes.ProfilePropertyValue()
+                        ));
+        // 3) Aggregate
+        var propertyByProfileIdAggregated = propertyByProfileIdGrouped.aggregate(
+                () -> ProfilePropertyMap.newBuilder().build(),
+                (aggKey, newValue, aggValue) -> {
+                    var key = newValue.getProfileId() + "_" + newValue.getPropertyId() + "_" + newValue.getDomainId() + "_" + newValue.getRangeId();
+                    aggValue.getMap().put(key, newValue);
+                    return aggValue;
+                },
+                (aggKey, oldValue, aggValue) -> aggValue,
+                Named.as(inner.TOPICS.profile_with_properties)
+                ,
+                Materialized.<Integer, ProfilePropertyMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_properties)
+                        .withKeySerde(Serdes.Integer())
+                        .withValueSerde(avroSerdes.ProfilePropertyMapValue())
+        );
 
-        var projectsByProfile = projectProfile
+
+        // 4)
+        var projectProfileTable = projectProfile
                 .toTable(
                         Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
-                )
-                .groupBy((key, value) -> {
-                            /*var v = BooleanMap.newBuilder().build();
-                            v.getItem().put(value.getProjectId() + "", value.getDeleted$1());*/
-                            return KeyValue.pair(key.getProfileId(), value);
-                        },
-                        Grouped.with(Serdes.Integer(), avroSerdes.ProjectProfileValue()));
+                );
 
-        var profileWithProjects = projectsByProfile.aggregate(
-                /* initializer */
-                () -> BooleanMap.newBuilder().build(),
-                /* adder */
-                (aggKey, newValue, aggValue) -> {
-                    aggValue.getItem().put(newValue.getProjectId() + "", newValue.getDeleted$1());
-                    return aggValue;
-                },
-                /* subtractor */
-                (aggKey, oldValue, aggValue) -> aggValue,
-                Named.as(inner.TOPICS.profile_with_projects),
-                Materialized.with(Serdes.Integer(), avroSerdes.BooleanMapValue())
-        );
+        // 5)
+        var projectPropertiesPerProfile = projectProfileTable.join(
+                propertyByProfileIdAggregated,
+                ProjectProfileValue::getProfileId,
+                (projectProfileValue, profilePropertyMap) -> {
+                    var projectProperyMap = ProjectPropertyMap.newBuilder().build();
+                    profilePropertyMap.getMap().values()
+                            .forEach(property -> {
+                                var projectId = projectProfileValue.getProjectId();
+                                var projectPropertyIsDeleted = projectProfileValue.getDeleted$1() || property.getDeleted$1();
 
-
-        KGroupedTable<Integer, dev.data_for_history.api_property.Value> groupedTable = apiProperty.groupBy(
-                (key, value) -> KeyValue.pair(value.getDfhFkProfile(), value),
-                Grouped.with(
-                        Serdes.Integer(), avroSerdes.DfhApiPropertyValue()
-                ));
-        var profileWithProperties = groupedTable.aggregate(
-                ArrayList::new,
-                (aggKey, newValue, aggValue) -> {
-                    aggValue.add(newValue);
-                    return aggValue;
-                },
-                (aggKey, oldValue, aggValue) -> aggValue,
-                Named.as(inner.TOPICS.profile_with_properties),
-                Materialized.with(Serdes.Integer(), listSerdes.DfhApiPropertyValueList())
-        );
-
-
-        var projectPropertiesPerProfile = profileWithProperties.join(
-                profileWithProjects,
-                (propertiesOfProfile, projectsOfProfile) -> {
-                    List<ProjectPropertyValue> projectPropertyValues = new ArrayList<>();
-                    propertiesOfProfile.forEach(property -> projectsOfProfile.getItem()
-                            .forEach((projectId, projectIsDeleted) -> {
-                                var propertyIsDeleted = Objects.equals(property.getDeleted$1(), "true");
-                                var projectPropertyIsDeleted = projectIsDeleted || propertyIsDeleted;
                                 var v = ProjectPropertyValue.newBuilder()
-                                        .setProjectId(Integer.parseInt(projectId))
-                                        .setDomainId(property.getDfhPropertyDomain())
-                                        .setPropertyId(property.getDfhPkProperty())
-                                        .setRangeId(property.getDfhPropertyRange())
+                                        .setProjectId(projectId)
+                                        .setDomainId(property.getDomainId())
+                                        .setPropertyId(property.getPropertyId())
+                                        .setRangeId(property.getRangeId())
                                         .setDeleted$1(projectPropertyIsDeleted)
                                         .build();
-                                projectPropertyValues.add(v);
-                            }));
-                    return projectPropertyValues;
-                },
-                Materialized.with(Serdes.Integer(), listSerdes.ProjectPropertyValueList())
+                                var key = projectId + "_" + property.getDomainId() + "_" + property.getPropertyId() + "_" + property.getRangeId();
+                                // ... and add one project-property
+                                projectProperyMap.getMap().put(key, v);
+                            });
+                    return projectProperyMap;
+                }
         );
 
 // 3)
 
-        var projectPropertyStream = projectPropertiesPerProfile
-                .toStream()
-                .flatMap((key, value) -> value.stream().map(projectPropertyValue -> {
-                    var k = ProjectPropertyKey.newBuilder()
-                            .setPropertyId(projectPropertyValue.getPropertyId())
-                            .setProjectId(projectPropertyValue.getProjectId())
-                            .setDomainId(projectPropertyValue.getDomainId())
-                            .setRangeId(projectPropertyValue.getRangeId())
-                            .build();
-                    return KeyValue.pair(k, projectPropertyValue);
-                }).toList());
+        var projectPropertyFlat = projectPropertiesPerProfile
+                .toStream(
+                        Named.as(inner.TOPICS.project_properties_stream)
+                )
+                .flatMap((key, value) -> value.getMap().values().stream().map(projectPropertyValue -> {
+                                    var k = ProjectPropertyKey.newBuilder()
+                                            .setPropertyId(projectPropertyValue.getPropertyId())
+                                            .setProjectId(projectPropertyValue.getProjectId())
+                                            .setDomainId(projectPropertyValue.getDomainId())
+                                            .setRangeId(projectPropertyValue.getRangeId())
+                                            .build();
+                                    return KeyValue.pair(k, projectPropertyValue);
+                                }
+                        ).toList(),
+                        Named.as(inner.TOPICS.project_properties_flat));
 
-        projectPropertyStream.to(output.TOPICS.project_property,
+        projectPropertyFlat.to(output.TOPICS.project_property,
                 Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()));
 
         return builder;
@@ -144,8 +145,9 @@ public class ProjectPropertyTopology {
 
     public enum inner {
         TOPICS;
-        public final String profile_with_projects = Utils.tsPrefixed("profile_with_projects");
-        public final String profile_with_properties = Utils.tsPrefixed("profile_with_properties");
+        public final String profile_with_properties = "profile_with_properties";
+        public final String project_properties_stream = "project_properties_stream";
+        public final String project_properties_flat = "project_properties_flat";
     }
 
     public enum output {

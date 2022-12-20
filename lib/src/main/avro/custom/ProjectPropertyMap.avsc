@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "ProjectPropertyMap",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "ProjectPropertyMap",
+  "fields": [
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values" : "org.geovistory.toolbox.streams.avro.ProjectPropertyValue",
+        "default": {}
+      },
+      "default": {}
+    }
+  ]
+}
