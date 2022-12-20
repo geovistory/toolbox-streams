@@ -9,6 +9,8 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.topologies.ProjectProfiles;
+import org.geovistory.toolbox.streams.topologies.ProjectProperty;
 
 import java.util.Properties;
 
@@ -16,15 +18,16 @@ class App {
     public static void main(String[] args) {
 
         StreamsBuilder builder = new StreamsBuilder();
-        var a = ProjectProfilesTopology.addProcessors(builder);
-        var b = ProjectPropertyTopology.addProcessors(a.builder(), a.projectProfileStream());
+        var a = ProjectProfiles.addProcessors(builder);
+
+        var b = ProjectProperty.addProcessors( a.builder(), a.projectProfileStream());
         var topology = b.build();
         Properties props = getConfig();
 
         // create the output topics
         var admin = new Admin();
-        admin.createTopic(ProjectProfilesTopology.output.TOPICS.project_profile);
-        admin.createTopic(ProjectPropertyTopology.output.TOPICS.project_property);
+        admin.createTopic(ProjectProfiles.output.TOPICS.project_profile);
+        admin.createTopic(ProjectProperty.output.TOPICS.project_property);
 
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());

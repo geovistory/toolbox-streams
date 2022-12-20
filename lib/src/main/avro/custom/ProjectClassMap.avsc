@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "ProjectClassMap",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "ProjectClassMap",
+  "fields": [
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values" : "org.geovistory.toolbox.streams.avro.ProjectClassValue",
+        "default": {}
+      },
+      "default": {}
+    }
+  ]
+}

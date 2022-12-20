@@ -32,6 +32,18 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<dev.data_for_history.api_class.Key> DfhApiClassKey() {
+        Serde<dev.data_for_history.api_class.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.data_for_history.api_class.Value> DfhApiClassValue() {
+        Serde<dev.data_for_history.api_class.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
     public Serde<dev.projects.project.Key> ProProjectKey() {
         Serde<dev.projects.project.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
@@ -63,6 +75,12 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<BooleanMap> BooleanMapValue() {
+        Serde<BooleanMap> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
     public Serde<ProjectProfileValue> ProjectProfileValue() {
         Serde<ProjectProfileValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
@@ -83,12 +101,6 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<BooleanMap> BooleanMapValue() {
-        Serde<BooleanMap> serdes = new SpecificAvroSerde<>();
-        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
-        return serdes;
-    }
-
     public Serde<ProfileProperty> ProfilePropertyValue() {
         Serde<ProfileProperty> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
@@ -101,9 +113,31 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<ProjectPropertyMap> ProjectPropertyMapValue() {
-        Serde<ProjectPropertyMap> serdes = new SpecificAvroSerde<>();
+    public Serde<ProjectClassKey> ProjectClassKey() {
+        Serde<ProjectClassKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+
+        return serdes;
+    }
+
+    public Serde<ProjectClassValue> ProjectClassValue() {
+        Serde<ProjectClassValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+
+        return serdes;
+    }
+
+    public Serde<ProfileClass> ProfileClassValue() {
+        Serde<ProfileClass> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
+    public Serde<ProfileClassMap> ProfileClassMapValue() {
+        Serde<ProfileClassMap> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+
 }
