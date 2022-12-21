@@ -8,9 +8,7 @@ import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.kstream.Consumed;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.topologies.*;
 
 import java.util.Properties;
@@ -20,34 +18,42 @@ class App {
 
         StreamsBuilder builder = new StreamsBuilder();
 
-        var avroSerdes = new ConfluentAvroSerdes();
+        var inputTopics = new RegisterInputTopic(builder);
 
-        // register input topics
-        var apiClassTable = builder
-                .table(SourceTopics.api_class.getName(),
-                        Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue()));
+        // register input topics as KTables
+        var proProjectTable = inputTopics.proProjectTable();
+        var proTextPropertyTable = inputTopics.proTextPropertyTable();
+        var proProfileProjRelTable = inputTopics.proProfileProjRelTable();
+        var dfhApiClassTable = inputTopics.dfhApiClassTable();
+        var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
+        var sysConfigTable = inputTopics.sysConfigTable();
 
 
         // add processors
-        var projectProfiles = ProjectProfiles.addProcessors(builder);
+        var projectProfiles = ProjectProfiles.addProcessors(builder,
+                proProjectTable,
+                proProfileProjRelTable,
+                sysConfigTable);
 
-        var projectProperty = ProjectProperty.addProcessors(projectProfiles.builder(), projectProfiles.projectProfileStream());
+        var projectProperty = ProjectProperty.addProcessors(builder,
+                dfhApiPropertyTable,
+                projectProfiles.projectProfileStream());
 
         var projectClass = ProjectClass.addProcessors(
                 projectProperty,
                 projectProfiles.projectProfileStream(),
-                apiClassTable
+                dfhApiClassTable
         );
 
-        var ontomeClassLabel = OntomeClassLabel.addProcessors(
-                projectClass.builder(),
-                apiClassTable
+        var ontomeClassLabel = OntomeClassLabel.addProcessors(builder,
+                dfhApiClassTable
         );
 
-        var geovClassLabel = GeovClassLabel.addProcessors(ontomeClassLabel.builder());
+        var geovClassLabel = GeovClassLabel.addProcessors(builder,
+                proTextPropertyTable
+        );
 
-        var projectClassLabel = ProjectClassLabel.addProcessors(
-                geovClassLabel.builder(),
+        var projectClassLabel = ProjectClassLabel.addProcessors(builder,
                 ontomeClassLabel.ontomeClassLabelStream(),
                 geovClassLabel.geovClassLabelStream(),
                 projectClass.projectClassStream()

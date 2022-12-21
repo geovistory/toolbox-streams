@@ -7,7 +7,9 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.geovistory.toolbox.streams.app.SourceTopics;
+import org.geovistory.toolbox.streams.app.DbTopicNames;
+import org.geovistory.toolbox.streams.app.RegisterInputTopic;
+import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
@@ -22,16 +24,13 @@ public class ProjectClass {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var avroSerdes = new ConfluentAvroSerdes();
-        // 1)
-        /* SOURCE PROCESSORS */
-        var projectProfileStream = builder
-                .stream(input.TOPICS.project_profile,
-                        Consumed.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
-        var apiClassTable = builder
-                .table(input.TOPICS.api_class,
-                        Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue()));
+        var registerInputTopic = new RegisterInputTopic(builder);
+        var registerOutputTopic = new RegisterOutputTopic(builder);
+
+
+        var apiClassTable = registerInputTopic.dfhApiClassTable();
+        var projectProfileStream = registerOutputTopic.projectProfileStream();
 
         return addProcessors(builder, projectProfileStream, apiClassTable).builder().build();
     }
@@ -135,7 +134,7 @@ public class ProjectClass {
     public enum input {
         TOPICS;
         public final String project_profile = ProjectProfiles.output.TOPICS.project_profile;
-        public final String api_class = SourceTopics.api_class.getName();
+        public final String api_class = DbTopicNames.dfh_api_class.getName();
     }
 
 

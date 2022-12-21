@@ -7,6 +7,9 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.geovistory.toolbox.streams.app.DbTopicNames;
+import org.geovistory.toolbox.streams.app.RegisterInputTopic;
+import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
@@ -21,30 +24,27 @@ public class ProjectProperty {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var avroSerdes = new ConfluentAvroSerdes();
-        // 1)
-        // register project_profile
-        var projectProfile = builder
-                .stream(input.TOPICS.project_profile,
-                        Consumed.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
+        var registerInputTopic = new RegisterInputTopic(builder);
+        var registerOutputTopic = new RegisterOutputTopic(builder);
 
-        return addProcessors(builder, projectProfile).build();
+        return addProcessors(
+                builder,
+                registerInputTopic.dfhApiPropertyTable(),
+                registerOutputTopic.projectProfileStream()
+        ).build();
     }
 
-    public static StreamsBuilder addProcessors(StreamsBuilder builder, KStream<ProjectProfileKey, ProjectProfileValue> projectProfile) {
+    public static StreamsBuilder addProcessors(
+            StreamsBuilder builder,
+            KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyTable,
+            KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
-        /* SOURCE PROCESSORS */
-
-        // register api_property
-        var apiPropertyTable = builder
-                .table(input.TOPICS.api_property,
-                        Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue()));
 
         /* STREAM PROCESSORS */
         // 2)
-        KTable<dev.data_for_history.api_property.Key, ProfileProperty> apiPropertyProjected = apiPropertyTable
+        KTable<dev.data_for_history.api_property.Key, ProfileProperty> apiPropertyProjected = dfhApiPropertyTable
                 .mapValues((readOnlyKey, value) -> ProfileProperty.newBuilder()
                         .setProfileId(value.getDfhFkProfile())
                         .setPropertyId(value.getDfhPkProperty())
@@ -79,7 +79,7 @@ public class ProjectProperty {
 
 
         // 4)
-        var projectProfileTable = projectProfile
+        var projectProfileTable = projectProfileStream
                 .toTable(
                         Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
                 );
@@ -139,7 +139,7 @@ public class ProjectProperty {
     public enum input {
         TOPICS;
         public final String project_profile = ProjectProfiles.output.TOPICS.project_profile;
-        public final String api_property = Utils.dbPrefixed("data_for_history.api_property");
+        public final String api_property = DbTopicNames.dfh_api_property.getName();
     }
 
 

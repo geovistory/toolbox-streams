@@ -5,10 +5,10 @@ import dev.data_for_history.api_class.Value;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Produced;
-import org.geovistory.toolbox.streams.app.SourceTopics;
+import org.geovistory.toolbox.streams.app.DbTopicNames;
+import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.avro.OntomeClassLabelKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassLabelValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -25,13 +25,13 @@ public class OntomeClassLabel {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var avroSerdes = new ConfluentAvroSerdes();
 
-        var apiClassTable = builder
-                .table(SourceTopics.api_class.getName(),
-                        Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue()));
+        var register = new RegisterInputTopic(builder);
+
+        var apiClassTable = register.dfhApiClassTable();
 
         return addProcessors(builder, apiClassTable).builder().build();
+
     }
 
     public static OntomeClassLabelReturnValue addProcessors(
@@ -83,7 +83,7 @@ public class OntomeClassLabel {
 
     public enum input {
         TOPICS;
-        public final String api_class = SourceTopics.api_class.getName();
+        public final String api_class = DbTopicNames.dfh_api_class.getName();
 
 
     }

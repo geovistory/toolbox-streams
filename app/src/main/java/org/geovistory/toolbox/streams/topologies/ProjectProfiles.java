@@ -9,6 +9,8 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.geovistory.toolbox.streams.app.DbTopicNames;
+import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.avro.BooleanMap;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
@@ -29,39 +31,36 @@ public class ProjectProfiles {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        return addProcessors(builder).builder().build();
+        var registerInputTopic = new RegisterInputTopic(builder);
+        var proProjectTable = registerInputTopic.proProjectTable();
+        var proProfileProjRelTable = registerInputTopic.proProfileProjRelTable();
+       var sysConfigTable = registerInputTopic.sysConfigTable();
+        return addProcessors(
+                builder,
+                proProjectTable,
+                proProfileProjRelTable,
+                sysConfigTable
+        ).builder().build();
     }
 
-    public static ProjectProfilesReturnValue addProcessors(StreamsBuilder builder) {
+    public static ProjectProfilesReturnValue addProcessors(
+            StreamsBuilder builder,
+            KTable<dev.projects.project.Key, dev.projects.project.Value> proProjects,
+            KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> proDfhProfileProjRels,
+            KTable<dev.system.config.Key, dev.system.config.Value> sysConfig
+    ) {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
         String REQUIRED_ONTOME_PROFILES = "REQUIRED_ONTOME_PROFILES";
         var avroSerdes = new ConfluentAvroSerdes();
         var listSerdes = new ListSerdes();
 
-        /* SOURCE PROCESSORS */
-
-        // 1)
-        // register projects
-        KStream<dev.projects.project.Key, dev.projects.project.Value> projects = builder
-                .stream(input.TOPICS.project,
-                        Consumed.with(avroSerdes.ProProjectKey(), avroSerdes.ProProjectValue()));
-
-        // register dfh_profile_proj_rel
-        KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> dfhProfileProjRels = builder
-                .table(input.TOPICS.dfh_profile_proj_rel,
-                        Consumed.with(avroSerdes.ProProfileProjRelKey(), avroSerdes.ProProfileProjRelValue()));
-
-        // register config
-        KStream<dev.system.config.Key, dev.system.config.Value> config = builder
-                .stream(input.TOPICS.config,
-                        Consumed.with(avroSerdes.SysConfigKey(), avroSerdes.SysConfigValue()));
 
         /* STREAM PROCESSORS */
 
 
         // 2)
-        var profilesByProject = dfhProfileProjRels
+        var profilesByProject = proDfhProfileProjRels
                 // Filter: only enabled profiles project relations
                 .filter((k, v) -> v.getEnabled() && !Objects.equals(v.getDeleted$1(), "true"))
                 // 3)
@@ -95,7 +94,8 @@ public class ProjectProfiles {
 
         // 5)
         // Key: constant "REQUIRED_ONTOME_PROFILES", Value: List of profile ids
-        KTable<String, List<Integer>> requiredProfiles = config
+        KTable<String, List<Integer>> requiredProfiles = sysConfig
+                .toStream()
                 .filter(((k, v) -> v.getKey().equals(SYS_CONFIG)))
                 // 6)
                 .map((k, v) -> {
@@ -113,7 +113,9 @@ public class ProjectProfiles {
                                 .with(Serdes.String(), listSerdes.IntegerList()));
         // 7)
         // Key: project, Val: project
-        KTable<Integer, Integer> projectKeys = projects.map((k, v) -> new KeyValue<>(k.getPkEntity(), v == null ? null : k.getPkEntity()))
+        KTable<Integer, Integer> projectKeys = proProjects
+                .toStream()
+                .map((k, v) -> new KeyValue<>(k.getPkEntity(), v == null ? null : k.getPkEntity()))
                 // 8)
                 .toTable(
                         Named.as(inner.TOPICS.project_keys),
@@ -195,9 +197,9 @@ public class ProjectProfiles {
 
     public enum input {
         TOPICS;
-        public final String dfh_profile_proj_rel = Utils.dbPrefixed("projects.dfh_profile_proj_rel");
-        public final String project = Utils.dbPrefixed("projects.project");
-        public final String config = Utils.dbPrefixed("system.config");
+        public final String dfh_profile_proj_rel = DbTopicNames.pro_dfh_profile_proj_rel.getName();
+        public final String project = DbTopicNames.pro_projects.getName();
+        public final String config = DbTopicNames.sys_config.getName();
     }
 
 

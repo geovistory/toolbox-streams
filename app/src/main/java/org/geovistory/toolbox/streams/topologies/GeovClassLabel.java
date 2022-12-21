@@ -4,6 +4,8 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.geovistory.toolbox.streams.app.DbTopicNames;
+import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
@@ -20,21 +22,25 @@ public class GeovClassLabel {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
+        var register = new RegisterInputTopic(builder);
 
-        return addProcessors(builder).builder().build();
+        return addProcessors(
+                builder,
+                register.proTextPropertyTable()
+        ).builder().build();
     }
 
-    public static GeovClassLabelReturnValue addProcessors(StreamsBuilder builder) {
+    public static GeovClassLabelReturnValue addProcessors(
+            StreamsBuilder builder,
+            KTable<dev.projects.text_property.Key, dev.projects.text_property.Value> proTextPropertyTable
+    ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
         /* SOURCE PROCESSORS */
 
         // 1) register text_property
-        var textPropertyStream = builder
-                .stream(input.TOPICS.text_property,
-                        Consumed.with(avroSerdes.ProTextPropertyKey(), avroSerdes.ProTextPropertyValue()));
-
+        var textPropertyStream = proTextPropertyTable.toStream();
 
         /* STREAM PROCESSORS */
 
@@ -79,7 +85,7 @@ public class GeovClassLabel {
 
     public enum input {
         TOPICS;
-        public final String text_property = Utils.dbPrefixed("projects.text_property");
+        public final String text_property = DbTopicNames.pro_text_property.getName();
 
     }
 
