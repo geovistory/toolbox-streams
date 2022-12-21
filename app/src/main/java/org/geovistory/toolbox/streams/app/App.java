@@ -54,6 +54,7 @@ class App {
         );
 
         var projectClassLabel = ProjectClassLabel.addProcessors(builder,
+                proProjectTable,
                 ontomeClassLabel.ontomeClassLabelStream(),
                 geovClassLabel.geovClassLabelStream(),
                 projectClass.projectClassStream()

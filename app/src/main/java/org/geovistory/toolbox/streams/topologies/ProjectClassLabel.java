@@ -6,6 +6,9 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.geovistory.toolbox.streams.app.DbTopicNames;
+import org.geovistory.toolbox.streams.app.RegisterInputTopic;
+import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
@@ -22,23 +25,15 @@ public class ProjectClassLabel {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var avroSerdes = new ConfluentAvroSerdes();
-        // 1)
-        var ontomeClassLabelStream = builder
-                .stream(input.TOPICS.ontome_class_label,
-                        Consumed.with(avroSerdes.OntomeClassLabelKey(), avroSerdes.OntomeClassLabelValue()));
-        var geovClassLabelStream = builder
-                .stream(input.TOPICS.geov_class_label,
-                        Consumed.with(avroSerdes.GeovClassLabelKey(), avroSerdes.GeovClassLabelValue()));
-        var projectClassStream = builder
-                .stream(input.TOPICS.project_class,
-                        Consumed.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue()));
+        var registerInputTopic = new RegisterInputTopic(builder);
+        var registerOutputTopic = new RegisterOutputTopic(builder);
 
         return addProcessors(
                 builder,
-                ontomeClassLabelStream,
-                geovClassLabelStream,
-                projectClassStream
+                registerInputTopic.proProjectTable(),
+                registerOutputTopic.ontomeClassLabelStream(),
+                registerOutputTopic.geovClassLabelStream(),
+                registerOutputTopic.projectClassStream()
         ).build();
     }
 
@@ -46,6 +41,7 @@ public class ProjectClassLabel {
 
     public static StreamsBuilder addProcessors(
             StreamsBuilder builder,
+            KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable,
             KStream<OntomeClassLabelKey, OntomeClassLabelValue> ontomeClassLabelStream,
             KStream<GeovClassLabelKey, GeovClassLabelValue> geovClassLabelStream,
             KStream<ProjectClassKey, ProjectClassValue> projectClassStream
@@ -54,11 +50,6 @@ public class ProjectClassLabel {
         var avroSerdes = new ConfluentAvroSerdes();
 
         /* SOURCE PROCESSORS */
-
-        // register project
-        var projectTable = builder
-                .table(input.TOPICS.project,
-                        Consumed.with(avroSerdes.ProProjectKey(), avroSerdes.ProProjectValue()));
         var projectClassTable = projectClassStream.toTable(
                 Named.as("project_class_table"),
                 Materialized.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
@@ -75,7 +66,7 @@ public class ProjectClassLabel {
         /* STREAM PROCESSORS */
         // 2)
         var projectClassLanguage = projectClassTable.join(
-                projectTable,
+                proProjectTable,
                 projectClassValue -> dev.projects.project.Key.newBuilder().setPkEntity(projectClassValue.getProjectId()).build(),
                 (value1, value2) -> ProjectClassLanguageValue.newBuilder()
                         .setClassId(value1.getClassId())
@@ -360,7 +351,7 @@ public class ProjectClassLabel {
         public final String geov_class_label = GeovClassLabel.output.TOPICS.geov_class_label;
         public final String project_class = ProjectClass.output.TOPICS.project_class;
 
-        public final String project = Utils.dbPrefixed("projects.project");
+        public final String project = DbTopicNames.pro_projects.getName();
     }
 
 
