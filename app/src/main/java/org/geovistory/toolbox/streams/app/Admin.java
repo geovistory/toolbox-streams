@@ -13,24 +13,11 @@ import java.util.Properties;
 
 public class Admin {
 
-    public String createTopic(String topicName){
-        try(AdminClient adminClient = AdminClient.create(getAdminConfig())){
-            NewTopic topic = new NewTopic(topicName, 1, (short) 1);
+    public String createTopic(String topicName, Integer numPartitions) {
+        try (AdminClient adminClient = AdminClient.create(getAdminConfig())) {
+            NewTopic topic = new NewTopic(topicName, numPartitions, (short) 1);
             topic.configs(getTopicConfig());
 
-            adminClient.createTopics(Collections.singletonList(topic));
-
-        }
-        return topicName;
-    }
-    public String createTopic(String topicName, Integer maxMessageBytes){
-        try(AdminClient adminClient = AdminClient.create(getAdminConfig())){
-            NewTopic topic = new NewTopic(topicName, 1, (short) 1);
-            Map<String, String> configMap = new HashMap<>();
-            configMap.put(TopicConfig.RETENTION_MS_CONFIG, "-1");
-            configMap.put(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_COMPACT);
-            configMap.put(TopicConfig.MAX_MESSAGE_BYTES_CONFIG, maxMessageBytes.toString());
-            topic.configs(configMap);
             adminClient.createTopics(Collections.singletonList(topic));
 
         }

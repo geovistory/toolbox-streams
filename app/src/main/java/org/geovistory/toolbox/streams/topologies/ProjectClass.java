@@ -7,6 +7,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.geovistory.toolbox.streams.app.SourceTopics;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
@@ -23,24 +24,25 @@ public class ProjectClass {
     public static Topology buildStandalone(StreamsBuilder builder) {
         var avroSerdes = new ConfluentAvroSerdes();
         // 1)
-        // register project_profile
-        var projectProfile = builder
+        /* SOURCE PROCESSORS */
+        var projectProfileStream = builder
                 .stream(input.TOPICS.project_profile,
                         Consumed.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
-        return addProcessors(builder, projectProfile).builder().build();
-    }
-
-    public static ProjectClassReturnValue addProcessors(StreamsBuilder builder, KStream<ProjectProfileKey, ProjectProfileValue> projectProfile) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
-        /* SOURCE PROCESSORS */
-
-        // register api_class
         var apiClassTable = builder
                 .table(input.TOPICS.api_class,
                         Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue()));
+
+        return addProcessors(builder, projectProfileStream, apiClassTable).builder().build();
+    }
+
+    public static ProjectClassReturnValue addProcessors(
+            StreamsBuilder builder,
+            KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream,
+            KTable<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> apiClassTable
+    ) {
+
+        var avroSerdes = new ConfluentAvroSerdes();
 
         /* STREAM PROCESSORS */
         // 2)
@@ -77,7 +79,7 @@ public class ProjectClass {
 
 
         // 4)
-        var projectProfileTable = projectProfile
+        var projectProfileTable = projectProfileStream
                 .toTable(
                         Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
                 );
@@ -133,7 +135,7 @@ public class ProjectClass {
     public enum input {
         TOPICS;
         public final String project_profile = ProjectProfiles.output.TOPICS.project_profile;
-        public final String api_class = Utils.dbPrefixed("data_for_history.api_class");
+        public final String api_class = SourceTopics.api_class.getName();
     }
 
 
