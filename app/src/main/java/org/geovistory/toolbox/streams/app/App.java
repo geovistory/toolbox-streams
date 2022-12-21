@@ -9,9 +9,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.topologies.ProjectClass;
-import org.geovistory.toolbox.streams.topologies.ProjectProfiles;
-import org.geovistory.toolbox.streams.topologies.ProjectProperty;
+import org.geovistory.toolbox.streams.topologies.*;
 
 import java.util.Properties;
 
@@ -26,7 +24,18 @@ class App {
 
         var projectClass = ProjectClass.addProcessors(projectProperty, projectProfiles.projectProfileStream());
 
-        var topology = projectClass.build();
+        var ontomeClassLabel = OntomeClassLabel.addProcessors(projectClass.builder());
+
+        var geovClassLabel = GeovClassLabel.addProcessors(ontomeClassLabel.builder());
+
+        var projectClassLabel = ProjectClassLabel.addProcessors(
+                geovClassLabel.builder(),
+                ontomeClassLabel.ontomeClassLabelStream(),
+                geovClassLabel.geovClassLabelStream(),
+                projectClass.projectClassStream()
+        );
+
+        var topology = projectClassLabel.build();
 
         Properties props = getConfig();
 

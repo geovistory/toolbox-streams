@@ -28,10 +28,10 @@ public class ProjectClass {
                 .stream(input.TOPICS.project_profile,
                         Consumed.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue()));
 
-        return addProcessors(builder, projectProfile).build();
+        return addProcessors(builder, projectProfile).builder().build();
     }
 
-    public static StreamsBuilder addProcessors(StreamsBuilder builder, KStream<ProjectProfileKey, ProjectProfileValue> projectProfile) {
+    public static ProjectClassReturnValue addProcessors(StreamsBuilder builder, KStream<ProjectProfileKey, ProjectProfileValue> projectProfile) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
@@ -98,7 +98,7 @@ public class ProjectClass {
                                         .setClassId(apiClass.getClassId())
                                         .setDeleted$1(projectClassIsDeleted)
                                         .build();
-                                var key = projectId +  "_" + apiClass.getClassId();
+                                var key = projectId + "_" + apiClass.getClassId();
                                 // ... and add one project-class
                                 projectProperyMap.getMap().put(key, v);
                             });
@@ -125,7 +125,7 @@ public class ProjectClass {
         projectClassFlat.to(output.TOPICS.project_class,
                 Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue()));
 
-        return builder;
+        return new ProjectClassReturnValue(builder, projectClassFlat);
 
     }
 

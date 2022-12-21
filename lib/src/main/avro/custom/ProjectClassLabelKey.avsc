@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "ProjectClassLabelKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of project class label",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    }
+  ]
+}
