@@ -39,7 +39,10 @@ class App {
                 apiClassTable
         );
 
-        var ontomeClassLabel = OntomeClassLabel.addProcessors(projectClass.builder());
+        var ontomeClassLabel = OntomeClassLabel.addProcessors(
+                projectClass.builder(),
+                apiClassTable
+        );
 
         var geovClassLabel = GeovClassLabel.addProcessors(ontomeClassLabel.builder());
 
@@ -107,7 +110,6 @@ class App {
         props.put(SerdeConfig.AUTO_REGISTER_ARTIFACT, true);*/
         return props;
     }
-
 
 
 }

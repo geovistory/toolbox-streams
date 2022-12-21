@@ -1,10 +1,14 @@
 package org.geovistory.toolbox.streams.topologies;
 
+import dev.data_for_history.api_class.Key;
+import dev.data_for_history.api_class.Value;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Produced;
+import org.geovistory.toolbox.streams.app.SourceTopics;
 import org.geovistory.toolbox.streams.avro.OntomeClassLabelKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassLabelValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -21,21 +25,26 @@ public class OntomeClassLabel {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
+        var avroSerdes = new ConfluentAvroSerdes();
 
-        return addProcessors(builder).builder().build();
+        var apiClassTable = builder
+                .table(SourceTopics.api_class.getName(),
+                        Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue()));
+
+        return addProcessors(builder, apiClassTable).builder().build();
     }
 
-    public static OntomeClassLabelReturnValue addProcessors(StreamsBuilder builder) {
+    public static OntomeClassLabelReturnValue addProcessors(
+            StreamsBuilder builder,
+            KTable<Key, Value> apiClassTable
+    ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
         /* SOURCE PROCESSORS */
 
         // 1) register api_class
-        var ontomeClassStream = builder
-                .stream(input.TOPICS.api_class,
-                        Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue()));
-
+        var ontomeClassStream = apiClassTable.toStream();
 
         /* STREAM PROCESSORS */
         // 2)
@@ -74,7 +83,7 @@ public class OntomeClassLabel {
 
     public enum input {
         TOPICS;
-        public final String api_class = Utils.dbPrefixed("data_for_history.api_class");
+        public final String api_class = SourceTopics.api_class.getName();
 
 
     }
