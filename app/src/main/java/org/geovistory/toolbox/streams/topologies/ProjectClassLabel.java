@@ -74,8 +74,9 @@ public class ProjectClassLabel {
                         .setLanguageId(value2.getFkLanguage())
                         .setDeleted$1(Boolean.TRUE.equals(value1.getDeleted$1()) || Objects.equals(value2.getDeleted$1(), "true"))
                         .build(),
-                Named.as("project_class_language"),
-                Materialized.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassLanguageValue())
+                Materialized.<ProjectClassKey, ProjectClassLanguageValue, KeyValueStore<Bytes, byte[]>>as("project_class_language")
+                        .withKeySerde(avroSerdes.ProjectClassKey())
+                        .withValueSerde(avroSerdes.ProjectClassLanguageValue())
         );
         // 3
         var projectClassLabelOptionsTable = projectClassLanguage
@@ -152,10 +153,11 @@ public class ProjectClassLabel {
                     }
                     return result;
                 },
-                Named.as("project_class_label_options_with_geov"),
-                Materialized.with(avroSerdes.ProjectClassLanguageKey(), avroSerdes.ProjectClassLabelOptionMapValue())
-
+                Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov")
+                        .withKeySerde(avroSerdes.ProjectClassLanguageKey())
+                        .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
         );
+
 // 4b) left join geov default
         var withGeovDefault = withGeov.leftJoin(
                 geovClassLabelTable,
@@ -182,11 +184,10 @@ public class ProjectClassLabel {
                     }
                     return value1;
                 },
-                Named.as("project_class_label_options_with_geov_and_default"),
-                Materialized.with(avroSerdes.ProjectClassLanguageKey(), avroSerdes.ProjectClassLabelOptionMapValue())
-
+                Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov_and_default")
+                        .withKeySerde(avroSerdes.ProjectClassLanguageKey())
+                        .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
         );
-
 
         // 5) left join
         var withGeovAndOntome = withGeovDefault.leftJoin(
@@ -213,8 +214,9 @@ public class ProjectClassLabel {
                     }
                     return value1;
                 },
-                Named.as("project_class_label_options_with_geov_and_default_and_ontome"),
-                Materialized.with(avroSerdes.ProjectClassLanguageKey(), avroSerdes.ProjectClassLabelOptionMapValue())
+                Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov_and_default_and_ontome")
+                        .withKeySerde(avroSerdes.ProjectClassLanguageKey())
+                        .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
         );
 
 
