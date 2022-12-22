@@ -24,6 +24,11 @@ dependencies {
     // Apache Commons CLI
     implementation 'commons-cli:commons-cli:1.5.0'
 
+    // OkHttp
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+
+    // Jackson
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4'
 }
 
 ext {

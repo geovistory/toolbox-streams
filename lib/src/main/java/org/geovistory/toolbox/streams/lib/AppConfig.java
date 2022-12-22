@@ -41,7 +41,6 @@ public enum AppConfig {
                 dotenv.get("TS_APICURIO_REGISTRY_URL"),
                 "http://localhost:8080/apis/registry/v2"
         );
-        System.out.println("apicurioRegistryUrl: " + apicurioRegistryUrl);
 
         this.schemaRegistryUrl = Utils.coalesce(
                 System.getProperty("TS_SCHEMA_REGISTRY_URL"),
@@ -49,7 +48,6 @@ public enum AppConfig {
                 dotenv.get("TS_SCHEMA_REGISTRY_URL"),
                 "http://localhost:8081/"
         );
-        System.out.println("schemaRegistryUrl: " + schemaRegistryUrl);
 
 
         this.kafkaBootstrapServers = Utils.coalesce(
@@ -58,7 +56,6 @@ public enum AppConfig {
                 dotenv.get("TS_BOOTSTRAP_SERVERS"),
                 "http://localhost:9092"
         );
-        System.out.println("kafkaBootstrapServers: " + kafkaBootstrapServers);
 
         this.applicationId = Utils.coalesce(
                 System.getProperty("TS_APPLICATION_ID"),
@@ -66,7 +63,6 @@ public enum AppConfig {
                 dotenv.get("TS_APPLICATION_ID"),
                 "dev"
         );
-        System.out.println("applicationId: " + applicationId);
 
         this.stateDir = Utils.coalesce(
                 System.getProperty("TS_STATE_DIR"),
@@ -74,7 +70,6 @@ public enum AppConfig {
                 dotenv.get("TS_STATE_DIR"),
                 "tmp/kafka-streams"
         );
-        System.out.println("stateDir: " + stateDir);
 
         this.outputTopicPrefix = Utils.coalesce(
                 System.getProperty("TS_OUTPUT_TOPIC_NAME_PREFIX"),
@@ -82,7 +77,6 @@ public enum AppConfig {
                 dotenv.get("TS_OUTPUT_TOPIC_NAME_PREFIX"),
                 "dev"
         );
-        System.out.println("outputTopicPrefix: " + outputTopicPrefix);
 
         this.inputTopicPrefix = Utils.coalesce(
                 System.getProperty("TS_INPUT_TOPIC_NAME_PREFIX"),
@@ -90,7 +84,7 @@ public enum AppConfig {
                 dotenv.get("TS_INPUT_TOPIC_NAME_PREFIX"),
                 "dev"
         );
-        System.out.println("inputTopicPrefix: " + inputTopicPrefix);
+
     }
 
     public AppConfig getInstance() {
@@ -131,5 +125,15 @@ public enum AppConfig {
 
     public void setSchemaRegistryUrl(String schemaRegistryUrl) {
         this.schemaRegistryUrl = schemaRegistryUrl;
+    }
+
+    public void printConfigs() {
+        System.out.println("apicurioRegistryUrl: " + apicurioRegistryUrl);
+        System.out.println("schemaRegistryUrl: " + schemaRegistryUrl);
+        System.out.println("kafkaBootstrapServers: " + kafkaBootstrapServers);
+        System.out.println("applicationId: " + applicationId);
+        System.out.println("stateDir: " + stateDir);
+        System.out.println("inputTopicPrefix: " + inputTopicPrefix);
+        System.out.println("outputTopicPrefix: " + outputTopicPrefix);
     }
 }

@@ -77,6 +77,8 @@ class App {
 
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
+        System.out.println("With config:");
+        AppConfig.INSTANCE.printConfigs();
 
         // create the streams app
         //noinspection resource

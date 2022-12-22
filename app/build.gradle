@@ -38,7 +38,7 @@ jib {
     }
     container {
         jvmFlags = []
-        mainClass = application.mainClassName
+        mainClass = application.mainClass
         format = 'OCI'
     }
 }
