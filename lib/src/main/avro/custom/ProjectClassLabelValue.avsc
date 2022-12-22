@@ -14,11 +14,17 @@
     },
     {
       "name": "label",
-      "type": "string"
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "languageId",
-      "type": "int"
+      "type": [
+        "null",
+        "int"
+      ]
     },
     {
       "name": "languageIso",
