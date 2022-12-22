@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "OntomeClassLabelKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Model to store class id and language id",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "language_id",
+      "type": {
+        "type": "int"
+      }
+    }
+  ]
+}

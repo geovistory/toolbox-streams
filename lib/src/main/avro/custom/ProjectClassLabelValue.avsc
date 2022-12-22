@@ -1,0 +1,46 @@
+{
+  "type": "record",
+  "name": "ProjectClassLabelValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of project class label",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "label",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "languageId",
+      "type": [
+        "null",
+        "int"
+      ]
+    },
+    {
+      "name": "languageIso",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

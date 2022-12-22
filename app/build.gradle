@@ -29,7 +29,7 @@ application {
 }
 
 jar {
-    manifest.attributes('Main-Class': application.mainClassName)
+    manifest.attributes('Main-Class': application.mainClass)
 }
 
 jib {

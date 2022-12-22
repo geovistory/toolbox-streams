@@ -17,13 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ProjectProfilesTest {
 
-    // will be shared between test methods
-    /*@Container
-    private static final GenericContainer<?> APICURIO_CONTAINER = new GenericContainer<>(DockerImageName.parse("apicurio/apicurio-registry-mem:2.3.1.Final"))
-            .withExposedPorts(8080);
-*/
-
-
     private static final String SCHEMA_REGISTRY_SCOPE = ProjectProfilesTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
 
