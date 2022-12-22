@@ -114,40 +114,6 @@ public class ProjectClassLabel {
                         result.add(KeyValue.pair(kEnglish, vEnglish));
                     }
 
-      /*              // if project is not default project (DEFAULT_PROJECT) add default project record
-                    if (value.getProjectId() != DEFAULT_PROJECT) {
-                        // add record for default project in project's language
-                        var kDefaultProjectProjectLang = ProjectClassLanguageKey.newBuilder()
-                                .setClassId(value.getClassId())
-                                .setProjectId(value.getProjectId())
-                                .setLanguageId(value.getLanguageId())
-                                .build();
-                        var vDefaultProjectProjectLang = ProjectClassLanguageValue.newBuilder()
-                                .setClassId(value.getClassId())
-                                .setProjectId(DEFAULT_PROJECT)
-                                .setLanguageId(value.getLanguageId())
-                                .setDeleted$1(value.getDeleted$1())
-                                .build();
-                        result.add(KeyValue.pair(kDefaultProjectProjectLang, vDefaultProjectProjectLang));
-
-                        // if language is not english (18889) add english record
-                        if (value.getLanguageId() != 18889) {
-                            // add record for default project english
-                            var kDefaultProjectEnglish = ProjectClassLanguageKey.newBuilder()
-                                    .setClassId(value.getClassId())
-                                    .setProjectId(value.getProjectId())
-                                    .setLanguageId(18889)
-                                    .build();
-                            var vDefaultProjectEnglish = ProjectClassLanguageValue.newBuilder()
-                                    .setClassId(value.getClassId())
-                                    .setProjectId(DEFAULT_PROJECT)
-                                    .setLanguageId(18889)
-                                    .setDeleted$1(value.getDeleted$1())
-                                    .build();
-                            result.add(KeyValue.pair(kDefaultProjectEnglish, vDefaultProjectEnglish));
-                        }
-                    }
-*/
                     return result;
                 })
                 .toTable(

@@ -18,6 +18,16 @@ class App {
 
         StreamsBuilder builder = new StreamsBuilder();
 
+        var admin = new Admin();
+        // create intermediate output topics (topics used as input of other topology)
+        admin.createTopic(OntomeClassLabel.output.TOPICS.ontome_class_label, 32);
+        admin.createTopic(GeovClassLabel.output.TOPICS.geov_class_label, 32);
+        admin.createTopic(ProjectClass.output.TOPICS.project_class, 32);
+        admin.createTopic(ProjectProfiles.output.TOPICS.project_profile, 32);
+        admin.createTopic(ProjectProperty.output.TOPICS.project_property, 32);
+        // create the output topics
+        admin.createTopic(ProjectClassLabel.output.TOPICS.project_class_label, 32);
+
         var inputTopics = new RegisterInputTopic(builder);
 
         // register input topics as KTables
@@ -64,15 +74,6 @@ class App {
 
         Properties props = getConfig();
 
-        var admin = new Admin();
-        // create intermediate output topics (topics used as input of other topology)
-        admin.createTopic(OntomeClassLabel.output.TOPICS.ontome_class_label, 32);
-        admin.createTopic(GeovClassLabel.output.TOPICS.geov_class_label, 32);
-        admin.createTopic(ProjectClass.output.TOPICS.project_class, 32);
-        admin.createTopic(ProjectProfiles.output.TOPICS.project_profile, 32);
-        admin.createTopic(ProjectProperty.output.TOPICS.project_property, 32);
-        // create the output topics
-        admin.createTopic(ProjectClassLabel.output.TOPICS.project_class_label, 1);
 
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
