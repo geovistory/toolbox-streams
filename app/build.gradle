@@ -33,6 +33,9 @@ jar {
 }
 
 jib {
+    from{
+        image = "ghcr.io/geovistory/kafka-streams-base:0.1"
+    }
     to {
         image = getDockerImageTag()
     }

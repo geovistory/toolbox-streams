@@ -142,6 +142,14 @@ class App {
         // See this for producer configs:
         // https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#ak-consumers-producer-and-admin-client-configuration-parameters
         props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "20971760");
+
+        // this is for rocksdb memory management
+        // see https://medium.com/@grinfeld_433/kafka-streams-and-rocksdb-in-the-space-time-continuum-and-a-little-bit-of-configuration-40edb5ee9ed7
+        // see https://kafka.apache.org/33/documentation/streams/developer-guide/memory-mgmt.html#id3
+        props.put(StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG, BoundedMemoryRocksDBConfig.class.getName());
+        props.put(BoundedMemoryRocksDBConfig.TOTAL_OFF_HEAP_SIZE_MB, "3000");
+        props.put(BoundedMemoryRocksDBConfig.TOTAL_MEMTABLE_MB, "300");
+
         /*
 
         props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
