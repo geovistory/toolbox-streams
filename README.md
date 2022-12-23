@@ -30,15 +30,17 @@ The
 
 ### Base image used by jib
 
-#### build base image
+#### build and push base image
 
 Set the correct version number
 
-`docker build . -t ghcr.io/geovistory/kafka-streams-base:0.1`
+create multiplatform image:
+read here: https://docs.docker.com/build/building/multi-platform/
 
-
-#### push base image to ghcr.io
-
+create and use builder that supports multiplatform builds (if not yet done):
+```bash
+docker buildx create --name mybuilder --driver docker-container --bootstrap --use
+```
 
 login to github container registry with docker cli (see (official docs)[https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry])
 
@@ -53,9 +55,17 @@ echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
 > Login Succeeded
 ```
 
-Push image
+build the images for amd64 and arm64 and load it to docker
+
+Update the version tag manually (e.g. increase version number after point)
 ```bash
-docker push ghcr.io/geovistory/kafka-streams-base:0.1 
+docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/geovistory/kafka-streams-base:0.2 . --load
 ```
+
+#### use base image
+
+In `./app/build.gradle` update `jib.from.image` to the new tag.
+
+
 
 

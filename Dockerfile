@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM eclipse-temurin:19
+FROM eclipse-temurin:19
 
 # install jemalloc
 RUN apt update
