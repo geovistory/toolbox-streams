@@ -37,6 +37,20 @@ public class RegisterInputTopic {
         );
     }
 
+    public KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable() {
+        return builder.table(
+                DbTopicNames.pro_info_proj_rel.getName(),
+                Consumed.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue())
+        );
+    }
+
+    public KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable() {
+        return builder.table(
+                DbTopicNames.inf_resource.getName(),
+                Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
+        );
+    }
+
     public KTable<dev.system.config.Key, dev.system.config.Value> sysConfigTable() {
         return builder.table(
                 DbTopicNames.sys_config.getName(),

@@ -19,6 +19,30 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<dev.projects.info_proj_rel.Key> ProInfoProjRelKey() {
+        Serde<dev.projects.info_proj_rel.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.projects.info_proj_rel.Value> ProInfoProjRelValue() {
+        Serde<dev.projects.info_proj_rel.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.information.resource.Key> InfResourceKey() {
+        Serde<dev.information.resource.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.information.resource.Value> InfResourceValue() {
+        Serde<dev.information.resource.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
 
     public Serde<dev.data_for_history.api_property.Key> DfhApiPropertyKey() {
         Serde<dev.data_for_history.api_property.Key> serdes = new SpecificAvroSerde<>();
@@ -202,6 +226,18 @@ public class ConfluentAvroSerdes {
 
     public Serde<ProjectClassLabelOptionMap> ProjectClassLabelOptionMapValue() {
         Serde<ProjectClassLabelOptionMap> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityKey> ProjectEntityKey() {
+        Serde<ProjectEntityKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityValue> ProjectEntityValue() {
+        Serde<ProjectEntityValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }

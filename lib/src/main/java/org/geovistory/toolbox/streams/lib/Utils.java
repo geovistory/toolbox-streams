@@ -2,6 +2,7 @@ package org.geovistory.toolbox.streams.lib;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Utils {
     /**
@@ -43,6 +44,17 @@ public class Utils {
         }
         return found;
     }
+
+    /**
+     * Checks if given string is "true".
+     *
+     * @param s string or null
+     * @return if s=="true" returns true, else false
+     */
+    public static Boolean stringIsNotEqualTrue(String s) {
+        return Objects.equals(s, "true");
+    }
+
 
     /**
      * Returns the language Id of a Geovistory Language for the given language code

@@ -25,6 +25,7 @@ class App {
         admin.createTopic(ProjectClass.output.TOPICS.project_class, 32);
         admin.createTopic(ProjectProfiles.output.TOPICS.project_profile, 32);
         admin.createTopic(ProjectProperty.output.TOPICS.project_property, 32);
+        admin.createTopic(ProjectEntity.output.TOPICS.project_entity, 32);
         // create the output topics
         admin.createTopic(ProjectClassLabel.output.TOPICS.project_class_label, 32);
 
@@ -73,7 +74,6 @@ class App {
         var topology = projectClassLabel.build();
 
         Properties props = getConfig();
-
 
         // build the topology
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
