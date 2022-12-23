@@ -12,82 +12,117 @@ import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.topologies.*;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 class App {
     public static void main(String[] args) {
 
+        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
+        createTopics();
+
         StreamsBuilder builder = new StreamsBuilder();
 
-        var admin = new Admin();
-        // create intermediate output topics (topics used as input of other topology)
-        admin.createTopic(OntomeClassLabel.output.TOPICS.ontome_class_label, 32);
-        admin.createTopic(GeovClassLabel.output.TOPICS.geov_class_label, 32);
-        admin.createTopic(ProjectClass.output.TOPICS.project_class, 32);
-        admin.createTopic(ProjectProfiles.output.TOPICS.project_profile, 32);
-        admin.createTopic(ProjectProperty.output.TOPICS.project_property, 32);
-        admin.createTopic(ProjectEntity.output.TOPICS.project_entity, 32);
-        // create the output topics
-        admin.createTopic(ProjectClassLabel.output.TOPICS.project_class_label, 32);
+        // add processors of sub-topologies
+        addSubTopologies(builder);
 
+        // build the topology
+        var topology = builder.build();
+
+        // print configuration information
+        System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
+        System.out.println("With config:");
+        AppConfig.INSTANCE.printConfigs();
+
+        // create the streams app
+        // noinspection resource
+        KafkaStreams streams = new KafkaStreams(topology, getConfig());
+
+        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
+        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+
+        // start streaming!
+        streams.start();
+    }
+
+    private static void addSubTopologies(StreamsBuilder builder) {
         var inputTopics = new RegisterInputTopic(builder);
 
         // register input topics as KTables
         var proProjectTable = inputTopics.proProjectTable();
         var proTextPropertyTable = inputTopics.proTextPropertyTable();
         var proProfileProjRelTable = inputTopics.proProfileProjRelTable();
+        var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
+        var infResourceTable = inputTopics.infResourceTable();
         var dfhApiClassTable = inputTopics.dfhApiClassTable();
         var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
         var sysConfigTable = inputTopics.sysConfigTable();
 
 
-        // add processors
+        // add sub-topology ProjectProfiles
         var projectProfiles = ProjectProfiles.addProcessors(builder,
                 proProjectTable,
                 proProfileProjRelTable,
                 sysConfigTable);
 
+        // add sub-topology ProjectProperty
         var projectProperty = ProjectProperty.addProcessors(builder,
                 dfhApiPropertyTable,
                 projectProfiles.projectProfileStream());
 
+        // add sub-topology ProjectClass
         var projectClass = ProjectClass.addProcessors(
                 projectProperty,
                 projectProfiles.projectProfileStream(),
                 dfhApiClassTable
         );
 
+        // add sub-topology OntomeClassLabel
         var ontomeClassLabel = OntomeClassLabel.addProcessors(builder,
                 dfhApiClassTable
         );
 
+        // add sub-topology GeovClassLabel
         var geovClassLabel = GeovClassLabel.addProcessors(builder,
                 proTextPropertyTable
         );
 
-        var projectClassLabel = ProjectClassLabel.addProcessors(builder,
+        // add sub-topology ProjectClassLabel
+        ProjectClassLabel.addProcessors(builder,
                 proProjectTable,
                 ontomeClassLabel.ontomeClassLabelStream(),
                 geovClassLabel.geovClassLabelStream(),
                 projectClass.projectClassStream()
         );
 
-        var topology = projectClassLabel.build();
+        // add sub-topology ProjectEntity
+        ProjectEntity.addProcessors(builder,
+                infResourceTable,
+                proInfoProjRelTable
+        );
 
-        Properties props = getConfig();
+    }
 
-        // build the topology
-        System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
-        System.out.println("With config:");
-        AppConfig.INSTANCE.printConfigs();
+    private static void createTopics() {
+        var admin = new Admin();
+        // create topics (topics used as input of other topology)
+        var kafkaFuture = admin.createTopics(new String[]{
+                OntomeClassLabel.output.TOPICS.ontome_class_label,
+                GeovClassLabel.output.TOPICS.geov_class_label,
+                ProjectClass.output.TOPICS.project_class,
+                ProjectProfiles.output.TOPICS.project_profile,
+                ProjectProperty.output.TOPICS.project_property,
+                ProjectEntity.output.TOPICS.project_entity,
+                ProjectClassLabel.output.TOPICS.project_class_label
+        }, 32);
 
-        // create the streams app
-        //noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, props);
 
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-        // start streaming!
-        streams.start();
+        // Use the KafkaFuture object to block and wait for the topic creation to complete
+        try {
+            kafkaFuture.get();
+            System.out.println("Topics created successfully");
+        } catch (InterruptedException | ExecutionException e) {
+            System.out.println("Error creating topics: " + e.getMessage());
+        }
     }
 
     private static Properties getConfig() {

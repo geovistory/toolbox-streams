@@ -9,16 +9,20 @@ root
 |- utilities # helpers for developers
 ```
 
-## Development
 
+## Run
 ### Requirements
 
 - Kafka
-- Apicurio Registry
+- Schema Registry
 
 ### Environment
 
+## Develop
 
-## Deployment
+### CLI
+The
+
+## Deploy
 
 ### App ID

@@ -3,25 +3,29 @@ package org.geovistory.toolbox.streams.app;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.config.TopicConfig;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class Admin {
 
-    public String createTopic(String topicName, Integer numPartitions) {
+    public KafkaFuture<Void> createTopics(String[] topicNames, Integer numPartitions) {
+
+        KafkaFuture<Void> future;
+
         try (AdminClient adminClient = AdminClient.create(getAdminConfig())) {
-            NewTopic topic = new NewTopic(topicName, numPartitions, (short) 1);
-            topic.configs(getTopicConfig());
-
-            adminClient.createTopics(Collections.singletonList(topic));
-
+            var config = getTopicConfig();
+            var newTopics = new ArrayList<NewTopic>();
+            Arrays.stream(topicNames).forEach(topicName -> {
+                var n = new NewTopic(topicName, numPartitions, (short) 1);
+                n.configs(config);
+                newTopics.add(n);
+            });
+            future = adminClient.createTopics(newTopics).all();
         }
-        return topicName;
+        return future;
     }
 
     private static Properties getAdminConfig() {
