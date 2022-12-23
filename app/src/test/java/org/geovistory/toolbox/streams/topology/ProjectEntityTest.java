@@ -302,4 +302,46 @@ class ProjectEntityTest {
     }
 
 
+    @Test
+    void testEntityWithoutClass() {
+        var projectId = 10;
+        var entityId = 20;
+        var classId = (Integer) null;
+        // add relation between project and entity
+        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+                .setFkEntity(entityId)
+                .setFkProject(projectId)
+                .build();
+        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setEntityVersion(1)
+                .setFkEntity(entityId)
+                .setFkProject(projectId)
+                .setIsInProject(true)
+                .build();
+        proInfoProjRelTopic.pipeInput(kR, vR);
+
+        // add entity
+        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(entityId)
+                .setFkClass(classId)
+                .build();
+        infResourceTopic.pipeInput(kE, vE);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectEntityKey.newBuilder()
+                .setProjectId(projectId)
+                .setEntityId(entityId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getDeleted$1()).isFalse();
+        assertThat(record.getClassId()).isEqualTo(classId);
+    }
+
 }
