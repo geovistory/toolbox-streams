@@ -2,6 +2,7 @@ package org.geovistory.toolbox.streams.app;
 
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 
@@ -48,6 +49,55 @@ public class RegisterInputTopic {
         return builder.table(
                 DbTopicNames.inf_resource.getName(),
                 Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
+        );
+    }
+
+    public KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream() {
+        return builder.stream(
+                DbTopicNames.inf_language.getName(),
+                Consumed.with(avroSerdes.InfLanguageKey(), avroSerdes.InfLanguageValue())
+        );
+    }
+
+    public KStream<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationStream() {
+        return builder.stream(
+                DbTopicNames.inf_appellation.getName(),
+                Consumed.with(avroSerdes.InfAppellationKey(), avroSerdes.InfAppellationValue())
+        );
+    }
+
+    public KStream<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringStream() {
+        return builder.stream(
+                DbTopicNames.inf_lang_string.getName(),
+                Consumed.with(avroSerdes.InfLangStringKey(), avroSerdes.InfLangStringValue())
+        );
+    }
+
+    public KStream<dev.information.place.Key, dev.information.place.Value> infPlaceStream() {
+        return builder.stream(
+                DbTopicNames.inf_place.getName(),
+                Consumed.with(avroSerdes.InfPlaceKey(), avroSerdes.InfPlaceValue())
+        );
+    }
+
+    public KStream<dev.information.time_primitive.Key, dev.information.time_primitive.Value> infTimePrimitiveStream() {
+        return builder.stream(
+                DbTopicNames.inf_time_primitive.getName(),
+                Consumed.with(avroSerdes.InfTimePrimitiveKey(), avroSerdes.InfTimePrimitiveValue())
+        );
+    }
+
+    public KStream<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionStream() {
+        return builder.stream(
+                DbTopicNames.inf_dimension.getName(),
+                Consumed.with(avroSerdes.InfDimensionKey(), avroSerdes.InfDimensionValue())
+        );
+    }
+
+    public KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable() {
+        return builder.table(
+                DbTopicNames.inf_statement.getName(),
+                Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.InfStatementValue())
         );
     }
 

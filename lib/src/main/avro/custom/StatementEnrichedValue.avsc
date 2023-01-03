@@ -1,0 +1,35 @@
+{
+  "type": "record",
+  "name": "StatementEnrichedValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of enriched statement",
+  "fields": [
+    {
+      "name": "subject_id",
+      "type": "int"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "object_id",
+      "type": "int"
+    },
+    {
+      "name": "object_literal",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.LiteralValue"
+      ]
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

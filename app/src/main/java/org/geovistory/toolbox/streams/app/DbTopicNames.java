@@ -4,6 +4,13 @@ import org.geovistory.toolbox.streams.lib.Utils;
 
 public enum DbTopicNames {
     inf_resource("information.resource"),
+    inf_statement("information.statement"),
+    inf_language("information.language"),
+    inf_appellation("information.appellation"),
+    inf_lang_string("information.lang_string"),
+    inf_place("information.place"),
+    inf_time_primitive("information.time_primitive"),
+    inf_dimension("information.dimension"),
     pro_projects("projects.project"),
     pro_text_property("projects.text_property"),
     pro_info_proj_rel("projects.info_proj_rel"),

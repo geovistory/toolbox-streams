@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "Key",
+  "namespace": "dev.information.language",
+  "fields": [
+    {
+      "name": "pk_language",
+      "type": "string"
+    }
+  ],
+  "connect.name": "dev.information.language.Key"
+}

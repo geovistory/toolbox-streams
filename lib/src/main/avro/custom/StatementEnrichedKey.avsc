@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "StatementEnrichedKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of enriched statement",
+  "fields": [
+    {
+      "name": "subject_id",
+      "type": "int"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "object_id",
+      "type": "int"
+    }
+  ]
+}

@@ -21,6 +21,7 @@ dependencies {
     implementation 'org.apache.kafka:kafka-streams:3.3.1'
     // Apicurio Avro Serdes
     implementation group: 'io.apicurio', name: 'apicurio-registry-serdes-avro-serde', version: '2.3.1.Final'
+
 }
 
 application {
