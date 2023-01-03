@@ -12,82 +12,117 @@ import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.topologies.*;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 class App {
     public static void main(String[] args) {
 
+        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
+        createTopics();
+
         StreamsBuilder builder = new StreamsBuilder();
 
-        var admin = new Admin();
-        // create intermediate output topics (topics used as input of other topology)
-        admin.createTopic(OntomeClassLabel.output.TOPICS.ontome_class_label, 32);
-        admin.createTopic(GeovClassLabel.output.TOPICS.geov_class_label, 32);
-        admin.createTopic(ProjectClass.output.TOPICS.project_class, 32);
-        admin.createTopic(ProjectProfiles.output.TOPICS.project_profile, 32);
-        admin.createTopic(ProjectProperty.output.TOPICS.project_property, 32);
-        // create the output topics
-        admin.createTopic(ProjectClassLabel.output.TOPICS.project_class_label, 32);
+        // add processors of sub-topologies
+        addSubTopologies(builder);
 
+        // build the topology
+        var topology = builder.build();
+
+        // print configuration information
+        System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
+        System.out.println("With config:");
+        AppConfig.INSTANCE.printConfigs();
+
+        // create the streams app
+        // noinspection resource
+        KafkaStreams streams = new KafkaStreams(topology, getConfig());
+
+        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
+        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+
+        // start streaming!
+        streams.start();
+    }
+
+    private static void addSubTopologies(StreamsBuilder builder) {
         var inputTopics = new RegisterInputTopic(builder);
 
         // register input topics as KTables
         var proProjectTable = inputTopics.proProjectTable();
         var proTextPropertyTable = inputTopics.proTextPropertyTable();
         var proProfileProjRelTable = inputTopics.proProfileProjRelTable();
+        var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
+        var infResourceTable = inputTopics.infResourceTable();
         var dfhApiClassTable = inputTopics.dfhApiClassTable();
         var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
         var sysConfigTable = inputTopics.sysConfigTable();
 
 
-        // add processors
+        // add sub-topology ProjectProfiles
         var projectProfiles = ProjectProfiles.addProcessors(builder,
                 proProjectTable,
                 proProfileProjRelTable,
                 sysConfigTable);
 
+        // add sub-topology ProjectProperty
         var projectProperty = ProjectProperty.addProcessors(builder,
                 dfhApiPropertyTable,
                 projectProfiles.projectProfileStream());
 
+        // add sub-topology ProjectClass
         var projectClass = ProjectClass.addProcessors(
                 projectProperty,
                 projectProfiles.projectProfileStream(),
                 dfhApiClassTable
         );
 
+        // add sub-topology OntomeClassLabel
         var ontomeClassLabel = OntomeClassLabel.addProcessors(builder,
                 dfhApiClassTable
         );
 
+        // add sub-topology GeovClassLabel
         var geovClassLabel = GeovClassLabel.addProcessors(builder,
                 proTextPropertyTable
         );
 
-        var projectClassLabel = ProjectClassLabel.addProcessors(builder,
+        // add sub-topology ProjectClassLabel
+        ProjectClassLabel.addProcessors(builder,
                 proProjectTable,
                 ontomeClassLabel.ontomeClassLabelStream(),
                 geovClassLabel.geovClassLabelStream(),
                 projectClass.projectClassStream()
         );
 
-        var topology = projectClassLabel.build();
+        // add sub-topology ProjectEntity
+        ProjectEntity.addProcessors(builder,
+                infResourceTable,
+                proInfoProjRelTable
+        );
 
-        Properties props = getConfig();
+    }
+
+    private static void createTopics() {
+        var admin = new Admin();
+        // create topics (topics used as input of other topology)
+        var kafkaFuture = admin.createTopics(new String[]{
+                OntomeClassLabel.output.TOPICS.ontome_class_label,
+                GeovClassLabel.output.TOPICS.geov_class_label,
+                ProjectClass.output.TOPICS.project_class,
+                ProjectProfiles.output.TOPICS.project_profile,
+                ProjectProperty.output.TOPICS.project_property,
+                ProjectEntity.output.TOPICS.project_entity,
+                ProjectClassLabel.output.TOPICS.project_class_label
+        }, 32);
 
 
-        // build the topology
-        System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
-        System.out.println("With config:");
-        AppConfig.INSTANCE.printConfigs();
-
-        // create the streams app
-        //noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, props);
-
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-        // start streaming!
-        streams.start();
+        // Use the KafkaFuture object to block and wait for the topic creation to complete
+        try {
+            kafkaFuture.get();
+            System.out.println("Topics created successfully");
+        } catch (InterruptedException | ExecutionException e) {
+            System.out.println("Error creating topics: " + e.getMessage());
+        }
     }
 
     private static Properties getConfig() {
@@ -107,6 +142,14 @@ class App {
         // See this for producer configs:
         // https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#ak-consumers-producer-and-admin-client-configuration-parameters
         props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "20971760");
+
+        // this is for rocksdb memory management
+        // see https://medium.com/@grinfeld_433/kafka-streams-and-rocksdb-in-the-space-time-continuum-and-a-little-bit-of-configuration-40edb5ee9ed7
+        // see https://kafka.apache.org/33/documentation/streams/developer-guide/memory-mgmt.html#id3
+        props.put(StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG, BoundedMemoryRocksDBConfig.class.getName());
+        props.put(BoundedMemoryRocksDBConfig.TOTAL_OFF_HEAP_SIZE_MB, "3000");
+        props.put(BoundedMemoryRocksDBConfig.TOTAL_MEMTABLE_MB, "300");
+
         /*
 
         props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);

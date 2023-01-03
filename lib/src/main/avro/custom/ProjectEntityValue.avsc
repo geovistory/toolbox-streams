@@ -1,0 +1,32 @@
+{
+  "type": "record",
+  "name": "ProjectEntityValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of project entity",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "entity_id",
+      "type": "int"
+    },
+    {
+      "name": "class_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}
