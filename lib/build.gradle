@@ -26,4 +26,7 @@ dependencies {
 
     // Apicurio Avro Serdes
     implementation group: 'io.apicurio', name: 'apicurio-registry-serdes-avro-serde', version: '2.3.1.Final'
+
+    // Debezium core to handle Geometries
+    implementation 'io.debezium:debezium-core:2.1.1.Final'
 }

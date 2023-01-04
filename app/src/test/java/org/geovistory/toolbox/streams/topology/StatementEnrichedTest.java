@@ -7,12 +7,12 @@ import org.geovistory.toolbox.streams.avro.StatementEnrichedKey;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.topologies.StatementEnriched;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.ByteBuffer;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -281,10 +281,6 @@ class StatementEnrichedTest {
 
         double x = 1;
         double y = 2;
-        var wkb = ByteBuffer.allocate(16);
-        wkb.putDouble(x);
-        wkb.putDouble(y);
-        wkb.rewind();
 
         // add place
         var k = dev.information.place.Key.newBuilder().setPkEntity(objectId).build();
@@ -293,7 +289,7 @@ class StatementEnrichedTest {
                 .setTableName("")
                 .setPkEntity(objectId)
                 .setGeoPoint(Geography.newBuilder()
-                        .setWkb(wkb)
+                        .setWkb(GeoUtils.pointToByteBuffer(x, y))
                         .setSrid(4326)
                         .build())
                 .setFkClass(0)
@@ -312,6 +308,7 @@ class StatementEnrichedTest {
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo("WGS84: " + x + "°, " + y + "°");
         assertThat(record.getObjectLiteral().getPlace()).isNotNull();
     }
+
 
     @Test
     void testStatementWithTimePrimitive() {

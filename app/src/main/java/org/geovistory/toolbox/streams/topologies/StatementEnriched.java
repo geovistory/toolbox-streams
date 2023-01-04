@@ -16,6 +16,7 @@ import org.geovistory.toolbox.streams.avro.LiteralValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedKey;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 
@@ -86,9 +87,10 @@ public class StatementEnriched {
 
         // Map places to literals
         var placeLiterals = infPlaceTable.map((key, value) -> {
-                    var db = value.getGeoPoint().getWkb().asDoubleBuffer();
-                    var x = db.get(0);
-                    var y = db.get(1);
+                    var wkb = value.getGeoPoint().getWkb();
+                    var coordinates = GeoUtils.wkbToXY(wkb);
+                    var x = coordinates[0];
+                    var y = coordinates[1];
                     return KeyValue.pair(
                             LiteralKey.newBuilder().setId(key.getPkEntity()).build(),
                             LiteralValue.newBuilder().setId(key.getPkEntity())

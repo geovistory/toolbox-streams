@@ -53,6 +53,13 @@ class App {
         var proProfileProjRelTable = inputTopics.proProfileProjRelTable();
         var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
         var infResourceTable = inputTopics.infResourceTable();
+        var infStatementTable = inputTopics.infStatementTable();
+        var infLanguageStream = inputTopics.infLanguageStream();
+        var infAppellationStream = inputTopics.infAppellationStream();
+        var infLangStringStream = inputTopics.infLangStringStream();
+        var infPlaceStream = inputTopics.infPlaceStream();
+        var infTimePrimitiveStream = inputTopics.infTimePrimitiveStream();
+        var infDimensionStream = inputTopics.infDimensionStream();
         var dfhApiClassTable = inputTopics.dfhApiClassTable();
         var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
         var sysConfigTable = inputTopics.sysConfigTable();
@@ -94,6 +101,18 @@ class App {
                 projectClass.projectClassStream()
         );
 
+
+        // add sub-topology StatementEnriched
+        StatementEnriched.addProcessors(builder,
+                infStatementTable,
+                infLanguageStream,
+                infAppellationStream,
+                infLangStringStream,
+                infPlaceStream,
+                infTimePrimitiveStream,
+                infDimensionStream
+        );
+
         // add sub-topology ProjectEntity
         ProjectEntity.addProcessors(builder,
                 infResourceTable,
@@ -104,7 +123,8 @@ class App {
 
     private static void createTopics() {
         var admin = new Admin();
-        // create topics (topics used as input of other topology)
+
+        // create output topics (with 32 partitions and delete.policy=compact)
         var kafkaFuture = admin.createTopics(new String[]{
                 OntomeClassLabel.output.TOPICS.ontome_class_label,
                 GeovClassLabel.output.TOPICS.geov_class_label,
@@ -112,7 +132,8 @@ class App {
                 ProjectProfiles.output.TOPICS.project_profile,
                 ProjectProperty.output.TOPICS.project_property,
                 ProjectEntity.output.TOPICS.project_entity,
-                ProjectClassLabel.output.TOPICS.project_class_label
+                ProjectClassLabel.output.TOPICS.project_class_label,
+                StatementEnriched.output.TOPICS.statement_enriched
         }, 32);
 
 
