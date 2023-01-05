@@ -7,7 +7,7 @@ public enum AppConfig {
     INSTANCE();
 
     // url of the apicurio registry
-    private String apicurioRegistryUrl;
+    private final String apicurioRegistryUrl;
 
     // url of the confluent schema registry
     private String schemaRegistryUrl;
@@ -33,6 +33,30 @@ public enum AppConfig {
 
     // rocksdb TOTAL_MEMTABLE_MB
     private final String rocksdbTotalMemtableMb;
+
+    // streams config cache.max.bytes.buffering
+    private final String streamsCacheMaxBytesBuffering;
+
+    // streams config commit.interval.ms
+    private final String streamsCommitIntervalMs;
+
+    // streams config buffer.memory
+    private final String streamsBufferMemory;
+
+    // streams config fetch.max.bytes
+    private final String streamsFetchMaxBytes;
+
+    // streams config fetch.max.wait.ms
+    private final String streamsFetchMaxWaitMs;
+
+    // streams config send.buffer.bytes
+    private final String streamsSendBufferBytes;
+
+    // streams config receive.buffer.bytes
+    private final String streamsReceiveBufferBytes;
+
+    // streams config buffered.records.per.partition
+    private final String streamsBufferedRecordsPerPartition;
 
     AppConfig() {
         // load .env for local development
@@ -105,6 +129,62 @@ public enum AppConfig {
                 dotenv.get("ROCKSDB_TOTAL_MEMTABLE_MB"),
                 "100"
         );
+
+        this.streamsCacheMaxBytesBuffering = Utils.coalesce(
+                System.getProperty("STREAMS_CACHE_MAX_BYTES_BUFFERING_CONFIG"),
+                System.getenv("STREAMS_CACHE_MAX_BYTES_BUFFERING_CONFIG"),
+                dotenv.get("STREAMS_CACHE_MAX_BYTES_BUFFERING_CONFIG"),
+                "10485760" // 10485760 => 10MB per Thread
+        );
+
+        this.streamsCommitIntervalMs = Utils.coalesce(
+                System.getProperty("STREAMS_COMMIT_INTERVAL_MS"),
+                System.getenv("STREAMS_COMMIT_INTERVAL_MS"),
+                dotenv.get("STREAMS_COMMIT_INTERVAL_MS"),
+                "30000" // 30000 => 30 seconds
+        );
+
+        this.streamsBufferMemory = Utils.coalesce(
+                System.getProperty("STREAMS_BUFFER_MEMORY"),
+                System.getenv("STREAMS_BUFFER_MEMORY"),
+                dotenv.get("STREAMS_BUFFER_MEMORY"),
+                "33554432" // 33554432 => 32 MB
+        );
+
+        this.streamsFetchMaxBytes = Utils.coalesce(
+                System.getProperty("STREAMS_FETCH_MAX_BYTES"),
+                System.getenv("STREAMS_FETCH_MAX_BYTES"),
+                dotenv.get("STREAMS_FETCH_MAX_BYTES"),
+                "52428800" // 52428800 => 50 MB
+        );
+
+        this.streamsFetchMaxWaitMs = Utils.coalesce(
+                System.getProperty("STREAMS_FETCH_MAX_WAIT_MS"),
+                System.getenv("STREAMS_FETCH_MAX_WAIT_MS"),
+                dotenv.get("STREAMS_FETCH_MAX_WAIT_MS"),
+                "500" // 500 => half a second
+        );
+
+        this.streamsSendBufferBytes = Utils.coalesce(
+                System.getProperty("STREAMS_SEND_BUFFER_BYTES"),
+                System.getenv("STREAMS_SEND_BUFFER_BYTES"),
+                dotenv.get("STREAMS_SEND_BUFFER_BYTES"),
+                "131072" // 131072 => 128 KB
+        );
+
+        this.streamsReceiveBufferBytes = Utils.coalesce(
+                System.getProperty("STREAMS_RECEIVE_BUFFER_BYTES"),
+                System.getenv("STREAMS_RECEIVE_BUFFER_BYTES"),
+                dotenv.get("STREAMS_RECEIVE_BUFFER_BYTES"),
+                "32768" // 32768 => 32 KB
+        );
+
+        this.streamsBufferedRecordsPerPartition = Utils.coalesce(
+                System.getProperty("STREAMS_BUFFERED_RECORDS_PER_PARTITION"),
+                System.getenv("STREAMS_BUFFERED_RECORDS_PER_PARTITION"),
+                dotenv.get("STREAMS_BUFFERED_RECORDS_PER_PARTITION"),
+                "1000" // 1000 records
+        );
     }
 
     public AppConfig getInstance() {
@@ -117,10 +197,6 @@ public enum AppConfig {
 
     public String getApicurioRegistryUrl() {
         return apicurioRegistryUrl;
-    }
-
-    public void setApicurioRegistryUrl(String apicurioRegistryUrl) {
-        this.apicurioRegistryUrl = apicurioRegistryUrl;
     }
 
     public String getKafkaBootstrapServers() {
@@ -147,6 +223,47 @@ public enum AppConfig {
         this.schemaRegistryUrl = schemaRegistryUrl;
     }
 
+
+    public String getRocksdbTotalOffHeapMb() {
+        return rocksdbTotalOffHeapMb;
+    }
+
+    public String getRocksdbTotalMemtableMb() {
+        return rocksdbTotalMemtableMb;
+    }
+
+    public String getStreamsCacheMaxBytesBuffering() {
+        return streamsCacheMaxBytesBuffering;
+    }
+
+    public String getStreamsCommitIntervalMs() {
+        return streamsCommitIntervalMs;
+    }
+
+    public String getStreamsBufferMemory() {
+        return streamsBufferMemory;
+    }
+
+    public String getStreamsFetchMaxBytes() {
+        return streamsFetchMaxBytes;
+    }
+
+    public String getStreamsFetchMaxWaitMs() {
+        return streamsFetchMaxWaitMs;
+    }
+
+    public String getStreamsSendBufferBytes() {
+        return streamsSendBufferBytes;
+    }
+
+    public String getStreamsReceiveBufferBytes() {
+        return streamsReceiveBufferBytes;
+    }
+
+    public String getStreamsBufferedRecordsPerPartition() {
+        return streamsBufferedRecordsPerPartition;
+    }
+
     public void printConfigs() {
         System.out.println("apicurioRegistryUrl: " + apicurioRegistryUrl);
         System.out.println("schemaRegistryUrl: " + schemaRegistryUrl);
@@ -157,5 +274,13 @@ public enum AppConfig {
         System.out.println("outputTopicPrefix: " + outputTopicPrefix);
         System.out.println("rocksdbTotalOffHeapMb: " + rocksdbTotalOffHeapMb);
         System.out.println("rocksdbTotalMemtableMb: " + rocksdbTotalMemtableMb);
+        System.out.println("streamsCacheMaxBytesBuffering: " + streamsCacheMaxBytesBuffering);
+        System.out.println("streamsCommitIntervalMs: " + streamsCommitIntervalMs);
+        System.out.println("streamsBufferMemory: " + streamsBufferMemory);
+        System.out.println("streamsFetchMaxBytes: " + streamsFetchMaxBytes);
+        System.out.println("streamsFetchMaxWaitMs: " + streamsFetchMaxWaitMs);
+        System.out.println("streamsSendBufferBytes: " + streamsSendBufferBytes);
+        System.out.println("streamsReceiveBufferBytes: " + streamsReceiveBufferBytes);
+        System.out.println("streamsBufferedRecordsPerPartition: " + streamsBufferedRecordsPerPartition);
     }
 }

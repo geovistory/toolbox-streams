@@ -3,6 +3,7 @@
  */
 package org.geovistory.toolbox.streams.app;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.streams.KafkaStreams;
@@ -164,16 +165,30 @@ class App {
         // https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#ak-consumers-producer-and-admin-client-configuration-parameters
         props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "20971760");
 
-        // this is for rocksdb memory management
+        // rocksdb memory management
         // see https://medium.com/@grinfeld_433/kafka-streams-and-rocksdb-in-the-space-time-continuum-and-a-little-bit-of-configuration-40edb5ee9ed7
         // see https://kafka.apache.org/33/documentation/streams/developer-guide/memory-mgmt.html#id3
         props.put(StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG, BoundedMemoryRocksDBConfig.class.getName());
-        props.put(BoundedMemoryRocksDBConfig.TOTAL_OFF_HEAP_SIZE_MB, "3000");
-        props.put(BoundedMemoryRocksDBConfig.TOTAL_MEMTABLE_MB, "300");
+        props.put(BoundedMemoryRocksDBConfig.TOTAL_OFF_HEAP_SIZE_MB, appConfig.getRocksdbTotalOffHeapMb());
+        props.put(BoundedMemoryRocksDBConfig.TOTAL_MEMTABLE_MB, appConfig.getRocksdbTotalMemtableMb());
+
+        // streams memory management
+        props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, appConfig.getStreamsCacheMaxBytesBuffering());
+        props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, appConfig.getStreamsCommitIntervalMs());
+        props.put(StreamsConfig.BUFFERED_RECORDS_PER_PARTITION_CONFIG, appConfig.getStreamsBufferedRecordsPerPartition());
+
+        // producer memory management
+        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, appConfig.getStreamsBufferMemory());
+        props.put(ProducerConfig.SEND_BUFFER_CONFIG, appConfig.getStreamsSendBufferBytes());
+
+        // consumer memory management
+        props.put(ConsumerConfig.FETCH_MAX_BYTES_CONFIG, appConfig.getStreamsFetchMaxBytes());
+        props.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, appConfig.getStreamsFetchMaxWaitMs());
+        props.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, appConfig.getStreamsReceiveBufferBytes());
+
 
         /*
 
-        props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, AvroSerde.class);
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, AvroSerde.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
