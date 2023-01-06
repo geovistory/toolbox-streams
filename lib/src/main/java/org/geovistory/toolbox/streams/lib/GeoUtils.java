@@ -1,55 +1,54 @@
 package org.geovistory.toolbox.streams.lib;
 
 
-import io.debezium.data.geometry.Point;
+import org.postgis.Point;
+import org.postgis.binary.BinaryParser;
+import org.postgis.binary.BinaryWriter;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 public class GeoUtils {
-    private static final int WKB_POINT = 1; // type constant
-    private static final int WKB_POINT_SIZE = (1 + 4 + 8 + 8); // fixed size
 
+    public static BinaryWriter writer = new BinaryWriter();
+    public static BinaryParser parser = new BinaryParser();
 
     /**
-     * Creates a GeoPoint as OGC Well-known bites (wkb) representation in the form
-     * of a ByteBuffer.
+     * Creates Extended Well-known bytes ByteBuffer for a point geometry
      *
      * @param x e.g. 1.23
      * @param y e.g. 3.0
-     * @return Point as wkb ByteBuffer
+     * @param srid e.g. 4326
+     * @return PostGIS Point
      */
-    public static ByteBuffer pointToByteBuffer(double x, double y) {
-        ByteBuffer wkb = ByteBuffer.allocate(WKB_POINT_SIZE);
-        wkb.put((byte) 1); // BOM
-        wkb.order(ByteOrder.LITTLE_ENDIAN);
-
-        wkb.putInt(WKB_POINT);
-        wkb.putDouble(x);
-        wkb.putDouble(y);
-        wkb.rewind();
-        return wkb;
+    public static ByteBuffer pointToBytes(double x, double y, int srid) {
+        var point = new Point();
+        point.setSrid(srid);
+        point.setX(x);
+        point.setY(y);
+        var bytes = writer.writeBinary(point);
+        return ByteBuffer.wrap(bytes);
     }
 
     /**
-     * Parses wkb byte[] to {x,y}.
+     * Parses Extended Well-known binary byte[] to {x,y}.
      *
-     * @param wkb OGC WKB point geometry
+     * @param bytes Extended WKB point geometry
      * @return {x,y}
      */
-    public static double[] wkbToXY(byte[] wkb) {
-        return Point.parseWKBPoint(wkb);
+    public static Point bytesToPoint(byte[] bytes) {
+        var g = parser.parse(bytes);
+        return g.getFirstPoint();
     }
 
 
     /**
-     * Parses wkb ByteBuffer to Point.
+     * Parses bytes ByteBuffer to Point.
      *
-     * @param wkb OGC WKB point geometry
+     * @param bytes Extended WKB point geometry
      * @return Point
      */
-    public static double[] wkbToXY(ByteBuffer wkb) {
-        return wkbToXY(wkb.array());
+    public static Point bytesToPoint(ByteBuffer bytes) {
+        return bytesToPoint(bytes.array());
     }
 
 }

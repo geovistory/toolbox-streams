@@ -88,9 +88,9 @@ public class StatementEnriched {
         // Map places to literals
         var placeLiterals = infPlaceTable.map((key, value) -> {
                     var wkb = value.getGeoPoint().getWkb();
-                    var coordinates = GeoUtils.wkbToXY(wkb);
-                    var x = coordinates[0];
-                    var y = coordinates[1];
+                    var point = GeoUtils.bytesToPoint(wkb);
+                    var x = point.getX();
+                    var y = point.getY();
                     return KeyValue.pair(
                             LiteralKey.newBuilder().setId(key.getPkEntity()).build(),
                             LiteralValue.newBuilder().setId(key.getPkEntity())

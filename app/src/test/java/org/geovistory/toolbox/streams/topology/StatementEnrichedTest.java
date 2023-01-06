@@ -278,7 +278,6 @@ class StatementEnrichedTest {
                 .build();
         infStatementTopic.pipeInput(kS, vS);
 
-
         double x = 1;
         double y = 2;
 
@@ -289,7 +288,7 @@ class StatementEnrichedTest {
                 .setTableName("")
                 .setPkEntity(objectId)
                 .setGeoPoint(Geography.newBuilder()
-                        .setWkb(GeoUtils.pointToByteBuffer(x, y))
+                        .setWkb(GeoUtils.pointToBytes(x, y,4326))
                         .setSrid(4326)
                         .build())
                 .setFkClass(0)
