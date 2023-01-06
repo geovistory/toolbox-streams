@@ -261,6 +261,50 @@ class StatementEnrichedTest {
     }
 
     @Test
+    void testStatementWithNullLangString() {
+        int subjectId = 10;
+        int propertyId = 20;
+        int objectId = 30;
+        String label = null;
+        // add statement
+        var kS = dev.information.statement.Key.newBuilder()
+                .setPkEntity(1)
+                .build();
+        var vS = dev.information.statement.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setFkSubjectInfo(10)
+                .setFkProperty(20)
+                .setFkObjectInfo(objectId)
+                .build();
+        infStatementTopic.pipeInput(kS, vS);
+
+        // add lang_string
+        var k = dev.information.lang_string.Key.newBuilder().setPkEntity(objectId).build();
+        var v = dev.information.lang_string.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(objectId)
+                .setFkLanguage(0)
+                .setFkClass(0)
+                .setString(label)
+                .build();
+        infLangStringTopic.pipeInput(k, v);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = StatementEnrichedKey.newBuilder()
+                .setSubjectId(subjectId)
+                .setPropertyId(propertyId)
+                .setObjectId(objectId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
+        assertThat(record.getObjectLiteral().getLangString()).isNotNull();
+    }
+
+    @Test
     void testStatementWithPlace() {
         int subjectId = 10;
         int propertyId = 20;
