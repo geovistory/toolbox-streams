@@ -126,6 +126,7 @@ class App {
         var admin = new Admin();
 
         var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
+        var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
         var kafkaFuture = admin.createTopics(new String[]{
@@ -137,7 +138,7 @@ class App {
                 ProjectEntity.output.TOPICS.project_entity,
                 ProjectClassLabel.output.TOPICS.project_class_label,
                 StatementEnriched.output.TOPICS.statement_enriched
-        }, outputTopicPartitions);
+        }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
         // Use the KafkaFuture object to block and wait for the topic creation to complete

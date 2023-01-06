@@ -30,6 +30,9 @@ public enum AppConfig {
     // Number of partitions of output topics
     private final String outputTopicPartitions;
 
+    // Replication factor of output topics
+    private final String outputTopicReplicationFactor;
+
     // rocksdb TOTAL_OFF_HEAP_SIZE_MB
     private final String rocksdbTotalOffHeapMb;
 
@@ -124,6 +127,13 @@ public enum AppConfig {
                 System.getenv("TS_OUTPUT_TOPIC_PARTITIONS"),
                 dotenv.get("TS_OUTPUT_TOPIC_PARTITIONS"),
                 "4"
+        );
+
+        this.outputTopicReplicationFactor = Utils.coalesce(
+                System.getProperty("TS_OUTPUT_TOPIC_REPLICATION_FACTOR"),
+                System.getenv("TS_OUTPUT_TOPIC_REPLICATION_FACTOR"),
+                dotenv.get("TS_OUTPUT_TOPIC_REPLICATION_FACTOR"),
+                "3"
         );
 
         this.rocksdbTotalOffHeapMb = Utils.coalesce(
@@ -227,6 +237,10 @@ public enum AppConfig {
 
     public String getOutputTopicPartitions() {
         return outputTopicPartitions;
+    }
+
+    public String getOutputTopicReplicationFactor() {
+        return outputTopicReplicationFactor;
     }
 
     public String getSchemaRegistryUrl() {
