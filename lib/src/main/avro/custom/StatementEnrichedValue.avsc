@@ -14,7 +14,7 @@
     },
     {
       "name": "object_id",
-      "type": "int"
+      "type": "string"
     },
     {
       "name": "object_literal",

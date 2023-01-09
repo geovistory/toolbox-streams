@@ -10,7 +10,9 @@ flowchart TD
     1d-->2d-->3b-->3c 
     1e-->2e-->3c-->3d 
     1f-->2f-->3d-->3e 
-    1g-->2g-->3e-->4a-->4b-->4c-->4d
+    1g-->2g-->3e-->3f
+    1h-->2h-->3f-->3g 
+    1i-->2i-->3g-->4a-->4b-->4c-->4d
        
     subgraph 1
         1a[statement]
@@ -20,6 +22,8 @@ flowchart TD
         1e[place]
         1f[timePrimitive]
         1g[dimension]
+        1h[table]
+        1i[cell]
     end
     subgraph __2
         2b([2b MapValues])
@@ -28,6 +32,8 @@ flowchart TD
         2e([2e MapValues])
         2f([2f MapValues])
         2g([2g MapValues])
+        2h([2h MapValues])
+        2i([2i MapValues])
        
     end  
     subgraph __3
@@ -36,6 +42,8 @@ flowchart TD
         3c([3c Merge])
         3d([3d Merge])
         3e([3e Merge])
+        3f([3f Merge])
+        3g([3g Merge])
     end  
     subgraph __4
         4a([Left Join])

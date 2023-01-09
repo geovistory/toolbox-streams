@@ -351,4 +351,28 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<dev.data.digital.Key> DatDigitalKey() {
+        Serde<dev.data.digital.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.data.digital.Value> DatDigitalValue() {
+        Serde<dev.data.digital.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.tables.cell.Key> TabCellKey() {
+        Serde<dev.tables.cell.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.tables.cell.Value> TabCellValue() {
+        Serde<dev.tables.cell.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
 }

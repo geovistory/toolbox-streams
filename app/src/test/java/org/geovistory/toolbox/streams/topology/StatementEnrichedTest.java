@@ -29,6 +29,8 @@ class StatementEnrichedTest {
     private TestInputTopic<dev.information.place.Key, dev.information.place.Value> infPlaceTopic;
     private TestInputTopic<dev.information.time_primitive.Key, dev.information.time_primitive.Value> infTimePrimitiveTopic;
     private TestInputTopic<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionTopic;
+    private TestInputTopic<dev.data.digital.Key, dev.data.digital.Value> datDigitalTopic;
+    private TestInputTopic<dev.tables.cell.Key, dev.tables.cell.Value> tabCellTopic;
     private TestOutputTopic<StatementEnrichedKey, StatementEnrichedValue> outputTopic;
 
     @BeforeEach
@@ -83,6 +85,16 @@ class StatementEnrichedTest {
                 avroSerdes.InfDimensionKey().serializer(),
                 avroSerdes.InfDimensionValue().serializer()
         );
+        tabCellTopic = testDriver.createInputTopic(
+                StatementEnriched.input.TOPICS.tab_cell,
+                avroSerdes.TabCellKey().serializer(),
+                avroSerdes.TabCellValue().serializer()
+        );
+        datDigitalTopic = testDriver.createInputTopic(
+                StatementEnriched.input.TOPICS.dat_digital,
+                avroSerdes.DatDigitalKey().serializer(),
+                avroSerdes.DatDigitalValue().serializer()
+        );
 
 
         outputTopic = testDriver.createOutputTopic(
@@ -121,7 +133,7 @@ class StatementEnrichedTest {
         var resultingKey = StatementEnrichedKey.newBuilder()
                 .setSubjectId(subjectId)
                 .setPropertyId(propertyId)
-                .setObjectId(objectId)
+                .setObjectId("i" + objectId)
                 .build();
         var record = outRecords.get(resultingKey);
         assertThat(record.getObjectLiteral()).isNull();
@@ -165,7 +177,7 @@ class StatementEnrichedTest {
         var resultingKey = StatementEnrichedKey.newBuilder()
                 .setSubjectId(subjectId)
                 .setPropertyId(propertyId)
-                .setObjectId(objectId)
+                .setObjectId("i" + objectId)
                 .build();
         var record = outRecords.get(resultingKey);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
@@ -209,7 +221,7 @@ class StatementEnrichedTest {
         var resultingKey = StatementEnrichedKey.newBuilder()
                 .setSubjectId(subjectId)
                 .setPropertyId(propertyId)
-                .setObjectId(objectId)
+                .setObjectId("i" + objectId)
                 .build();
         var record = outRecords.get(resultingKey);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
@@ -253,7 +265,7 @@ class StatementEnrichedTest {
         var resultingKey = StatementEnrichedKey.newBuilder()
                 .setSubjectId(subjectId)
                 .setPropertyId(propertyId)
-                .setObjectId(objectId)
+                .setObjectId("i" + objectId)
                 .build();
         var record = outRecords.get(resultingKey);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
@@ -297,7 +309,7 @@ class StatementEnrichedTest {
         var resultingKey = StatementEnrichedKey.newBuilder()
                 .setSubjectId(subjectId)
                 .setPropertyId(propertyId)
-                .setObjectId(objectId)
+                .setObjectId("i" + objectId)
                 .build();
         var record = outRecords.get(resultingKey);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
@@ -332,7 +344,7 @@ class StatementEnrichedTest {
                 .setTableName("")
                 .setPkEntity(objectId)
                 .setGeoPoint(Geography.newBuilder()
-                        .setWkb(GeoUtils.pointToBytes(x, y,4326))
+                        .setWkb(GeoUtils.pointToBytes(x, y, 4326))
                         .setSrid(4326)
                         .build())
                 .setFkClass(0)
@@ -345,7 +357,7 @@ class StatementEnrichedTest {
         var resultingKey = StatementEnrichedKey.newBuilder()
                 .setSubjectId(subjectId)
                 .setPropertyId(propertyId)
-                .setObjectId(objectId)
+                .setObjectId("i" + objectId)
                 .build();
         var record = outRecords.get(resultingKey);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo("WGS84: " + x + "°, " + y + "°");
@@ -391,10 +403,10 @@ class StatementEnrichedTest {
         var resultingKey = StatementEnrichedKey.newBuilder()
                 .setSubjectId(subjectId)
                 .setPropertyId(propertyId)
-                .setObjectId(objectId)
+                .setObjectId("i" + objectId)
                 .build();
         var record = outRecords.get(resultingKey);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo("todo");
+        assertThat(record.getObjectLiteral().getLabel()).isNull();
         assertThat(record.getObjectLiteral().getTimePrimitive()).isNotNull();
     }
 
@@ -436,11 +448,99 @@ class StatementEnrichedTest {
         var resultingKey = StatementEnrichedKey.newBuilder()
                 .setSubjectId(subjectId)
                 .setPropertyId(propertyId)
-                .setObjectId(objectId)
+                .setObjectId("i" + objectId)
                 .build();
         var record = outRecords.get(resultingKey);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(num + "");
         assertThat(record.getObjectLiteral().getDimension()).isNotNull();
+    }
+
+    @Test
+    void testStatementWithCell() {
+        int subjectId = 10;
+        int propertyId = 20;
+        long objectId = 30;
+        double num = 111;
+        // add statement
+        var kS = dev.information.statement.Key.newBuilder()
+                .setPkEntity(1)
+                .build();
+        var vS = dev.information.statement.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setFkSubjectInfo(10)
+                .setFkProperty(20)
+                .setFkObjectTablesCell(objectId)
+                .build();
+        infStatementTopic.pipeInput(kS, vS);
+
+
+        // add cell
+        var k = dev.tables.cell.Key.newBuilder().setPkCell(objectId).build();
+        var v = dev.tables.cell.Value.newBuilder()
+                .setEntityVersion(0)
+                .setPkCell(objectId)
+                .setFkColumn(0)
+                .setFkRow(0)
+                .setFkDigital(0)
+                .setNumericValue(num)
+                .setFkClass(0)
+                .build();
+        tabCellTopic.pipeInput(k, v);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = StatementEnrichedKey.newBuilder()
+                .setSubjectId(subjectId)
+                .setPropertyId(propertyId)
+                .setObjectId("t" + objectId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getObjectLiteral().getCell().getNumericValue()).isEqualTo(num);
+    }
+
+    @Test
+    void testStatementWithDigital() {
+        int subjectId = 10;
+        int propertyId = 20;
+        int objectId = 30;
+        // add statement
+        var kS = dev.information.statement.Key.newBuilder()
+                .setPkEntity(1)
+                .build();
+        var vS = dev.information.statement.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setFkSubjectInfo(10)
+                .setFkProperty(20)
+                .setFkObjectData(objectId)
+                .build();
+        infStatementTopic.pipeInput(kS, vS);
+
+
+        // add cell
+        var k = dev.data.digital.Key.newBuilder().setPkEntity(objectId).build();
+        var v = dev.data.digital.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setQuillDoc("")
+                .setString("")
+                .setEntityVersion(0)
+                .setPkEntity(objectId)
+                .build();
+        datDigitalTopic.pipeInput(k, v);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = StatementEnrichedKey.newBuilder()
+                .setSubjectId(subjectId)
+                .setPropertyId(propertyId)
+                .setObjectId("d" + objectId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getObjectLiteral().getDigital()).isNotNull();
     }
 
 }

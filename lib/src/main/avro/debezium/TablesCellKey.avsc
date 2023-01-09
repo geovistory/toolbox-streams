@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "Key",
+  "namespace": "dev.tables.cell",
+  "fields": [
+    {
+      "name": "pk_cell",
+      "type": {
+        "type": "long",
+        "connect.default": 0
+      },
+      "default": 0
+    }
+  ],
+  "connect.name": "dev.tables.cell.Key"
+}

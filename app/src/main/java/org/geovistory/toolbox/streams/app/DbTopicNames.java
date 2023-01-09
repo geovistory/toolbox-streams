@@ -17,7 +17,9 @@ public enum DbTopicNames {
     pro_dfh_profile_proj_rel("projects.dfh_profile_proj_rel"),
     sys_config("system.config"),
     dfh_api_property("data_for_history.api_property"),
-    dfh_api_class("data_for_history.api_class");
+    dfh_api_class("data_for_history.api_class"),
+    dat_digital("data.digital"),
+    tab_cell("tables.cell");
 
     private final String name;
 

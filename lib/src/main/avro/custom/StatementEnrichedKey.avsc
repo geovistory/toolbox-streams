@@ -14,7 +14,8 @@
     },
     {
       "name": "object_id",
-      "type": "int"
+      "type": "string",
+      "default": ""
     }
   ]
 }

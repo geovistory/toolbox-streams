@@ -94,6 +94,20 @@ public class RegisterInputTopic {
         );
     }
 
+    public KStream<dev.data.digital.Key, dev.data.digital.Value> datDigitalStream() {
+        return builder.stream(
+                DbTopicNames.dat_digital.getName(),
+                Consumed.with(avroSerdes.DatDigitalKey(), avroSerdes.DatDigitalValue())
+        );
+    }
+
+    public KStream<dev.tables.cell.Key, dev.tables.cell.Value> tabCellStream() {
+        return builder.stream(
+                DbTopicNames.tab_cell.getName(),
+                Consumed.with(avroSerdes.TabCellKey(), avroSerdes.TabCellValue())
+        );
+    }
+
     public KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable() {
         return builder.table(
                 DbTopicNames.inf_statement.getName(),
@@ -120,5 +134,6 @@ public class RegisterInputTopic {
                 Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue())
         );
     }
+
 
 }

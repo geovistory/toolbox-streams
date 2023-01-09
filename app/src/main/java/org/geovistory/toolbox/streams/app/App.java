@@ -61,6 +61,8 @@ class App {
         var infPlaceStream = inputTopics.infPlaceStream();
         var infTimePrimitiveStream = inputTopics.infTimePrimitiveStream();
         var infDimensionStream = inputTopics.infDimensionStream();
+        var datDigitalStream = inputTopics.datDigitalStream();
+        var tabCellStream = inputTopics.tabCellStream();
         var dfhApiClassTable = inputTopics.dfhApiClassTable();
         var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
         var sysConfigTable = inputTopics.sysConfigTable();
@@ -111,7 +113,9 @@ class App {
                 infLangStringStream,
                 infPlaceStream,
                 infTimePrimitiveStream,
-                infDimensionStream
+                infDimensionStream,
+                datDigitalStream,
+                tabCellStream
         );
 
         // add sub-topology ProjectEntity
