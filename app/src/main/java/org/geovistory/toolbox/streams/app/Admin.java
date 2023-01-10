@@ -11,7 +11,7 @@ import java.util.*;
 
 public class Admin {
 
-    public KafkaFuture<Void> createTopics(String[] topicNames, Integer numPartitions) {
+    public KafkaFuture<Void> createTopics(String[] topicNames, Integer numPartitions, short replicationFactor) {
 
         KafkaFuture<Void> future;
 
@@ -19,7 +19,7 @@ public class Admin {
             var config = getTopicConfig();
             var newTopics = new ArrayList<NewTopic>();
             Arrays.stream(topicNames).forEach(topicName -> {
-                var n = new NewTopic(topicName, numPartitions, (short) 1);
+                var n = new NewTopic(topicName, numPartitions, replicationFactor);
                 n.configs(config);
                 newTopics.add(n);
             });

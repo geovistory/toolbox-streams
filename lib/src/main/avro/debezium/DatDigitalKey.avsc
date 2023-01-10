@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "Key",
+  "namespace": "dev.data.digital",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    }
+  ],
+  "connect.name": "dev.data.digital.Key"
+}

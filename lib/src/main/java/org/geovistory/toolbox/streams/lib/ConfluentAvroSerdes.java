@@ -242,4 +242,137 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<dev.information.language.Key> InfLanguageKey() {
+        Serde<dev.information.language.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+
+    public Serde<dev.information.language.Value> InfLanguageValue() {
+        Serde<dev.information.language.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.information.appellation.Key> InfAppellationKey() {
+        Serde<dev.information.appellation.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.information.appellation.Value> InfAppellationValue() {
+        Serde<dev.information.appellation.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.information.lang_string.Key> InfLangStringKey() {
+        Serde<dev.information.lang_string.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.information.lang_string.Value> InfLangStringValue() {
+        Serde<dev.information.lang_string.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.information.place.Key> InfPlaceKey() {
+        Serde<dev.information.place.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.information.place.Value> InfPlaceValue() {
+        Serde<dev.information.place.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.information.time_primitive.Key> InfTimePrimitiveKey() {
+        Serde<dev.information.time_primitive.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.information.time_primitive.Value> InfTimePrimitiveValue() {
+        Serde<dev.information.time_primitive.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.information.dimension.Key> InfDimensionKey() {
+        Serde<dev.information.dimension.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.information.dimension.Value> InfDimensionValue() {
+        Serde<dev.information.dimension.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.information.statement.Key> InfStatementKey() {
+        Serde<dev.information.statement.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.information.statement.Value> InfStatementValue() {
+        Serde<dev.information.statement.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<LiteralKey> LiteralKey() {
+        Serde<LiteralKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<LiteralValue> LiteralValue() {
+        Serde<LiteralValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<StatementEnrichedKey> StatementEnrichedKey() {
+        Serde<StatementEnrichedKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<StatementEnrichedValue> StatementEnrichedValue() {
+        Serde<StatementEnrichedValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.data.digital.Key> DatDigitalKey() {
+        Serde<dev.data.digital.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.data.digital.Value> DatDigitalValue() {
+        Serde<dev.data.digital.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.tables.cell.Key> TabCellKey() {
+        Serde<dev.tables.cell.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.tables.cell.Value> TabCellValue() {
+        Serde<dev.tables.cell.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
 }

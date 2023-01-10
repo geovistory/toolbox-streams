@@ -1,0 +1,89 @@
+{
+  "type": "record",
+  "name": "LiteralValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of a literal (object of a statement)",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "language",
+      "type": [
+        "null",
+        "dev.information.language.Value"
+      ],
+      "default": null
+    },
+    {
+      "name": "appellation",
+      "type": [
+        "null",
+        "dev.information.appellation.Value"
+      ],
+      "default": null
+    },
+    {
+      "name": "lang_string",
+      "type": [
+        "null",
+        "dev.information.lang_string.Value"
+      ],
+      "default": null
+    },
+    {
+      "name": "place",
+      "type": [
+        "null",
+        "dev.information.place.Value"
+      ],
+      "default": null
+    },
+    {
+      "name": "time_primitive",
+      "type": [
+        "null",
+        "dev.information.time_primitive.Value"
+      ],
+      "default": null
+    },
+    {
+      "name": "dimension",
+      "type": [
+        "null",
+        "dev.information.dimension.Value"
+      ],
+      "default": null
+    },
+    {
+      "name": "cell",
+      "type": [
+        "null",
+        "dev.tables.cell.Value"
+      ],
+      "default": null
+    },
+    {
+      "name": "digital",
+      "type": [
+        "null",
+        "dev.data.digital.Value"
+      ],
+      "default": null
+    }
+  ]
+}

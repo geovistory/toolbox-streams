@@ -1,0 +1,113 @@
+{
+  "type": "record",
+  "name": "Value",
+  "namespace": "dev.information.dimension",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "schema_name",
+      "type": "string"
+    },
+    {
+      "name": "table_name",
+      "type": "string"
+    },
+    {
+      "name": "notes",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "fk_creator",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "fk_last_modifier",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "tmsp_creation",
+      "type": [
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.default": "1970-01-01T00:00:00Z",
+          "connect.name": "io.debezium.time.ZonedTimestamp"
+        },
+        "null"
+      ],
+      "default": "1970-01-01T00:00:00Z"
+    },
+    {
+      "name": "tmsp_last_modification",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.name": "io.debezium.time.ZonedTimestamp"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "sys_period",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "metadata",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.name": "io.debezium.data.Json"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "fk_class",
+      "type": "int"
+    },
+    {
+      "name": "fk_measurement_unit",
+      "type": "int"
+    },
+    {
+      "name": "numeric_value",
+      "type": "double"
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ],
+  "connect.name": "dev.information.dimension.Value"
+}
