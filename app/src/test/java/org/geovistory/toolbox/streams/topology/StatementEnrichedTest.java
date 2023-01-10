@@ -131,7 +131,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("i" + objectId)
                 .build();
@@ -175,7 +175,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("i" + objectId)
                 .build();
@@ -219,7 +219,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("i" + objectId)
                 .build();
@@ -263,7 +263,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("i" + objectId)
                 .build();
@@ -307,7 +307,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("i" + objectId)
                 .build();
@@ -355,7 +355,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("i" + objectId)
                 .build();
@@ -401,7 +401,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("i" + objectId)
                 .build();
@@ -446,7 +446,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("i" + objectId)
                 .build();
@@ -492,7 +492,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("t" + objectId)
                 .build();
@@ -535,7 +535,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId(subjectId)
+                .setSubjectId("i" + subjectId)
                 .setPropertyId(propertyId)
                 .setObjectId("d" + objectId)
                 .build();

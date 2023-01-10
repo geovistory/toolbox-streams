@@ -174,7 +174,7 @@ public class StatementEnriched {
                         .setId(getObjectStringId(value))
                         .build(),
                 (statement, literal) -> StatementEnrichedValue.newBuilder()
-                        .setSubjectId(statement.getFkSubjectInfo())
+                        .setSubjectId(getSubjectStringId(statement))
                         .setPropertyId(statement.getFkProperty())
                         .setObjectId(getObjectStringId(statement))
                         .setObjectLiteral(literal)
@@ -216,8 +216,26 @@ public class StatementEnriched {
     private static String getObjectStringId(Value value) {
         String id = "";
         if (value.getFkObjectInfo() > 0) id = "i" + value.getFkObjectInfo();
-        if (value.getFkObjectTablesCell() > 0) id = "t" + value.getFkObjectTablesCell();
-        if (value.getFkObjectData() > 0) id = "d" + value.getFkObjectData();
+        else if (value.getFkObjectTablesCell() > 0) id = "t" + value.getFkObjectTablesCell();
+        else if (value.getFkObjectData() > 0) id = "d" + value.getFkObjectData();
+        return id;
+    }
+
+    /**
+     * Returns a string object id for statement prefixed
+     * with one letter for the postgres schema name:
+     * - "i" for information
+     * - "d" for data
+     * - "t" for table
+     *
+     * @param value statement
+     * @return e.g. "i2134123" or "t232342"
+     */
+    private static String getSubjectStringId(Value value) {
+        String id = "";
+        if (value.getFkSubjectInfo() > 0) id = "i" + value.getFkSubjectInfo();
+        else if (value.getFkSubjectTablesCell() > 0) id = "t" + value.getFkSubjectTablesCell();
+        else if (value.getFkSubjectData() > 0) id = "d" + value.getFkSubjectData();
         return id;
     }
 

@@ -6,7 +6,8 @@
   "fields": [
     {
       "name": "subject_id",
-      "type": "int"
+      "type": "string",
+      "default": ""
     },
     {
       "name": "property_id",
@@ -14,7 +15,8 @@
     },
     {
       "name": "object_id",
-      "type": "string"
+      "type": "string",
+      "default": ""
     },
     {
       "name": "object_literal",
