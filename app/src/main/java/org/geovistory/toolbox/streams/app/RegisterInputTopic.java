@@ -18,12 +18,14 @@ public class RegisterInputTopic {
         this.builder = builder;
         this.avroSerdes = new ConfluentAvroSerdes();
     }
+
     public KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable() {
         return builder.table(
                 DbTopicNames.pro_projects.getName(),
                 Consumed.with(avroSerdes.ProProjectKey(), avroSerdes.ProProjectValue())
         );
     }
+
     public KTable<dev.projects.text_property.Key, dev.projects.text_property.Value> proTextPropertyTable() {
         return builder.table(
                 DbTopicNames.pro_text_property.getName(),
@@ -42,6 +44,13 @@ public class RegisterInputTopic {
         return builder.table(
                 DbTopicNames.pro_info_proj_rel.getName(),
                 Consumed.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue())
+        );
+    }
+
+    public KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream() {
+        return builder.stream(
+                DbTopicNames.pro_entity_label_config.getName(),
+                Consumed.with(avroSerdes.ProEntityLabelConfigKey(), avroSerdes.ProEntityLabelConfigValue())
         );
     }
 
@@ -128,6 +137,7 @@ public class RegisterInputTopic {
                 Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue())
         );
     }
+
     public KTable<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> dfhApiClassTable() {
         return builder.table(
                 DbTopicNames.dfh_api_class.getName(),

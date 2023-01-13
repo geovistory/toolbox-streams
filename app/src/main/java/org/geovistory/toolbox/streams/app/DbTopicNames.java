@@ -14,6 +14,7 @@ public enum DbTopicNames {
     pro_projects("projects.project"),
     pro_text_property("projects.text_property"),
     pro_info_proj_rel("projects.info_proj_rel"),
+    pro_entity_label_config("projects.entity_label_config"),
     pro_dfh_profile_proj_rel("projects.dfh_profile_proj_rel"),
     sys_config("system.config"),
     dfh_api_property("data_for_history.api_property"),

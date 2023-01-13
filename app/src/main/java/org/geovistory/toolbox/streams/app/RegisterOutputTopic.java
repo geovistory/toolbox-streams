@@ -3,12 +3,10 @@ package org.geovistory.toolbox.streams.app;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.topologies.GeovClassLabel;
-import org.geovistory.toolbox.streams.topologies.OntomeClassLabel;
-import org.geovistory.toolbox.streams.topologies.ProjectClass;
-import org.geovistory.toolbox.streams.topologies.ProjectProfiles;
+import org.geovistory.toolbox.streams.topologies.*;
 
 /**
  * This class provides helper methods to register
@@ -42,6 +40,60 @@ public class RegisterOutputTopic {
     public KStream<ProjectClassKey, ProjectClassValue> projectClassStream() {
         return builder.stream(ProjectClass.output.TOPICS.project_class,
                 Consumed.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue()));
+    }
+
+    public KTable<ProjectClassKey, ProjectClassValue> projectClassTable() {
+        return builder.table(ProjectClass.output.TOPICS.project_class,
+                Consumed.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue()));
+    }
+
+    public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
+        return builder.table(ProjectEntity.output.TOPICS.project_entity,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityValue()));
+    }
+
+    public KTable<dev.information.statement.Key, StatementEnrichedValue> statementEnrichedTable() {
+        return builder.table(StatementEnriched.output.TOPICS.statement_enriched,
+                Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
 
     }
+
+    public KTable<ProjectStatementKey, ProjectStatementValue> projectStatementTable() {
+        return builder.table(ProjectStatement.output.TOPICS.project_statement,
+                Consumed.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue()));
+
+    }
+
+    public KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable() {
+        return builder.table(CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config,
+                Consumed.with(avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue()));
+    }
+
+    public KTable<ProjectClassKey, ProjectEntityLabelConfigValue> projectEntityLabelConfigTable() {
+        return builder.table(ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config_enriched,
+                Consumed.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectEntityLabelConfigValue()));
+    }
+
+
+    public KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsStream() {
+        return builder.stream(ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
+                Consumed.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
+    }
+
+    public KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopIncomingStatementsStream() {
+        return builder.stream(ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
+                Consumed.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
+    }
+
+    public KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopStatementsTable() {
+        return builder.table(ProjectTopStatements.output.TOPICS.project_top_statements,
+                Consumed.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
+    }
+
+    public KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable() {
+        return builder.table(ProjectEntityLabel.output.TOPICS.project_entity_label,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelValue()));
+    }
+
+
 }

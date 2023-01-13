@@ -14,7 +14,6 @@ import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.avro.LiteralKey;
 import org.geovistory.toolbox.streams.avro.LiteralValue;
-import org.geovistory.toolbox.streams.avro.StatementEnrichedKey;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
@@ -177,6 +176,7 @@ public class StatementEnriched {
                         .setSubjectId(getSubjectStringId(statement))
                         .setPropertyId(statement.getFkProperty())
                         .setObjectId(getObjectStringId(statement))
+                        .setObjectLabel(literal == null ? null : literal.getLabel())
                         .setObjectLiteral(literal)
                         .setDeleted$1(Utils.stringIsNotEqualTrue(statement.getDeleted$1()))
                         .build(),
@@ -186,18 +186,11 @@ public class StatementEnriched {
         );
 
         var statementsEnrichedStream = statementEnrichedTable
-                .toStream()
-                .map((key, value) -> KeyValue.pair(
-                        StatementEnrichedKey.newBuilder()
-                                .setSubjectId(value.getSubjectId())
-                                .setPropertyId(value.getPropertyId())
-                                .setObjectId(value.getObjectId())
-                                .build(),
-                        value
-                ));
+                .toStream();
+
 
         statementsEnrichedStream.to(output.TOPICS.statement_enriched,
-                Produced.with(avroSerdes.StatementEnrichedKey(), avroSerdes.StatementEnrichedValue()));
+                Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
 
         return builder;
 

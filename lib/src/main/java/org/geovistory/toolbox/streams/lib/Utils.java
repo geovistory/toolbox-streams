@@ -55,6 +55,11 @@ public class Utils {
         return Objects.equals(s, "true");
     }
 
+    public static Boolean booleanIsNotEqualTrue(Boolean s) {
+        if(s==null) return true;
+        return !s;
+    }
+
 
     /**
      * Returns the language Id of a Geovistory Language for the given language code

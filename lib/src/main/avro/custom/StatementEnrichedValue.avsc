@@ -19,11 +19,28 @@
       "default": ""
     },
     {
+      "name": "subject_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "object_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
       "name": "object_literal",
       "type": [
         "null",
         "org.geovistory.toolbox.streams.avro.LiteralValue"
-      ]
+      ],
+      "default": null
     },
     {
       "name": "__deleted",

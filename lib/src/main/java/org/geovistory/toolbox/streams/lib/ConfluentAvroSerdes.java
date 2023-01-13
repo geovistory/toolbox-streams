@@ -339,12 +339,6 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<StatementEnrichedKey> StatementEnrichedKey() {
-        Serde<StatementEnrichedKey> serdes = new SpecificAvroSerde<>();
-        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
-        return serdes;
-    }
-
     public Serde<StatementEnrichedValue> StatementEnrichedValue() {
         Serde<StatementEnrichedValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
@@ -374,5 +368,91 @@ public class ConfluentAvroSerdes {
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
+    public Serde<ProjectStatementKey> ProjectStatementKey() {
+        Serde<ProjectStatementKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectStatementValue> ProjectStatementValue() {
+        Serde<ProjectStatementValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<dev.projects.entity_label_config.Key> ProEntityLabelConfigKey() {
+        Serde<dev.projects.entity_label_config.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<dev.projects.entity_label_config.Value> ProEntityLabelConfigValue() {
+        Serde<dev.projects.entity_label_config.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityLabelConfigKey> CommunityEntityLabelConfigKey() {
+        Serde<CommunityEntityLabelConfigKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityLabelConfigValue> CommunityEntityLabelConfigValue() {
+        Serde<CommunityEntityLabelConfigValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityLabelConfigValue> ProjectEntityLabelConfigValue() {
+        Serde<ProjectEntityLabelConfigValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+
+    public Serde<ProjectTopStatementsKey> ProjectTopStatementsKey() {
+        Serde<ProjectTopStatementsKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectTopStatementsValue> ProjectTopStatementsValue() {
+        Serde<ProjectTopStatementsValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityWithConfigValue> ProjectEntityWithConfigValue() {
+        Serde<ProjectEntityWithConfigValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityLabelPartKey> ProjectEntityLabelPartKey() {
+        Serde<ProjectEntityLabelPartKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityLabelPartValue> ProjectEntityLabelPartValue() {
+        Serde<ProjectEntityLabelPartValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityLabelSlotWithStringValue> ProjectEntityLabelSlotWithStringValue() {
+        Serde<ProjectEntityLabelSlotWithStringValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityLabelValue> ProjectEntityLabelValue() {
+        Serde<ProjectEntityLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
 
 }

@@ -10,7 +10,7 @@
     },
     {
       "name": "entity_id",
-      "type": "int"
+      "type": "string"
     },
     {
       "name": "class_id",

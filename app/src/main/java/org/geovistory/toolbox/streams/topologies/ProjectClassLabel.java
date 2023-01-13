@@ -7,6 +7,7 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
+import org.geovistory.toolbox.streams.app.I;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
@@ -36,9 +37,6 @@ public class ProjectClassLabel {
                 registerOutputTopic.projectClassStream()
         ).build();
     }
-
-    public static final Integer DEFAULT_PROJECT = 375669;
-
     public static StreamsBuilder addProcessors(
             StreamsBuilder builder,
             KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable,
@@ -163,7 +161,7 @@ public class ProjectClassLabel {
                 geovClassLabelTable,
                 projectClassLanguageValue -> GeovClassLabelKey.newBuilder()
                         .setClassId(projectClassLanguageValue.getClassId())
-                        .setProjectId(DEFAULT_PROJECT)
+                        .setProjectId(I.DEFAULT_PROJECT.get())
                         .setLanguageId(projectClassLanguageValue.getLanguageId())
                         .build(),
                 (value1, value2) -> {

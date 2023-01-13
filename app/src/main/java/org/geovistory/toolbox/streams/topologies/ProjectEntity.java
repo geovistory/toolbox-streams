@@ -54,7 +54,7 @@ public class ProjectEntity {
                     var deleted = v1Deleted || v2Deleted || notInProject;
                     return ProjectEntityValue.newBuilder()
                             .setProjectId(value1.getFkProject())
-                            .setEntityId(value1.getFkEntity())
+                            .setEntityId("i" + value1.getFkEntity())
                             .setClassId(value2.getFkClass())
                             .setDeleted$1(deleted)
                             .build();
@@ -69,15 +69,11 @@ public class ProjectEntity {
                 .map((key, value) -> {
                     var k = ProjectEntityKey.newBuilder()
                             .setProjectId(key.getFkProject())
-                            .setEntityId(key.getFkEntity())
+                            .setEntityId("i" + key.getFkEntity())
                             .build();
-                    if (value.getDeleted$1()) {
-                        // add tombstone
-                        return KeyValue.pair(k, null);
-                    }
                     var v = ProjectEntityValue.newBuilder()
                             .setProjectId(key.getFkProject())
-                            .setEntityId(key.getFkEntity())
+                            .setEntityId("i" + key.getFkEntity())
                             .setClassId(value.getClassId())
                             .setDeleted$1(value.getDeleted$1())
                             .build();

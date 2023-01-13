@@ -101,12 +101,7 @@ _{prefix_out} = TS_OUTPUT_TOPIC_NAME_PREFIX_
 ## Output model
 
 ### Key
-
-| field      | type |
-|------------|------|
-| subjectId  | int  |
-| propertyId | int  |
-| objectId   | int  |
+InfStatementKey
 
 ### Value
 
