@@ -131,7 +131,11 @@ public class ProjectEntityLabel {
                     result.setDeleted$1(false);
 
                     // get the list of relevant statements
-                    var relevantStmts = topStatements.getStatements().subList(0, config.getNrOfStatementsInLabel());
+                    var relevantStmts = topStatements.getStatements();
+                    var maxSize = config.getNrOfStatementsInLabel();
+                    if (relevantStmts.size() > maxSize && maxSize > 0) {
+                        relevantStmts = relevantStmts.subList(0, maxSize);
+                    }
 
                     // concatenate the strings
                     var list = relevantStmts

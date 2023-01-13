@@ -187,4 +187,66 @@ class ProjectEntityLabelTest {
 
     }
 
+    @Test
+    void testShouldAllowNrOfStatementsInLabelBiggerThanStatements() {
+
+        var entityId = "i1";
+        var projectId = 2;
+        var classId = 3;
+
+        var propIdFirstPart = 5;
+
+        var expected = "S1";
+
+        // add an entity
+        var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(projectId).build();
+        var vE = ProjectEntityValue.newBuilder().setEntityId(entityId).setProjectId(projectId).setClassId(3).build();
+        projectEntityTopic.pipeInput(kE, vE);
+        /*
+         * The entity label configuration is:
+         * - property_it = 5, is_outgoing = false, number_of_statements = 3
+         */
+        var kC = ProjectClassKey.newBuilder().setProjectId(projectId).setClassId(classId).build();
+        var vC = ProjectEntityLabelConfigValue.newBuilder().setProjectId(projectId).setClassId(classId)
+                .setConfig(EntityLabelConfig.newBuilder().setLabelParts(List.of(
+                        EntityLabelConfigPart.newBuilder().setOrdNum(1).setField(EntityLabelConfigPartField.newBuilder()
+                                .setFkProperty(propIdFirstPart)
+                                .setIsOutgoing(false)
+                                .setNrOfStatementsInLabel(3).build()).build()
+                )).build()).build();
+
+        projectEntityLabelConfigTopic.pipeInput(kC, vC);
+        /*
+         * Statements for the first part:
+         * - subject_id = i1, property_id = 5, object_id = i1, ord_num_for_domain = 1, subject_label = S1
+         */
+        var kS = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId).setEntityId(entityId)
+                .setPropertyId(propIdFirstPart).setIsOutgoing(false).build();
+        var vS = ProjectTopStatementsValue.newBuilder()
+                .setProjectId(projectId).setEntityId(entityId)
+                .setPropertyId(propIdFirstPart).setIsOutgoing(false)
+                .setStatements(List.of(
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(1)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdFirstPart)
+                                        .setSubjectLabel("S1").build()).build()
+                )).build();
+        projectTopStatements.pipeInput(kS, vS);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectEntityKey.newBuilder()
+                .setEntityId(entityId)
+                .setProjectId(projectId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getLabel()).isEqualTo(expected);
+
+    }
+
 }
