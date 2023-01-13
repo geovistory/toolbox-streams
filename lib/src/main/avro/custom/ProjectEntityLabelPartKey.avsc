@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "ProjectEntityLabelPartKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "ord_num",
+      "type": "int"
+    }
+  ]
+}

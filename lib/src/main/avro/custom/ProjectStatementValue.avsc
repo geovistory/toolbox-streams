@@ -1,0 +1,87 @@
+{
+  "type": "record",
+  "name": "ProjectStatementValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of project statement",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "statement_id",
+      "type": "int"
+    },
+    {
+      "name": "statement",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.StatementEnrichedValue"
+      ]
+    },
+    {
+      "name": "ord_num_for_domain",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "ord_num_for_range",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "created_by",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "modified_by",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "created_at",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.name": "io.debezium.time.ZonedTimestamp"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "modified_at",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.name": "io.debezium.time.ZonedTimestamp"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

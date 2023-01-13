@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "Key",
+  "namespace": "dev.projects.entity_label_config",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    }
+  ],
+  "connect.name": "dev.projects.entity_label_config.Key"
+}

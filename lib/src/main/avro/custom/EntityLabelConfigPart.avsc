@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "EntityLabelConfigPart",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Entity label config",
+  "fields": [
+    {
+      "name": "ordNum",
+      "type": "int"
+    },
+    {
+      "name": "field",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityLabelConfigPartField"
+      ],
+      "default": null
+    }
+  ]
+}

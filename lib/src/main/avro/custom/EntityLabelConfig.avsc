@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "EntityLabelConfig",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Entity label config",
+  "fields": [
+    {
+      "name": "labelParts",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": "org.geovistory.toolbox.streams.avro.EntityLabelConfigPart"
+        }
+      ],
+      "default": null
+    }
+  ]
+}
