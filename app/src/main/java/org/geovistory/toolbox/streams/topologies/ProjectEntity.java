@@ -6,6 +6,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
@@ -66,6 +67,10 @@ public class ProjectEntity {
 
         var projectEntityStream = projectEntityJoin
                 .toStream()
+                .filter(
+                        (key, value) -> value.getClassId() != null,
+                        Named.as("filter_entity_without_class")
+                )
                 .map((key, value) -> {
                     var k = ProjectEntityKey.newBuilder()
                             .setProjectId(key.getFkProject())
