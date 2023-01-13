@@ -47,6 +47,7 @@ class App {
 
     private static void addSubTopologies(StreamsBuilder builder) {
         var inputTopics = new RegisterInputTopic(builder);
+        var outputTopics = new RegisterOutputTopic(builder);
 
         // register input topics as KTables
         var proProjectTable = inputTopics.proProjectTable();
@@ -67,6 +68,11 @@ class App {
         var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
         var sysConfigTable = inputTopics.sysConfigTable();
 
+        // register input topics as KStreams
+        var proEntityLabelConfigStream = inputTopics.proEntityLabelConfigStream();
+
+        // register recursive output topics as KTables
+        var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
 
         // add sub-topology ProjectProfiles
         var projectProfiles = ProjectProfiles.addProcessors(builder,
@@ -85,6 +91,7 @@ class App {
                 projectProfiles.projectProfileStream(),
                 dfhApiClassTable
         );
+        var projectClassTable = outputTopics.projectClassTable();
 
         // add sub-topology OntomeClassLabel
         var ontomeClassLabel = OntomeClassLabel.addProcessors(builder,
@@ -104,9 +111,29 @@ class App {
                 projectClass.projectClassStream()
         );
 
+        // add sub-topology CommunityEntityLabelConfig
+        CommunityEntityLabelConfig.addProcessors(builder,
+                proEntityLabelConfigStream
+        );
+        var communityEntityLabelConfigTable = outputTopics.communityEntityLabelConfigTable();
+
+        // add sub-topology ProjectEntityLabelConfig
+        ProjectEntityLabelConfig.addProcessors(builder,
+                projectClassTable,
+                proEntityLabelConfigStream,
+                communityEntityLabelConfigTable
+        );
+
+        // add sub-topology ProjectEntityLabelConfig
+        ProjectEntityLabelConfig.addProcessors(builder,
+                projectClassTable,
+                proEntityLabelConfigStream,
+                communityEntityLabelConfigTable
+        );
+        var projectEntityLabelConfigTable = outputTopics.projectEntityLabelConfigTable();
 
         // add sub-topology StatementEnriched
-        StatementEnriched.addProcessors(builder,
+        var statementEnriched = StatementEnriched.addProcessors(builder,
                 infStatementTable,
                 infLanguageStream,
                 infAppellationStream,
@@ -118,11 +145,42 @@ class App {
                 tabCellStream
         );
 
+        // add sub-topology ProjectStatement
+        ProjectStatement.addProcessors(builder,
+                statementEnriched.statementEnrichedTable(),
+                proInfoProjRelTable,
+                projectEntityLabelTable
+        );
+        var projectStatementTable = outputTopics.projectStatementTable();
+
+        // add sub-topology ProjectTopIncomingStatements
+        var projectTopIncomingStatements = ProjectTopIncomingStatements.addProcessors(builder,
+                projectStatementTable
+        );
+
+        // add sub-topology ProjectTopOutgoingStatements
+        var projectTopOutgoingStatements = ProjectTopOutgoingStatements.addProcessors(builder,
+                projectStatementTable
+        );
+
+        // add sub-topology ProjectTopStatements
+        var projectTopStatements = ProjectTopStatements.addProcessors(builder,
+                projectTopOutgoingStatements.projectTopStatementStream(),
+                projectTopIncomingStatements.projectTopStatementStream()
+        );
+
         // add sub-topology ProjectEntity
         ProjectEntity.addProcessors(builder,
                 infResourceTable,
                 proInfoProjRelTable
         );
+        var projectEntityTable = outputTopics.projectEntityTable();
+        ProjectEntityLabel.addProcessors(builder,
+                projectEntityTable,
+                projectEntityLabelConfigTable,
+                projectTopStatements.projectTopStatementTable()
+        );
+
 
     }
 
@@ -141,7 +199,14 @@ class App {
                 ProjectProperty.output.TOPICS.project_property,
                 ProjectEntity.output.TOPICS.project_entity,
                 ProjectClassLabel.output.TOPICS.project_class_label,
-                StatementEnriched.output.TOPICS.statement_enriched
+                StatementEnriched.output.TOPICS.statement_enriched,
+                ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config_enriched,
+                CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config,
+                ProjectStatement.output.TOPICS.project_statement,
+                ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
+                ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
+                ProjectTopStatements.output.TOPICS.project_top_statements,
+                ProjectEntityLabel.output.TOPICS.project_entity_label
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 

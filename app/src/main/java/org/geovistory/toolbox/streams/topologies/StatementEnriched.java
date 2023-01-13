@@ -40,10 +40,10 @@ public class StatementEnriched {
                 registerInputTopic.infDimensionStream(),
                 registerInputTopic.datDigitalStream(),
                 registerInputTopic.tabCellStream()
-        ).build();
+        ).builder().build();
     }
 
-    public static StreamsBuilder addProcessors(
+    public static StatementEnrichedReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable,
             KStream<dev.information.language.Key, dev.information.language.Value> infLanguageTable,
@@ -192,7 +192,7 @@ public class StatementEnriched {
         statementsEnrichedStream.to(output.TOPICS.statement_enriched,
                 Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
 
-        return builder;
+        return new StatementEnrichedReturnValue(builder, statementEnrichedTable, statementsEnrichedStream);
 
     }
 
