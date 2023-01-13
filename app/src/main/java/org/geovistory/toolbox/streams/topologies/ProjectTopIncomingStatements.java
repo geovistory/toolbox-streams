@@ -99,8 +99,7 @@ public class ProjectTopIncomingStatements {
 
     public static List<ProjectStatementValue> addStatement(List<ProjectStatementValue> existingList, ProjectStatementValue newItem) {
         int targetPosition = -1;
-        ProjectStatementValue replacedItem = null;
-
+        int replacedItemPosition = -1;
 
         for (int i = 0; i < existingList.size(); i++) {
             var oldItem = existingList.get(i);
@@ -116,14 +115,14 @@ public class ProjectTopIncomingStatements {
             // if the newItem replaces an oldItem...
             if (oldId == newId) {
                 // ...keep track of this old item
-                replacedItem = oldItem;
+                replacedItemPosition = i;
             }
         }
 
         // if item was deleted...
         if (newItem.getDeleted$1() != null && newItem.getDeleted$1()) {
             // ...remove it
-            if (replacedItem != null) existingList.remove(replacedItem);
+            if (replacedItemPosition > -1) existingList.remove(replacedItemPosition);
             // ...and return immediately
             return existingList;
         }
@@ -131,6 +130,11 @@ public class ProjectTopIncomingStatements {
         // add item at retrieved position
         if (targetPosition > -1) {
             existingList.add(targetPosition, newItem);
+            // if it was inserted before the replaced item...
+            if (targetPosition < replacedItemPosition) {
+                // ...increase replace item position
+                replacedItemPosition = replacedItemPosition + 1;
+            }
         }
         // append item to the end
         else if (existingList.size() < 5) {
@@ -138,8 +142,8 @@ public class ProjectTopIncomingStatements {
         }
 
         // remove the replaced item
-        if (replacedItem != null) {
-            existingList.remove(replacedItem);
+        if (replacedItemPosition > -1) {
+            existingList.remove(replacedItemPosition);
         }
 
         // keep max. list size
