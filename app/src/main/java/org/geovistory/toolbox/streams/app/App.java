@@ -123,13 +123,6 @@ class App {
                 proEntityLabelConfigStream,
                 communityEntityLabelConfigTable
         );
-
-        // add sub-topology ProjectEntityLabelConfig
-        ProjectEntityLabelConfig.addProcessors(builder,
-                projectClassTable,
-                proEntityLabelConfigStream,
-                communityEntityLabelConfigTable
-        );
         var projectEntityLabelConfigTable = outputTopics.projectEntityLabelConfigTable();
 
         // add sub-topology StatementEnriched
