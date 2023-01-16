@@ -136,7 +136,13 @@ class StatementEnrichedTest {
     @Test
     void testStatementWithAppellation() {
         int objectId = 30;
-        String label = "Lyon";
+
+        // string with more than 100
+        String label = "Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_";
+
+        // string with 100 characters
+        String expected = "Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_";
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -167,7 +173,7 @@ class StatementEnrichedTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
+        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(expected);
         assertThat(record.getObjectLiteral().getAppellation()).isNotNull();
     }
 

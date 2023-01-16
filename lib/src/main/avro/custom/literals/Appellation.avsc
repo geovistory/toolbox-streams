@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "Appellation",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "string",
+      "type": "string"
+    },
+    {
+      "name": "fk_class",
+      "type": "int"
+    }
+  ]
+}

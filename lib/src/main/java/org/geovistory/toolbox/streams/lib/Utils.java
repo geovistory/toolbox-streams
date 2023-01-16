@@ -56,7 +56,7 @@ public class Utils {
     }
 
     public static Boolean booleanIsNotEqualTrue(Boolean s) {
-        if(s==null) return true;
+        if (s == null) return true;
         return !s;
     }
 
@@ -70,6 +70,20 @@ public class Utils {
     public static Integer isoLangToGeoId(String isoLang) {
         return languageMap().get(isoLang.trim());
 
+    }
+
+    /**
+     * Shorten a string to a maximum length
+     * @param inputString string to shorten
+     * @param maxLength the maximum length of the string
+     * @return if inputString is longer than maxLength, the first {maxLength} characters of inputString,
+     *         else the inputString
+     *         if inputString is null, returns null
+     */
+    public static String shorten(String inputString, int maxLength) {
+        if (inputString == null) return null;
+        if (inputString.length() > maxLength) return inputString.substring(0, maxLength);
+        else return inputString;
     }
 
     private static Map<String, Integer> languageMap() {

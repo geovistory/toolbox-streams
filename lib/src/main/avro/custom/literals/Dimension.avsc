@@ -1,0 +1,27 @@
+{
+  "type": "record",
+  "name": "Dimension",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "fk_class",
+      "type": "int"
+    },
+    {
+      "name": "fk_measurement_unit",
+      "type": "int"
+    },
+    {
+      "name": "numeric_value",
+      "type": "double"
+    }
+  ]
+}

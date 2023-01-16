@@ -1,0 +1,43 @@
+{
+  "type": "record",
+  "name": "Cell",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "pk_cell",
+      "type": {
+        "type": "long",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "fk_column",
+      "type": "int"
+    },
+    {
+      "name": "fk_row",
+      "type": "long"
+    },
+    {
+      "name": "fk_digital",
+      "type": "int"
+    },
+    {
+      "name": "numeric_value",
+      "type": [
+        "null",
+        "double"
+      ],
+      "default": null
+    },
+    {
+      "name": "string_value",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}

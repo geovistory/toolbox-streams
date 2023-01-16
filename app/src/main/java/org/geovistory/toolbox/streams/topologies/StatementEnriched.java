@@ -12,15 +12,15 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
-import org.geovistory.toolbox.streams.avro.LiteralKey;
-import org.geovistory.toolbox.streams.avro.LiteralValue;
-import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 
 public class StatementEnriched {
+
+    public static final int MAX_STRING_LENGTH = 100;
 
     public static void main(String[] args) {
         System.out.println(buildStandalone(new StreamsBuilder()).describe());
@@ -63,7 +63,7 @@ public class StatementEnriched {
         var languageLiterals = infLanguageTable.map((key, value) -> KeyValue.pair(
                 LiteralKey.newBuilder().setId("i" + value.getPkEntity()).build(),
                 LiteralValue.newBuilder().setId("i" + value.getPkEntity())
-                        .setLanguage(value)
+                        .setLanguage(tranformLanguage(value))
                         .setClassId(value.getFkClass())
                         .setLabel(value.getNotes())
                         .build()
@@ -71,24 +71,30 @@ public class StatementEnriched {
 
 
         // Map appellations to literals
-        var appellationLiterals = infAppellationTable.map((key, value) -> KeyValue.pair(
-                LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                LiteralValue.newBuilder().setId("i" + key.getPkEntity())
-                        .setAppellation(value)
-                        .setClassId(value.getFkClass())
-                        .setLabel(value.getString())
-                        .build()
-        ));
+        var appellationLiterals = infAppellationTable.map((key, value) -> {
+            var transformedValue = tranformAppellation(value);
+            return KeyValue.pair(
+                    LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                    LiteralValue.newBuilder().setId("i" + key.getPkEntity())
+                            .setAppellation(transformedValue)
+                            .setClassId(value.getFkClass())
+                            .setLabel(transformedValue.getString())
+                            .build()
+            );
+        });
 
         // Map langStrings to literals
-        var langStringLiterals = infLangStringTable.map((key, value) -> KeyValue.pair(
-                LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                LiteralValue.newBuilder().setId("i" + key.getPkEntity())
-                        .setLangString(value)
-                        .setClassId(value.getFkClass())
-                        .setLabel(value.getString())
-                        .build()
-        ));
+        var langStringLiterals = infLangStringTable.map((key, value) -> {
+            var transformedValue = tranformLangString(value);
+            return KeyValue.pair(
+                    LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                    LiteralValue.newBuilder().setId("i" + key.getPkEntity())
+                            .setLangString(transformedValue)
+                            .setClassId(value.getFkClass())
+                            .setLabel(transformedValue.getString())
+                            .build()
+            );
+        });
 
         // Map places to literals
         var placeLiterals = infPlaceTable.map((key, value) -> {
@@ -99,7 +105,7 @@ public class StatementEnriched {
                     return KeyValue.pair(
                             LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
                             LiteralValue.newBuilder().setId("i" + key.getPkEntity())
-                                    .setPlace(value)
+                                    .setPlace(tranformPlace(value))
                                     .setClassId(value.getFkClass())
                                     .setLabel(
                                             "WGS84: " + x + "°, " + y + "°"
@@ -112,7 +118,7 @@ public class StatementEnriched {
         var timePrimitiveLiterals = infTimePrimitiveTable.map((key, value) -> KeyValue.pair(
                         LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
                         LiteralValue.newBuilder().setId("i" + key.getPkEntity())
-                                .setTimePrimitive(value)
+                                .setTimePrimitive(tranformTimePrimitive(value))
                                 .setClassId(value.getFkClass())
                                 .setLabel(null)
                                 .build()
@@ -123,7 +129,7 @@ public class StatementEnriched {
         var dimensionLiterals = infDimensionTable.map((key, value) -> KeyValue.pair(
                         LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
                         LiteralValue.newBuilder().setId("i" + key.getPkEntity())
-                                .setDimension(value)
+                                .setDimension(tranformDimension(value))
                                 .setClassId(value.getFkClass())
                                 .setLabel(value.getNumericValue() + "")
                                 .build()
@@ -134,7 +140,7 @@ public class StatementEnriched {
         var tableValueLiteral = datDigitalTable.map((key, value) -> KeyValue.pair(
                         LiteralKey.newBuilder().setId("d" + key.getPkEntity()).build(),
                         LiteralValue.newBuilder().setId("d" + key.getPkEntity())
-                                .setDigital(value)
+                                .setDigital(tranformDigital(value))
                                 .setClassId(936) // https://ontome.net/ontology/c936
                                 .setLabel(null)
                                 .build()
@@ -145,7 +151,7 @@ public class StatementEnriched {
         var cellLiteral = tabCellTable.map((key, value) -> KeyValue.pair(
                         LiteralKey.newBuilder().setId("t" + key.getPkCell()).build(),
                         LiteralValue.newBuilder().setId("t" + key.getPkCell())
-                                .setCell(value)
+                                .setCell(tranformCell(value))
                                 .setClassId(521) // https://ontome.net/ontology/c521
                                 .setLabel(null)
                                 .build()
@@ -230,6 +236,114 @@ public class StatementEnriched {
         else if (value.getFkSubjectTablesCell() > 0) id = "t" + value.getFkSubjectTablesCell();
         else if (value.getFkSubjectData() > 0) id = "d" + value.getFkSubjectData();
         return id;
+    }
+
+    /**
+     * @param infAppellation the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static Appellation tranformAppellation(dev.information.appellation.Value infAppellation) {
+        return Appellation.newBuilder()
+                .setPkEntity(infAppellation.getPkEntity())
+                .setFkClass(infAppellation.getFkClass())
+                .setString(Utils.shorten(infAppellation.getString(), MAX_STRING_LENGTH))
+                .build();
+    }
+
+
+    /**
+     * @param tabCell the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static Cell tranformCell(dev.tables.cell.Value tabCell) {
+        return Cell.newBuilder()
+                .setPkCell(tabCell.getPkCell())
+                .setFkColumn(tabCell.getFkColumn())
+                .setFkRow(tabCell.getFkColumn())
+                .setFkDigital(tabCell.getFkDigital())
+                .setNumericValue(tabCell.getNumericValue())
+                .setStringValue(tabCell.getStringValue())
+                .build();
+    }
+
+
+    /**
+     * @param datDigital the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static Digital tranformDigital(dev.data.digital.Value datDigital) {
+        return Digital.newBuilder()
+                .setPkEntity(datDigital.getPkEntity())
+                .setFkNamespace(datDigital.getFkNamespace())
+                .setFkSystemType(datDigital.getFkSystemType())
+                .build();
+    }
+
+    /**
+     * @param infDimension the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static Dimension tranformDimension(dev.information.dimension.Value infDimension) {
+        return Dimension.newBuilder()
+                .setPkEntity(infDimension.getPkEntity())
+                .setFkClass(infDimension.getFkClass())
+                .setNumericValue(infDimension.getNumericValue())
+                .setFkMeasurementUnit(infDimension.getFkMeasurementUnit())
+                .build();
+    }
+
+
+    /**
+     * @param infLangString the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static LangString tranformLangString(dev.information.lang_string.Value infLangString) {
+        return LangString.newBuilder()
+                .setPkEntity(infLangString.getPkEntity())
+                .setFkClass(infLangString.getFkClass())
+                .setString(Utils.shorten(infLangString.getString(), MAX_STRING_LENGTH))
+                .setFkLanguage(infLangString.getFkLanguage())
+                .build();
+    }
+
+    /**
+     * @param infLanguage the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static Language tranformLanguage(dev.information.language.Value infLanguage) {
+        return Language.newBuilder()
+                .setPkEntity(infLanguage.getPkEntity())
+                .setFkClass(infLanguage.getFkClass())
+                .setNotes(infLanguage.getNotes())
+                .setPkLanguage(infLanguage.getPkLanguage())
+                .build();
+    }
+
+
+    /**
+     * @param infPlace the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static Place tranformPlace(dev.information.place.Value infPlace) {
+        return Place.newBuilder()
+                .setPkEntity(infPlace.getPkEntity())
+                .setFkClass(infPlace.getFkClass())
+                .setGeoPoint(infPlace.getGeoPoint())
+                .build();
+    }
+
+    /**
+     * @param infTimePrimitive the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static TimePrimitive tranformTimePrimitive(dev.information.time_primitive.Value infTimePrimitive) {
+        return TimePrimitive.newBuilder()
+                .setPkEntity(infTimePrimitive.getPkEntity())
+                .setFkClass(infTimePrimitive.getFkClass())
+                .setJulianDay(infTimePrimitive.getJulianDay())
+                .setDuration(infTimePrimitive.getDuration())
+                .setCalendar(infTimePrimitive.getCalendar())
+                .build();
     }
 
 
