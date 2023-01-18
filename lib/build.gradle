@@ -30,3 +30,34 @@ dependencies {
     // Postgis to parse Well-known binary to Java Objects
     implementation 'org.postgis:postgis-jdbc:1.3.3'
 }
+
+generateAvroJava {
+    dependsOn('debeziumDevLight')
+    dependsOn('debeziumStag')
+    dependsOn('debeziumProd')
+}
+
+
+tasks.register('debeziumDevLight', Copy) {
+    var prefix = 'devlight'
+    var targetDir = "src/main/avro/tmp/" + prefix
+    from layout.projectDirectory.dir("src/main/avro/debezium")
+    into layout.projectDirectory.dir(targetDir)
+    filter { line -> line.replaceAll('"namespace": "dev.', '"namespace": "' + prefix + '.') }
+}
+
+tasks.register('debeziumStag', Copy) {
+    var prefix = 'stag'
+    var targetDir = "src/main/avro/tmp/" + prefix
+    from layout.projectDirectory.dir("src/main/avro/debezium")
+    into layout.projectDirectory.dir(targetDir)
+    filter { line -> line.replaceAll('"namespace": "dev.', '"namespace": "' + prefix + '.') }
+}
+
+tasks.register('debeziumProd', Copy) {
+    var prefix = 'prod'
+    var targetDir = "src/main/avro/tmp/" + prefix
+    from layout.projectDirectory.dir("src/main/avro/debezium")
+    into layout.projectDirectory.dir(targetDir)
+    filter { line -> line.replaceAll('"namespace": "dev.', '"namespace": "' + prefix + '.') }
+}
