@@ -193,8 +193,8 @@ public class ProjectEntityLabel {
                     var slots = aggValue.getLabelSlots();
                     var slotNum = newValue.getOrdNum();
 
-                    if (!newValue.getDeleted$1()) slots.add(slotNum, newValue.getString());
-                    else slots.add(slotNum, "");
+                    if (!newValue.getDeleted$1()) slots.set(slotNum, newValue.getString());
+                    else slots.set(slotNum, "");
 
                     var strings = slots.stream().filter(s -> !Objects.equals(s, "")).toList();
                     var entityLabel = String.join(", ", strings);

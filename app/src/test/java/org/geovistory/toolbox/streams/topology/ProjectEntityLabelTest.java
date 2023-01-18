@@ -175,6 +175,12 @@ class ProjectEntityLabelTest {
                 )).build();
         projectTopStatements.pipeInput(kS, vS);
 
+        /*
+         * Add the same statements again to see if it still behaves correctly
+         */
+        projectTopStatements.pipeInput(kS, vS);
+
+
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
