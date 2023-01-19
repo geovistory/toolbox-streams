@@ -185,6 +185,7 @@ public class ProjectEntityLabel {
                             .setProjectId(0)
                             .setEntityId("")
                             .setLabel("")
+                            .setChanged(true)
                             .setLabelSlots(stringList)
                             .build();
                 },
@@ -235,7 +236,7 @@ public class ProjectEntityLabel {
         aggregatedStream.to(output.TOPICS.project_entity_label,
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelValue()));
 
-        return new ProjectEntityLabelReturnValue(builder, aggregated, aggregatedStream);
+        return new ProjectEntityLabelReturnValue(builder, aggregatedStream);
 
     }
 
