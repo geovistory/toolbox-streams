@@ -173,6 +173,8 @@ public class ProjectEntityLabel {
                 Grouped.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelSlotWithStringValue())
                         .withName(output.TOPICS.project_entity_label)
         );
+
+        // 6
         var aggregated = grouped.aggregate(
                 () -> {
                     ArrayList<String> stringList = new ArrayList<>();
@@ -203,7 +205,16 @@ public class ProjectEntityLabel {
                         entityLabel = entityLabel.substring(0, MAX_STRING_LENGTH);
                     }
 
-                    aggValue.setLabel(entityLabel);
+
+                    if (!Objects.equals(aggValue.getLabel(), entityLabel)) {
+                        aggValue.setLabel(entityLabel);
+                        // mark values as changed
+                        aggValue.setChanged(true);
+                    } else {
+
+                        // mark values as unchanged
+                        aggValue.setChanged(false);
+                    }
 
                     return aggValue;
                 },
@@ -213,7 +224,12 @@ public class ProjectEntityLabel {
                         .withValueSerde(avroSerdes.ProjectEntityLabelValue())
         );
 
-        var aggregatedStream = aggregated.toStream();
+        var aggregatedStream = aggregated
+                .toStream()
+                // only let changed values pass
+                // this approach could be implemented more efficiently using Processors API
+                // See: https://stackoverflow.com/q/56282301/11786845
+                .filter((key, value) -> value.getChanged());
         /* SINK PROCESSORS */
 
         aggregatedStream.to(output.TOPICS.project_entity_label,
