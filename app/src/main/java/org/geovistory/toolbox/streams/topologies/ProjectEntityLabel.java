@@ -4,11 +4,11 @@ import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Grouped;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.state.StoreBuilder;
+import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -161,7 +161,13 @@ public class ProjectEntityLabel {
                         .withValueSerde(avroSerdes.ProjectEntityLabelSlotWithStringValue())
         );
 
-        // 5
+
+        var aggregatedStream = projectEntityLabelSlotsWithStrings
+                .toStream()
+                .transform(new EntityLabelsAggregatorSupplier("project_entity_labels_agg"));
+
+
+      /*  // 5
         var grouped = projectEntityLabelSlotsWithStrings.groupBy(
                 (key, value) -> KeyValue.pair(
                         ProjectEntityKey.newBuilder()
@@ -230,7 +236,7 @@ public class ProjectEntityLabel {
                 // only let changed values pass
                 // this approach could be implemented more efficiently using Processors API
                 // See: https://stackoverflow.com/q/56282301/11786845
-                .filter((key, value) -> value.getChanged());
+                .filter((key, value) -> value.getChanged());*/
         /* SINK PROCESSORS */
 
         aggregatedStream.to(output.TOPICS.project_entity_label,
@@ -262,4 +268,115 @@ public class ProjectEntityLabel {
         public final String project_entity_label = Utils.tsPrefixed("project_entity_label");
     }
 
+    public static class EntityLabelsAggregatorSupplier implements TransformerSupplier<
+            ProjectEntityLabelPartKey, ProjectEntityLabelSlotWithStringValue,
+            KeyValue<ProjectEntityKey, ProjectEntityLabelValue>> {
+
+        private final String stateStoreName;
+        private final ConfluentAvroSerdes avroSerdes = new ConfluentAvroSerdes();
+
+        EntityLabelsAggregatorSupplier(String stateStoreName) {
+            this.stateStoreName = stateStoreName;
+        }
+
+        @Override
+        public Transformer<ProjectEntityLabelPartKey, ProjectEntityLabelSlotWithStringValue, KeyValue<ProjectEntityKey, ProjectEntityLabelValue>> get() {
+            return new EntityLabelsAggregator(stateStoreName);
+        }
+
+        @Override
+        public Set<StoreBuilder<?>> stores() {
+            StoreBuilder<KeyValueStore<ProjectEntityKey, ProjectEntityLabelValue>> keyValueStoreBuilder =
+                    Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(stateStoreName),
+                            avroSerdes.ProjectEntityKey(),
+                            avroSerdes.ProjectEntityLabelValue());
+            return Collections.singleton(keyValueStoreBuilder);
+        }
+    }
+
+    public static class EntityLabelsAggregator implements Transformer<
+            ProjectEntityLabelPartKey, ProjectEntityLabelSlotWithStringValue,
+            KeyValue<ProjectEntityKey, ProjectEntityLabelValue>> {
+
+        private final String stateStoreName;
+        private KeyValueStore<ProjectEntityKey, ProjectEntityLabelValue> kvStore;
+
+
+        public EntityLabelsAggregator(String stateStoreName) {
+            this.stateStoreName = stateStoreName;
+        }
+
+        @Override
+        public void init(ProcessorContext context) {
+            this.kvStore = context.getStateStore(stateStoreName);
+
+        }
+
+        @Override
+        public KeyValue<ProjectEntityKey, ProjectEntityLabelValue> transform(
+                ProjectEntityLabelPartKey key,
+                ProjectEntityLabelSlotWithStringValue value
+        ) {
+            var groupKey = ProjectEntityKey.newBuilder()
+                    .setEntityId(key.getEntityId())
+                    .setProjectId(key.getProjectId())
+                    .build();
+
+            var slotNum = value.getOrdNum();
+
+            // get previous entity label value
+            var oldVal = kvStore.get(groupKey);
+
+            // if no oldVal, initialize one
+            if (oldVal == null) {
+                ArrayList<String> stringList = new ArrayList<>();
+                for (int i = 0; i < NUMBER_OF_SLOTS; i++) {
+                    if (i == slotNum && !value.getDeleted$1()) stringList.add(value.getString());
+                    else stringList.add("");
+                }
+
+                var initialVal = ProjectEntityLabelValue.newBuilder()
+                        .setProjectId(key.getProjectId())
+                        .setEntityId(key.getEntityId())
+                        .setLabel(Utils.shorten(value.getString(), MAX_STRING_LENGTH))
+                        .setLabelSlots(stringList)
+                        .build();
+
+
+                kvStore.put(groupKey, initialVal);
+                return KeyValue.pair(groupKey, initialVal);
+            }
+
+            // get old slots
+            var slots = oldVal.getLabelSlots();
+
+            // add new string to slot
+            if (!value.getDeleted$1()) slots.set(slotNum, value.getString());
+            else slots.set(slotNum, "");
+
+            // create new entity label
+            var strings = slots.stream().filter(s -> !Objects.equals(s, "")).toList();
+            var entityLabel = Utils.shorten(String.join(", ", strings), MAX_STRING_LENGTH);
+
+            // memorize if label has changed
+            var labelIsNew = !Objects.equals(entityLabel, oldVal.getLabel());
+
+            // update the old value
+            oldVal.setLabelSlots(slots);
+            oldVal.setLabel(entityLabel);
+            kvStore.put(groupKey, oldVal);
+
+            // if the new entity label differs from the old, flush the new entity label value
+            if (labelIsNew) {
+                return KeyValue.pair(groupKey, oldVal);
+            }
+
+            return null;
+        }
+
+        public void close() {
+
+        }
+
+    }
 }

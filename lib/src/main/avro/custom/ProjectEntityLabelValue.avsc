@@ -23,11 +23,6 @@
       }
     },
     {
-      "name": "changed",
-      "type": "boolean",
-      "default": false
-    },
-    {
       "name": "__deleted",
       "type": [
         "null",
