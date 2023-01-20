@@ -70,9 +70,8 @@ public class ProjectTopOutgoingStatements {
                         .setIsOutgoing(true)
                         .build(),
                 (aggKey, newValue, aggValue) -> {
-                    aggValue.setProjectId(aggKey.getProjectId());
                     aggValue.setEntityId(aggKey.getEntityId());
-                    aggValue.setPropertyId(aggKey.getProjectId());
+                    aggValue.setPropertyId(aggKey.getPropertyId());
                     aggValue.setProjectId(aggKey.getProjectId());
                     List<ProjectStatementValue> statements = aggValue.getStatements();
                     var newStatements = addStatement(statements, newValue);

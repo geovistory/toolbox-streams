@@ -72,8 +72,7 @@ public class ProjectTopIncomingStatements {
                 (aggKey, newValue, aggValue) -> {
                     aggValue.setProjectId(aggKey.getProjectId());
                     aggValue.setEntityId(aggKey.getEntityId());
-                    aggValue.setPropertyId(aggKey.getProjectId());
-                    aggValue.setProjectId(aggKey.getProjectId());
+                    aggValue.setPropertyId(aggKey.getPropertyId());
                     List<ProjectStatementValue> statements = aggValue.getStatements();
                     var newStatements = addStatement(statements, newValue);
                     aggValue.setStatements(newStatements);
