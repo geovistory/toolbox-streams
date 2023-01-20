@@ -1,10 +1,9 @@
 package org.geovistory.toolbox.streams.app;
 
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.Utils;
 
 /**
  * This class provides helper methods to register
@@ -41,9 +40,12 @@ public class RegisterInputTopic {
     }
 
     public KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable() {
-        return builder.table(
+        return builder.stream(
                 DbTopicNames.pro_info_proj_rel.getName(),
                 Consumed.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue())
+        ).toTable(
+                Named.as(Utils.tsPrefixed(DbTopicNames.pro_info_proj_rel.getName())),
+                Materialized.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue())
         );
     }
 
@@ -55,9 +57,12 @@ public class RegisterInputTopic {
     }
 
     public KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable() {
-        return builder.table(
+        return builder.stream(
                 DbTopicNames.inf_resource.getName(),
                 Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
+        ).toTable(
+                Named.as(Utils.tsPrefixed(DbTopicNames.pro_info_proj_rel.getName())),
+                Materialized.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
         );
     }
 
