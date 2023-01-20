@@ -92,6 +92,45 @@ class ProjectTopIncomingStatementsTest {
         assertThat(v6.get(3).getOrdNumForRange()).isEqualTo(3);
     }
 
+
+    @Test
+    void testValueAggregatorOrderingByModificationDate() {
+        var s = StatementEnrichedValue.newBuilder()
+                .setSubjectId("1")
+                .setPropertyId(2)
+                .setObjectId("3")
+                .build();
+
+        var b = ProjectStatementValue.newBuilder();
+        var v0 = new ArrayList<ProjectStatementValue>();
+        var v1 = ProjectTopIncomingStatements.addStatement(v0,
+                b.setProjectId(1).setStatementId(3).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-03-03T09:25:57.698128Z").build()
+        );
+        var v2 = ProjectTopIncomingStatements.addStatement(v1,
+                b.setProjectId(1).setStatementId(4).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-02-03T09:25:57.698128Z").build()
+        );
+        var v3 = ProjectTopIncomingStatements.addStatement(v2,
+                b.setProjectId(1).setStatementId(0).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-12-03T09:25:57.698128Z").build()
+        );
+        var v4 = ProjectTopIncomingStatements.addStatement(v3,
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForRange(3).setModifiedAt("2020-11-03T09:25:57.698128Z").build()
+        );
+        var v5 = ProjectTopIncomingStatements.addStatement(v4,
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-04-03T09:25:57.698128Z").build()
+        );
+        var v6 = ProjectTopIncomingStatements.addStatement(v5,
+                b.setProjectId(1).setStatementId(5).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-01-03T09:25:57.698128Z").build()
+        );
+
+        assertThat(v6.size()).isEqualTo(5);
+        assertThat(v6.get(0).getStatementId()).isEqualTo(1);
+        assertThat(v6.get(1).getStatementId()).isEqualTo(0);
+        assertThat(v6.get(2).getStatementId()).isEqualTo(2);
+        assertThat(v6.get(3).getStatementId()).isEqualTo(3);
+        assertThat(v6.get(4).getStatementId()).isEqualTo(4);
+    }
+
+
     @Test
     void testValueAggregatorMoveStatementDown() {
         var s = StatementEnrichedValue.newBuilder()

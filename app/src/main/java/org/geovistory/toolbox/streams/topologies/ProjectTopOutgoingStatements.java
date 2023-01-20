@@ -111,6 +111,21 @@ public class ProjectTopOutgoingStatements {
                 // ...set the target position of the new item
                 targetPosition = i;
             }
+            // if both items have no explicit ordNum...
+            if (newOrdNum == null && oldOrdNum == null && targetPosition == -1) {
+
+                var oldModifiedAt = Utils.DateFromIso(oldItem.getModifiedAt());
+                var newModifiedAt = Utils.DateFromIso(newItem.getModifiedAt());
+                // ...if the new item has a more recent modification date...
+                if (newModifiedAt.after(oldModifiedAt)) {
+                    // ...set the target position of the new item
+                    targetPosition = i;
+                }
+            }
+            // if the newItem has an ordNum, the old doesn't, set position
+            if(newOrdNum!=null && oldOrdNum==null && targetPosition == -1){
+                targetPosition = i;
+            }
             // if the newItem replaces an oldItem...
             if (oldId == newId) {
                 // ...keep track of this old item
