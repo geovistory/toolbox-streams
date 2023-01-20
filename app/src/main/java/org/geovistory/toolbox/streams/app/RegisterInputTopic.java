@@ -1,9 +1,12 @@
 package org.geovistory.toolbox.streams.app;
 
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Materialized;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
 
 /**
  * This class provides helper methods to register
@@ -41,12 +44,11 @@ public class RegisterInputTopic {
 
     public KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable() {
         return builder.stream(
-                DbTopicNames.pro_info_proj_rel.getName(),
-                Consumed.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue())
-        ).toTable(
-                Named.as(Utils.tsPrefixed(DbTopicNames.pro_info_proj_rel.getName())),
-                Materialized.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue())
-        );
+                        DbTopicNames.pro_info_proj_rel.getName(),
+                        Consumed.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue())
+                )
+                .map(KeyValue::pair)
+                .toTable(Materialized.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue()));
     }
 
     public KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream() {
@@ -58,12 +60,11 @@ public class RegisterInputTopic {
 
     public KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable() {
         return builder.stream(
-                DbTopicNames.inf_resource.getName(),
-                Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
-        ).toTable(
-                Named.as(Utils.tsPrefixed(DbTopicNames.pro_info_proj_rel.getName())),
-                Materialized.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
-        );
+                        DbTopicNames.inf_resource.getName(),
+                        Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
+                )
+                .map(KeyValue::pair)
+                .toTable(Materialized.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue()));
     }
 
     public KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream() {
