@@ -1,5 +1,9 @@
 package org.geovistory.toolbox.streams.lib;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -84,6 +88,12 @@ public class Utils {
         if (inputString == null) return null;
         if (inputString.length() > maxLength) return inputString.substring(0, maxLength);
         else return inputString;
+    }
+
+    public static Date DateFromIso(String s){
+        TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(s);
+        Instant instant = Instant.from(ta);
+        return Date.from(instant);
     }
 
     private static Map<String, Integer> languageMap() {
