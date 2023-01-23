@@ -16,6 +16,7 @@ import org.geovistory.toolbox.streams.avro.ProjectTopStatementsKey;
 import org.geovistory.toolbox.streams.avro.ProjectTopStatementsValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
+import org.geovistory.toolbox.streams.utils.TopStatementAdder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +75,7 @@ public class ProjectTopOutgoingStatements {
                     aggValue.setPropertyId(aggKey.getPropertyId());
                     aggValue.setProjectId(aggKey.getProjectId());
                     List<ProjectStatementValue> statements = aggValue.getStatements();
-                    var newStatements = addStatement(statements, newValue);
+                    var newStatements = TopStatementAdder.addStatement(statements, newValue, true);
                     aggValue.setStatements(newStatements);
                     return aggValue;
                 },
@@ -96,75 +97,6 @@ public class ProjectTopOutgoingStatements {
 
     }
 
-    public static List<ProjectStatementValue> addStatement(List<ProjectStatementValue> existingList, ProjectStatementValue newItem) {
-        int targetPosition = -1;
-        int replacedItemPosition = -1;
-
-        for (int i = 0; i < existingList.size(); i++) {
-            var oldItem = existingList.get(i);
-            var oldOrdNum = oldItem.getOrdNumForDomain();
-            var newOrdNum = newItem.getOrdNumForDomain();
-            var oldId = oldItem.getStatementId();
-            var newId = newItem.getStatementId();
-            // if the new item should be before old item...
-            if (newOrdNum != null && oldOrdNum != null && newOrdNum <= oldOrdNum && targetPosition == -1) {
-                // ...set the target position of the new item
-                targetPosition = i;
-            }
-            // if both items have no explicit ordNum...
-            if (newOrdNum == null && oldOrdNum == null && targetPosition == -1) {
-
-                var oldModifiedAt = Utils.DateFromIso(oldItem.getModifiedAt());
-                var newModifiedAt = Utils.DateFromIso(newItem.getModifiedAt());
-                // ...if the new item has a more recent modification date...
-                if (newModifiedAt.after(oldModifiedAt)) {
-                    // ...set the target position of the new item
-                    targetPosition = i;
-                }
-            }
-            // if the newItem has an ordNum, the old doesn't, set position
-            if(newOrdNum!=null && oldOrdNum==null && targetPosition == -1){
-                targetPosition = i;
-            }
-            // if the newItem replaces an oldItem...
-            if (oldId == newId) {
-                // ...keep track of this old item
-                replacedItemPosition = i;
-            }
-        }
-
-        // if item was deleted...
-        if (newItem.getDeleted$1() != null && newItem.getDeleted$1()) {
-            // ...remove it
-            if (replacedItemPosition > -1) existingList.remove(replacedItemPosition);
-            // ...and return immediately
-            return existingList;
-        }
-
-        // add item at retrieved position
-        if (targetPosition > -1) {
-            existingList.add(targetPosition, newItem);
-            // if it was inserted before the replaced item...
-            if (targetPosition < replacedItemPosition) {
-                // ...increase replace item position
-                replacedItemPosition = replacedItemPosition + 1;
-            }
-        }
-        // append item to the end
-        else if (existingList.size() < 5) {
-            existingList.add(newItem);
-        }
-
-        // remove the replaced item
-        if (replacedItemPosition > -1) {
-            existingList.remove(replacedItemPosition);
-        }
-
-        // keep max. list size
-        if (existingList.size() > 5) existingList.remove(5);
-
-        return existingList;
-    }
 
     public enum input {
         TOPICS;

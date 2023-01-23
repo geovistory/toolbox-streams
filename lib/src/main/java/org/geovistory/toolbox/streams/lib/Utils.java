@@ -78,11 +78,12 @@ public class Utils {
 
     /**
      * Shorten a string to a maximum length
+     *
      * @param inputString string to shorten
-     * @param maxLength the maximum length of the string
+     * @param maxLength   the maximum length of the string
      * @return if inputString is longer than maxLength, the first {maxLength} characters of inputString,
-     *         else the inputString
-     *         if inputString is null, returns null
+     * else the inputString
+     * if inputString is null, returns null
      */
     public static String shorten(String inputString, int maxLength) {
         if (inputString == null) return null;
@@ -90,10 +91,15 @@ public class Utils {
         else return inputString;
     }
 
-    public static Date DateFromIso(String s){
-        TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(s);
-        Instant instant = Instant.from(ta);
-        return Date.from(instant);
+    public static Date DateFromIso(String s) {
+        try {
+
+            TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(s);
+            Instant instant = Instant.from(ta);
+            return Date.from(instant);
+        } catch (NullPointerException | IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private static Map<String, Integer> languageMap() {

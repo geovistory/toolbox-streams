@@ -61,8 +61,8 @@ public class ProjectStatement {
                             .setStatement(statementEnriched)
                             .setCreatedBy(projectRelation.getFkCreator())
                             .setModifiedBy(projectRelation.getFkLastModifier())
-                            .setCreatedAt(projectRelation.getTmspLastModification())
-                            .setModifiedAt(projectRelation.getTmspCreation())
+                            .setCreatedAt(projectRelation.getTmspCreation())
+                            .setModifiedAt(projectRelation.getTmspLastModification())
                             .setDeleted$1(deleted)
                             .build();
                 },
@@ -89,6 +89,7 @@ public class ProjectStatement {
                         .withValueSerde(avroSerdes.ProjectStatementValue())
         );
 
+        // join object entity labels to get object label
         var projectStatementTable = joinSubjectEntityLabel.leftJoin(projectEntityLabelTable,
                 projectStatementValue -> ProjectEntityKey.newBuilder()
                         .setEntityId(projectStatementValue.getStatement().getObjectId())
@@ -103,8 +104,6 @@ public class ProjectStatement {
                 Materialized.<dev.projects.info_proj_rel.Key, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_join_object_entity_label)
                         .withKeySerde(avroSerdes.ProInfoProjRelKey())
                         .withValueSerde(avroSerdes.ProjectStatementValue()));
-
-        // join object entity labels to get object label
 
         var projectStatementStream = projectStatementTable
                 .toStream()
