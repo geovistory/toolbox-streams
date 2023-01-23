@@ -42,6 +42,7 @@ public class ProjectEntity {
 
         /* STREAM PROCESSORS */
         // 2)
+        // https://stackoverflow.com/questions/62884230/ktable-ktable-foreign-key-join-not-producing-all-messages-when-topics-have-more
         var projectEntityJoin = proInfoProjRelTable.join(
                 infResourceTable,
                 value -> dev.information.resource.Key.newBuilder()

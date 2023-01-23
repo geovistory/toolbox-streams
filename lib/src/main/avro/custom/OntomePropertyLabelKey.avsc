@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "OntomePropertyLabelKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Model to store property id and language id",
+  "fields": [
+    {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "language_id",
+      "type": {
+        "type": "int"
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "type": "record",
+  "name": "OntomePropertyLabelValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Model to store property id, language id and label",
+  "fields": [
+    {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "language_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "inverse_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

@@ -175,6 +175,18 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<OntomePropertyLabelKey> OntomePropertyLabelKey() {
+        Serde<OntomePropertyLabelKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<OntomePropertyLabelValue> OntomePropertyLabelValue() {
+        Serde<OntomePropertyLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
     public Serde<GeovClassLabelKey> GeovClassLabelKey() {
         Serde<GeovClassLabelKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
@@ -183,6 +195,18 @@ public class ConfluentAvroSerdes {
 
     public Serde<GeovClassLabelValue> GeovClassLabelValue() {
         Serde<GeovClassLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<GeovPropertyLabelKey> GeovPropertyLabelKey() {
+        Serde<GeovPropertyLabelKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<GeovPropertyLabelValue> GeovPropertyLabelValue() {
+        Serde<GeovPropertyLabelValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
@@ -226,6 +250,44 @@ public class ConfluentAvroSerdes {
 
     public Serde<ProjectClassLabelOptionMap> ProjectClassLabelOptionMapValue() {
         Serde<ProjectClassLabelOptionMap> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+
+    public Serde<ProjectFieldLanguageKey> ProjectPropertyLanguageKey() {
+        Serde<ProjectFieldLanguageKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectFieldLanguageValue> ProjectFieldLanguageValue() {
+        Serde<ProjectFieldLanguageValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectPropertyLanguageValue> ProjectPropertyLanguageValue() {
+        Serde<ProjectPropertyLanguageValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+
+    public Serde<ProjectFieldLabelKey> ProjectPropertyLabelKey() {
+        Serde<ProjectFieldLabelKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectFieldLabelValue> ProjectPropertyLabelValue() {
+        Serde<ProjectFieldLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectFieldLabelOptionMap> ProjectPropertyLabelOptionMapValue() {
+        Serde<ProjectFieldLabelOptionMap> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }

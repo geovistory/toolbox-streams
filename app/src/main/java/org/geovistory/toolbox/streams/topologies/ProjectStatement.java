@@ -89,6 +89,7 @@ public class ProjectStatement {
                         .withValueSerde(avroSerdes.ProjectStatementValue())
         );
 
+        // join object entity labels to get object label
         var projectStatementTable = joinSubjectEntityLabel.leftJoin(projectEntityLabelTable,
                 projectStatementValue -> ProjectEntityKey.newBuilder()
                         .setEntityId(projectStatementValue.getStatement().getObjectId())
@@ -104,7 +105,6 @@ public class ProjectStatement {
                         .withKeySerde(avroSerdes.ProInfoProjRelKey())
                         .withValueSerde(avroSerdes.ProjectStatementValue()));
 
-        // join object entity labels to get object label
 
         var projectStatementStream = projectStatementTable
                 .toStream()

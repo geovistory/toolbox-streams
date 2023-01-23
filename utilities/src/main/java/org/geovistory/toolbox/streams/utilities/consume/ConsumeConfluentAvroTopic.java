@@ -24,7 +24,7 @@ public class ConsumeConfluentAvroTopic {
     public static void main(String[] args) throws UnsupportedEncodingException {
 
         // Assign topicName to string variable
-        String topicName = "dev.information.place";
+        String topicName = "devlight.information.place";
 
         // create instance for properties to access producer configs
         //Properties props = KafkaSeederConfig.getConsumerConfig(topicName);
@@ -63,7 +63,9 @@ public class ConsumeConfluentAvroTopic {
             while (true) {
                 ConsumerRecords<Key, Value> records = consumer.poll(Duration.ofMillis(100));
 
+
                 for (ConsumerRecord<Key, Value> record : records) {
+                    System.out.println(record.value().getGeoPoint().toString());
                     // print the offset,key and value for the consumer records.
                     System.out.printf("offset = %d, key = %s, value = %s\n",
                             record.offset(), record.key(), record.value());
