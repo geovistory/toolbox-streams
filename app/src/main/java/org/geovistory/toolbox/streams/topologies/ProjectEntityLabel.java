@@ -164,79 +164,18 @@ public class ProjectEntityLabel {
 
         var aggregatedStream = projectEntityLabelSlotsWithStrings
                 .toStream()
+                .selectKey((k, v) -> ProjectEntityKey.newBuilder()
+                        .setProjectId(k.getProjectId())
+                        .setEntityId(k.getEntityId())
+                        .build()
+                )
+                .repartition(
+                        Repartitioned.<ProjectEntityKey, ProjectEntityLabelSlotWithStringValue>as(inner.TOPICS.project_entity_label_slots_with_strings_repart)
+                                .withKeySerde(avroSerdes.ProjectEntityKey())
+                                .withValueSerde(avroSerdes.ProjectEntityLabelSlotWithStringValue())
+                )
                 .transform(new EntityLabelsAggregatorSupplier("project_entity_labels_agg"));
 
-
-      /*  // 5
-        var grouped = projectEntityLabelSlotsWithStrings.groupBy(
-                (key, value) -> KeyValue.pair(
-                        ProjectEntityKey.newBuilder()
-                                .setEntityId(key.getEntityId())
-                                .setProjectId(key.getProjectId())
-                                .build(),
-                        value
-                ),
-                Grouped.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelSlotWithStringValue())
-                        .withName(output.TOPICS.project_entity_label)
-        );
-
-        // 6
-        var aggregated = grouped.aggregate(
-                () -> {
-                    ArrayList<String> stringList = new ArrayList<>();
-                    for (int i = 0; i < NUMBER_OF_SLOTS; i++) {
-                        stringList.add("");
-                    }
-                    return ProjectEntityLabelValue.newBuilder()
-                            .setProjectId(0)
-                            .setEntityId("")
-                            .setLabel("")
-                            .setChanged(true)
-                            .setLabelSlots(stringList)
-                            .build();
-                },
-                (aggKey, newValue, aggValue) -> {
-                    aggValue.setProjectId(aggKey.getProjectId());
-                    aggValue.setEntityId(aggKey.getEntityId());
-
-                    var slots = aggValue.getLabelSlots();
-                    var slotNum = newValue.getOrdNum();
-
-                    if (!newValue.getDeleted$1()) slots.set(slotNum, newValue.getString());
-                    else slots.set(slotNum, "");
-
-                    var strings = slots.stream().filter(s -> !Objects.equals(s, "")).toList();
-                    var entityLabel = String.join(", ", strings);
-
-                    if (entityLabel.length() > MAX_STRING_LENGTH) {
-                        entityLabel = entityLabel.substring(0, MAX_STRING_LENGTH);
-                    }
-
-
-                    if (!Objects.equals(aggValue.getLabel(), entityLabel)) {
-                        aggValue.setLabel(entityLabel);
-                        // mark values as changed
-                        aggValue.setChanged(true);
-                    } else {
-
-                        // mark values as unchanged
-                        aggValue.setChanged(false);
-                    }
-
-                    return aggValue;
-                },
-                (aggKey, oldValue, aggValue) -> aggValue,
-                Materialized.<ProjectEntityKey, ProjectEntityLabelValue, KeyValueStore<Bytes, byte[]>>as(output.TOPICS.project_entity_label)
-                        .withKeySerde(avroSerdes.ProjectEntityKey())
-                        .withValueSerde(avroSerdes.ProjectEntityLabelValue())
-        );
-
-        var aggregatedStream = aggregated
-                .toStream()
-                // only let changed values pass
-                // this approach could be implemented more efficiently using Processors API
-                // See: https://stackoverflow.com/q/56282301/11786845
-                .filter((key, value) -> value.getChanged());*/
         /* SINK PROCESSORS */
 
         aggregatedStream.to(output.TOPICS.project_entity_label,
@@ -260,6 +199,7 @@ public class ProjectEntityLabel {
         public final String project_entity_with_label_config = "project_entity_with_label_config";
         public final String project_entity_label_slots = "project_entity_label_slots";
         public final String project_entity_label_slots_with_strings = "project_entity_label_slots_with_strings";
+        public final String project_entity_label_slots_with_strings_repart = "project_entity_label_slots_with_strings_repart";
 
     }
 
@@ -269,7 +209,7 @@ public class ProjectEntityLabel {
     }
 
     public static class EntityLabelsAggregatorSupplier implements TransformerSupplier<
-            ProjectEntityLabelPartKey, ProjectEntityLabelSlotWithStringValue,
+            ProjectEntityKey, ProjectEntityLabelSlotWithStringValue,
             KeyValue<ProjectEntityKey, ProjectEntityLabelValue>> {
 
         private final String stateStoreName;
@@ -280,7 +220,7 @@ public class ProjectEntityLabel {
         }
 
         @Override
-        public Transformer<ProjectEntityLabelPartKey, ProjectEntityLabelSlotWithStringValue, KeyValue<ProjectEntityKey, ProjectEntityLabelValue>> get() {
+        public Transformer<ProjectEntityKey, ProjectEntityLabelSlotWithStringValue, KeyValue<ProjectEntityKey, ProjectEntityLabelValue>> get() {
             return new EntityLabelsAggregator(stateStoreName);
         }
 
@@ -295,12 +235,11 @@ public class ProjectEntityLabel {
     }
 
     public static class EntityLabelsAggregator implements Transformer<
-            ProjectEntityLabelPartKey, ProjectEntityLabelSlotWithStringValue,
+            ProjectEntityKey, ProjectEntityLabelSlotWithStringValue,
             KeyValue<ProjectEntityKey, ProjectEntityLabelValue>> {
 
         private final String stateStoreName;
         private KeyValueStore<ProjectEntityKey, ProjectEntityLabelValue> kvStore;
-
 
         public EntityLabelsAggregator(String stateStoreName) {
             this.stateStoreName = stateStoreName;
@@ -309,12 +248,11 @@ public class ProjectEntityLabel {
         @Override
         public void init(ProcessorContext context) {
             this.kvStore = context.getStateStore(stateStoreName);
-
         }
 
         @Override
         public KeyValue<ProjectEntityKey, ProjectEntityLabelValue> transform(
-                ProjectEntityLabelPartKey key,
+                ProjectEntityKey key,
                 ProjectEntityLabelSlotWithStringValue value
         ) {
             var groupKey = ProjectEntityKey.newBuilder()
