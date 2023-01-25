@@ -31,10 +31,10 @@ public class ProjectProperty {
                 builder,
                 registerInputTopic.dfhApiPropertyTable(),
                 registerOutputTopic.projectProfileStream()
-        ).build();
+        ).builder().build();
     }
 
-    public static StreamsBuilder addProcessors(
+    public static ProjectPropertyReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyTable,
             KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream) {
@@ -112,7 +112,7 @@ public class ProjectProperty {
 
 // 3)
 
-        var projectPropertyFlat = projectPropertiesPerProfile
+        var projectPropertyStream = projectPropertiesPerProfile
                 .toStream(
                         Named.as(inner.TOPICS.project_properties_stream)
                 )
@@ -128,10 +128,10 @@ public class ProjectProperty {
                         ).toList(),
                         Named.as(inner.TOPICS.project_properties_flat));
 
-        projectPropertyFlat.to(output.TOPICS.project_property,
+        projectPropertyStream.to(output.TOPICS.project_property,
                 Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()));
 
-        return builder;
+        return new ProjectPropertyReturnValue(builder, projectPropertyStream);
 
     }
 

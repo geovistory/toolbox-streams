@@ -1,3 +1,4 @@
+
 package org.geovistory.toolbox.streams.app;
 
 import org.apache.kafka.streams.StreamsBuilder;
@@ -47,6 +48,19 @@ public class RegisterOutputTopic {
                 Consumed.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue()));
     }
 
+    public KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelStream() {
+        return builder.stream(OntomePropertyLabel.output.TOPICS.ontome_property_label,
+                Consumed.with(avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue()));
+    }
+
+    public KStream<GeovPropertyLabelKey, GeovPropertyLabelValue> geovPropertyLabelStream() {
+        return builder.stream(GeovPropertyLabel.output.TOPICS.geov_property_label,
+                Consumed.with(avroSerdes.GeovPropertyLabelKey(), avroSerdes.GeovPropertyLabelValue()));
+    }
+    public KStream<ProjectPropertyKey, ProjectPropertyValue> projectPropertyStream() {
+        return builder.stream(ProjectProperty.output.TOPICS.project_property,
+                Consumed.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()));
+    }
     public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
         return builder.table(ProjectEntity.output.TOPICS.project_entity,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityValue()));

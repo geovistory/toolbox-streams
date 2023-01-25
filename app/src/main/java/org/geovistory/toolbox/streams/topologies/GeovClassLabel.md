@@ -1,4 +1,4 @@
-# Topology: ProjectClassLabel
+# Topology: GeovClassLabel
 
 This topology generates geovistory class labels, keyed by projectId, classId and languageId.
 

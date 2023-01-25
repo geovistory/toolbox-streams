@@ -1,0 +1,46 @@
+{
+  "type": "record",
+  "name": "ProjectFieldLanguageValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of project property language",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "is_outgoing",
+      "type": {
+        "type": "boolean"
+      }
+    },
+    {
+      "name": "project_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "language_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}
