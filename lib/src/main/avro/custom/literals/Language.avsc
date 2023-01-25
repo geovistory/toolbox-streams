@@ -1,0 +1,35 @@
+{
+  "type": "record",
+  "name": "Language",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "notes",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "pk_language",
+      "type": "string"
+    },
+    {
+      "name": "fk_class",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    }
+  ]
+}

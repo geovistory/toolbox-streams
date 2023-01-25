@@ -3,7 +3,6 @@ package org.geovistory.toolbox.streams.topology;
 
 import io.debezium.data.geometry.Geography;
 import org.apache.kafka.streams.*;
-import org.geovistory.toolbox.streams.avro.StatementEnrichedKey;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -31,7 +30,7 @@ class StatementEnrichedTest {
     private TestInputTopic<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionTopic;
     private TestInputTopic<dev.data.digital.Key, dev.data.digital.Value> datDigitalTopic;
     private TestInputTopic<dev.tables.cell.Key, dev.tables.cell.Value> tabCellTopic;
-    private TestOutputTopic<StatementEnrichedKey, StatementEnrichedValue> outputTopic;
+    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> outputTopic;
 
     @BeforeEach
     void setup() {
@@ -99,7 +98,7 @@ class StatementEnrichedTest {
 
         outputTopic = testDriver.createOutputTopic(
                 StatementEnriched.output.TOPICS.statement_enriched,
-                avroSerdes.StatementEnrichedKey().deserializer(),
+                avroSerdes.InfStatementKey().deserializer(),
                 avroSerdes.StatementEnrichedValue().deserializer());
     }
 
@@ -121,8 +120,8 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
-                .setFkProperty(20)
+                .setFkSubjectInfo(subjectId)
+                .setFkProperty(propertyId)
                 .setFkObjectInfo(objectId)
                 .build();
         infStatementTopic.pipeInput(kS, vS);
@@ -130,21 +129,20 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("i" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral()).isNull();
     }
 
     @Test
     void testStatementWithAppellation() {
-        int subjectId = 10;
-        int propertyId = 20;
         int objectId = 30;
-        String label = "Lyon";
+
+        // string with more than 100
+        String label = "Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_";
+
+        // string with 100 characters
+        String expected = "Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_";
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -174,20 +172,13 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("i" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
+        var record = outRecords.get(kS);
+        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(expected);
         assertThat(record.getObjectLiteral().getAppellation()).isNotNull();
     }
 
     @Test
     void testStatementWithLanguage() {
-        int subjectId = 10;
-        int propertyId = 20;
         int objectId = 30;
         String label = "English";
         // add statement
@@ -218,20 +209,13 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("i" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
         assertThat(record.getObjectLiteral().getLanguage()).isNotNull();
     }
 
     @Test
     void testStatementWithLangString() {
-        int subjectId = 10;
-        int propertyId = 20;
         int objectId = 30;
         String label = "Label";
         // add statement
@@ -262,20 +246,13 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("i" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
         assertThat(record.getObjectLiteral().getLangString()).isNotNull();
     }
 
     @Test
     void testStatementWithNullLangString() {
-        int subjectId = 10;
-        int propertyId = 20;
         int objectId = 30;
         String label = null;
         // add statement
@@ -306,20 +283,13 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("i" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
         assertThat(record.getObjectLiteral().getLangString()).isNotNull();
     }
 
     @Test
     void testStatementWithPlace() {
-        int subjectId = 10;
-        int propertyId = 20;
         int objectId = 30;
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
@@ -354,12 +324,7 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("i" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo("WGS84: " + x + "°, " + y + "°");
         assertThat(record.getObjectLiteral().getPlace()).isNotNull();
     }
@@ -367,8 +332,6 @@ class StatementEnrichedTest {
 
     @Test
     void testStatementWithTimePrimitive() {
-        int subjectId = 10;
-        int propertyId = 20;
         int objectId = 30;
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
@@ -400,20 +363,13 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("i" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getLabel()).isNull();
         assertThat(record.getObjectLiteral().getTimePrimitive()).isNotNull();
     }
 
     @Test
     void testStatementWithDimension() {
-        int subjectId = 10;
-        int propertyId = 20;
         int objectId = 30;
         double num = 111;
         // add statement
@@ -445,20 +401,13 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("i" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(num + "");
         assertThat(record.getObjectLiteral().getDimension()).isNotNull();
     }
 
     @Test
     void testStatementWithCell() {
-        int subjectId = 10;
-        int propertyId = 20;
         long objectId = 30;
         double num = 111;
         // add statement
@@ -491,19 +440,12 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("t" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getCell().getNumericValue()).isEqualTo(num);
     }
 
     @Test
     void testStatementWithDigital() {
-        int subjectId = 10;
-        int propertyId = 20;
         int objectId = 30;
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
@@ -534,12 +476,7 @@ class StatementEnrichedTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = StatementEnrichedKey.newBuilder()
-                .setSubjectId("i" + subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId("d" + objectId)
-                .build();
-        var record = outRecords.get(resultingKey);
+        var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getDigital()).isNotNull();
     }
 

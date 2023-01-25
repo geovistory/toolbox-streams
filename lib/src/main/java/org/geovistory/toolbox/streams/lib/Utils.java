@@ -1,5 +1,9 @@
 package org.geovistory.toolbox.streams.lib;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -55,6 +59,11 @@ public class Utils {
         return Objects.equals(s, "true");
     }
 
+    public static Boolean booleanIsNotEqualTrue(Boolean s) {
+        if (s == null) return true;
+        return !s;
+    }
+
 
     /**
      * Returns the language Id of a Geovistory Language for the given language code
@@ -65,6 +74,32 @@ public class Utils {
     public static Integer isoLangToGeoId(String isoLang) {
         return languageMap().get(isoLang.trim());
 
+    }
+
+    /**
+     * Shorten a string to a maximum length
+     *
+     * @param inputString string to shorten
+     * @param maxLength   the maximum length of the string
+     * @return if inputString is longer than maxLength, the first {maxLength} characters of inputString,
+     * else the inputString
+     * if inputString is null, returns null
+     */
+    public static String shorten(String inputString, int maxLength) {
+        if (inputString == null) return null;
+        if (inputString.length() > maxLength) return inputString.substring(0, maxLength);
+        else return inputString;
+    }
+
+    public static Date DateFromIso(String s) {
+        try {
+
+            TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(s);
+            Instant instant = Instant.from(ta);
+            return Date.from(instant);
+        } catch (NullPointerException | IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private static Map<String, Integer> languageMap() {

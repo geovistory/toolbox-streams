@@ -54,8 +54,8 @@ public class ProjectEntity {
                     var deleted = v1Deleted || v2Deleted || notInProject;
                     return ProjectEntityValue.newBuilder()
                             .setProjectId(value1.getFkProject())
-                            .setEntityId(value1.getFkEntity())
-                            .setClassId(value2.getFkClass())
+                            .setEntityId("i" + value1.getFkEntity())
+                            .setClassId(value2.getFkClass() == null ? -1 : value2.getFkClass())
                             .setDeleted$1(deleted)
                             .build();
                 },
@@ -66,18 +66,18 @@ public class ProjectEntity {
 
         var projectEntityStream = projectEntityJoin
                 .toStream()
+         /*       .filter(
+                        (key, value) -> value.getClassId() != null,
+                        Named.as("filter_entity_without_class")
+                )*/
                 .map((key, value) -> {
                     var k = ProjectEntityKey.newBuilder()
                             .setProjectId(key.getFkProject())
-                            .setEntityId(key.getFkEntity())
+                            .setEntityId("i" + key.getFkEntity())
                             .build();
-                    if (value.getDeleted$1()) {
-                        // add tombstone
-                        return KeyValue.pair(k, null);
-                    }
                     var v = ProjectEntityValue.newBuilder()
                             .setProjectId(key.getFkProject())
-                            .setEntityId(key.getFkEntity())
+                            .setEntityId("i" + key.getFkEntity())
                             .setClassId(value.getClassId())
                             .setDeleted$1(value.getDeleted$1())
                             .build();

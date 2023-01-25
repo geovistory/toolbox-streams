@@ -1,9 +1,12 @@
 package org.geovistory.toolbox.streams.app;
 
+import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Materialized;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 
 /**
@@ -18,37 +21,86 @@ public class RegisterInputTopic {
         this.builder = builder;
         this.avroSerdes = new ConfluentAvroSerdes();
     }
+
     public KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable() {
-        return builder.table(
+        return getRepartitionedTable(
                 DbTopicNames.pro_projects.getName(),
-                Consumed.with(avroSerdes.ProProjectKey(), avroSerdes.ProProjectValue())
+                avroSerdes.ProProjectKey(),
+                avroSerdes.ProProjectValue()
         );
     }
+
     public KTable<dev.projects.text_property.Key, dev.projects.text_property.Value> proTextPropertyTable() {
-        return builder.table(
+        return getRepartitionedTable(
                 DbTopicNames.pro_text_property.getName(),
-                Consumed.with(avroSerdes.ProTextPropertyKey(), avroSerdes.ProTextPropertyValue())
+                avroSerdes.ProTextPropertyKey(),
+                avroSerdes.ProTextPropertyValue()
         );
     }
 
     public KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> proProfileProjRelTable() {
-        return builder.table(
+        return getRepartitionedTable(
                 DbTopicNames.pro_dfh_profile_proj_rel.getName(),
-                Consumed.with(avroSerdes.ProProfileProjRelKey(), avroSerdes.ProProfileProjRelValue())
+                avroSerdes.ProProfileProjRelKey(),
+                avroSerdes.ProProfileProjRelValue()
         );
     }
 
     public KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable() {
-        return builder.table(
+        return getRepartitionedTable(
                 DbTopicNames.pro_info_proj_rel.getName(),
-                Consumed.with(avroSerdes.ProInfoProjRelKey(), avroSerdes.ProInfoProjRelValue())
+                avroSerdes.ProInfoProjRelKey(),
+                avroSerdes.ProInfoProjRelValue()
         );
     }
 
+
     public KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable() {
-        return builder.table(
-                DbTopicNames.inf_resource.getName(),
-                Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
+        return builder.stream(
+                        DbTopicNames.inf_resource.getName(),
+                        Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
+                )
+                .map(KeyValue::pair)
+                .toTable(Materialized.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue()));
+    }
+
+
+    public KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable() {
+        return getRepartitionedTable(
+                DbTopicNames.inf_statement.getName(),
+                avroSerdes.InfStatementKey(),
+                avroSerdes.InfStatementValue()
+        );
+    }
+
+    public KTable<dev.system.config.Key, dev.system.config.Value> sysConfigTable() {
+        return getRepartitionedTable(
+                DbTopicNames.sys_config.getName(),
+                avroSerdes.SysConfigKey(),
+                avroSerdes.SysConfigValue()
+        );
+    }
+
+    public KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyTable() {
+        return getRepartitionedTable(
+                DbTopicNames.dfh_api_property.getName(),
+                avroSerdes.DfhApiPropertyKey(),
+                avroSerdes.DfhApiPropertyValue()
+        );
+    }
+
+    public KTable<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> dfhApiClassTable() {
+        return getRepartitionedTable(
+                DbTopicNames.dfh_api_class.getName(),
+                avroSerdes.DfhApiClassKey(),
+                avroSerdes.DfhApiClassValue()
+        );
+    }
+
+    public KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream() {
+        return builder.stream(
+                DbTopicNames.pro_entity_label_config.getName(),
+                Consumed.with(avroSerdes.ProEntityLabelConfigKey(), avroSerdes.ProEntityLabelConfigValue())
         );
     }
 
@@ -108,32 +160,21 @@ public class RegisterInputTopic {
         );
     }
 
-    public KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable() {
-        return builder.table(
-                DbTopicNames.inf_statement.getName(),
-                Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.InfStatementValue())
-        );
-    }
 
-    public KTable<dev.system.config.Key, dev.system.config.Value> sysConfigTable() {
-        return builder.table(
-                DbTopicNames.sys_config.getName(),
-                Consumed.with(avroSerdes.SysConfigKey(), avroSerdes.SysConfigValue())
-        );
+    /**
+     * Register a KStream and map it to a new KTable to ensure proper partitioning
+     * This seems to be needed to correctly join topics created by debezium, since they have
+     * a different Partitioner then this Kafka Streams application.
+     *
+     * @param topicName name of topic to consume from
+     * @param kSerde key Serde
+     * @param vSerde value Serde
+     * @return KTable
+     */
+    private <K,V> KTable<K, V> getRepartitionedTable(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
+        return builder.stream(topicName, Consumed.with(kSerde, vSerde))
+                .map(KeyValue::pair)
+                .toTable(Materialized.with(kSerde, vSerde));
     }
-
-    public KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyTable() {
-        return builder.table(
-                DbTopicNames.dfh_api_property.getName(),
-                Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue())
-        );
-    }
-    public KTable<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> dfhApiClassTable() {
-        return builder.table(
-                DbTopicNames.dfh_api_class.getName(),
-                Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue())
-        );
-    }
-
 
 }

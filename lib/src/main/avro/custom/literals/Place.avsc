@@ -1,0 +1,52 @@
+{
+  "type": "record",
+  "name": "Place",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "geo_point",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "Geography",
+          "namespace": "io.debezium.data.geometry",
+          "fields": [
+            {
+              "name": "wkb",
+              "type": "bytes"
+            },
+            {
+              "name": "srid",
+              "type": [
+                "null",
+                "int"
+              ],
+              "default": null
+            }
+          ],
+          "connect.doc": "Geography",
+          "connect.version": 1,
+          "connect.name": "io.debezium.data.geometry.Geography"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "fk_class",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    }
+  ]
+}

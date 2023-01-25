@@ -1,0 +1,57 @@
+{
+  "type": "record",
+  "name": "TimePrimitive",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "duration",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.parameters": {
+            "allowed": "1 year,1 month,1 day,1 hour,1 minute,1 second"
+          },
+          "connect.name": "io.debezium.data.Enum"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "fk_class",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "julian_day",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "calendar",
+      "type": {
+        "type": "string",
+        "connect.version": 1,
+        "connect.parameters": {
+          "allowed": "gregorian,julian"
+        },
+        "connect.name": "io.debezium.data.Enum"
+      }
+    }
+  ]
+}

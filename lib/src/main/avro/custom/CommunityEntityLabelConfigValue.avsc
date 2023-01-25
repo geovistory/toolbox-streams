@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "CommunityEntityLabelConfigValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of a entity label config",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "config",
+      "type": "org.geovistory.toolbox.streams.avro.EntityLabelConfig"
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

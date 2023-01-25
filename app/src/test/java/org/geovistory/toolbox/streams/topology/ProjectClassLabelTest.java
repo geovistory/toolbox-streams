@@ -1,6 +1,7 @@
 package org.geovistory.toolbox.streams.topology;
 
 import org.apache.kafka.streams.*;
+import org.geovistory.toolbox.streams.app.I;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -24,10 +25,6 @@ class ProjectClassLabelTest {
     private TestInputTopic<ProjectClassKey, ProjectClassValue> projectClassTopic;
     private TestInputTopic<dev.projects.project.Key, dev.projects.project.Value> projectTopic;
     private TestOutputTopic<ProjectClassLabelKey, ProjectClassLabelValue> outputTopic;
-
-    private static final Integer EN = 18889;
-    private static final Integer DE = 18605;
-    private static final Integer DEFAULT_PROJECT = 375669;
 
 
     @BeforeEach
@@ -89,7 +86,7 @@ class ProjectClassLabelTest {
                 .setPkEntity(projectId)
                 .build();
         var vP = dev.projects.project.Value.newBuilder()
-                .setFkLanguage(DE)
+                .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
 
@@ -107,24 +104,24 @@ class ProjectClassLabelTest {
         // add ontome class label in english
         var kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .build();
         var vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setLabel("label 10 (from ontome en)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);
 
         // add geov default class label in english
         var kG = GeovClassLabelKey.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .build();
         var vG = GeovClassLabelValue.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .setLabel("label 10 (from geov default en)")
                 .build();
@@ -133,12 +130,12 @@ class ProjectClassLabelTest {
         // add geov project class label in english
         kG = GeovClassLabelKey.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setClassId(10)
                 .build();
         vG = GeovClassLabelValue.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setClassId(10)
                 .setLabel("label 10 (from geov project en)")
                 .build();
@@ -147,24 +144,24 @@ class ProjectClassLabelTest {
         // add ontome class label in project lang
         kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(DE)
+                .setLanguageId(I.DE.get())
                 .build();
         vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(DE)
+                .setLanguageId(I.DE.get())
                 .setLabel("label 10 (from ontome de)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);
 
         // add geov default class label in project lang
         kG = GeovClassLabelKey.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(DE)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.DE.get())
                 .setClassId(classId)
                 .build();
         vG = GeovClassLabelValue.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(DE)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.DE.get())
                 .setClassId(classId)
                 .setLabel("label 10 (from geov default de)")
                 .build();
@@ -173,12 +170,12 @@ class ProjectClassLabelTest {
         // add geov project class label in project lang
         kG = GeovClassLabelKey.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(DE)
+                .setLanguageId(I.DE.get())
                 .setClassId(classId)
                 .build();
         vG = GeovClassLabelValue.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(DE)
+                .setLanguageId(I.DE.get())
                 .setClassId(classId)
                 .setLabel("label 10 (from geov project de)")
                 .build();
@@ -203,7 +200,7 @@ class ProjectClassLabelTest {
                 .setPkEntity(projectId)
                 .build();
         var vP = dev.projects.project.Value.newBuilder()
-                .setFkLanguage(DE)
+                .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
 
@@ -221,24 +218,24 @@ class ProjectClassLabelTest {
         // add ontome class label in english
         var kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .build();
         var vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setLabel("label 10 (from ontome en)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);
 
         // add geov default class label in english
         var kG = GeovClassLabelKey.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .build();
         var vG = GeovClassLabelValue.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .setLabel("label 10 (from geov default en)")
                 .build();
@@ -247,12 +244,12 @@ class ProjectClassLabelTest {
         // add geov project class label in english
         kG = GeovClassLabelKey.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setClassId(10)
                 .build();
         vG = GeovClassLabelValue.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setClassId(10)
                 .setLabel("label 10 (from geov project en)")
                 .build();
@@ -261,24 +258,24 @@ class ProjectClassLabelTest {
         // add ontome class label in project lang
         kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(DE)
+                .setLanguageId(I.DE.get())
                 .build();
         vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(DE)
+                .setLanguageId(I.DE.get())
                 .setLabel("label 10 (from ontome de)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);
 
         // add geov default class label in project lang
         kG = GeovClassLabelKey.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(DE)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.DE.get())
                 .setClassId(classId)
                 .build();
         vG = GeovClassLabelValue.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(DE)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.DE.get())
                 .setClassId(classId)
                 .setLabel("label 10 (from geov default de)")
                 .build();
@@ -304,7 +301,7 @@ class ProjectClassLabelTest {
                 .setPkEntity(projectId)
                 .build();
         var vP = dev.projects.project.Value.newBuilder()
-                .setFkLanguage(DE)
+                .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
 
@@ -322,24 +319,24 @@ class ProjectClassLabelTest {
         // add ontome class label in english
         var kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .build();
         var vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setLabel("label 10 (from ontome en)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);
 
         // add geov default class label in english
         var kG = GeovClassLabelKey.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .build();
         var vG = GeovClassLabelValue.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .setLabel("label 10 (from geov default en)")
                 .build();
@@ -348,12 +345,12 @@ class ProjectClassLabelTest {
         // add geov project class label in english
         kG = GeovClassLabelKey.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setClassId(10)
                 .build();
         vG = GeovClassLabelValue.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setClassId(10)
                 .setLabel("label 10 (from geov project en)")
                 .build();
@@ -362,11 +359,11 @@ class ProjectClassLabelTest {
         // add ontome class label in project lang
         kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(DE)
+                .setLanguageId(I.DE.get())
                 .build();
         vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(DE)
+                .setLanguageId(I.DE.get())
                 .setLabel("label 10 (from ontome de)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);
@@ -391,7 +388,7 @@ class ProjectClassLabelTest {
                 .setPkEntity(projectId)
                 .build();
         var vP = dev.projects.project.Value.newBuilder()
-                .setFkLanguage(DE)
+                .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
 
@@ -409,24 +406,24 @@ class ProjectClassLabelTest {
         // add ontome class label in english
         var kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .build();
         var vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setLabel("label 10 (from ontome en)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);
 
         // add geov default class label in english
         var kG = GeovClassLabelKey.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .build();
         var vG = GeovClassLabelValue.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .setLabel("label 10 (from geov default en)")
                 .build();
@@ -435,12 +432,12 @@ class ProjectClassLabelTest {
         // add geov project class label in english
         kG = GeovClassLabelKey.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setClassId(10)
                 .build();
         vG = GeovClassLabelValue.newBuilder()
                 .setProjectId(projectId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setClassId(10)
                 .setLabel("label 10 (from geov project en)")
                 .build();
@@ -466,7 +463,7 @@ class ProjectClassLabelTest {
                 .setPkEntity(projectId)
                 .build();
         var vP = dev.projects.project.Value.newBuilder()
-                .setFkLanguage(DE)
+                .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
 
@@ -484,24 +481,24 @@ class ProjectClassLabelTest {
         // add ontome class label in english
         var kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .build();
         var vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setLabel("label 10 (from ontome en)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);
 
         // add geov default class label in english
         var kG = GeovClassLabelKey.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .build();
         var vG = GeovClassLabelValue.newBuilder()
-                .setProjectId(DEFAULT_PROJECT)
-                .setLanguageId(EN)
+                .setProjectId(I.DEFAULT_PROJECT.get())
+                .setLanguageId(I.EN.get())
                 .setClassId(classId)
                 .setLabel("label 10 (from geov default en)")
                 .build();
@@ -527,7 +524,7 @@ class ProjectClassLabelTest {
                 .setPkEntity(projectId)
                 .build();
         var vP = dev.projects.project.Value.newBuilder()
-                .setFkLanguage(DE)
+                .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
 
@@ -545,11 +542,11 @@ class ProjectClassLabelTest {
         // add ontome class label in english
         var kO = OntomeClassLabelKey.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .build();
         var vO = OntomeClassLabelValue.newBuilder()
                 .setClassId(classId)
-                .setLanguageId(EN)
+                .setLanguageId(I.EN.get())
                 .setLabel("label 10 (from ontome en)")
                 .build();
         ontomeClassLabelTopic.pipeInput(kO, vO);

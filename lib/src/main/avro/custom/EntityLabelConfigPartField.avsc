@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "EntityLabelConfigPartField",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Configures the Field of the entity Label Part",
+  "fields": [
+    {
+      "name": "fkProperty",
+      "type": "int"
+    },
+    {
+      "name": "isOutgoing",
+      "type": "boolean"
+    },
+    {
+      "name": "nrOfStatementsInLabel",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    }
+  ]
+}

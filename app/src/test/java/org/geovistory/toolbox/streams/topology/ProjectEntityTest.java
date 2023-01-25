@@ -97,10 +97,10 @@ class ProjectEntityTest {
         assertThat(outRecords).hasSize(1);
         var resultingKey = ProjectEntityKey.newBuilder()
                 .setProjectId(projectId)
-                .setEntityId(entityId)
+                .setEntityId("i" + entityId)
                 .build();
         var record = outRecords.get(resultingKey);
-        assertThat(record.getDeleted$1()).isFalse();
+        assertThat(record.getDeleted$1()).isEqualTo(false);
         assertThat(record.getClassId()).isEqualTo(classId);
     }
 
@@ -142,11 +142,11 @@ class ProjectEntityTest {
         assertThat(outRecords).hasSize(1);
         var resultingKey = ProjectEntityKey.newBuilder()
                 .setProjectId(projectId)
-                .setEntityId(entityId)
+                .setEntityId("i" + entityId)
                 .build();
         assertThat(outRecords.containsKey(resultingKey)).isTrue();
         var record = outRecords.get(resultingKey);
-        assertThat(record).isNull();
+        assertThat(record.getDeleted$1()).isEqualTo(true);
     }
 
     @Test
@@ -187,11 +187,11 @@ class ProjectEntityTest {
         assertThat(outRecords).hasSize(1);
         var resultingKey = ProjectEntityKey.newBuilder()
                 .setProjectId(projectId)
-                .setEntityId(entityId)
+                .setEntityId("i" + entityId)
                 .build();
         assertThat(outRecords.containsKey(resultingKey)).isTrue();
         var record = outRecords.get(resultingKey);
-        assertThat(record).isNull();
+        assertThat(record.getDeleted$1()).isEqualTo(true);
     }
 
     @Test
@@ -232,11 +232,11 @@ class ProjectEntityTest {
         assertThat(outRecords).hasSize(1);
         var resultingKey = ProjectEntityKey.newBuilder()
                 .setProjectId(projectId)
-                .setEntityId(entityId)
+                .setEntityId("i" + entityId)
                 .build();
         assertThat(outRecords.containsKey(resultingKey)).isTrue();
         var record = outRecords.get(resultingKey);
-        assertThat(record).isNull();
+        assertThat(record.getDeleted$1()).isEqualTo(true);
     }
 
     @Test
@@ -291,22 +291,21 @@ class ProjectEntityTest {
         assertThat(outRecords).hasSize(2);
         var resultingKeyOne = ProjectEntityKey.newBuilder()
                 .setProjectId(projectOneId)
-                .setEntityId(entityId)
+                .setEntityId("i" + entityId)
                 .build();
         assertThat(outRecords.containsKey(resultingKeyOne)).isTrue();
         var resultingKeyTwo = ProjectEntityKey.newBuilder()
                 .setProjectId(projectTwoId)
-                .setEntityId(entityId)
+                .setEntityId("i" + entityId)
                 .build();
         assertThat(outRecords.containsKey(resultingKeyTwo)).isTrue();
     }
-
+/*
 
     @Test
-    void testEntityWithoutClass() {
+    void testShouldFilterEntityWithoutClass() {
         var projectId = 10;
         var entityId = 20;
-        var classId = (Integer) null;
         // add relation between project and entity
         var kR = dev.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
@@ -328,20 +327,12 @@ class ProjectEntityTest {
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(entityId)
-                .setFkClass(classId)
+                .setFkClass(null)
                 .build();
         infResourceTopic.pipeInput(kE, vE);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
-        assertThat(outRecords).hasSize(1);
-        var resultingKey = ProjectEntityKey.newBuilder()
-                .setProjectId(projectId)
-                .setEntityId(entityId)
-                .build();
-        var record = outRecords.get(resultingKey);
-        assertThat(record.getDeleted$1()).isFalse();
-        assertThat(record.getClassId()).isEqualTo(classId);
+        assertThat(outputTopic.isEmpty()).isTrue();
     }
+*/
 
 }

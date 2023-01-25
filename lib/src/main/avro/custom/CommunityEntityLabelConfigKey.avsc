@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "CommunityEntityLabelConfigKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of a entity label config",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": "int"
+    }
+  ]
+}
