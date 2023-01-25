@@ -86,8 +86,7 @@ class App {
                 projectProfiles.projectProfileStream());
 
         // add sub-topology ProjectClass
-        var projectClass = ProjectClass.addProcessors(
-                projectProperty,
+        var projectClass = ProjectClass.addProcessors(builder,
                 projectProfiles.projectProfileStream(),
                 dfhApiClassTable
         );
@@ -174,6 +173,25 @@ class App {
                 projectEntityTable,
                 projectEntityLabelConfigTable,
                 projectTopStatements.projectTopStatementTable()
+        );
+
+        // add sub-topology OntomePropertyLabel
+        var ontomePropertyLabel = OntomePropertyLabel.addProcessors(builder,
+                dfhApiPropertyTable
+        );
+
+
+        // add sub-topology GeovPropertyLabel
+        var geovPropertyLabel = GeovPropertyLabel.addProcessors(builder,
+                proTextPropertyTable
+        );
+
+        // add sub-topology ProjectPropertyLabel
+        ProjectPropertyLabel.addProcessors(builder,
+                proProjectTable,
+                ontomePropertyLabel.ontomePropertyLabelStream(),
+                geovPropertyLabel.geovPropertyLabelStream(),
+                projectProperty.projectPropertyStream()
         );
 
 
