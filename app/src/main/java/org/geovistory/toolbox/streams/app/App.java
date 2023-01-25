@@ -195,11 +195,17 @@ class App {
         );
 
         // add sub-topology ProjectEntityTopStatements
-        ProjectEntityTopStatements.addProcessors(builder,
+        var projectEntityTopStatements = ProjectEntityTopStatements.addProcessors(builder,
                 projectEntityTable,
                 projectTopStatements.projectTopStatementTable(),
                 projectPropertyLabel.projectProfileTable()
         );
+        // add sub-topology ProjectEntityFulltext
+        ProjectEntityFulltext.addProcessors(builder,
+                projectEntityTopStatements.projectEntityTopStatementTable(),
+                projectEntityLabelConfigTable
+        );
+
     }
 
     private static void createTopics() {

@@ -66,6 +66,11 @@ public class RegisterOutputTopic {
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityValue()));
     }
 
+    public KTable<ProjectEntityKey, ProjectEntityTopStatementsValue> ProjectEntityTopStatementsTable() {
+        return builder.table(ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTopStatementsValue()));
+    }
+
     public KTable<dev.information.statement.Key, StatementEnrichedValue> statementEnrichedTable() {
         return builder.table(StatementEnriched.output.TOPICS.statement_enriched,
                 Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));

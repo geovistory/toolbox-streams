@@ -118,7 +118,11 @@ public class ProjectEntityTopStatements {
                         .build(),
                 (aggKey, newValue, aggValue) -> {
                     var key = newValue.getPropertyId() + "_" + (newValue.getIsOutgoing() ? "out" : "in");
-                    aggValue.getMap().put(key, newValue);
+                    if (newValue.getStatements().size() == 0) {
+                        aggValue.getMap().remove(key);
+                    } else {
+                        aggValue.getMap().put(key, newValue);
+                    }
                     return aggValue;
                 },
                 (aggKey, oldValue, aggValue) -> aggValue,
