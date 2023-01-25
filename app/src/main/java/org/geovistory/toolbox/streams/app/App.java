@@ -168,6 +168,8 @@ class App {
                 proInfoProjRelTable
         );
         var projectEntityTable = outputTopics.projectEntityTable();
+
+        // add sub-topology ProjectEntityLabel
         ProjectEntityLabel.addProcessors(builder,
                 projectEntityTable,
                 projectEntityLabelConfigTable,

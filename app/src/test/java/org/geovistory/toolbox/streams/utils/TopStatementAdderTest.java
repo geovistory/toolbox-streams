@@ -1,66 +1,19 @@
-package org.geovistory.toolbox.streams.topology;
+package org.geovistory.toolbox.streams.utils;
 
 
-import org.apache.kafka.streams.*;
-import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.topologies.ProjectTopOutgoingStatements;
-import org.geovistory.toolbox.streams.utils.TopStatementAdder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ProjectTopOutgoingStatementsTest {
-
-    private static final String SCHEMA_REGISTRY_SCOPE = ProjectTopOutgoingStatementsTest.class.getName();
-    private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
-    private TopologyTestDriver testDriver;
-    private TestInputTopic<ProjectStatementKey, ProjectStatementValue> projectStatementTopic;
-    private TestOutputTopic<ProjectTopStatementsKey, ProjectTopStatementsValue> outputTopic;
-
-    @BeforeEach
-    void setup() {
-
-
-        Properties props = new Properties();
-        var appId = "test";
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
-        props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
-
-        Topology topology = ProjectTopOutgoingStatements.buildStandalone(new StreamsBuilder());
-
-        testDriver = new TopologyTestDriver(topology, props);
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
-        projectStatementTopic = testDriver.createInputTopic(
-                ProjectTopOutgoingStatements.input.TOPICS.project_statement,
-                avroSerdes.ProjectStatementKey().serializer(),
-                avroSerdes.ProjectStatementValue().serializer());
-
-
-        outputTopic = testDriver.createOutputTopic(
-                ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
-                avroSerdes.ProjectTopStatementsKey().deserializer(),
-                avroSerdes.ProjectTopStatementsValue().deserializer());
-    }
-
-    @AfterEach
-    void teardown() {
-        testDriver.close();
-    }
+class TopStatementAdderTest {
 
 
     @Test
-    void testValueAggregatorOrdering() {
+    void testOutgoingOrdering() {
         var s = StatementEnrichedValue.newBuilder()
                 .setSubjectId("1")
                 .setPropertyId(2)
@@ -94,7 +47,7 @@ class ProjectTopOutgoingStatementsTest {
     }
 
     @Test
-    void testValueAggregatorOrderingByModificationDate() {
+    void testOutgoingOrderingByModificationDate() {
         var s = StatementEnrichedValue.newBuilder()
                 .setSubjectId("1")
                 .setPropertyId(2)
@@ -131,7 +84,110 @@ class ProjectTopOutgoingStatementsTest {
     }
 
     @Test
-    void testValueAggregatorMoveStatementDown() {
+    void testIncomingOrderingByModificationDate() {
+        var s = StatementEnrichedValue.newBuilder()
+                .setSubjectId("1")
+                .setPropertyId(2)
+                .setObjectId("3")
+                .build();
+
+        var b = ProjectStatementValue.newBuilder();
+        var v0 = new ArrayList<ProjectStatementValue>();
+        var v1 = TopStatementAdder.addStatement(v0,
+                b.setProjectId(1).setStatementId(3).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-03-03T09:25:57.698128Z").build(),
+                false
+        );
+        var v2 = TopStatementAdder.addStatement(v1,
+                b.setProjectId(1).setStatementId(4).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-02-03T09:25:57.698128Z").build(),
+                false
+        );
+        var v3 = TopStatementAdder.addStatement(v2,
+                b.setProjectId(1).setStatementId(0).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-12-03T09:25:57.698128Z").build(),
+                false
+        );
+        var v4 = TopStatementAdder.addStatement(v3,
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForRange(3).setModifiedAt("2020-11-03T09:25:57.698128Z").build(),
+                false
+        );
+        var v5 = TopStatementAdder.addStatement(v4,
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-04-03T09:25:57.698128Z").build(),
+                false
+        );
+        var v6 = TopStatementAdder.addStatement(v5,
+                b.setProjectId(1).setStatementId(5).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-01-03T09:25:57.698128Z").build(),
+                false
+        );
+
+        assertThat(v6.size()).isEqualTo(5);
+        assertThat(v6.get(0).getStatementId()).isEqualTo(1);
+        assertThat(v6.get(1).getStatementId()).isEqualTo(0);
+        assertThat(v6.get(2).getStatementId()).isEqualTo(2);
+        assertThat(v6.get(3).getStatementId()).isEqualTo(3);
+        assertThat(v6.get(4).getStatementId()).isEqualTo(4);
+    }
+
+    @Test
+    void testIncomingOrderingByStatementId() {
+        var s = StatementEnrichedValue.newBuilder()
+                .setSubjectId("1")
+                .setPropertyId(2)
+                .setObjectId("3")
+                .build();
+
+        var b = ProjectStatementValue.newBuilder();
+        var v0 = new ArrayList<ProjectStatementValue>();
+        var v1 = TopStatementAdder.addStatement(v0,
+                b.setProjectId(1).setStatementId(0).setStatement(s).setOrdNumForRange(null).setModifiedAt(null).build(),
+                false
+        );
+        var v2 = TopStatementAdder.addStatement(v1,
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-02-03T09:25:57.698128Z").build(),
+                false
+        );
+        var v3 = TopStatementAdder.addStatement(v2,
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForRange(null).setModifiedAt(null).build(),
+                false
+        );
+
+
+        assertThat(v3.size()).isEqualTo(3);
+        assertThat(v3.get(0).getStatementId()).isEqualTo(1); // because it has a date
+        assertThat(v3.get(1).getStatementId()).isEqualTo(2); // because id 2 > 0
+        assertThat(v3.get(2).getStatementId()).isEqualTo(0);
+    }
+
+    @Test
+    void testIncomingOrderingByStatementIdWithSameDate() {
+        var s = StatementEnrichedValue.newBuilder()
+                .setSubjectId("1")
+                .setPropertyId(2)
+                .setObjectId("3")
+                .build();
+
+        var b = ProjectStatementValue.newBuilder();
+        var v0 = new ArrayList<ProjectStatementValue>();
+        var v1 = TopStatementAdder.addStatement(v0,
+                b.setProjectId(1).setStatementId(0).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-02-03T09:25:57.698128Z").build(),
+                false
+        );
+        var v2 = TopStatementAdder.addStatement(v1,
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-02-03T09:25:57.698128Z").build(),
+                false
+        );
+        var v3 = TopStatementAdder.addStatement(v2,
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForRange(null).setModifiedAt("2020-02-03T09:25:57.698128Z").build(),
+                false
+        );
+
+
+        assertThat(v3.size()).isEqualTo(3);
+        assertThat(v3.get(0).getStatementId()).isEqualTo(2);
+        assertThat(v3.get(1).getStatementId()).isEqualTo(1);
+        assertThat(v3.get(2).getStatementId()).isEqualTo(0);
+    }
+
+    @Test
+    void testOutgoingMoveStatementDown() {
         var s = StatementEnrichedValue.newBuilder()
                 .setSubjectId("1")
                 .setPropertyId(2)
@@ -162,7 +218,7 @@ class ProjectTopOutgoingStatementsTest {
     }
 
     @Test
-    void testValueAggregatorMoveStatementUp() {
+    void testOutgoingMoveStatementUp() {
         var s = StatementEnrichedValue.newBuilder()
                 .setSubjectId("1")
                 .setPropertyId(2)
@@ -193,7 +249,7 @@ class ProjectTopOutgoingStatementsTest {
     }
 
     @Test
-    void testValueAggregatorDeleteStatementUp() {
+    void testOutgoingDeleteStatementUp() {
         var s = StatementEnrichedValue.newBuilder()
                 .setSubjectId("1")
                 .setPropertyId(2)
@@ -219,59 +275,6 @@ class ProjectTopOutgoingStatementsTest {
 
         assertThat(v4.size()).isEqualTo(2);
         assertThat(v4.get(0).getStatementId()).isEqualTo(2);
-    }
-
-    @Test
-    void testFourStatementsOfSameSubjectAndProperty() {
-        int projectId = 1;
-        String subjectId = "i10";
-        int propertyId = 20;
-        String objectId = "i30";
-
-        // add statement
-        var k = ProjectStatementKey.newBuilder()
-                .setProjectId(projectId)
-                .setStatementId(1)
-                .build();
-        var v = ProjectStatementValue.newBuilder()
-                .setProjectId(1)
-                .setStatementId(3)
-                .setStatement(
-                        StatementEnrichedValue.newBuilder()
-                                .setSubjectId(subjectId)
-                                .setPropertyId(propertyId)
-                                .setObjectId(objectId)
-                                .build()
-                )
-                .setOrdNumForDomain(3)
-                .build();
-        projectStatementTopic.pipeInput(k, v);
-
-        v.setStatementId(1);
-        v.setOrdNumForDomain(1);
-
-        projectStatementTopic.pipeInput(k, v);
-
-        v.setStatementId(2);
-        v.setOrdNumForDomain(2);
-        projectStatementTopic.pipeInput(k, v);
-
-        v.setStatementId(0);
-        v.setOrdNumForDomain(0);
-        projectStatementTopic.pipeInput(k, v);
-
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
-        assertThat(outRecords).hasSize(1);
-        var resultKey = ProjectTopStatementsKey.newBuilder()
-                .setProjectId(projectId)
-                .setEntityId(subjectId)
-                .setPropertyId(propertyId)
-                .setIsOutgoing(true)
-                .build();
-        var record = outRecords.get(resultKey);
-        assertThat(record.getStatements().size()).isEqualTo(4);
-        assertThat(record.getStatements().get(2).getOrdNumForDomain()).isEqualTo(2);
     }
 
 
