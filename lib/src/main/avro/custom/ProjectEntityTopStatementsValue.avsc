@@ -1,0 +1,37 @@
+{
+  "type": "record",
+  "name": "ProjectEntityTopStatementsValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of project entity",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values" : "org.geovistory.toolbox.streams.avro.ProjectTopStatementsWithPropLabelValue",
+        "default": {}
+      },
+      "default": {}
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

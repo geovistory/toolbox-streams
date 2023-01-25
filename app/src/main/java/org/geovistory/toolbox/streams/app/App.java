@@ -187,14 +187,19 @@ class App {
         );
 
         // add sub-topology ProjectPropertyLabel
-        ProjectPropertyLabel.addProcessors(builder,
+        var projectPropertyLabel = ProjectPropertyLabel.addProcessors(builder,
                 proProjectTable,
                 ontomePropertyLabel.ontomePropertyLabelStream(),
                 geovPropertyLabel.geovPropertyLabelStream(),
                 projectProperty.projectPropertyStream()
         );
 
-
+        // add sub-topology ProjectEntityTopStatements
+        ProjectEntityTopStatements.addProcessors(builder,
+                projectEntityTable,
+                projectTopStatements.projectTopStatementTable(),
+                projectPropertyLabel.projectProfileTable()
+        );
     }
 
     private static void createTopics() {

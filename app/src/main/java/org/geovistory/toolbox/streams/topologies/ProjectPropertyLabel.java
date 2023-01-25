@@ -35,10 +35,10 @@ public class ProjectPropertyLabel {
                 registerOutputTopic.ontomePropertyLabelStream(),
                 registerOutputTopic.geovPropertyLabelStream(),
                 registerOutputTopic.projectPropertyStream()
-        ).build();
+        ).builder().build();
     }
 
-    public static StreamsBuilder addProcessors(
+    public static ProjectPropertyLabelReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable,
             KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelStream,
@@ -324,7 +324,7 @@ public class ProjectPropertyLabel {
                         .withKeySerde(avroSerdes.ProjectPropertyLabelKey())
                         .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
         );
-        var projectPropertyLabel = projectPropertyLabelOptionsAggregated.mapValues((readOnlyKey, map) -> {
+        var projectPropertyLabelTable = projectPropertyLabelOptionsAggregated.mapValues((readOnlyKey, map) -> {
             ProjectFieldLabelValue o;
             var direction = readOnlyKey.getIsOutgoing() ? "out" : "in";
             // Label in project language, provided by Geovistory project
@@ -352,15 +352,16 @@ public class ProjectPropertyLabel {
             if (o != null) return o;
 
             return o;
-        }).toStream();
+        });
+        var projectPropertyLabelStream = projectPropertyLabelTable.toStream();
 
         /* SINK PROCESSORS */
 
         // 8) to
-        projectPropertyLabel.to(output.TOPICS.project_property_label,
+        projectPropertyLabelStream.to(output.TOPICS.project_property_label,
                 Produced.with(avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelValue()));
 
-        return builder;
+        return new ProjectPropertyLabelReturnValue(builder, projectPropertyLabelTable, projectPropertyLabelStream);
 
     }
 

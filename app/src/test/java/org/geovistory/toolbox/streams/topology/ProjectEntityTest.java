@@ -300,7 +300,7 @@ class ProjectEntityTest {
                 .build();
         assertThat(outRecords.containsKey(resultingKeyTwo)).isTrue();
     }
-/*
+
 
     @Test
     void testShouldFilterEntityWithoutClass() {
@@ -333,6 +333,6 @@ class ProjectEntityTest {
 
         assertThat(outputTopic.isEmpty()).isTrue();
     }
-*/
+
 
 }

@@ -516,5 +516,20 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<ProjectTopStatementsWithClassValue> ProjectTopStatementsWithClassValue() {
+        Serde<ProjectTopStatementsWithClassValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+    public Serde<ProjectTopStatementsWithPropLabelValue> ProjectTopStatementsWithPropLabelValue() {
+        Serde<ProjectTopStatementsWithPropLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+    public Serde<ProjectEntityTopStatementsValue> ProjectEntityTopStatementsValue() {
+        Serde<ProjectEntityTopStatementsValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 
 }
