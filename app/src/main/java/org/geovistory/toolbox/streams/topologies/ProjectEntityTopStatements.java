@@ -122,8 +122,8 @@ public class ProjectEntityTopStatements {
                     return aggValue;
                 },
                 (aggKey, oldValue, aggValue) -> aggValue,
-                Named.as(ProjectPropertyLabel.inner.TOPICS.project_property_label_options_aggregated),
-                Materialized.<ProjectEntityKey, ProjectEntityTopStatementsValue, KeyValueStore<Bytes, byte[]>>as(ProjectPropertyLabel.inner.TOPICS.project_property_label_options_aggregated)
+                Named.as(ProjectEntityTopStatements.inner.TOPICS.project_entity_top_tatements_aggregated),
+                Materialized.<ProjectEntityKey, ProjectEntityTopStatementsValue, KeyValueStore<Bytes, byte[]>>as(ProjectEntityTopStatements.inner.TOPICS.project_entity_top_tatements_aggregated)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityTopStatementsValue())
         );
@@ -152,6 +152,8 @@ public class ProjectEntityTopStatements {
         TOPICS;
         public final String project_top_statements_with_class_id = Utils.tsPrefixed("project_top_statements_with_class_id");
         public final String project_top_statements_with_prop_label = Utils.tsPrefixed("project_top_statements_with_prop_label");
+        public final String project_entity_top_tatements_aggregated = Utils.tsPrefixed("project_entity_top_tatements_aggregated");
+
     }
 
     public enum output {
