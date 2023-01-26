@@ -196,7 +196,7 @@ class ProjectEntityFulltextTest {
 
         var in = ProjectTopStatementsWithPropLabelValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
-                .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("has friend").setStatements(List.of(
+                .setEntityId(entityId).setIsOutgoing(false).setPropertyLabel("has friend").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
                                 .setOrdNumForDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
@@ -217,7 +217,7 @@ class ProjectEntityFulltextTest {
 
         var out = ProjectTopStatementsWithPropLabelValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdSecondPart)
-                .setEntityId(entityId).setIsOutgoing(false).setPropertyLabel("participates in").setStatements(List.of(
+                .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("participates in").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
                                 .setOrdNumForDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
@@ -277,6 +277,101 @@ class ProjectEntityFulltextTest {
 
         var record = outRecords.get(k);
         assertThat(record.getFulltext()).isEqualTo("foo participates in Voyage 1, Voyage 2, has friend Max, Mia, has fun with Toy 1, Toy 2.");
+    }
+
+    @Test
+    void testTopologyEntityWithoutLabelConfig() {
+        var projectId = 1;
+        var classId = 2;
+        var entityId = "foo";
+        var propIdSecondPart = 3;
+        var propIdFirstPart = 4;
+
+        var map = new HashMap<String, ProjectTopStatementsWithPropLabelValue>();
+
+        var in = ProjectTopStatementsWithPropLabelValue.newBuilder()
+                .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
+                .setEntityId(entityId).setIsOutgoing(false).setPropertyLabel("has friend").setStatements(List.of(
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(1)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdFirstPart)
+                                        .setObjectLabel("foo")
+                                        .setSubjectLabel("Max").build()).build(),
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(2)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdFirstPart)
+                                        .setObjectLabel("foo")
+                                        .setSubjectLabel("Mia").build()).build()
+                )).build();
+
+        var out = ProjectTopStatementsWithPropLabelValue.newBuilder()
+                .setClassId(classId).setProjectId(projectId).setPropertyId(propIdSecondPart)
+                .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("participates in").setStatements(List.of(
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(1)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdSecondPart)
+                                        .setSubjectLabel("foo")
+                                        .setObjectLabel("Voyage 1").build()).build(),
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(2)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdSecondPart)
+                                        .setSubjectLabel("foo")
+                                        .setObjectLabel("Voyage 2").build()).build()
+                )).build();
+
+
+        var out2 = ProjectTopStatementsWithPropLabelValue.newBuilder()
+                .setClassId(classId).setProjectId(projectId).setPropertyId(9876543)
+                .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("has fun with").setStatements(List.of(
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(1)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(9876543)
+                                        .setSubjectLabel("foo")
+                                        .setObjectLabel("Toy 1").build()).build(),
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(2)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(9876543)
+                                        .setSubjectLabel("foo")
+                                        .setObjectLabel("Toy 2").build()).build()
+                )).build();
+
+        map.put(propIdFirstPart + "_in", in);
+
+        map.put(propIdSecondPart + "_out", out);
+
+        map.put(9876543 + "_out", out2);
+
+        var entityTopStatements = ProjectEntityTopStatementsValue.newBuilder()
+                .setEntityId(entityId).setProjectId(projectId).setClassId(classId).setMap(map).build();
+
+
+        var k = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
+        projectEntityTopStatementsTopic.pipeInput(k, entityTopStatements);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+
+        var record = outRecords.get(k);
+        assertThat(record.getFulltext()).isEqualTo("foo has fun with Toy 1, Toy 2, has friend Max, Mia, participates in Voyage 1, Voyage 2.");
     }
 
 

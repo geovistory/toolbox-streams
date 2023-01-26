@@ -106,20 +106,24 @@ public class ProjectEntityFulltext {
      */
     public static String createFulltext(ProjectEntityTopStatementsWithConfigValue v) {
         var strings = new ArrayList<String>();
+        var topStatements = v.getEntityTopStatements();
+        if (topStatements == null) return "";
         var topStatementsMap = v.getEntityTopStatements().getMap();
+        var labelConfig = v.getLabelConfig();
         String entityLabel = getEntityLabel(topStatementsMap);
+        if (labelConfig != null) {
+            // process fields from label config
 
-        // process fields from label config
-        v.getLabelConfig().getConfig().getLabelParts().forEach(entityLabelConfigPart -> {
-            var f = entityLabelConfigPart.getField();
-            var s = createFieldText(topStatementsMap, f.getIsOutgoing(), f.getFkProperty());
-            strings.add(s);
+            labelConfig.getConfig().getLabelParts().forEach(entityLabelConfigPart -> {
+                var f = entityLabelConfigPart.getField();
+                var s = createFieldText(topStatementsMap, f.getIsOutgoing(), f.getFkProperty());
+                strings.add(s);
 
-            // remove key from map
-            topStatementsMap.remove(getFieldKey(f.getIsOutgoing(), f.getFkProperty()));
+                // remove key from map
+                topStatementsMap.remove(getFieldKey(f.getIsOutgoing(), f.getFkProperty()));
 
-        });
-
+            });
+        }
         // process rest of fields
         topStatementsMap.forEach((key, value) -> {
             var s = createFieldText(topStatementsMap, value.getIsOutgoing(), value.getPropertyId());
