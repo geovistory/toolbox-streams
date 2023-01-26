@@ -21,7 +21,20 @@ root
 ## Develop
 
 ### CLI
-The
+
+For convenience there is a CLI tool to perform cleanup tasks, like:
+
+- batch delete of topics
+- batch delete of schemas
+
+In order to connect to the schema registry and to the kafka bootstrap server,
+make sure you properly configured .env and have access to the remote servers.
+
+```bash
+# run this command for more details
+./gradlew utilities:cli --args="--help"
+```
+
 
 ## Deploy
 

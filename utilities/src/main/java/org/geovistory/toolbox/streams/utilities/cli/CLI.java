@@ -32,7 +32,7 @@ public class CLI {
         PrintWriter pw = new PrintWriter(System.out);
         pw.println("Toolbox Streams CLI");
         pw.println();
-        formatter.printUsage(pw, 100, "./cli.sh [options] argument1 argument2 ...");
+        formatter.printUsage(pw, 100, "./gradlew utilities:cli --args=\"--argument1=foo --argument2 ...\"");
         formatter.printOptions(pw, 100, options, 2, 5);
         pw.close();
     }

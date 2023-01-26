@@ -195,18 +195,17 @@ class App {
                 projectProperty.projectPropertyStream()
         );
         // add sub-topology ProjectEntityTopStatements
-        // var projectEntityTopStatements =
-        ProjectEntityTopStatements.addProcessors(builder,
+        var projectEntityTopStatements = ProjectEntityTopStatements.addProcessors(builder,
                 projectEntityTable,
                 projectTopStatements.projectTopStatementTable(),
                 projectPropertyLabelTable
         );
-/*
+
         // add sub-topology ProjectEntityFulltext
         ProjectEntityFulltext.addProcessors(builder,
                 projectEntityTopStatements.projectEntityTopStatementTable(),
                 projectEntityLabelConfigTable
-        );*/
+        );
 
     }
 
@@ -236,7 +235,8 @@ class App {
                 OntomePropertyLabel.output.TOPICS.ontome_property_label,
                 GeovPropertyLabel.output.TOPICS.geov_property_label,
                 ProjectPropertyLabel.output.TOPICS.project_property_label,
-                ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements
+                ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
+                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
