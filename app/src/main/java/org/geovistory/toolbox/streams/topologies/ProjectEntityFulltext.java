@@ -113,32 +113,35 @@ public class ProjectEntityFulltext {
         var topStatementsMap = v.getEntityTopStatements().getMap();
         var labelConfig = v.getLabelConfig();
         String entityLabel = getEntityLabel(topStatementsMap);
-        if (labelConfig != null) {
-            // process fields from label config
 
+        // process fields from label config
+        if (labelConfig != null) {
             labelConfig.getConfig().getLabelParts().forEach(entityLabelConfigPart -> {
                 var f = entityLabelConfigPart.getField();
                 var s = createFieldText(topStatementsMap, f.getIsOutgoing(), f.getFkProperty());
-                strings.add(s);
+                if (s != null) strings.add(s);
 
                 // remove key from map
                 topStatementsMap.remove(getFieldKey(f.getIsOutgoing(), f.getFkProperty()));
 
             });
         }
+
         // process rest of fields
         topStatementsMap.forEach((key, value) -> {
             var s = createFieldText(topStatementsMap, value.getIsOutgoing(), value.getPropertyId());
-            strings.add(s);
+            if (s != null) strings.add(s);
         });
 
+        var fieldsText = String.join(".\n", strings);
 
-        var fieldsText = String.join(", ", strings);
-        var parts = Stream.of(entityLabel, fieldsText).filter(s -> !Objects.equals(s, "")).toList();
+        var parts = Stream.of(entityLabel, fieldsText)
+                .filter(s -> s != null && !Objects.equals(s, ""))
+                .toList();
 
         if (parts.size() == 0) return "";
 
-        return String.join(" ", parts) + ".";
+        return String.join("\n", parts) + ".";
     }
 
     private static String getEntityLabel(Map<String, ProjectTopStatementsWithPropLabelValue> topStatementsMap) {
@@ -148,7 +151,7 @@ public class ProjectEntityFulltext {
             return firstField.getIsOutgoing() ?
                     firstStatement.getSubjectLabel() : firstStatement.getObjectLabel();
         } catch (NoSuchElementException e) {
-            return "";
+            return null;
         }
     }
 
@@ -165,7 +168,11 @@ public class ProjectEntityFulltext {
 
         if (fieldStrings.size() > 0) {
             var propertyLabel = topStatements.getPropertyLabel();
-            return propertyLabel + " " + String.join(", ", fieldStrings);
+            var targetLabels = String.join(", ", fieldStrings);
+            if (propertyLabel != null && !Objects.equals(propertyLabel, "")) {
+                return propertyLabel + ": " + targetLabels;
+            }
+            return targetLabels;
         }
         return null;
     }

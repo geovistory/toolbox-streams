@@ -165,7 +165,50 @@ class ProjectEntityFulltextTest {
                 .setEntityTopStatements(entityTopStatements)
                 .build();
         var result = ProjectEntityFulltext.createFulltext(v);
-        assertThat(result).isEqualTo("foo participates in Voyage 1, Voyage 2, has friend Max, Mia, has fun with Toy 1, Toy 2.");
+        assertThat(result).isEqualTo("foo\nparticipates in: Voyage 1, Voyage 2.\nhas friend: Max, Mia.\nhas fun with: Toy 1, Toy 2.");
+    }
+
+    @Test
+    void testCreateFulltextMethodWithNullLabels() {
+        var projectId = 1;
+        var classId = 2;
+        var entityId = "foo";
+        var propIdFirstPart = 4;
+
+        var map = new HashMap<String, ProjectTopStatementsWithPropLabelValue>();
+
+        var in = ProjectTopStatementsWithPropLabelValue.newBuilder()
+                .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
+                .setEntityId(entityId).setIsOutgoing(false).setPropertyLabel("has friend").setStatements(List.of(
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(1)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdFirstPart)
+                                        .setObjectLabel(null)
+                                        .setSubjectLabel(null).build()).build(),
+                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNumForDomain(2)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdFirstPart)
+                                        .setObjectLabel(null)
+                                        .setSubjectLabel(null).build()).build()
+                )).build();
+
+        map.put(propIdFirstPart + "_in", in);
+
+
+        var entityTopStatements = ProjectEntityTopStatementsValue.newBuilder()
+                .setEntityId(entityId).setProjectId(projectId).setClassId(classId).setMap(map).build();
+
+        var v = ProjectEntityTopStatementsWithConfigValue.newBuilder()
+                .setEntityTopStatements(entityTopStatements)
+                .build();
+        var result = ProjectEntityFulltext.createFulltext(v);
+        assertThat(result).isEqualTo("");
     }
 
     @Test
@@ -276,7 +319,7 @@ class ProjectEntityFulltextTest {
         assertThat(outRecords).hasSize(1);
 
         var record = outRecords.get(k);
-        assertThat(record.getFulltext()).isEqualTo("foo participates in Voyage 1, Voyage 2, has friend Max, Mia, has fun with Toy 1, Toy 2.");
+        assertThat(record.getFulltext()).isEqualTo("foo\nparticipates in: Voyage 1, Voyage 2.\nhas friend: Max, Mia.\nhas fun with: Toy 1, Toy 2.");
     }
 
     @Test
@@ -371,7 +414,7 @@ class ProjectEntityFulltextTest {
         assertThat(outRecords).hasSize(1);
 
         var record = outRecords.get(k);
-        assertThat(record.getFulltext()).isEqualTo("foo has fun with Toy 1, Toy 2, has friend Max, Mia, participates in Voyage 1, Voyage 2.");
+        assertThat(record.getFulltext()).isEqualTo("foo\nhas fun with: Toy 1, Toy 2.\nhas friend: Max, Mia.\nparticipates in: Voyage 1, Voyage 2.");
     }
 
 
