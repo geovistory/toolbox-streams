@@ -103,7 +103,7 @@ public class ProjectEntityTopStatements {
                 ),
                 Grouped.with(
                         avroSerdes.ProjectEntityKey(), avroSerdes.ProjectTopStatementsWithPropLabelValue()
-                ).withName("project_top_statements_with_prop_label_grouped")
+                ).withName("project_entity_top_statements_with_prop_label_grouped")
         );
         // 5)
         // Aggregate ProjectEntityTopStatementsValue, where the ProjectTopStatementKey is transformed to a string,
