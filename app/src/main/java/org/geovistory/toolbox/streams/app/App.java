@@ -74,6 +74,7 @@ class App {
         // register recursive output topics as KTables
         var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
         var projectPropertyLabelTable = outputTopics.projectPropertyLabelTable();
+        var projectEntityTopStatementsTable = outputTopics.ProjectEntityTopStatementsTable();
 
         // add sub-topology ProjectProfiles
         var projectProfiles = ProjectProfiles.addProcessors(builder,
@@ -195,7 +196,7 @@ class App {
                 projectProperty.projectPropertyStream()
         );
         // add sub-topology ProjectEntityTopStatements
-        var projectEntityTopStatements = ProjectEntityTopStatements.addProcessors(builder,
+        ProjectEntityTopStatements.addProcessors(builder,
                 projectEntityTable,
                 projectTopStatements.projectTopStatementTable(),
                 projectPropertyLabelTable
@@ -203,7 +204,7 @@ class App {
 
         // add sub-topology ProjectEntityFulltext
         ProjectEntityFulltext.addProcessors(builder,
-                projectEntityTopStatements.projectEntityTopStatementTable(),
+                projectEntityTopStatementsTable,
                 projectEntityLabelConfigTable
         );
 
