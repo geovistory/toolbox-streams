@@ -375,4 +375,27 @@ class ProjectEntityFulltextTest {
     }
 
 
+    @Test
+    void testTopologyEntityWithoutStatements() {
+        var projectId = 1;
+        var classId = 2;
+        var entityId = "foo";
+
+        var map = new HashMap<String, ProjectTopStatementsWithPropLabelValue>();
+
+        var entityTopStatements = ProjectEntityTopStatementsValue.newBuilder()
+                .setEntityId(entityId).setProjectId(projectId).setClassId(classId).setMap(map).build();
+
+
+        var k = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
+        projectEntityTopStatementsTopic.pipeInput(k, entityTopStatements);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+
+        var record = outRecords.get(k);
+        assertThat(record.getFulltext()).isEqualTo("");
+    }
+
 }

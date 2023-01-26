@@ -13,8 +13,10 @@ import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 
 public class ProjectEntityFulltext {
@@ -132,18 +134,26 @@ public class ProjectEntityFulltext {
 
 
         var fieldsText = String.join(", ", strings);
-        return String.join(" ", List.of(entityLabel, fieldsText)) + ".";
+        var parts = Stream.of(entityLabel, fieldsText).filter(s -> !Objects.equals(s, "")).toList();
+
+        if (parts.size() == 0) return "";
+
+        return String.join(" ", parts) + ".";
     }
 
     private static String getEntityLabel(Map<String, ProjectTopStatementsWithPropLabelValue> topStatementsMap) {
-        var firstField = topStatementsMap.entrySet().iterator().next().getValue();
-
-        var firstStatement = firstField.getStatements().get(0).getStatement();
-        return firstField.getIsOutgoing() ?
-                firstStatement.getSubjectLabel() : firstStatement.getObjectLabel();
+        try {
+            var firstField = topStatementsMap.entrySet().iterator().next().getValue();
+            var firstStatement = firstField.getStatements().get(0).getStatement();
+            return firstField.getIsOutgoing() ?
+                    firstStatement.getSubjectLabel() : firstStatement.getObjectLabel();
+        } catch (NoSuchElementException e) {
+            return "";
+        }
     }
 
-    private static String createFieldText(Map<String, ProjectTopStatementsWithPropLabelValue> topStatementsMap, boolean isOutgoing, int propertyId) {
+    private static String createFieldText(Map<String, ProjectTopStatementsWithPropLabelValue> topStatementsMap,
+                                          boolean isOutgoing, int propertyId) {
         String key = getFieldKey(isOutgoing, propertyId);
         var topStatements = topStatementsMap.get(key);
         var fieldStrings = new ArrayList<String>();
