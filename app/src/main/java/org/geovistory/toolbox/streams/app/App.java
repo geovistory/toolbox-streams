@@ -73,6 +73,8 @@ class App {
 
         // register recursive output topics as KTables
         var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
+        var projectPropertyLabelTable = outputTopics.projectPropertyLabelTable();
+        var projectEntityTopStatementsTable = outputTopics.ProjectEntityTopStatementsTable();
 
         // add sub-topology ProjectProfiles
         var projectProfiles = ProjectProfiles.addProcessors(builder,
@@ -193,7 +195,18 @@ class App {
                 geovPropertyLabel.geovPropertyLabelStream(),
                 projectProperty.projectPropertyStream()
         );
+        // add sub-topology ProjectEntityTopStatements
+        ProjectEntityTopStatements.addProcessors(builder,
+                projectEntityTable,
+                projectTopStatements.projectTopStatementTable(),
+                projectPropertyLabelTable
+        );
 
+        // add sub-topology ProjectEntityFulltext
+        ProjectEntityFulltext.addProcessors(builder,
+                projectEntityTopStatementsTable,
+                projectEntityLabelConfigTable
+        );
 
     }
 
@@ -219,7 +232,12 @@ class App {
                 ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
                 ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
                 ProjectTopStatements.output.TOPICS.project_top_statements,
-                ProjectEntityLabel.output.TOPICS.project_entity_label
+                ProjectEntityLabel.output.TOPICS.project_entity_label,
+                OntomePropertyLabel.output.TOPICS.ontome_property_label,
+                GeovPropertyLabel.output.TOPICS.geov_property_label,
+                ProjectPropertyLabel.output.TOPICS.project_property_label,
+                ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
+                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 

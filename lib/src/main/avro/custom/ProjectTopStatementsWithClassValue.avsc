@@ -1,0 +1,35 @@
+{
+  "type": "record",
+  "name": "ProjectTopStatementsWithClassValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of statements grouped by project, entity, property and direction, including class id of entity",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "is_outgoing",
+      "type": "boolean"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "statements",
+      "type": {
+        "type": "array",
+        "items": "org.geovistory.toolbox.streams.avro.ProjectStatementValue"
+      }
+    }
+  ]
+}

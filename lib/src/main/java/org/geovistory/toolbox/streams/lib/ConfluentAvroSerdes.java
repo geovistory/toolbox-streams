@@ -492,6 +492,12 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<ProjectEntityTopStatementsWithConfigValue> ProjectEntityTopStatementsWithConfigValue() {
+        Serde<ProjectEntityTopStatementsWithConfigValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
     public Serde<ProjectEntityLabelPartKey> ProjectEntityLabelPartKey() {
         Serde<ProjectEntityLabelPartKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
@@ -516,5 +522,28 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<ProjectEntityFulltextValue> ProjectEntityFulltextValue() {
+        Serde<ProjectEntityFulltextValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectTopStatementsWithClassValue> ProjectTopStatementsWithClassValue() {
+        Serde<ProjectTopStatementsWithClassValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectTopStatementsWithPropLabelValue> ProjectTopStatementsWithPropLabelValue() {
+        Serde<ProjectTopStatementsWithPropLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityTopStatementsValue> ProjectEntityTopStatementsValue() {
+        Serde<ProjectEntityTopStatementsValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 
 }
