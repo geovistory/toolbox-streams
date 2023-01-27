@@ -6,33 +6,57 @@
   "fields": [
     {
       "name": "p81",
-      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
-      "doc": "ongoing throughout, see https://ontome.net/ontology/p71"
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "ongoing throughout, see https://ontome.net/ontology/p71",
+      "default": null
     },
     {
       "name": "p82",
-      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
-      "doc": "at some time within, see https://ontome.net/ontology/p72"
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "at some time within, see https://ontome.net/ontology/p72",
+      "default": null
     },
     {
       "name": "p81a",
-      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
-      "doc": "end of the begin, see https://ontome.net/ontology/p150"
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "end of the begin, see https://ontome.net/ontology/p150",
+      "default": null
     },
     {
       "name": "p81b",
-      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
-      "doc": "begin of the end, see https://ontome.net/ontology/p151"
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "begin of the end, see https://ontome.net/ontology/p151",
+      "default": null
     },
     {
       "name": "p82a",
-      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
-      "doc": "begin of the begin, see https://ontome.net/ontology/p152"
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "begin of the begin, see https://ontome.net/ontology/p152",
+      "default": null
     },
     {
       "name": "p82b",
-      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
-      "doc": "end of the end, see https://ontome.net/ontology/p153"
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "end of the end, see https://ontome.net/ontology/p153",
+      "default": null
     }
   ]
 }
