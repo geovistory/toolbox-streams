@@ -109,6 +109,7 @@ class ProjectEntityTimeSpanTest {
 
         assertThat(result).isNotNull();
         assertThat(result.getTimeSpan().getP81().getDuration()).isEqualTo("1 day");
+        assertThat(result.getTimeSpan().getP81a()).isNull();
         assertThat(result.getFirstSecond()).isEqualTo(expectedFirstSec);
         assertThat(result.getLastSecond()).isEqualTo(expectedLastSec);
     }

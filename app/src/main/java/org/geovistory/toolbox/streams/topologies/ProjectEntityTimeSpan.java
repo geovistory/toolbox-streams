@@ -141,18 +141,12 @@ public class ProjectEntityTimeSpan {
 
     public static void setTimePrimitiveInTimeSpan(TimeSpan.Builder timeSpanBuilder, String key, NewTimePrimitive ntp) {
         switch (key) {
-            case "71_out":
-                timeSpanBuilder.setP81(ntp);
-            case "72_out":
-                timeSpanBuilder.setP82(ntp);
-            case "150_out":
-                timeSpanBuilder.setP81a(ntp);
-            case "151_out":
-                timeSpanBuilder.setP81b(ntp);
-            case "152_out":
-                timeSpanBuilder.setP82a(ntp);
-            case "153_out":
-                timeSpanBuilder.setP82b(ntp);
+            case "71_out" -> timeSpanBuilder.setP81(ntp);
+            case "72_out" -> timeSpanBuilder.setP82(ntp);
+            case "150_out" -> timeSpanBuilder.setP81a(ntp);
+            case "151_out" -> timeSpanBuilder.setP81b(ntp);
+            case "152_out" -> timeSpanBuilder.setP82a(ntp);
+            case "153_out" -> timeSpanBuilder.setP82b(ntp);
         }
     }
 
@@ -162,7 +156,12 @@ public class ProjectEntityTimeSpan {
 
     public static long createLastSecond(TimePrimitive value) {
 
-        var date = LocalDate.MIN.with(JulianFields.JULIAN_DAY, value.getJulianDay());
+        var localDate = LocalDate.MIN.with(JulianFields.JULIAN_DAY, value.getJulianDay());
+        var date = switch (value.getDuration()) {
+            case "1 year" -> localDate.plus(1, ChronoUnit.YEARS);
+            case "1 month" -> localDate.plus(1, ChronoUnit.MONTHS);
+            case "1 day" -> localDate.plus(1, ChronoUnit.DAYS);
+            default -> LocalDate.MIN.with(JulianFields.JULIAN_DAY, value.getJulianDay());
 
         /*
         var calendar = new GregorianCalendar();
@@ -172,14 +171,7 @@ public class ProjectEntityTimeSpan {
         GregorianCalendar gc = GregorianCalendar.from(date.atStartOfDay(ZoneId.of("Europe/Paris")));
         gc.isLeapYear();
         */
-        switch (value.getDuration()) {
-            case "1 year":
-                date = date.plus(1, ChronoUnit.YEARS);
-            case "1 month":
-                date = date.plus(1, ChronoUnit.MONTHS);
-            case "1 day":
-                date = date.plus(1, ChronoUnit.DAYS);
-        }
+        };
 
         long newJulianDay = date.getLong(JulianFields.JULIAN_DAY);
 
