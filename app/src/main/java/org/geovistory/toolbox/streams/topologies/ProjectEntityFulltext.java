@@ -30,7 +30,7 @@ public class ProjectEntityFulltext {
 
         return addProcessors(
                 builder,
-                registerOutputTopic.ProjectEntityTopStatementsTable(),
+                registerOutputTopic.projectEntityTopStatementsTable(),
                 registerOutputTopic.projectEntityLabelConfigTable()
         ).builder().build();
     }

@@ -1,0 +1,62 @@
+{
+  "type": "record",
+  "name": "TimeSpan",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "TimeSpan an aggregation of the six properties begin of begin, end of begin, begin of end, end of end, at some time within, ongoing throughout.",
+  "fields": [
+    {
+      "name": "p81",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "ongoing throughout, see https://ontome.net/ontology/p71",
+      "default": null
+    },
+    {
+      "name": "p82",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "at some time within, see https://ontome.net/ontology/p72",
+      "default": null
+    },
+    {
+      "name": "p81a",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "end of the begin, see https://ontome.net/ontology/p150",
+      "default": null
+    },
+    {
+      "name": "p81b",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "begin of the end, see https://ontome.net/ontology/p151",
+      "default": null
+    },
+    {
+      "name": "p82a",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "begin of the begin, see https://ontome.net/ontology/p152",
+      "default": null
+    },
+    {
+      "name": "p82b",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NewTimePrimitive"
+      ],
+      "doc": "end of the end, see https://ontome.net/ontology/p153",
+      "default": null
+    }
+  ]
+}

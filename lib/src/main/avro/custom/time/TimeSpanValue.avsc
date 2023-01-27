@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "TimeSpanValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Time Span value for an entity",
+  "fields": [
+    {
+      "name": "timeSpan",
+      "type": "org.geovistory.toolbox.streams.avro.TimeSpan"
+    },
+    {
+      "name": "firstSecond",
+      "type": "long",
+      "doc": "Earliest julianDay found in all timePrimitives, multiplied by 12 * 60 * 60"
+    },
+    {
+      "name": "lastSecond",
+      "type": "long",
+      "doc": "Latest second calculated for all TimePrimitives by adding the duration to the julianDay and multiplying it by 12 * 60 * 60"
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}
