@@ -1,0 +1,38 @@
+{
+  "type": "record",
+  "name": "TimeSpan",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "TimeSpan an aggregation of the six properties begin of begin, end of begin, begin of end, end of end, at some time within, ongoing throughout.",
+  "fields": [
+    {
+      "name": "p81",
+      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
+      "doc": "ongoing throughout, see https://ontome.net/ontology/p71"
+    },
+    {
+      "name": "p82",
+      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
+      "doc": "at some time within, see https://ontome.net/ontology/p72"
+    },
+    {
+      "name": "p81a",
+      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
+      "doc": "end of the begin, see https://ontome.net/ontology/p150"
+    },
+    {
+      "name": "p81b",
+      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
+      "doc": "begin of the end, see https://ontome.net/ontology/p151"
+    },
+    {
+      "name": "p82a",
+      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
+      "doc": "begin of the begin, see https://ontome.net/ontology/p152"
+    },
+    {
+      "name": "p82b",
+      "type": "org.geovistory.toolbox.streams.avro.NewTimePrimitive",
+      "doc": "end of the end, see https://ontome.net/ontology/p153"
+    }
+  ]
+}

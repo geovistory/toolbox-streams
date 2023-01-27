@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "NewTimePrimitive",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "TimePrimitive consisting of julian day to mark start, duration (1 year, 1 month, 1 day) and calendar (julian, gregorian)",
+  "fields": [
+    {
+      "name": "julianDay",
+      "type": "long"
+    },
+    {
+      "name": "duration",
+      "type": "string"
+    },
+    {
+      "name": "calendar",
+      "type": "string"
+    }
+  ]
+}

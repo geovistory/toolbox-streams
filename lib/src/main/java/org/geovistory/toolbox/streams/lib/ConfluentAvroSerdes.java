@@ -546,4 +546,9 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<TimeSpanValue> TimeSpanValue() {
+        Serde<TimeSpanValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 }
