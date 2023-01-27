@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "HasTypePropertyGroupByValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Projection value for grouping properties",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "profile_id",
+      "type": "int"
+    },
+    {
+      "name": "enabled_in_profile",
+      "type": "boolean"
+    }
+  ]
+}

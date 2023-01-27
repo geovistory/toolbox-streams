@@ -184,7 +184,7 @@ public class StatementEnriched {
                         .setObjectId(getObjectStringId(statement))
                         .setObjectLabel(literal == null ? null : literal.getLabel())
                         .setObjectLiteral(literal)
-                        .setDeleted$1(Utils.stringIsNotEqualTrue(statement.getDeleted$1()))
+                        .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
                         .build(),
                 Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_enriched)
                         .withKeySerde(avroSerdes.InfStatementKey())

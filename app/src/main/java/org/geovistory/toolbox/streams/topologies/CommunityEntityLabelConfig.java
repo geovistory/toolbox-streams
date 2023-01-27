@@ -57,7 +57,7 @@ public class CommunityEntityLabelConfig {
                                 CommunityEntityLabelConfigValue.newBuilder()
                                         .setClassId(value.getFkClass())
                                         .setConfig(config)
-                                        .setDeleted$1(Utils.stringIsNotEqualTrue(value.getDeleted$1()))
+                                        .setDeleted$1(Utils.stringIsEqualTrue(value.getDeleted$1()))
                                         .build()
                         );
                         result.add(kv);

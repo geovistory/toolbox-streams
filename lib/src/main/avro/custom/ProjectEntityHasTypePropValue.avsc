@@ -1,0 +1,27 @@
+{
+  "type": "record",
+  "name": "ProjectEntityHasTypePropValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "has_type_property_id",
+      "type": "int"
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

@@ -50,8 +50,8 @@ public class ProjectEntity {
                         .setPkEntity(value.getFkEntity())
                         .build(),
                 (value1, value2) -> {
-                    var v1Deleted = Utils.stringIsNotEqualTrue(value1.getDeleted$1());
-                    var v2Deleted = Utils.stringIsNotEqualTrue(value2.getDeleted$1());
+                    var v1Deleted = Utils.stringIsEqualTrue(value1.getDeleted$1());
+                    var v2Deleted = Utils.stringIsEqualTrue(value2.getDeleted$1());
                     var notInProject = !value1.getIsInProject();
                     var deleted = v1Deleted || v2Deleted || notInProject;
                     return ProjectEntityValue.newBuilder()

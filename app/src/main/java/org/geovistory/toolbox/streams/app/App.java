@@ -213,6 +213,18 @@ class App {
                 projectEntityTopStatements.projectEntityTopStatementStream()
         );
 
+        // add sub-topology HasTypeProperty
+        HasTypeProperty.addProcessors(builder,
+                inputTopics.dfhApiPropertyStream()
+        );
+
+        // add sub-topology ProjectEntityType
+        ProjectEntityType.addProcessors(builder,
+                projectEntityTable,
+                outputTopics.hasTypePropertyTable(),
+                projectTopOutgoingStatements.projectTopStatementTable()
+        );
+
     }
 
     private static void createTopics() {

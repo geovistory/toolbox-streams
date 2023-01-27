@@ -113,6 +113,11 @@ public class RegisterOutputTopic {
                 Consumed.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
     }
 
+    public KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsTable() {
+        return builder.table(ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
+                Consumed.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
+    }
+
     public KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable() {
         return builder.table(ProjectEntityLabel.output.TOPICS.project_entity_label,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelValue()));
@@ -121,6 +126,11 @@ public class RegisterOutputTopic {
     public KStream<ProjectEntityKey, ProjectEntityTopStatementsValue> projectEntityTopStatementsStream() {
         return builder.stream(ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTopStatementsValue()));
+    }
+
+    public KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable() {
+        return builder.table(HasTypeProperty.output.TOPICS.has_type_property,
+                Consumed.with(avroSerdes.HasTypePropertyKey(), avroSerdes.HasTypePropertyValue()));
     }
 
 
