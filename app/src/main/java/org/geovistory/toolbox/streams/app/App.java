@@ -242,7 +242,8 @@ class App {
                 GeovPropertyLabel.output.TOPICS.geov_property_label,
                 ProjectPropertyLabel.output.TOPICS.project_property_label,
                 ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
-                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label
+                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
+                ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
