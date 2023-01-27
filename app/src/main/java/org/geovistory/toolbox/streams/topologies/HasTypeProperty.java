@@ -52,13 +52,13 @@ public class HasTypeProperty {
                     List<HasTypePropertyGroupByValue> result = new LinkedList<>();
 
                     if (isHasTypeProperty(value)) {
-                        var enabled = Utils.booleanIsEqualTrue(value.getIsEnabledInProfile()) &&
+                        var deleted = Utils.booleanIsNotEqualTrue(value.getRemovedFromApi()) ||
                                 Utils.stringIsNotEqualTrue(value.getDeleted$1());
                         result.add(HasTypePropertyGroupByValue.newBuilder()
                                 .setPropertyId(value.getDfhPkProperty())
                                 .setClassId(value.getDfhPropertyDomain())
                                 .setProfileId(value.getDfhFkProfile())
-                                .setEnabledInProfile(enabled)
+                                .setDeleted(deleted)
                                 .build());
                     }
 
@@ -77,15 +77,15 @@ public class HasTypeProperty {
         var hasTypePropertyTable = groupedByDomain.aggregate(() -> HasTypePropertyAggregateValue.newBuilder()
                         .setPropertyId(0)
                         .setClassId(0)
-                        .setEnabledInProfileMap(BooleanMap.newBuilder().build())
+                        .setDeletedMap(BooleanMap.newBuilder().build())
                         .build(),
                 (key, value, aggregate) -> {
                     aggregate.setPropertyId(value.getPropertyId());
                     aggregate.setClassId(value.getClassId());
 
-                    var map = aggregate.getEnabledInProfileMap().getItem();
+                    var map = aggregate.getDeletedMap().getItem();
                     var profileIdString = value.getProfileId() + "";
-                    map.put(profileIdString, value.getEnabledInProfile());
+                    map.put(profileIdString, value.getDeleted());
 
 
                     return aggregate;
@@ -97,14 +97,13 @@ public class HasTypeProperty {
         var hasTypePropertyStream = hasTypePropertyTable
                 .toStream()
                 .mapValues((readOnlyKey, value) -> {
-                            // if none of the one profiles have this prop enabled, mark as deleted
-                            var deleted = !value.getEnabledInProfileMap().getItem().containsValue(true);
+                            // if all are deleted, mark as deleted
+                            var deleted = !value.getDeletedMap().getItem().containsValue(false);
                             return HasTypePropertyValue.newBuilder()
                                     .setClassId(value.getClassId())
                                     .setPropertyId(value.getPropertyId())
                                     .setDeleted$1(deleted)
                                     .build();
-
                         }
                 );
 

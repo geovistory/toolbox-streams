@@ -17,7 +17,7 @@
       "type": "int"
     },
     {
-      "name": "enabled_in_profile",
+      "name": "deleted",
       "type": "boolean"
     }
   ]

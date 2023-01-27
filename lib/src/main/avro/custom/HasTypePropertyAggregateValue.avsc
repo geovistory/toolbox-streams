@@ -13,7 +13,7 @@
       "type": "int"
     },
     {
-      "name": "enabled_in_profile_map",
+      "name": "deleted_map",
       "type": "org.geovistory.toolbox.streams.avro.BooleanMap"
     }
   ]

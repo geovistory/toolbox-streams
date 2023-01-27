@@ -75,7 +75,7 @@ class HasTypePropertyTest {
                 .setDfhPropertyLabel("has type")
                 .setDfhPropertyInverseLabel("is type of")
                 .setDfhPropertyLabelLanguage(" de ") // add spaces to test trim
-                .setIsEnabledInProfile(true)
+                .setRemovedFromApi(false)
                 .build();
         apiPropertyTopic.pipeInput(apKey, apVal);
 
@@ -119,12 +119,12 @@ class HasTypePropertyTest {
                 .setDfhPropertyLabel("has type")
                 .setDfhPropertyInverseLabel("is type of")
                 .setDfhPropertyLabelLanguage(" de ") // add spaces to test trim
-                .setIsEnabledInProfile(true)
+                .setRemovedFromApi(false)
                 .build();
         apiPropertyTopic.pipeInput(apKey, apVal);
 
         // disable
-        apVal.setIsEnabledInProfile(false);
+        apVal.setRemovedFromApi(true);
         apiPropertyTopic.pipeInput(apKey, apVal);
 
 
