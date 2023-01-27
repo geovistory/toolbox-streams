@@ -76,6 +76,7 @@ class HasTypePropertyTest {
                 .setDfhPropertyInverseLabel("is type of")
                 .setDfhPropertyLabelLanguage(" de ") // add spaces to test trim
                 .setRemovedFromApi(false)
+                .setDeleted$1("false")
                 .build();
         apiPropertyTopic.pipeInput(apKey, apVal);
 
@@ -104,6 +105,7 @@ class HasTypePropertyTest {
         assertThat(outRecords.get(HasTypePropertyKey.newBuilder().setClassId(10).build()).getPropertyId()).isEqualTo(40);
         assertThat(outRecords.get(HasTypePropertyKey.newBuilder().setClassId(11).build()).getPropertyId()).isEqualTo(41);
         assertThat(outRecords.get(HasTypePropertyKey.newBuilder().setClassId(12).build()).getPropertyId()).isEqualTo(2);
+        assertThat(outRecords.get(HasTypePropertyKey.newBuilder().setClassId(12).build()).getDeleted$1()).isEqualTo(false);
     }
 
     @Test

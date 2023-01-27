@@ -52,8 +52,8 @@ public class HasTypeProperty {
                     List<HasTypePropertyGroupByValue> result = new LinkedList<>();
 
                     if (isHasTypeProperty(value)) {
-                        var deleted = Utils.booleanIsNotEqualTrue(value.getRemovedFromApi()) ||
-                                Utils.stringIsNotEqualTrue(value.getDeleted$1());
+                        var deleted = Utils.booleanIsEqualTrue(value.getRemovedFromApi()) ||
+                                Utils.stringIsEqualTrue(value.getDeleted$1());
                         result.add(HasTypePropertyGroupByValue.newBuilder()
                                 .setPropertyId(value.getDfhPkProperty())
                                 .setClassId(value.getDfhPropertyDomain())
