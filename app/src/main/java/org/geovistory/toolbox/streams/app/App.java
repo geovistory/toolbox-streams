@@ -255,7 +255,9 @@ class App {
                 ProjectPropertyLabel.output.TOPICS.project_property_label,
                 ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
                 ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
-                ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span
+                ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
+                HasTypeProperty.output.TOPICS.has_type_property,
+                ProjectEntityType.output.TOPICS.project_entity_type
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
