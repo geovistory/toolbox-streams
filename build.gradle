@@ -3,6 +3,6 @@ plugins {
 }
 
 ext {
-    pullRequestNumber = 38
-    pullRequestPushCount = 8
+    pullRequestNumber = 40
+    pullRequestPushCount = 0
 }
