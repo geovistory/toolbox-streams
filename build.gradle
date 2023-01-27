@@ -4,5 +4,5 @@ plugins {
 
 ext {
     pullRequestNumber = 43
-    pullRequestPushCount = 1
+    pullRequestPushCount = 2
 }
