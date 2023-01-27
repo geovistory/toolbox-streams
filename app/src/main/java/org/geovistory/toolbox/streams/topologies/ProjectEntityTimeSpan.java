@@ -32,6 +32,7 @@ public class ProjectEntityTimeSpan {
     }
 
     public static int secondsPerDay = 86400;// = 60 * 60 * 24 = number of seconds per day
+    public static String[] keys = new String[]{"71_out", "72_out", "150_out", "151_out", "152_out", "153_out"};
 
     public static ProjectEntityTimeSpanReturnValue addProcessors(
             StreamsBuilder builder,
@@ -75,35 +76,37 @@ public class ProjectEntityTimeSpan {
         long firstSecond = Long.MAX_VALUE;
         long lastSecond = Long.MIN_VALUE;
         var isEmpty = true;
-        var key = "71_out";
-        var temporalStatements = value.getMap().get(key);
-        if (temporalStatements != null) {
-            var statements = temporalStatements.getStatements();
-            if (statements != null && statements.size() > 0) {
-                for (var s : statements) {
 
-                    var tp = extractTimePrimitive(s);
-                    if (tp != null) {
-                        isEmpty = false;
-                        // create NewTimePrimitive
-                        var ntp = createNewTimePrimitive(tp);
+        for (var key : keys) {
+            var temporalStatements = value.getMap().get(key);
+            if (temporalStatements != null) {
+                var statements = temporalStatements.getStatements();
+                if (statements != null && statements.size() > 0) {
+                    for (var s : statements) {
 
-                        // set NewTimePrimitive in TimeSpan
-                        setTimePrimitiveInTimeSpan(timeSpan, key, ntp);
+                        var tp = extractTimePrimitive(s);
+                        if (tp != null) {
+                            isEmpty = false;
+                            // create NewTimePrimitive
+                            var ntp = createNewTimePrimitive(tp);
 
-                        // create the first second
-                        long fs = createFirstSecond(tp);
-                        // set the first second
-                        if (firstSecond > fs) firstSecond = fs;
+                            // set NewTimePrimitive in TimeSpan
+                            setTimePrimitiveInTimeSpan(timeSpan, key, ntp);
 
-                        // create the last second
-                        long ls = createLastSecond(tp);
-                        // set the last second
-                        if (lastSecond < ls) lastSecond = ls;
+                            // create the first second
+                            long fs = createFirstSecond(tp);
+                            // set the first second
+                            if (firstSecond > fs) firstSecond = fs;
 
+                            // create the last second
+                            long ls = createLastSecond(tp);
+                            // set the last second
+                            if (lastSecond < ls) lastSecond = ls;
+
+
+                        }
 
                     }
-
                 }
             }
         }
