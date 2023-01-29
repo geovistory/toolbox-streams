@@ -13,7 +13,6 @@ import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.topologies.*;
 
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 
 class App {
     public static void main(String[] args) {
@@ -234,7 +233,7 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        var kafkaFuture = admin.createTopics(new String[]{
+        admin.createOrConfigureTopics(new String[]{
                 OntomeClassLabel.output.TOPICS.ontome_class_label,
                 GeovClassLabel.output.TOPICS.geov_class_label,
                 ProjectClass.output.TOPICS.project_class,
@@ -261,13 +260,13 @@ class App {
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
-        // Use the KafkaFuture object to block and wait for the topic creation to complete
+       /* // Use the KafkaFuture object to block and wait for the topic creation to complete
         try {
             kafkaFuture.get();
             System.out.println("Topics created successfully");
         } catch (InterruptedException | ExecutionException e) {
             System.out.println("Error creating topics: " + e.getMessage());
-        }
+        }*/
     }
 
     private static Properties getConfig() {
