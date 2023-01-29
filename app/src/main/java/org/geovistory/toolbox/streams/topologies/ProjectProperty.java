@@ -14,6 +14,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import java.util.LinkedList;
 import java.util.Objects;
 
 
@@ -89,7 +90,7 @@ public class ProjectProperty {
                 propertyByProfileIdAggregated,
                 ProjectProfileValue::getProfileId,
                 (projectProfileValue, profilePropertyMap) -> {
-                    var projectProperyMap = ProjectPropertyMap.newBuilder().build();
+                    var projectPropertyMap = ProjectPropertyMap.newBuilder().build();
                     profilePropertyMap.getMap().values()
                             .forEach(property -> {
                                 var projectId = projectProfileValue.getProjectId();
@@ -104,9 +105,9 @@ public class ProjectProperty {
                                         .build();
                                 var key = projectId + "_" + property.getDomainId() + "_" + property.getPropertyId() + "_" + property.getRangeId();
                                 // ... and add one project-property
-                                projectProperyMap.getMap().put(key, v);
+                                projectPropertyMap.getMap().put(key, v);
                             });
-                    return projectProperyMap;
+                    return projectPropertyMap;
                 }
         );
 
@@ -116,16 +117,22 @@ public class ProjectProperty {
                 .toStream(
                         Named.as(inner.TOPICS.project_properties_stream)
                 )
-                .flatMap((key, value) -> value.getMap().values().stream().map(projectPropertyValue -> {
+                .flatMap((key, value) -> {
+                            var list = new LinkedList<KeyValue<ProjectPropertyKey, ProjectPropertyValue>>();
+                            if (value != null && value.getMap() != null) {
+                                for (var projectPropertyValue : value.getMap().values()) {
                                     var k = ProjectPropertyKey.newBuilder()
                                             .setPropertyId(projectPropertyValue.getPropertyId())
                                             .setProjectId(projectPropertyValue.getProjectId())
                                             .setDomainId(projectPropertyValue.getDomainId())
                                             .setRangeId(projectPropertyValue.getRangeId())
                                             .build();
-                                    return KeyValue.pair(k, projectPropertyValue);
+                                    var item = KeyValue.pair(k, projectPropertyValue);
+                                    list.add(item);
                                 }
-                        ).toList(),
+                            }
+                            return list;
+                        },
                         Named.as(inner.TOPICS.project_properties_flat));
 
         projectPropertyStream.to(output.TOPICS.project_property,
