@@ -70,7 +70,8 @@ class App {
         // register input topics as KStreams
         var proEntityLabelConfigStream = inputTopics.proEntityLabelConfigStream();
 
-        // register recursive output topics as KTables
+        // register output topics as KTables
+        var statementEnrichedTable = outputTopics.statementEnrichedTable();
         var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
         var projectPropertyLabelTable = outputTopics.projectPropertyLabelTable();
         var projectEntityTopStatementsTable = outputTopics.projectEntityTopStatementsTable();
@@ -126,8 +127,9 @@ class App {
         var projectEntityLabelConfigTable = outputTopics.projectEntityLabelConfigTable();
 
         // add sub-topology StatementEnriched
-        var statementEnriched = StatementEnriched.addProcessors(builder,
+        StatementEnriched.addProcessors(builder,
                 infStatementTable,
+                infResourceTable,
                 infLanguageStream,
                 infAppellationStream,
                 infLangStringStream,
@@ -140,7 +142,7 @@ class App {
 
         // add sub-topology ProjectStatement
         ProjectStatement.addProcessors(builder,
-                statementEnriched.statementEnrichedTable(),
+                statementEnrichedTable,
                 proInfoProjRelTable,
                 projectEntityLabelTable
         );

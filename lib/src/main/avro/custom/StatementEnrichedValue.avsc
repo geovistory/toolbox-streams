@@ -19,6 +19,14 @@
       "default": ""
     },
     {
+      "name": "object_class_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
       "name": "subject_label",
       "type": [
         "null",

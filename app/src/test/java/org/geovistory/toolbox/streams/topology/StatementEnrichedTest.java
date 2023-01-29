@@ -22,6 +22,7 @@ class StatementEnrichedTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
     private TestInputTopic<dev.information.statement.Key, dev.information.statement.Value> infStatementTopic;
+    private TestInputTopic<dev.information.resource.Key, dev.information.resource.Value> infResourceTopic;
     private TestInputTopic<dev.information.language.Key, dev.information.language.Value> infLanguageTopic;
     private TestInputTopic<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationTopic;
     private TestInputTopic<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringTopic;
@@ -53,6 +54,11 @@ class StatementEnrichedTest {
                 StatementEnriched.input.TOPICS.inf_statement,
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.InfStatementValue().serializer()
+        );
+        infResourceTopic = testDriver.createInputTopic(
+                StatementEnriched.input.TOPICS.inf_resource,
+                avroSerdes.InfResourceKey().serializer(),
+                avroSerdes.InfResourceValue().serializer()
         );
         infLanguageTopic = testDriver.createInputTopic(
                 StatementEnriched.input.TOPICS.inf_language,
@@ -108,7 +114,7 @@ class StatementEnrichedTest {
     }
 
     @Test
-    void testStatementWithoutLiteral() {
+    void testStatementWithoutObject() {
         int subjectId = 10;
         int propertyId = 20;
         int objectId = 30;
@@ -126,16 +132,51 @@ class StatementEnrichedTest {
                 .build();
         infStatementTopic.pipeInput(kS, vS);
 
+        assertThat(outputTopic.isEmpty()).isTrue();
+
+    }
+
+    @Test
+    void testStatementWithEntity() {
+        int subjectId = 10;
+        int propertyId = 20;
+        int objectId = 30;
+        int classId = 40;
+
+        // add statement
+        var kS = dev.information.statement.Key.newBuilder()
+                .setPkEntity(1)
+                .build();
+        var vS = dev.information.statement.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setFkSubjectInfo(subjectId)
+                .setFkProperty(propertyId)
+                .setFkObjectInfo(objectId)
+                .build();
+        infStatementTopic.pipeInput(kS, vS);
+
+        // add entity
+        var k = dev.information.resource.Key.newBuilder().setPkEntity(objectId).build();
+        var v = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(objectId)
+                .setFkClass(classId)
+                .build();
+        infResourceTopic.pipeInput(k, v);
+
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral()).isNull();
+        assertThat(record.getObjectClassId()).isEqualTo(classId);
     }
 
     @Test
     void testStatementWithAppellation() {
         int objectId = 30;
+        int classId = 40;
 
         // string with more than 100
         String label = "Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_";
@@ -164,7 +205,7 @@ class StatementEnrichedTest {
                 .setEntityVersion(0)
                 .setQuillDoc("")
                 .setPkEntity(objectId)
-                .setFkClass(0)
+                .setFkClass(classId)
                 .setString(label)
                 .build();
         infAppellationTopic.pipeInput(k, v);
@@ -175,6 +216,7 @@ class StatementEnrichedTest {
         var record = outRecords.get(kS);
         assertThat(record.getObjectLiteral().getLabel()).isEqualTo(expected);
         assertThat(record.getObjectLiteral().getAppellation()).isNotNull();
+        assertThat(record.getObjectClassId()).isEqualTo(classId);
     }
 
     @Test
