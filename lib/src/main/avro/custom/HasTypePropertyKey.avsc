@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "HasTypePropertyKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "HasTypePropertyKey",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": "int"
+    }
+  ]
+}

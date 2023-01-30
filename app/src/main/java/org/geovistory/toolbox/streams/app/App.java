@@ -13,7 +13,6 @@ import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.topologies.*;
 
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 
 class App {
     public static void main(String[] args) {
@@ -71,7 +70,8 @@ class App {
         // register input topics as KStreams
         var proEntityLabelConfigStream = inputTopics.proEntityLabelConfigStream();
 
-        // register recursive output topics as KTables
+        // register output topics as KTables
+        var statementEnrichedTable = outputTopics.statementEnrichedTable();
         var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
         var projectPropertyLabelTable = outputTopics.projectPropertyLabelTable();
         var projectEntityTopStatementsTable = outputTopics.projectEntityTopStatementsTable();
@@ -127,8 +127,9 @@ class App {
         var projectEntityLabelConfigTable = outputTopics.projectEntityLabelConfigTable();
 
         // add sub-topology StatementEnriched
-        var statementEnriched = StatementEnriched.addProcessors(builder,
+        StatementEnriched.addProcessors(builder,
                 infStatementTable,
+                infResourceTable,
                 infLanguageStream,
                 infAppellationStream,
                 infLangStringStream,
@@ -141,7 +142,7 @@ class App {
 
         // add sub-topology ProjectStatement
         ProjectStatement.addProcessors(builder,
-                statementEnriched.statementEnrichedTable(),
+                statementEnrichedTable,
                 proInfoProjRelTable,
                 projectEntityLabelTable
         );
@@ -213,6 +214,18 @@ class App {
                 projectEntityTopStatements.projectEntityTopStatementStream()
         );
 
+        // add sub-topology HasTypeProperty
+        HasTypeProperty.addProcessors(builder,
+                inputTopics.dfhApiPropertyStream()
+        );
+
+        // add sub-topology ProjectEntityType
+        ProjectEntityType.addProcessors(builder,
+                projectEntityTable,
+                outputTopics.hasTypePropertyTable(),
+                projectTopOutgoingStatements.projectTopStatementTable()
+        );
+
     }
 
     private static void createTopics() {
@@ -222,7 +235,7 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        var kafkaFuture = admin.createTopics(new String[]{
+        admin.createOrConfigureTopics(new String[]{
                 OntomeClassLabel.output.TOPICS.ontome_class_label,
                 GeovClassLabel.output.TOPICS.geov_class_label,
                 ProjectClass.output.TOPICS.project_class,
@@ -243,17 +256,19 @@ class App {
                 ProjectPropertyLabel.output.TOPICS.project_property_label,
                 ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
                 ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
-                ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span
+                ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
+                HasTypeProperty.output.TOPICS.has_type_property,
+                ProjectEntityType.output.TOPICS.project_entity_type
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
-        // Use the KafkaFuture object to block and wait for the topic creation to complete
+       /* // Use the KafkaFuture object to block and wait for the topic creation to complete
         try {
             kafkaFuture.get();
             System.out.println("Topics created successfully");
         } catch (InterruptedException | ExecutionException e) {
             System.out.println("Error creating topics: " + e.getMessage());
-        }
+        }*/
     }
 
     private static Properties getConfig() {

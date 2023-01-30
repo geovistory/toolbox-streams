@@ -551,4 +551,38 @@ public class ConfluentAvroSerdes {
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
+    public Serde<HasTypePropertyKey> HasTypePropertyKey() {
+        Serde<HasTypePropertyKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+    public Serde<HasTypePropertyValue> HasTypePropertyValue() {
+        Serde<HasTypePropertyValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+    public Serde<HasTypePropertyGroupByValue> HasTypePropertyGroupByValue() {
+        Serde<HasTypePropertyGroupByValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+    public Serde<HasTypePropertyAggregateValue> HasTypePropertyAggregateValue() {
+        Serde<HasTypePropertyAggregateValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityHasTypePropValue> ProjectEntityHasTypePropValue() {
+        Serde<ProjectEntityHasTypePropValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityTypeValue> ProjectEntityTypeValue() {
+        Serde<ProjectEntityTypeValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
 }

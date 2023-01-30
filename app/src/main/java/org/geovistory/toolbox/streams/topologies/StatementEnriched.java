@@ -32,6 +32,7 @@ public class StatementEnriched {
         return addProcessors(
                 builder,
                 registerInputTopic.infStatementTable(),
+                registerInputTopic.infResourceTable(),
                 registerInputTopic.infLanguageStream(),
                 registerInputTopic.infAppellationStream(),
                 registerInputTopic.infLangStringStream(),
@@ -46,6 +47,7 @@ public class StatementEnriched {
     public static StatementEnrichedReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable,
+            KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
             KStream<dev.information.language.Key, dev.information.language.Value> infLanguageTable,
             KStream<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationTable,
             KStream<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringTable,
@@ -54,6 +56,7 @@ public class StatementEnriched {
             KStream<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionTable,
             KStream<dev.data.digital.Key, dev.data.digital.Value> datDigitalTable,
             KStream<dev.tables.cell.Key, dev.tables.cell.Value> tabCellTable
+
 
     ) {
 
@@ -173,7 +176,7 @@ public class StatementEnriched {
                         .withValueSerde(avroSerdes.LiteralValue())
         );
 
-        var statementEnrichedTable = infStatementTable.leftJoin(
+        var statementJoinedWithLiteralTable = infStatementTable.join(
                 literalTable,
                 value -> LiteralKey.newBuilder()
                         .setId(getObjectStringId(value))
@@ -184,21 +187,40 @@ public class StatementEnriched {
                         .setObjectId(getObjectStringId(statement))
                         .setObjectLabel(literal == null ? null : literal.getLabel())
                         .setObjectLiteral(literal)
-                        .setDeleted$1(Utils.stringIsNotEqualTrue(statement.getDeleted$1()))
+                        .setObjectClassId(literal  == null ? null : literal.getClassId())
+                        .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
                         .build(),
-                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_enriched)
+                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_literal)
+                        .withKeySerde(avroSerdes.InfStatementKey())
+                        .withValueSerde(avroSerdes.StatementEnrichedValue())
+        );
+        var statementJoinedWithEntityTable = infStatementTable.join(
+                infResourceTable,
+                value -> dev.information.resource.Key.newBuilder()
+                        .setPkEntity(value.getFkObjectInfo())
+                        .build(),
+                (statement, entity) -> StatementEnrichedValue.newBuilder()
+                        .setSubjectId(getSubjectStringId(statement))
+                        .setPropertyId(statement.getFkProperty())
+                        .setObjectId(getObjectStringId(statement))
+                        .setObjectClassId(entity.getFkClass())
+                        .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
+                        .build(),
+                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_entity)
                         .withKeySerde(avroSerdes.InfStatementKey())
                         .withValueSerde(avroSerdes.StatementEnrichedValue())
         );
 
-        var statementsEnrichedStream = statementEnrichedTable
-                .toStream();
+        var statementJoinedWithLiteralStream = statementJoinedWithLiteralTable.toStream();
+        var statementJoinedWithEntityStream = statementJoinedWithEntityTable.toStream();
 
+
+        var statementsEnrichedStream = statementJoinedWithLiteralStream.merge(statementJoinedWithEntityStream);
 
         statementsEnrichedStream.to(output.TOPICS.statement_enriched,
                 Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
 
-        return new StatementEnrichedReturnValue(builder, statementEnrichedTable, statementsEnrichedStream);
+        return new StatementEnrichedReturnValue(builder, statementsEnrichedStream);
 
     }
 
@@ -350,6 +372,7 @@ public class StatementEnriched {
     public enum input {
         TOPICS;
         public final String inf_statement = DbTopicNames.inf_statement.getName();
+        public final String inf_resource = DbTopicNames.inf_resource.getName();
         public final String inf_language = DbTopicNames.inf_language.getName();
         public final String inf_appellation = DbTopicNames.inf_appellation.getName();
         public final String inf_lang_string = DbTopicNames.inf_lang_string.getName();
@@ -364,7 +387,8 @@ public class StatementEnriched {
     public enum inner {
         TOPICS;
         public final String literals = "literals";
-        public final String statement_enriched = "statement_enriched";
+        public final String statement_joined_with_literal = "statement_joined_with_literal";
+        public final String statement_joined_with_entity = "statement_joined_with_entity";
     }
 
     public enum output {

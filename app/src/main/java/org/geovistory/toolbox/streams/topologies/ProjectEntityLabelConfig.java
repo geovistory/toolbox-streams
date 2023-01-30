@@ -71,7 +71,7 @@ public class ProjectEntityLabelConfig {
                             .build();
                     // if we have a project configuration, take it
                     if (value2 != null) {
-                        result.setDeleted$1(Utils.stringIsNotEqualTrue(value2.getDeleted$1()));
+                        result.setDeleted$1(Utils.stringIsEqualTrue(value2.getDeleted$1()));
                         try {
                             var config = mapper.readValue(value2.getConfig(), EntityLabelConfig.class);
                             result.setConfig(config);

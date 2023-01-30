@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "HasTypePropertyAggregateValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "counts how many times this has type property is enabled in a profile",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "deleted_map",
+      "type": "org.geovistory.toolbox.streams.avro.BooleanMap"
+    }
+  ]
+}

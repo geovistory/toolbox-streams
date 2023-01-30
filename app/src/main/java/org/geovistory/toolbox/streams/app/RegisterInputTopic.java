@@ -160,6 +160,12 @@ public class RegisterInputTopic {
         );
     }
 
+    public KStream<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyStream() {
+        return builder.stream(
+                DbTopicNames.dfh_api_property.getName(),
+                Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue())
+        );
+    }
 
     /**
      * Register a KStream and map it to a new KTable to ensure proper partitioning
@@ -167,11 +173,11 @@ public class RegisterInputTopic {
      * a different Partitioner then this Kafka Streams application.
      *
      * @param topicName name of topic to consume from
-     * @param kSerde key Serde
-     * @param vSerde value Serde
+     * @param kSerde    key Serde
+     * @param vSerde    value Serde
      * @return KTable
      */
-    private <K,V> KTable<K, V> getRepartitionedTable(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
+    private <K, V> KTable<K, V> getRepartitionedTable(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
         return builder.stream(topicName, Consumed.with(kSerde, vSerde))
                 .map(KeyValue::pair)
                 .toTable(Materialized.with(kSerde, vSerde));

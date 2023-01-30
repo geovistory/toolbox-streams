@@ -55,13 +55,21 @@ public class Utils {
      * @param s string or null
      * @return if s=="true" returns true, else false
      */
-    public static Boolean stringIsNotEqualTrue(String s) {
+    public static Boolean stringIsEqualTrue(String s) {
         return Objects.equals(s, "true");
+    }
+
+    public static Boolean stringIsNotEqualTrue(String s) {
+        return !Objects.equals(s, "true");
     }
 
     public static Boolean booleanIsNotEqualTrue(Boolean s) {
         if (s == null) return true;
         return !s;
+    }
+    public static Boolean booleanIsEqualTrue(Boolean s) {
+        if (s == null) return false;
+        return s;
     }
 
 
