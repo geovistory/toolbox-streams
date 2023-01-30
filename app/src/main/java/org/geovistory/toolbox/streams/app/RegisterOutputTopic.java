@@ -134,4 +134,9 @@ public class RegisterOutputTopic {
     }
 
 
+    public KTable<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelTable() {
+        return builder.table(ProjectClassLabel.output.TOPICS.project_class_label,
+                Consumed.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue()));
+    }
+
 }
