@@ -139,4 +139,21 @@ public class RegisterOutputTopic {
                 Consumed.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue()));
     }
 
+    public KTable<ProjectEntityKey, ProjectEntityTypeValue> projectEntityTypeTable() {
+        return builder.table(ProjectEntityType.output.TOPICS.project_entity_type,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTypeValue()));
+    }
+    public KTable<ProjectEntityKey, TimeSpanValue> projectEntityTimeSpanTable() {
+        return builder.table(ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.TimeSpanValue()));
+    }
+    public KTable<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTable() {
+        return builder.table(ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityFulltextValue()));
+    }
+    public KTable<ProjectEntityKey, ProjectEntityClassLabelValue> projectEntityClassLabelTable() {
+        return builder.table(ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassLabelValue()));
+    }
+
 }
