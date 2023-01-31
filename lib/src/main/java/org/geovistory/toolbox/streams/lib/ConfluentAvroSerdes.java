@@ -585,4 +585,11 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+
+    public Serde<ProjectEntityClassLabelValue> ProjectEntityClassLabelValue() {
+        Serde<ProjectEntityClassLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
 }
