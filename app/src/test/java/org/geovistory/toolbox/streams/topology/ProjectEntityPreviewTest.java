@@ -212,6 +212,37 @@ class ProjectEntityPreviewTest {
     }
 
     @Test
+    void testJoinTypeWithoutTypeId() {
+
+        var entityId = "i1";
+        var projectId = 2;
+        var classId = 3;
+
+        // add an entity
+        var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(projectId).build();
+        var vE = ProjectEntityValue.newBuilder().setEntityId(entityId).setProjectId(projectId).setClassId(classId).build();
+        projectEntityTopic.pipeInput(kE, vE);
+
+        // add an entity type
+        var vET = ProjectEntityTypeValue.newBuilder().setEntityId(entityId).setProjectId(projectId)
+                .setTypeId("").setTypeLabel("").build();
+        projectEntityTypeTopic.pipeInput(kE, vET);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+
+        var record = outRecords.get(kE);
+        assertThat(record.getFkProject()).isEqualTo(projectId);
+        assertThat(record.getProject()).isEqualTo(projectId);
+        assertThat(record.getEntityId()).isEqualTo(entityId);
+        assertThat(record.getTypeId()).isEqualTo(null);
+        assertThat(record.getFkType()).isEqualTo(null);
+
+
+    }
+
+    @Test
     void testDeleteEntityPreview() {
 
         var entityId = "i1";

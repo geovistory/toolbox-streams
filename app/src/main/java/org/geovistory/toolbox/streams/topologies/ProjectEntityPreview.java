@@ -95,8 +95,11 @@ public class ProjectEntityPreview {
                 projectEntityTypeTable,
                 (value1, value2) -> {
                     if (value2 != null) {
-                        value1.setTypeId(value2.getTypeId());
-                        value1.setFkType(parseStringId(value2.getTypeId()));
+                        var typeId = value2.getTypeId();
+                        if (typeId != null && typeId.length() > 1) {
+                            value1.setTypeId(typeId);
+                            value1.setFkType(parseStringId(typeId));
+                        }
                         value1.setTypeLabel(value2.getTypeLabel());
                     }
                     return value1;
@@ -167,7 +170,12 @@ public class ProjectEntityPreview {
     }
 
     private static int parseStringId(String value1) {
-        return Integer.parseInt(value1.substring(1));
+        try {
+            return Integer.parseInt(value1.substring(1));
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
 
