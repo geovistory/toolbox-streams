@@ -64,6 +64,7 @@ class App {
         var datDigitalStream = inputTopics.datDigitalStream();
         var tabCellStream = inputTopics.tabCellStream();
         var dfhApiClassTable = inputTopics.dfhApiClassTable();
+        var dfhApiClassStream = inputTopics.dfhApiClassStream();
         var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
         var sysConfigTable = inputTopics.sysConfigTable();
 
@@ -234,6 +235,16 @@ class App {
                 projectEntityTable,
                 projectClassLabelTable
         );
+
+        // add sub-topology OntomeClassMetadata
+        var ontomeClassMetadata = OntomeClassMetadata.addProcessors(builder,
+                dfhApiClassStream
+        );
+        // add sub-topology ProjectEntityClassMetadata
+        var projectEntityClassMetadata = ProjectEntityClassMetadata.addProcessors(builder,
+                projectEntityTable,
+                ontomeClassMetadata.ontomeClassMetadataTable()
+        );
         // add sub-topology ProjectEntityPreview
         ProjectEntityPreview.addProcessors(builder,
                 projectEntityTable,
@@ -243,7 +254,8 @@ class App {
                 projectEntityType.projectEntityTypeTable(),
                 //projectEntityTypeTable,
                 projectEntityTimeSpanTable,
-                projectEntityFulltextTable
+                projectEntityFulltextTable,
+                projectEntityClassMetadata.projectEntityClassMetadataTable()
         );
 
     }
@@ -276,7 +288,7 @@ class App {
                 GeovPropertyLabel.output.TOPICS.geov_property_label,
                 ProjectPropertyLabel.output.TOPICS.project_property_label,
                 ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
-                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
+                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext,
                 ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
                 HasTypeProperty.output.TOPICS.has_type_property,
                 ProjectEntityType.output.TOPICS.project_entity_type,

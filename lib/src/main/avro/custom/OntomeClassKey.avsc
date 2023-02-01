@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "OntomeClassKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Model to store class id",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": {
+        "type": "int"
+      }
+    }
+  ]
+}

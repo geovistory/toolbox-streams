@@ -7,10 +7,13 @@ import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.geovistory.toolbox.streams.app.Klass;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
+
+import java.util.ArrayList;
 
 
 public class ProjectEntityPreview {
@@ -29,7 +32,8 @@ public class ProjectEntityPreview {
                 registerOutputTopic.projectEntityClassLabelTable(),
                 registerOutputTopic.projectEntityTypeTable(),
                 registerOutputTopic.projectEntityTimeSpanTable(),
-                registerOutputTopic.projectEntityFulltextTable()
+                registerOutputTopic.projectEntityFulltextTable(),
+                registerOutputTopic.projectEntityClassMetadataTable()
 
         ).builder().build();
     }
@@ -41,7 +45,8 @@ public class ProjectEntityPreview {
             KTable<ProjectEntityKey, ProjectEntityClassLabelValue> projectEntityClassLabelTable,
             KTable<ProjectEntityKey, ProjectEntityTypeValue> projectEntityTypeTable,
             KTable<ProjectEntityKey, TimeSpanValue> projectEntityTimeSpanTable,
-            KTable<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTable
+            KTable<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTable,
+            KTable<ProjectEntityKey, ProjectEntityClassMetadataValue> projectEntityClassMetadataTable
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
@@ -59,7 +64,9 @@ public class ProjectEntityPreview {
                             .setProject(value1.getProjectId())
                             .setPkEntity(value1.getEntityId())
                             .setFkClass(value1.getClassId())
-                            .setEntityType("") // TODO
+                            .setParentClasses(new ArrayList<>())
+                            .setAncestorClasses(new ArrayList<>())
+                            .setEntityType("")
                             .build();
 
                     if (value2 != null) newVal.setEntityLabel(value2.getLabel());
@@ -113,7 +120,7 @@ public class ProjectEntityPreview {
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
         );
-        // 4
+        // 6
         var typeFulltext = typeTimeSpan.leftJoin(
                 projectEntityFulltextTable,
                 (value1, value2) -> {
@@ -127,7 +134,28 @@ public class ProjectEntityPreview {
                         .withValueSerde(avroSerdes.EntityPreviewValue())
         );
 
-        var projectEntityPreviewStream = typeFulltext.toStream();
+        // 7
+        var classMetadata = typeFulltext.leftJoin(
+                projectEntityClassMetadataTable,
+                (value1, value2) -> {
+                    if (value2 != null) {
+                        var parents = value2.getParentClasses();
+                        var ancestors = value2.getAncestorClasses();
+                        value1.setParentClasses(parents);
+                        value1.setAncestorClasses(ancestors);
+                        var isPersistentItem = parents.contains(Klass.PERSISTENT_ITEM.get()) ||
+                                ancestors.contains(Klass.PERSISTENT_ITEM.get());
+                        var entityType = isPersistentItem ? "peIt" : "teEn";
+                        value1.setEntityType(entityType);
+                    }
+                    return value1;
+                },
+                Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_class_metadata_join)
+                        .withKeySerde(avroSerdes.ProjectEntityKey())
+                        .withValueSerde(avroSerdes.EntityPreviewValue())
+        );
+
+        var projectEntityPreviewStream = classMetadata.toStream();
 
         /* SINK PROCESSORS */
 
@@ -142,11 +170,13 @@ public class ProjectEntityPreview {
     public enum input {
         TOPICS;
         public final String project_entity = ProjectEntity.output.TOPICS.project_entity;
+
         public final String project_entity_label = ProjectEntityLabel.output.TOPICS.project_entity_label;
         public final String project_entity_class_label = ProjectEntityClassLabel.output.TOPICS.project_entity_class_label;
         public final String project_entity_type = ProjectEntityType.output.TOPICS.project_entity_type;
         public final String project_entity_time_span = ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span;
-        public final String project_entity_fulltext_label = ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label;
+        public final String project_entity_fulltext = ProjectEntityFulltext.output.TOPICS.project_entity_fulltext;
+        public final String project_entity_class_metadata = ProjectEntityClassMetadata.output.TOPICS.project_entity_class_metadata;
 
     }
 
@@ -158,7 +188,7 @@ public class ProjectEntityPreview {
         public final String project_entity_preview_type_join = "project_entity_preview_type_join";
         public final String project_entity_preview_time_span_join = "project_entity_preview_time_span_join";
         public final String project_entity_preview_fulltext_join = "project_entity_preview_fulltext_join";
-
+        public final String project_entity_class_metadata_join = "project_entity_class_metadata_join";
     }
 
     public enum output {

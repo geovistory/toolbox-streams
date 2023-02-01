@@ -26,6 +26,7 @@ class ProjectEntityPreviewTest {
     private TestInputTopic<ProjectEntityKey, ProjectEntityTypeValue> projectEntityTypeTopic;
     private TestInputTopic<ProjectEntityKey, TimeSpanValue> projectEntityTimeSpanTopic;
     private TestInputTopic<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTopic;
+    private TestInputTopic<ProjectEntityKey, ProjectEntityClassMetadataValue> projectEntityClassMetadataTopic;
     private TestOutputTopic<ProjectEntityKey, EntityPreviewValue> outputTopic;
 
     @BeforeEach
@@ -70,9 +71,14 @@ class ProjectEntityPreviewTest {
                 avroSerdes.TimeSpanValue().serializer());
 
         projectEntityFulltextTopic = testDriver.createInputTopic(
-                ProjectEntityPreview.input.TOPICS.project_entity_fulltext_label,
+                ProjectEntityPreview.input.TOPICS.project_entity_fulltext,
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityFulltextValue().serializer());
+
+        projectEntityClassMetadataTopic = testDriver.createInputTopic(
+                ProjectEntityPreview.input.TOPICS.project_entity_class_metadata,
+                avroSerdes.ProjectEntityKey().serializer(),
+                avroSerdes.ProjectEntityClassMetadataValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
                 ProjectEntityPreview.output.TOPICS.project_entity_preview,
@@ -106,6 +112,8 @@ class ProjectEntityPreviewTest {
                         .setDuration("1 day").build()
         ).build();
         var entityTimeSpanJson = "{\"p81\": {\"julianDay\": 1, \"duration\": \"1 day\", \"calendar\": \"julian\"}, \"p82\": null, \"p81a\": null, \"p81b\": null, \"p82a\": null, \"p82b\": null}";
+        var parentClasses = List.of(1, 2, 3);
+        var ancestorClasses = List.of(4, 5, 6);
 
         // add an entity
         var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(projectId).build();
@@ -129,12 +137,13 @@ class ProjectEntityPreviewTest {
         var vETSP = TimeSpanValue.newBuilder().setTimeSpan(entityTimeSpan).setFirstSecond(entityFirstSecond).setLastSecond(entityLastSecond).build();
         projectEntityTimeSpanTopic.pipeInput(kE, vETSP);
 
-
         // add an entity fulltext
         var vEFT = ProjectEntityFulltextValue.newBuilder().setEntityId(entityId).setProjectId(projectId).setFulltext(entityFulltext).build();
         projectEntityFulltextTopic.pipeInput(kE, vEFT);
 
-
+        // add an entity class metadata
+        var vECM = ProjectEntityClassMetadataValue.newBuilder().setParentClasses(parentClasses).setAncestorClasses(ancestorClasses).build();
+        projectEntityClassMetadataTopic.pipeInput(kE, vECM);
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
@@ -151,8 +160,47 @@ class ProjectEntityPreviewTest {
         assertThat(record.getTimeSpan()).isEqualTo(entityTimeSpanJson);
         assertThat(record.getFirstSecond()).isEqualTo(entityFirstSecond);
         assertThat(record.getLastSecond()).isEqualTo(entityLastSecond);
+        assertThat(record.getParentClasses()).isEqualTo(parentClasses);
+        assertThat(record.getAncestorClasses()).isEqualTo(ancestorClasses);
+        assertThat(record.getEntityType()).isEqualTo("teEn");
 
     }
+
+    @Test
+    void testJoinEntityType() {
+
+        var entityId = "i1";
+        var projectId = 2;
+        var classId = 3;
+        var parentClasses = List.of(1, 70, 3);
+        var ancestorClasses = List.of(4, 5, 6);
+
+        // add an entity
+        var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(projectId).build();
+        var vE = ProjectEntityValue.newBuilder().setEntityId(entityId).setProjectId(projectId).setClassId(classId).build();
+        projectEntityTopic.pipeInput(kE, vE);
+
+
+
+        // add an entity class metadata
+        var vECM = ProjectEntityClassMetadataValue.newBuilder().setParentClasses(parentClasses).setAncestorClasses(ancestorClasses).build();
+        projectEntityClassMetadataTopic.pipeInput(kE, vECM);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+
+        var record = outRecords.get(kE);
+        assertThat(record.getFkProject()).isEqualTo(projectId);
+        assertThat(record.getProject()).isEqualTo(projectId);
+        assertThat(record.getPkEntity()).isEqualTo(entityId);
+        assertThat(record.getFkClass()).isEqualTo(classId);
+        assertThat(record.getParentClasses()).isEqualTo(parentClasses);
+        assertThat(record.getAncestorClasses()).isEqualTo(ancestorClasses);
+        assertThat(record.getEntityType()).isEqualTo("peIt");
+
+    }
+
     @Test
     void testDeleteEntityPreview() {
 
@@ -172,6 +220,8 @@ class ProjectEntityPreviewTest {
                         .setCalendar("julian")
                         .setDuration("1 day").build()
         ).build();
+        var parentClasses = List.of(1, 2, 3);
+        var ancestorClasses = List.of(4, 5, 6);
 
         // add an entity
         var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(projectId).build();
@@ -195,10 +245,13 @@ class ProjectEntityPreviewTest {
         var vETSP = TimeSpanValue.newBuilder().setTimeSpan(entityTimeSpan).setFirstSecond(entityFirstSecond).setLastSecond(entityLastSecond).build();
         projectEntityTimeSpanTopic.pipeInput(kE, vETSP);
 
-
         // add an entity fulltext
         var vEFT = ProjectEntityFulltextValue.newBuilder().setEntityId(entityId).setProjectId(projectId).setFulltext(entityFulltext).build();
         projectEntityFulltextTopic.pipeInput(kE, vEFT);
+
+        // add an entity class metadata
+        var vECM = ProjectEntityClassMetadataValue.newBuilder().setParentClasses(parentClasses).setAncestorClasses(ancestorClasses).build();
+        projectEntityClassMetadataTopic.pipeInput(kE, vECM);
 
         // delete entity
         vE.setDeleted$1(true);
@@ -211,7 +264,6 @@ class ProjectEntityPreviewTest {
         var record = outRecords.get(kE);
         assertThat(record).isNull();
     }
-
 
 
 }

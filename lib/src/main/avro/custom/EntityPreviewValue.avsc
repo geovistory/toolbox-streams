@@ -92,6 +92,26 @@
         "long"
       ],
       "default": null
+    },
+    {
+      "name": "parent_classes",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    },
+    {
+      "name": "ancestor_classes",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
     }
   ]
 }

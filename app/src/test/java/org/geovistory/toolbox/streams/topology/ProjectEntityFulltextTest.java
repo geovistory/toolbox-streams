@@ -54,7 +54,7 @@ class ProjectEntityFulltextTest {
                 avroSerdes.ProjectEntityLabelConfigValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
+                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext,
                 avroSerdes.ProjectEntityKey().deserializer(),
                 avroSerdes.ProjectEntityFulltextValue().deserializer());
     }

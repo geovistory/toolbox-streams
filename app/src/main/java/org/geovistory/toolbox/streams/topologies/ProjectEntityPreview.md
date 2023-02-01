@@ -7,7 +7,8 @@ flowchart TD
     1b-->3a-->4a
     1c-->4a-->5a
     1d-->5a-->6a
-    1e-->6a-->6b
+    1e-->6a-->7a
+    1g-->7a-->7b
     
     
     subgraph 1
@@ -18,6 +19,7 @@ flowchart TD
         1c([project_entity_type])
         1d([project_entity_time_span])
         1e([project_entity_fulltext])
+        1g([project_entity_class_metadata])
     end
     subgraph 2
         2a([LeftJoin])
@@ -33,9 +35,11 @@ flowchart TD
     end
     subgraph 6
         6a([LeftJoin])
-        6b[project_entity_preview]
     end
-    
+    subgraph 7
+        7a([LeftJoin])
+        7b[project_entity_preview]
+    end
     
 ```
 
@@ -48,13 +52,14 @@ flowchart TD
 
 _{prefix_out} = TS_OUTPUT_TOPIC_NAME_PREFIX_
 
-| name                                  | label in diagram         | Type   |
-|---------------------------------------|--------------------------|--------|
-| {prefix_out}_project_entity           | project_entity           | KTable |
-| {prefix_out}_project_entity_label     | project_entity_label     | KTable |
-| {prefix_out}_project_entity_type      | project_entity_type      | KTable |
-| {prefix_out}_project_entity_time_span | project_entity_time_span | KTable |
-| {prefix_out}_project_entity_fulltext  | project_entity_fulltext  | KTable |
+| name                                       | label in diagram              | Type   |
+|--------------------------------------------|-------------------------------|--------|
+| {prefix_out}_project_entity                | project_entity                | KTable |
+| {prefix_out}_project_entity_label          | project_entity_label          | KTable |
+| {prefix_out}_project_entity_type           | project_entity_type           | KTable |
+| {prefix_out}_project_entity_time_span      | project_entity_time_span      | KTable |
+| {prefix_out}_project_entity_fulltext       | project_entity_fulltext       | KTable |
+| {prefix_out}_project_entity_class_metadata | project_entity_class_metadata | KTable |
 
 ## Output topic
 

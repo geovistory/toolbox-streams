@@ -14,11 +14,7 @@
     },
     {
       "name": "class_id",
-      "type": [
-        "null",
-        "int"
-      ],
-      "default": null
+      "type": "int"
     },
     {
       "name": "__deleted",
