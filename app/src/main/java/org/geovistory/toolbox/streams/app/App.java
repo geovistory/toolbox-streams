@@ -77,6 +77,7 @@ class App {
         var projectEntityTopStatementsTable = outputTopics.projectEntityTopStatementsTable();
         var projectEntityTimeSpanTable = outputTopics.projectEntityTimeSpanTable();
         var projectEntityFulltextTable = outputTopics.projectEntityFulltextTable();
+        var projectClassLabelTable = outputTopics.projectClassLabelTable();
 
         // add sub-topology ProjectProfiles
         var projectProfiles = ProjectProfiles.addProcessors(builder,
@@ -107,7 +108,7 @@ class App {
         );
 
         // add sub-topology ProjectClassLabel
-        var projectClassLabel = ProjectClassLabel.addProcessors(builder,
+        ProjectClassLabel.addProcessors(builder,
                 proProjectTable,
                 ontomeClassLabel.ontomeClassLabelStream(),
                 geovClassLabel.geovClassLabelStream(),
@@ -231,14 +232,16 @@ class App {
         // add sub-topology ProjectEntityClassLabel
         var projectEntityClassLabel = ProjectEntityClassLabel.addProcessors(builder,
                 projectEntityTable,
-                projectClassLabel.projectClassTable()
+                projectClassLabelTable
         );
         // add sub-topology ProjectEntityPreview
         ProjectEntityPreview.addProcessors(builder,
                 projectEntityTable,
                 projectEntityLabelTable,
                 projectEntityClassLabel.projectEntityClassLabelTable(),
+                //projectEntityClassLabelTable,
                 projectEntityType.projectEntityTypeTable(),
+                //projectEntityTypeTable,
                 projectEntityTimeSpanTable,
                 projectEntityFulltextTable
         );
