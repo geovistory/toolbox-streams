@@ -99,23 +99,11 @@
     },
     {
       "name": "parent_classes",
-      "type": {
-        "type": "array",
-        "items": [
-          "null",
-          "int"
-        ]
-      }
+      "type": "string"
     },
     {
       "name": "ancestor_classes",
-      "type": {
-        "type": "array",
-        "items": [
-          "null",
-          "int"
-        ]
-      }
+      "type": "string"
     }
   ]
 }

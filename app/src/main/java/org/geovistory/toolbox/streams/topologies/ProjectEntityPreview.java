@@ -13,8 +13,6 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import java.util.ArrayList;
-
 
 public class ProjectEntityPreview {
 
@@ -65,8 +63,8 @@ public class ProjectEntityPreview {
                             .setEntityId(value1.getEntityId())
                             .setPkEntity(Integer.parseInt(value1.getEntityId().substring(1)))
                             .setFkClass(value1.getClassId())
-                            .setParentClasses(new ArrayList<>())
-                            .setAncestorClasses(new ArrayList<>())
+                            .setParentClasses("[]")
+                            .setAncestorClasses("[]")
                             .setEntityType("")
                             .build();
 
@@ -142,8 +140,8 @@ public class ProjectEntityPreview {
                     if (value2 != null) {
                         var parents = value2.getParentClasses();
                         var ancestors = value2.getAncestorClasses();
-                        value1.setParentClasses(parents);
-                        value1.setAncestorClasses(ancestors);
+                        value1.setParentClasses(parents.toString());
+                        value1.setAncestorClasses(ancestors.toString());
                         var isPersistentItem = parents.contains(Klass.PERSISTENT_ITEM.get()) ||
                                 ancestors.contains(Klass.PERSISTENT_ITEM.get());
                         var entityType = isPersistentItem ? "peIt" : "teEn";

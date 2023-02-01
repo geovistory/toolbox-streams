@@ -115,6 +115,9 @@ class ProjectEntityPreviewTest {
         var entityTimeSpanJson = "{\"p81\": {\"julianDay\": 1, \"duration\": \"1 day\", \"calendar\": \"julian\"}, \"p82\": null, \"p81a\": null, \"p81b\": null, \"p82a\": null, \"p82b\": null}";
         var parentClasses = List.of(1, 2, 3);
         var ancestorClasses = List.of(4, 5, 6);
+        var parentClassesJson = "[1, 2, 3]";
+        var ancestorClassesJson = "[4, 5, 6]";
+
 
         // add an entity
         var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(projectId).build();
@@ -162,8 +165,8 @@ class ProjectEntityPreviewTest {
         assertThat(record.getTimeSpan()).isEqualTo(entityTimeSpanJson);
         assertThat(record.getFirstSecond()).isEqualTo(entityFirstSecond);
         assertThat(record.getLastSecond()).isEqualTo(entityLastSecond);
-        assertThat(record.getParentClasses()).isEqualTo(parentClasses);
-        assertThat(record.getAncestorClasses()).isEqualTo(ancestorClasses);
+        assertThat(record.getParentClasses()).isEqualTo(parentClassesJson);
+        assertThat(record.getAncestorClasses()).isEqualTo(ancestorClassesJson);
         assertThat(record.getEntityType()).isEqualTo("teEn");
 
     }
@@ -172,16 +175,18 @@ class ProjectEntityPreviewTest {
     void testJoinEntityType() {
 
         var entityId = "i1";
+        var pkEntity = 1;
         var projectId = 2;
         var classId = 3;
         var parentClasses = List.of(1, 70, 3);
         var ancestorClasses = List.of(4, 5, 6);
+        var parentClassesJson = "[1, 2, 3]";
+        var ancestorClassesJson = "[4, 5, 6]";
 
         // add an entity
         var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(projectId).build();
         var vE = ProjectEntityValue.newBuilder().setEntityId(entityId).setProjectId(projectId).setClassId(classId).build();
         projectEntityTopic.pipeInput(kE, vE);
-
 
 
         // add an entity class metadata
@@ -195,10 +200,11 @@ class ProjectEntityPreviewTest {
         var record = outRecords.get(kE);
         assertThat(record.getFkProject()).isEqualTo(projectId);
         assertThat(record.getProject()).isEqualTo(projectId);
-        assertThat(record.getPkEntity()).isEqualTo(entityId);
+        assertThat(record.getEntityId()).isEqualTo(entityId);
+        assertThat(record.getPkEntity()).isEqualTo(pkEntity);
         assertThat(record.getFkClass()).isEqualTo(classId);
-        assertThat(record.getParentClasses()).isEqualTo(parentClasses);
-        assertThat(record.getAncestorClasses()).isEqualTo(ancestorClasses);
+        assertThat(record.getParentClasses()).isEqualTo(parentClassesJson);
+        assertThat(record.getAncestorClasses()).isEqualTo(ancestorClassesJson);
         assertThat(record.getEntityType()).isEqualTo("peIt");
 
     }
