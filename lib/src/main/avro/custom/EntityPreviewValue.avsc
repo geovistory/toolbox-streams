@@ -18,6 +18,10 @@
     },
     {
       "name": "pk_entity",
+      "type": "int"
+    },
+    {
+      "name": "entity_id",
       "type": "string"
     },
     {

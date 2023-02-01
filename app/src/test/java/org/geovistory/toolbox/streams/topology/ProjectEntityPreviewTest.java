@@ -96,6 +96,7 @@ class ProjectEntityPreviewTest {
     void testJoinAll() {
 
         var entityId = "i1";
+        var pkEntity = 1;
         var projectId = 2;
         var classId = 3;
         var entityLabel = "Foo";
@@ -151,7 +152,8 @@ class ProjectEntityPreviewTest {
         var record = outRecords.get(kE);
         assertThat(record.getFkProject()).isEqualTo(projectId);
         assertThat(record.getProject()).isEqualTo(projectId);
-        assertThat(record.getPkEntity()).isEqualTo(entityId);
+        assertThat(record.getEntityId()).isEqualTo(entityId);
+        assertThat(record.getPkEntity()).isEqualTo(pkEntity);
         assertThat(record.getFkClass()).isEqualTo(classId);
         assertThat(record.getFkType()).isEqualTo(entityTypeId);
         assertThat(record.getEntityLabel()).isEqualTo(entityLabel);
