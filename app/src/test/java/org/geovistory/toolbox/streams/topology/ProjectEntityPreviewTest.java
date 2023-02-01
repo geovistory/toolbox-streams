@@ -102,6 +102,7 @@ class ProjectEntityPreviewTest {
         var entityLabel = "Foo";
         var entityClassLabel = "Foo Class";
         var entityTypeId = "i2";
+        var fkType = 2;
         var entityTypeLabel = "Foo Type";
         var entityFulltext = "Fulltext";
         var entityFirstSecond = 123L;
@@ -158,7 +159,8 @@ class ProjectEntityPreviewTest {
         assertThat(record.getEntityId()).isEqualTo(entityId);
         assertThat(record.getPkEntity()).isEqualTo(pkEntity);
         assertThat(record.getFkClass()).isEqualTo(classId);
-        assertThat(record.getFkType()).isEqualTo(entityTypeId);
+        assertThat(record.getTypeId()).isEqualTo(entityTypeId);
+        assertThat(record.getFkType()).isEqualTo(fkType);
         assertThat(record.getEntityLabel()).isEqualTo(entityLabel);
         assertThat(record.getClassLabel()).isEqualTo(entityClassLabel);
         assertThat(record.getFullText()).isEqualTo(entityFulltext);

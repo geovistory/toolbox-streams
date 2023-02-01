@@ -61,7 +61,7 @@ public class ProjectEntityPreview {
                             .setFkProject(value1.getProjectId())
                             .setProject(value1.getProjectId())
                             .setEntityId(value1.getEntityId())
-                            .setPkEntity(Integer.parseInt(value1.getEntityId().substring(1)))
+                            .setPkEntity(parseStringId(value1.getEntityId()))
                             .setFkClass(value1.getClassId())
                             .setParentClasses("[]")
                             .setAncestorClasses("[]")
@@ -95,7 +95,8 @@ public class ProjectEntityPreview {
                 projectEntityTypeTable,
                 (value1, value2) -> {
                     if (value2 != null) {
-                        value1.setFkType(value2.getTypeId());
+                        value1.setTypeId(value2.getTypeId());
+                        value1.setFkType(parseStringId(value2.getTypeId()));
                         value1.setTypeLabel(value2.getTypeLabel());
                     }
                     return value1;
@@ -163,6 +164,10 @@ public class ProjectEntityPreview {
 
         return new ProjectEntityPreviewReturnValue(builder, projectEntityPreviewStream);
 
+    }
+
+    private static int parseStringId(String value1) {
+        return Integer.parseInt(value1.substring(1));
     }
 
 

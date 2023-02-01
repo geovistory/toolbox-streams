@@ -36,6 +36,14 @@
       "name": "fk_type",
       "type": [
         "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "type_id",
+      "type": [
+        "null",
         "string"
       ],
       "default": null
