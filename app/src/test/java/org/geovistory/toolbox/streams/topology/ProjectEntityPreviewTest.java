@@ -180,7 +180,7 @@ class ProjectEntityPreviewTest {
         var classId = 3;
         var parentClasses = List.of(1, 70, 3);
         var ancestorClasses = List.of(4, 5, 6);
-        var parentClassesJson = "[1, 2, 3]";
+        var parentClassesJson = "[1, 70, 3]";
         var ancestorClassesJson = "[4, 5, 6]";
 
         // add an entity
