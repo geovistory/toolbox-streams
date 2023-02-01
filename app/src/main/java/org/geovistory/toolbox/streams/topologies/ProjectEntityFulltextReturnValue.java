@@ -6,5 +6,5 @@ import org.geovistory.toolbox.streams.avro.ProjectEntityFulltextValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 
 public record ProjectEntityFulltextReturnValue(StreamsBuilder builder,
-                                               KStream<ProjectEntityKey, ProjectEntityFulltextValue> ProjectStatementStream) {
+                                               KStream<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextStream) {
 }

@@ -75,6 +75,8 @@ class App {
         var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
         var projectPropertyLabelTable = outputTopics.projectPropertyLabelTable();
         var projectEntityTopStatementsTable = outputTopics.projectEntityTopStatementsTable();
+        var projectEntityTimeSpanTable = outputTopics.projectEntityTimeSpanTable();
+        var projectEntityFulltextTable = outputTopics.projectEntityFulltextTable();
 
         // add sub-topology ProjectProfiles
         var projectProfiles = ProjectProfiles.addProcessors(builder,
@@ -105,7 +107,7 @@ class App {
         );
 
         // add sub-topology ProjectClassLabel
-        ProjectClassLabel.addProcessors(builder,
+        var projectClassLabel = ProjectClassLabel.addProcessors(builder,
                 proProjectTable,
                 ontomeClassLabel.ontomeClassLabelStream(),
                 geovClassLabel.geovClassLabelStream(),
@@ -220,10 +222,25 @@ class App {
         );
 
         // add sub-topology ProjectEntityType
-        ProjectEntityType.addProcessors(builder,
+        var projectEntityType = ProjectEntityType.addProcessors(builder,
                 projectEntityTable,
                 outputTopics.hasTypePropertyTable(),
                 projectTopOutgoingStatements.projectTopStatementTable()
+        );
+
+        // add sub-topology ProjectEntityClassLabel
+        var projectEntityClassLabel = ProjectEntityClassLabel.addProcessors(builder,
+                projectEntityTable,
+                projectClassLabel.projectClassTable()
+        );
+        // add sub-topology ProjectEntityPreview
+        ProjectEntityPreview.addProcessors(builder,
+                projectEntityTable,
+                projectEntityLabelTable,
+                projectEntityClassLabel.projectEntityClassLabelTable(),
+                projectEntityType.projectEntityTypeTable(),
+                projectEntityTimeSpanTable,
+                projectEntityFulltextTable
         );
 
     }
@@ -243,6 +260,7 @@ class App {
                 ProjectProperty.output.TOPICS.project_property,
                 ProjectEntity.output.TOPICS.project_entity,
                 ProjectClassLabel.output.TOPICS.project_class_label,
+                ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
                 StatementEnriched.output.TOPICS.statement_enriched,
                 ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config_enriched,
                 CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config,
@@ -258,7 +276,8 @@ class App {
                 ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
                 ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
                 HasTypeProperty.output.TOPICS.has_type_property,
-                ProjectEntityType.output.TOPICS.project_entity_type
+                ProjectEntityType.output.TOPICS.project_entity_type,
+                ProjectEntityPreview.output.TOPICS.project_entity_preview
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 

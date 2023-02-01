@@ -101,7 +101,7 @@ public class ProjectEntityType {
         projectEntityTypeStream.to(output.TOPICS.project_entity_type,
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTypeValue()));
 
-        return new ProjectEntityTypeReturnValue(builder, projectEntityTypeStream);
+        return new ProjectEntityTypeReturnValue(builder, projectEntityTypeTable, projectEntityTypeStream);
 
     }
 

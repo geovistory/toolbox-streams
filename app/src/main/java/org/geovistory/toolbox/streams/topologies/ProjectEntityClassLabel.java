@@ -66,7 +66,7 @@ public class ProjectEntityClassLabel {
         projectEntityClassLabelStream.to(output.TOPICS.project_entity_class_label,
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassLabelValue()));
 
-        return new ProjectEntityClassLabelLabelReturnValue(builder, projectEntityClassLabelStream);
+        return new ProjectEntityClassLabelLabelReturnValue(builder, projectEntityClassLabelTable, projectEntityClassLabelStream);
 
     }
 
