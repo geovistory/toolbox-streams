@@ -98,7 +98,7 @@ class ProjectEntityTypeTest {
                 .setPropertyId(987).setIsOutgoing(true)
                 .setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setPropertyId(987)
@@ -151,7 +151,7 @@ class ProjectEntityTypeTest {
                 .setPropertyId(987).setIsOutgoing(true)
                 .setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setPropertyId(987)
@@ -205,7 +205,7 @@ class ProjectEntityTypeTest {
                 .setPropertyId(987).setIsOutgoing(true)
                 .setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setPropertyId(987)

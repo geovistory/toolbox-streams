@@ -78,21 +78,21 @@ class ProjectTopIncomingStatementsTest {
                                 .setObjectId(objectId)
                                 .build()
                 )
-                .setOrdNumForRange(3)
+                .setOrdNumOfDomain(3)
                 .build();
         projectStatementTopic.pipeInput(k, v);
 
         v.setStatementId(1);
-        v.setOrdNumForRange(1);
+        v.setOrdNumOfDomain(1);
 
         projectStatementTopic.pipeInput(k, v);
 
         v.setStatementId(2);
-        v.setOrdNumForRange(2);
+        v.setOrdNumOfDomain(2);
         projectStatementTopic.pipeInput(k, v);
 
         v.setStatementId(0);
-        v.setOrdNumForRange(0);
+        v.setOrdNumOfDomain(0);
         projectStatementTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isFalse();
@@ -106,7 +106,7 @@ class ProjectTopIncomingStatementsTest {
                 .build();
         var record = outRecords.get(resultKey);
         assertThat(record.getStatements().size()).isEqualTo(4);
-        assertThat(record.getStatements().get(2).getOrdNumForRange()).isEqualTo(2);
+        assertThat(record.getStatements().get(2).getOrdNumOfDomain()).isEqualTo(2);
     }
 
 

@@ -59,6 +59,8 @@ public class ProjectStatement {
                             .setProjectId(projectRelation.getFkProject())
                             .setStatementId(projectRelation.getFkEntity())
                             .setStatement(statementEnriched)
+                            .setOrdNumOfDomain(projectRelation.getOrdNumOfDomain())
+                            .setOrdNumOfRange(projectRelation.getOrdNumOfRange())
                             .setCreatedBy(projectRelation.getFkCreator())
                             .setModifiedBy(projectRelation.getFkLastModifier())
                             .setCreatedAt(projectRelation.getTmspCreation())

@@ -20,7 +20,7 @@
       ]
     },
     {
-      "name": "ord_num_for_domain",
+      "name": "ord_num_of_domain",
       "type": [
         "null",
         "int"
@@ -28,7 +28,7 @@
       "default": null
     },
     {
-      "name": "ord_num_for_range",
+      "name": "ord_num_of_range",
       "type": [
         "null",
         "int"
