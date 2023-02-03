@@ -67,6 +67,7 @@ class App {
         var dfhApiClassTable = inputTopics.dfhApiClassTable();
         var dfhApiClassStream = inputTopics.dfhApiClassStream();
         var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
+        var dfhApiPropertyStream = inputTopics.dfhApiPropertyStream();
         var sysConfigTable = inputTopics.sysConfigTable();
 
         // register input topics as KStreams
@@ -90,13 +91,13 @@ class App {
 
         // add sub-topology ProjectProperty
         var projectProperty = ProjectProperty.addProcessors(builder,
-                dfhApiPropertyTable,
+                dfhApiPropertyStream,
                 projectProfiles.projectProfileStream());
 
         // add sub-topology ProjectClass
         var projectClass = ProjectClass.addProcessors(builder,
                 projectProfiles.projectProfileStream(),
-                dfhApiClassTable
+                dfhApiClassStream
         );
         var projectClassTable = outputTopics.projectClassTable();
 

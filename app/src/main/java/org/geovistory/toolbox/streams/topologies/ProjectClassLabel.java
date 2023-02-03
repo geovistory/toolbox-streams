@@ -219,19 +219,21 @@ public class ProjectClassLabel {
         );
 
 
-// 6) group by
-        var projectClassLabelOptionsGrouped = withGeovAndOntome.groupBy(
-                (key, value) -> KeyValue.pair(
+        // 6) group by
+        var projectClassLabelOptionsGrouped = withGeovAndOntome
+                .toStream()
+                .groupBy(
+                (key, value) ->
                         ProjectClassLabelKey.newBuilder()
                                 .setProjectId(key.getProjectId())
                                 .setClassId(key.getClassId())
                                 .build(),
-                        value),
                 Grouped.with(
                         inner.TOPICS.project_class_label_options_grouped,
                         avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelOptionMapValue()
                 ));
-// 7) aggregate
+
+        // 7) aggregate
         var projectClassLabelOptionsAggregated = projectClassLabelOptionsGrouped.aggregate(
                 () -> ProjectClassLabelOptionMap.newBuilder()
                         .setClassId(0)
@@ -245,7 +247,6 @@ public class ProjectClassLabel {
                     aggValue.getMap().putAll(newValue.getMap());
                     return aggValue;
                 },
-                (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(inner.TOPICS.project_class_label_options_aggregated),
                 Materialized.<ProjectClassLabelKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_class_label_options_aggregated)
                         .withKeySerde(avroSerdes.ProjectClassLabelKey())

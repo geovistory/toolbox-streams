@@ -1,7 +1,6 @@
 package org.geovistory.toolbox.streams.topologies;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
@@ -61,27 +60,22 @@ public class ProjectTopOutgoingStatements {
                         .withValueSerde(avroSerdes.ProjectStatementValue()));
         // 3
         var statementsStream = joinedObjectEntityLabelsTable.toStream().merge(projectStatementsWithLiteralStream);
-        var statementsTable = statementsStream.toTable(
-                Named.as(inner.TOPICS.project_outgoing_statements),
-                Materialized.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue())
-        );
-        // 3
-        var grouped = statementsTable.groupBy(
-                (key, value) -> KeyValue.pair(
+
+        // 4
+        var grouped = statementsStream.groupBy(
+                (key, value) ->
                         ProjectTopStatementsKey.newBuilder()
                                 .setProjectId(value.getProjectId())
                                 .setEntityId(value.getStatement().getSubjectId())
                                 .setPropertyId(value.getStatement().getPropertyId())
                                 .setIsOutgoing(true)
                                 .build(),
-                        value
-                ),
                 Grouped
                         .with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectStatementValue())
                         .withName(inner.TOPICS.project_top_outgoing_statements_group_by)
         );
 
-        // 4
+        // 5
         var aggregatedTable = grouped.aggregate(
                 () -> ProjectTopStatementsValue.newBuilder()
                         .setProjectId(0)
@@ -99,7 +93,6 @@ public class ProjectTopOutgoingStatements {
                     aggValue.setStatements(newStatements);
                     return aggValue;
                 },
-                (aggKey, oldValue, aggValue) -> aggValue,
                 Materialized.<ProjectTopStatementsKey, ProjectTopStatementsValue, KeyValueStore<Bytes, byte[]>>as("project_top_outgoing_statements_aggregate")
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
                         .withValueSerde(avroSerdes.ProjectTopStatementsValue())
@@ -130,7 +123,6 @@ public class ProjectTopOutgoingStatements {
         TOPICS;
         public final String project_top_outgoing_statements_group_by = "project_top_outgoing_statements_group_by";
         public final String project_top_outgoing_statements_join_object_entity_label = "project_top_outgoing_statements_join_object_entity_label";
-        public final String project_outgoing_statements = "project_outgoing_statements";
 
     }
 

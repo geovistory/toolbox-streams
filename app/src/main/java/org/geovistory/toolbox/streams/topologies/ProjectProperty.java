@@ -30,14 +30,14 @@ public class ProjectProperty {
 
         return addProcessors(
                 builder,
-                registerInputTopic.dfhApiPropertyTable(),
+                registerInputTopic.dfhApiPropertyStream(),
                 registerOutputTopic.projectProfileStream()
         ).builder().build();
     }
 
     public static ProjectPropertyReturnValue addProcessors(
             StreamsBuilder builder,
-            KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyTable,
+            KStream<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyStream,
             KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream) {
 
         var avroSerdes = new ConfluentAvroSerdes();
@@ -45,7 +45,7 @@ public class ProjectProperty {
 
         /* STREAM PROCESSORS */
         // 2)
-        KTable<dev.data_for_history.api_property.Key, ProfileProperty> apiPropertyProjected = dfhApiPropertyTable
+        var apiPropertyProjected = dfhApiPropertyStream
                 .mapValues((readOnlyKey, value) -> ProfileProperty.newBuilder()
                         .setProfileId(value.getDfhFkProfile())
                         .setPropertyId(value.getDfhPkProperty())
@@ -56,9 +56,9 @@ public class ProjectProperty {
                 );
 
         // 3) GroupBy
-        KGroupedTable<Integer, ProfileProperty> propertyByProfileIdGrouped = apiPropertyProjected
+        var propertyByProfileIdGrouped = apiPropertyProjected
                 .groupBy(
-                        (key, value) -> KeyValue.pair(value.getProfileId(), value),
+                        (key, value) -> value.getProfileId(),
                         Grouped.with(
                                 Serdes.Integer(), avroSerdes.ProfilePropertyValue()
                         ));
@@ -70,7 +70,6 @@ public class ProjectProperty {
                     aggValue.getMap().put(key, newValue);
                     return aggValue;
                 },
-                (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(inner.TOPICS.profile_with_properties)
                 ,
                 Materialized.<Integer, ProfilePropertyMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_properties)

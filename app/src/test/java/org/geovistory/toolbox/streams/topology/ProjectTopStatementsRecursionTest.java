@@ -1,6 +1,7 @@
 package org.geovistory.toolbox.streams.topology;
 
 
+import com.github.underscore.U;
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
@@ -26,7 +27,8 @@ class ProjectTopStatementsRecursionTest {
 
     // input topics of ProjectStatement
     private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWitEntityTopic;
-    private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;    private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
+    private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;
+    private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
 
     // input topics of ProjectTopOutgoingStatements
     // -> output of Topology ProjectStatement
@@ -224,17 +226,17 @@ class ProjectTopStatementsRecursionTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
 
-        // add project entity foo
+        // add project entity person
         var kE = ProjectEntityKey.newBuilder().setEntityId(entityPerson).setProjectId(projectId).build();
         var vE = ProjectEntityValue.newBuilder().setEntityId(entityPerson).setProjectId(projectId).setClassId(classPersonId).build();
         projectEntityTopic.pipeInput(kE, vE);
 
-        // add project entity one
+        // add project entity name1
         kE = ProjectEntityKey.newBuilder().setEntityId(entityName1).setProjectId(projectId).build();
         vE = ProjectEntityValue.newBuilder().setEntityId(entityName1).setProjectId(projectId).setClassId(classNameId).build();
         projectEntityTopic.pipeInput(kE, vE);
 
-        // add project entity two
+        // add project entity name2
         kE = ProjectEntityKey.newBuilder().setEntityId(entityName2).setProjectId(projectId).build();
         vE = ProjectEntityValue.newBuilder().setEntityId(entityName2).setProjectId(projectId).setClassId(classNameId).build();
         projectEntityTopic.pipeInput(kE, vE);
@@ -289,7 +291,9 @@ class ProjectTopStatementsRecursionTest {
 
 
         }
-        assertThat(outRecords).hasSize(14);
+        assertThat(outRecords).hasSize(10);
+        var unique = U.uniq(outRecords);
+        assertThat(unique).hasSize(outRecords.size());
 
     }
 

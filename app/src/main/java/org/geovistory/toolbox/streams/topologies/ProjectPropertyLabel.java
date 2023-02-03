@@ -285,22 +285,23 @@ public class ProjectPropertyLabel {
                         .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
         );
 
+        // 6) group by
+        var projectPropertyLabelOptionsGrouped = withGeovAndOntome
+                .toStream()
+                .groupBy(
+                        (key, value) ->
+                                ProjectFieldLabelKey.newBuilder()
+                                        .setProjectId(key.getProjectId())
+                                        .setClassId(value.getClassId())
+                                        .setPropertyId(key.getPropertyId())
+                                        .setIsOutgoing(value.getIsOutgoing())
+                                        .build(),
+                        Grouped.with(
+                                inner.TOPICS.project_property_label_options_grouped,
+                                avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelOptionMapValue()
+                        ));
 
-// 6) group by
-        var projectPropertyLabelOptionsGrouped = withGeovAndOntome.groupBy(
-                (key, value) -> KeyValue.pair(
-                        ProjectFieldLabelKey.newBuilder()
-                                .setProjectId(key.getProjectId())
-                                .setClassId(value.getClassId())
-                                .setPropertyId(key.getPropertyId())
-                                .setIsOutgoing(value.getIsOutgoing())
-                                .build(),
-                        value),
-                Grouped.with(
-                        inner.TOPICS.project_property_label_options_grouped,
-                        avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelOptionMapValue()
-                ));
-// 7) aggregate
+        // 7) aggregate
         var projectPropertyLabelOptionsAggregated = projectPropertyLabelOptionsGrouped.aggregate(
                 () -> ProjectFieldLabelOptionMap.newBuilder()
                         .setProjectId(0)
@@ -318,7 +319,6 @@ public class ProjectPropertyLabel {
                     aggValue.getMap().putAll(newValue.getMap());
                     return aggValue;
                 },
-                (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(inner.TOPICS.project_property_label_options_aggregated),
                 Materialized.<ProjectFieldLabelKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_property_label_options_aggregated)
                         .withKeySerde(avroSerdes.ProjectPropertyLabelKey())

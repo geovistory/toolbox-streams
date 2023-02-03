@@ -1,7 +1,6 @@
 package org.geovistory.toolbox.streams.topologies;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
@@ -93,14 +92,14 @@ public class ProjectEntityTopStatements {
 
         // 4)
         // GroupBy ProjectEntityKey
-        var groupedTable = topStatementsWithPropLabelTable.groupBy(
-                (key, value) -> KeyValue.pair(
+        var groupedTable = topStatementsWithPropLabelTable
+                .toStream()
+                .groupBy(
+                (key, value) ->
                         ProjectEntityKey.newBuilder()
                                 .setEntityId(key.getEntityId())
                                 .setProjectId(key.getProjectId())
                                 .build(),
-                        value
-                ),
                 Grouped.with(
                         avroSerdes.ProjectEntityKey(), avroSerdes.ProjectTopStatementsWithPropLabelValue()
                 ).withName("project_entity_top_statements_with_prop_label_grouped")
@@ -125,7 +124,6 @@ public class ProjectEntityTopStatements {
                     }
                     return aggValue;
                 },
-                (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(ProjectEntityTopStatements.inner.TOPICS.project_entity_top_tatements_aggregated),
                 Materialized.<ProjectEntityKey, ProjectEntityTopStatementsValue, KeyValueStore<Bytes, byte[]>>as(ProjectEntityTopStatements.inner.TOPICS.project_entity_top_tatements_aggregated)
                         .withKeySerde(avroSerdes.ProjectEntityKey())

@@ -1,7 +1,6 @@
 package org.geovistory.toolbox.streams.topologies;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Grouped;
@@ -61,7 +60,7 @@ public class ProjectTopIncomingStatements {
                         .withKeySerde(avroSerdes.ProjectStatementKey())
                         .withValueSerde(avroSerdes.ProjectStatementValue())
         );
-
+/*
         // 4
         var grouped = joinedSubjectEntityLabelsTable.groupBy(
                 (key, value) -> KeyValue.pair(
@@ -96,13 +95,53 @@ public class ProjectTopIncomingStatements {
                     return aggValue;
                 },
                 (aggKey, oldValue, aggValue) -> aggValue,
-                Materialized.<ProjectTopStatementsKey, ProjectTopStatementsValue, KeyValueStore<Bytes, byte[]>>as("project_top_incoming_statements_aggregate")
+                Materialized.<ProjectTopStatementsKey, ProjectTopStatementsValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_incoming_statements_aggregate)
+                        .withKeySerde(avroSerdes.ProjectTopStatementsKey())
+                        .withValueSerde(avroSerdes.ProjectTopStatementsValue())
+        );*/
+
+
+        // 4
+        var grouped = joinedSubjectEntityLabelsTable
+                .toStream()
+                .groupBy(
+                        (key, value) ->
+                                ProjectTopStatementsKey.newBuilder()
+                                        .setProjectId(value.getProjectId())
+                                        .setEntityId(value.getStatement().getObjectId())
+                                        .setPropertyId(value.getStatement().getPropertyId())
+                                        .setIsOutgoing(false)
+                                        .build(),
+                        Grouped
+                                .with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectStatementValue())
+                                .withName(inner.TOPICS.project_top_incoming_statements_group_by)
+                );
+        // 5
+        var aggregatedTable = grouped.aggregate(
+                () -> ProjectTopStatementsValue.newBuilder()
+                        .setProjectId(0)
+                        .setEntityId("")
+                        .setPropertyId(0)
+                        .setStatements(new ArrayList<>())
+                        .setIsOutgoing(false)
+                        .build(),
+                (aggKey, newValue, aggValue) -> {
+                    aggValue.setProjectId(aggKey.getProjectId());
+                    aggValue.setEntityId(aggKey.getEntityId());
+                    aggValue.setPropertyId(aggKey.getPropertyId());
+                    List<ProjectStatementValue> statements = aggValue.getStatements();
+                    var newStatements = TopStatementAdder.addStatement(statements, newValue, false);
+                    aggValue.setStatements(newStatements);
+                    return aggValue;
+                },
+                Materialized.<ProjectTopStatementsKey, ProjectTopStatementsValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_incoming_statements_aggregate)
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
                         .withValueSerde(avroSerdes.ProjectTopStatementsValue())
         );
 
 
-        var aggregatedStream = aggregatedTable.toStream();
+        var aggregatedStream = aggregatedTable.toStream()
+                .mapValues((readOnlyKey, value) -> value);
 
         /* SINK PROCESSORS */
 
@@ -124,7 +163,7 @@ public class ProjectTopIncomingStatements {
     public enum inner {
         TOPICS;
         public final String project_top_incoming_statements_group_by = "project_top_incoming_statements_group_by";
-
+        public final String project_top_incoming_statements_aggregate = "project_top_incoming_statements_aggregate";
         public final String project_top_incoming_statements_join_subject_entity_label = "project_top_incoming_statements_join_subject_entity_label";
 
     }
