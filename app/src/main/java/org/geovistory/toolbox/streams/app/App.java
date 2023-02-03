@@ -54,6 +54,7 @@ class App {
         var proProfileProjRelTable = inputTopics.proProfileProjRelTable();
         var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
         var infResourceTable = inputTopics.infResourceTable();
+        var infResourceStream = inputTopics.infResourceStream();
         var infStatementTable = inputTopics.infStatementTable();
         var infLanguageStream = inputTopics.infLanguageStream();
         var infAppellationStream = inputTopics.infAppellationStream();
@@ -72,7 +73,8 @@ class App {
         var proEntityLabelConfigStream = inputTopics.proEntityLabelConfigStream();
 
         // register output topics as KTables
-        var statementEnrichedTable = outputTopics.statementEnrichedTable();
+        var statementWithEntityTable = outputTopics.statementWithEntityTable();
+        var statementWithLiteralTable = outputTopics.statementWithLiteralTable();
         var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
         var projectPropertyLabelTable = outputTopics.projectPropertyLabelTable();
         var projectEntityTopStatementsTable = outputTopics.projectEntityTopStatementsTable();
@@ -133,7 +135,7 @@ class App {
         // add sub-topology StatementEnriched
         StatementEnriched.addProcessors(builder,
                 infStatementTable,
-                infResourceTable,
+                infResourceStream,
                 infLanguageStream,
                 infAppellationStream,
                 infLangStringStream,
@@ -144,22 +146,29 @@ class App {
                 tabCellStream
         );
 
-        // add sub-topology ProjectStatement
-        ProjectStatement.addProcessors(builder,
-                statementEnrichedTable,
-                proInfoProjRelTable,
-                projectEntityLabelTable
+        // add sub-topology ProjectStatementWithEntity
+        ProjectStatementWithEntity.addProcessors(builder,
+                statementWithEntityTable,
+                proInfoProjRelTable
         );
-        var projectStatementTable = outputTopics.projectStatementTable();
+        var projectStatementWithEntityTable = outputTopics.projectStatementWithEntityTable();
 
+        // add sub-topology ProjectStatementWithLiteral
+        var projectStatementWithLiteral = ProjectStatementWithLiteral.addProcessors(builder,
+                statementWithLiteralTable,
+                proInfoProjRelTable
+        );
         // add sub-topology ProjectTopIncomingStatements
         var projectTopIncomingStatements = ProjectTopIncomingStatements.addProcessors(builder,
-                projectStatementTable
+                projectStatementWithEntityTable,
+                projectEntityLabelTable
         );
 
         // add sub-topology ProjectTopOutgoingStatements
         var projectTopOutgoingStatements = ProjectTopOutgoingStatements.addProcessors(builder,
-                projectStatementTable
+                projectStatementWithLiteral.ProjectStatementStream(),
+                projectStatementWithEntityTable,
+                projectEntityLabelTable
         );
 
         // add sub-topology ProjectTopStatements
@@ -276,10 +285,12 @@ class App {
                 ProjectEntity.output.TOPICS.project_entity,
                 ProjectClassLabel.output.TOPICS.project_class_label,
                 ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
-                StatementEnriched.output.TOPICS.statement_enriched,
+                StatementEnriched.output.TOPICS.statement_with_entity,
+                StatementEnriched.output.TOPICS.statement_with_literal,
+                StatementEnriched.output.TOPICS.statement_other,
                 ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config_enriched,
                 CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config,
-                ProjectStatement.output.TOPICS.project_statement,
+                ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity,
                 ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
                 ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
                 ProjectTopStatements.output.TOPICS.project_top_statements,

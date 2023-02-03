@@ -10,10 +10,7 @@ import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
-import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
-import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
-import org.geovistory.toolbox.streams.avro.ProjectTopStatementsKey;
-import org.geovistory.toolbox.streams.avro.ProjectTopStatementsValue;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.utils.TopStatementAdder;
@@ -32,22 +29,41 @@ public class ProjectTopIncomingStatements {
 
         return addProcessors(
                 builder,
-                registerOutputTopic.projectStatementTable()
+                registerOutputTopic.projectStatementWithEntityTable(),
+                registerOutputTopic.projectEntityLabelTable()
         ).builder().build();
     }
 
-    //    public static ProjectStatementReturnValue addProcessors(
     public static ProjectTopStatementsReturnValue addProcessors(
             StreamsBuilder builder,
-            KTable<ProjectStatementKey, ProjectStatementValue> projectStatementTable) {
+            KTable<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityTable,
+            KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
         // 2)
+        // join subject entity labels to get subject label
+        var joinedSubjectEntityLabelsTable = projectStatementWithEntityTable.join(
+                projectEntityLabelTable,
+                projectStatementValue -> ProjectEntityKey.newBuilder()
+                        .setEntityId(projectStatementValue.getStatement().getSubjectId())
+                        .setProjectId(projectStatementValue.getProjectId())
+                        .build(),
+                (projectStatementValue, projectEntityLabelValue) -> {
+                    if (projectEntityLabelValue != null && projectEntityLabelValue.getLabel() != null) {
+                        projectStatementValue.getStatement().setSubjectLabel(projectEntityLabelValue.getLabel());
+                    }
+                    return projectStatementValue;
+                },
+                Materialized.<ProjectStatementKey, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_incoming_statements_join_subject_entity_label)
+                        .withKeySerde(avroSerdes.ProjectStatementKey())
+                        .withValueSerde(avroSerdes.ProjectStatementValue())
+        );
 
-        var grouped = projectStatementTable.groupBy(
+        // 4
+        var grouped = joinedSubjectEntityLabelsTable.groupBy(
                 (key, value) -> KeyValue.pair(
                         ProjectTopStatementsKey.newBuilder()
                                 .setProjectId(value.getProjectId())
@@ -61,7 +77,7 @@ public class ProjectTopIncomingStatements {
                         .with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectStatementValue())
                         .withName(inner.TOPICS.project_top_incoming_statements_group_by)
         );
-        // 3
+        // 5
         var aggregatedTable = grouped.aggregate(
                 () -> ProjectTopStatementsValue.newBuilder()
                         .setProjectId(0)
@@ -100,13 +116,17 @@ public class ProjectTopIncomingStatements {
 
     public enum input {
         TOPICS;
-        public final String project_statement = ProjectStatement.output.TOPICS.project_statement;
+        public final String project_statement_with_entity = ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity;
+        public final String project_entity_label = ProjectEntityLabel.output.TOPICS.project_entity_label;
     }
 
 
     public enum inner {
         TOPICS;
         public final String project_top_incoming_statements_group_by = "project_top_incoming_statements_group_by";
+
+        public final String project_top_incoming_statements_join_subject_entity_label = "project_top_incoming_statements_join_subject_entity_label";
+
     }
 
     public enum output {

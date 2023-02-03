@@ -5,10 +5,7 @@ import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
@@ -16,6 +13,8 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
+
+import java.util.Map;
 
 
 public class StatementEnriched {
@@ -32,7 +31,7 @@ public class StatementEnriched {
         return addProcessors(
                 builder,
                 registerInputTopic.infStatementTable(),
-                registerInputTopic.infResourceTable(),
+                registerInputTopic.infResourceStream(),
                 registerInputTopic.infLanguageStream(),
                 registerInputTopic.infAppellationStream(),
                 registerInputTopic.infLangStringStream(),
@@ -47,25 +46,34 @@ public class StatementEnriched {
     public static StatementEnrichedReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable,
-            KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
-            KStream<dev.information.language.Key, dev.information.language.Value> infLanguageTable,
-            KStream<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationTable,
-            KStream<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringTable,
-            KStream<dev.information.place.Key, dev.information.place.Value> infPlaceTable,
-            KStream<dev.information.time_primitive.Key, dev.information.time_primitive.Value> infTimePrimitiveTable,
-            KStream<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionTable,
-            KStream<dev.data.digital.Key, dev.data.digital.Value> datDigitalTable,
-            KStream<dev.tables.cell.Key, dev.tables.cell.Value> tabCellTable
+            KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
+            KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream,
+            KStream<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationStream,
+            KStream<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringStream,
+            KStream<dev.information.place.Key, dev.information.place.Value> infPlaceStream,
+            KStream<dev.information.time_primitive.Key, dev.information.time_primitive.Value> infTimePrimitiveStream,
+            KStream<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionStream,
+            KStream<dev.data.digital.Key, dev.data.digital.Value> datDigitalStream,
+            KStream<dev.tables.cell.Key, dev.tables.cell.Value> tabCellStream
 
 
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
-        // Map languages to literals
-        var languageLiterals = infLanguageTable.map((key, value) -> KeyValue.pair(
-                LiteralKey.newBuilder().setId("i" + value.getPkEntity()).build(),
-                LiteralValue.newBuilder().setId("i" + value.getPkEntity())
+        // Map entities to objects
+        var entityObjects = infResourceTable.map((key, value) -> KeyValue.pair(
+                ObjectKey.newBuilder().setId("i" + value.getPkEntity()).build(),
+                ObjectValue.newBuilder().setId("i" + value.getPkEntity())
+                        .setEntity(tranformEntity(value))
+                        .setClassId(value.getFkClass())
+                        .build()
+        ));
+
+        // Map languages to objects
+        var languageObjects = infLanguageStream.map((key, value) -> KeyValue.pair(
+                ObjectKey.newBuilder().setId("i" + value.getPkEntity()).build(),
+                ObjectValue.newBuilder().setId("i" + value.getPkEntity())
                         .setLanguage(tranformLanguage(value))
                         .setClassId(value.getFkClass())
                         .setLabel(value.getNotes())
@@ -73,12 +81,12 @@ public class StatementEnriched {
         ));
 
 
-        // Map appellations to literals
-        var appellationLiterals = infAppellationTable.map((key, value) -> {
+        // Map appellations to objects
+        var appellationObjects = infAppellationStream.map((key, value) -> {
             var transformedValue = tranformAppellation(value);
             return KeyValue.pair(
-                    LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                    LiteralValue.newBuilder().setId("i" + key.getPkEntity())
+                    ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                    ObjectValue.newBuilder().setId("i" + key.getPkEntity())
                             .setAppellation(transformedValue)
                             .setClassId(value.getFkClass())
                             .setLabel(transformedValue.getString())
@@ -86,12 +94,12 @@ public class StatementEnriched {
             );
         });
 
-        // Map langStrings to literals
-        var langStringLiterals = infLangStringTable.map((key, value) -> {
+        // Map langStrings to objects
+        var langStringObjects = infLangStringStream.map((key, value) -> {
             var transformedValue = tranformLangString(value);
             return KeyValue.pair(
-                    LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                    LiteralValue.newBuilder().setId("i" + key.getPkEntity())
+                    ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                    ObjectValue.newBuilder().setId("i" + key.getPkEntity())
                             .setLangString(transformedValue)
                             .setClassId(value.getFkClass())
                             .setLabel(transformedValue.getString())
@@ -99,15 +107,15 @@ public class StatementEnriched {
             );
         });
 
-        // Map places to literals
-        var placeLiterals = infPlaceTable.map((key, value) -> {
+        // Map places to objects
+        var placeObjects = infPlaceStream.map((key, value) -> {
                     var wkb = value.getGeoPoint().getWkb();
                     var point = GeoUtils.bytesToPoint(wkb);
                     var x = point.getX();
                     var y = point.getY();
                     return KeyValue.pair(
-                            LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                            LiteralValue.newBuilder().setId("i" + key.getPkEntity())
+                            ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                            ObjectValue.newBuilder().setId("i" + key.getPkEntity())
                                     .setPlace(tranformPlace(value))
                                     .setClassId(value.getFkClass())
                                     .setLabel(
@@ -117,10 +125,10 @@ public class StatementEnriched {
                 }
         );
 
-        // Map timePrimitives to literals
-        var timePrimitiveLiterals = infTimePrimitiveTable.map((key, value) -> KeyValue.pair(
-                        LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                        LiteralValue.newBuilder().setId("i" + key.getPkEntity())
+        // Map timePrimitives to objects
+        var timePrimitiveObjects = infTimePrimitiveStream.map((key, value) -> KeyValue.pair(
+                        ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                        ObjectValue.newBuilder().setId("i" + key.getPkEntity())
                                 .setTimePrimitive(tranformTimePrimitive(value))
                                 .setClassId(value.getFkClass())
                                 .setLabel(null)
@@ -128,10 +136,10 @@ public class StatementEnriched {
                 )
         );
 
-        // Map dimensions to literals
-        var dimensionLiterals = infDimensionTable.map((key, value) -> KeyValue.pair(
-                        LiteralKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                        LiteralValue.newBuilder().setId("i" + key.getPkEntity())
+        // Map dimensions to objects
+        var dimensionObjects = infDimensionStream.map((key, value) -> KeyValue.pair(
+                        ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                        ObjectValue.newBuilder().setId("i" + key.getPkEntity())
                                 .setDimension(tranformDimension(value))
                                 .setClassId(value.getFkClass())
                                 .setLabel(value.getNumericValue() + "")
@@ -139,10 +147,10 @@ public class StatementEnriched {
                 )
         );
 
-        // Map digital (table value) to literals
-        var tableValueLiteral = datDigitalTable.map((key, value) -> KeyValue.pair(
-                        LiteralKey.newBuilder().setId("d" + key.getPkEntity()).build(),
-                        LiteralValue.newBuilder().setId("d" + key.getPkEntity())
+        // Map digital (table value) to objects
+        var tableValueLiteral = datDigitalStream.map((key, value) -> KeyValue.pair(
+                        ObjectKey.newBuilder().setId("d" + key.getPkEntity()).build(),
+                        ObjectValue.newBuilder().setId("d" + key.getPkEntity())
                                 .setDigital(tranformDigital(value))
                                 .setClassId(936) // https://ontome.net/ontology/c936
                                 .setLabel(null)
@@ -150,10 +158,10 @@ public class StatementEnriched {
                 )
         );
 
-        // Map cell to literals
-        var cellLiteral = tabCellTable.map((key, value) -> KeyValue.pair(
-                        LiteralKey.newBuilder().setId("t" + key.getPkCell()).build(),
-                        LiteralValue.newBuilder().setId("t" + key.getPkCell())
+        // Map cell to objects
+        var cellLiteral = tabCellStream.map((key, value) -> KeyValue.pair(
+                        ObjectKey.newBuilder().setId("t" + key.getPkCell()).build(),
+                        ObjectValue.newBuilder().setId("t" + key.getPkCell())
                                 .setCell(tranformCell(value))
                                 .setClassId(521) // https://ontome.net/ontology/c521
                                 .setLabel(null)
@@ -161,66 +169,59 @@ public class StatementEnriched {
                 )
         );
 
-        var literals = languageLiterals
-                .merge(appellationLiterals)
-                .merge(langStringLiterals)
-                .merge(placeLiterals)
-                .merge(timePrimitiveLiterals)
-                .merge(dimensionLiterals)
+        var objects = entityObjects
+                .merge(languageObjects)
+                .merge(appellationObjects)
+                .merge(langStringObjects)
+                .merge(placeObjects)
+                .merge(timePrimitiveObjects)
+                .merge(dimensionObjects)
                 .merge(tableValueLiteral)
                 .merge(cellLiteral);
 
-        var literalTable = literals.toTable(
-                Materialized.<LiteralKey, LiteralValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.literals)
+        var literalTable = objects.toTable(
+                Materialized.<ObjectKey, ObjectValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.literals)
                         .withKeySerde(avroSerdes.LiteralKey())
                         .withValueSerde(avroSerdes.LiteralValue())
         );
 
-        var statementJoinedWithLiteralTable = infStatementTable.join(
+        var statementJoinedWithObjectTable = infStatementTable.join(
                 literalTable,
-                value -> LiteralKey.newBuilder()
+                value -> ObjectKey.newBuilder()
                         .setId(getObjectStringId(value))
                         .build(),
-                (statement, literal) -> StatementEnrichedValue.newBuilder()
+                (statement, object) -> StatementEnrichedValue.newBuilder()
                         .setSubjectId(getSubjectStringId(statement))
                         .setPropertyId(statement.getFkProperty())
                         .setObjectId(getObjectStringId(statement))
-                        .setObjectLabel(literal == null ? null : literal.getLabel())
-                        .setObjectLiteral(literal)
-                        .setObjectClassId(literal  == null ? null : literal.getClassId())
+                        .setObjectLabel(object == null ? null : object.getLabel())
+                        .setObjectLiteral(object)
+                        .setObjectClassId(object == null ? null : object.getClassId())
                         .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
                         .build(),
-                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_literal)
-                        .withKeySerde(avroSerdes.InfStatementKey())
-                        .withValueSerde(avroSerdes.StatementEnrichedValue())
-        );
-        var statementJoinedWithEntityTable = infStatementTable.join(
-                infResourceTable,
-                value -> dev.information.resource.Key.newBuilder()
-                        .setPkEntity(value.getFkObjectInfo())
-                        .build(),
-                (statement, entity) -> StatementEnrichedValue.newBuilder()
-                        .setSubjectId(getSubjectStringId(statement))
-                        .setPropertyId(statement.getFkProperty())
-                        .setObjectId(getObjectStringId(statement))
-                        .setObjectClassId(entity.getFkClass())
-                        .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
-                        .build(),
-                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_entity)
+                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_object)
                         .withKeySerde(avroSerdes.InfStatementKey())
                         .withValueSerde(avroSerdes.StatementEnrichedValue())
         );
 
-        var statementJoinedWithLiteralStream = statementJoinedWithLiteralTable.toStream();
-        var statementJoinedWithEntityStream = statementJoinedWithEntityTable.toStream();
+        var stream = statementJoinedWithObjectTable.toStream();
+        Map<String, KStream<dev.information.statement.Key, StatementEnrichedValue>> branches =
+                stream.split(Named.as("Branch-"))
+                        .branch((key, value) -> value.getObjectLiteral().getEntity() != null,  /* first predicate  */
+                                Branched.as("Entity"))
+                        .branch((key, value) -> value.getObjectLiteral().getEntity() == null,  /* second predicate */
+                                Branched.as("Literal"))
+                        .defaultBranch(Branched.as("Other"));          /* default branch */
 
+        var e = branches.get("Branch-Entity"); // contains all records whose objects are entities
+        var l = branches.get("Branch-Literal"); // contains all records whose objects are literals
+        var o = branches.get("Branch-Other"); // contains all other records
 
-        var statementsEnrichedStream = statementJoinedWithLiteralStream.merge(statementJoinedWithEntityStream);
+        e.to(output.TOPICS.statement_with_entity, Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
+        l.to(output.TOPICS.statement_with_literal, Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
+        o.to(output.TOPICS.statement_other, Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
 
-        statementsEnrichedStream.to(output.TOPICS.statement_enriched,
-                Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
-
-        return new StatementEnrichedReturnValue(builder, statementsEnrichedStream);
+        return new StatementEnrichedReturnValue(builder, stream);
 
     }
 
@@ -258,6 +259,17 @@ public class StatementEnriched {
         else if (value.getFkSubjectTablesCell() > 0) id = "t" + value.getFkSubjectTablesCell();
         else if (value.getFkSubjectData() > 0) id = "d" + value.getFkSubjectData();
         return id;
+    }
+
+    /**
+     * @param infEntity the value from the database
+     * @return a projected, more lightweight, value
+     */
+    private static Entity tranformEntity(dev.information.resource.Value infEntity) {
+        return Entity.newBuilder()
+                .setPkEntity(infEntity.getPkEntity())
+                .setFkClass(infEntity.getFkClass())
+                .build();
     }
 
     /**
@@ -368,7 +380,6 @@ public class StatementEnriched {
                 .build();
     }
 
-
     public enum input {
         TOPICS;
         public final String inf_statement = DbTopicNames.inf_statement.getName();
@@ -387,13 +398,14 @@ public class StatementEnriched {
     public enum inner {
         TOPICS;
         public final String literals = "literals";
-        public final String statement_joined_with_literal = "statement_joined_with_literal";
-        public final String statement_joined_with_entity = "statement_joined_with_entity";
+        public final String statement_joined_with_object = "statement_joined_with_object";
     }
 
     public enum output {
         TOPICS;
-        public final String statement_enriched = Utils.tsPrefixed("statement_enriched");
+        public final String statement_with_entity = Utils.tsPrefixed("statement_with_entity");
+        public final String statement_with_literal = Utils.tsPrefixed("statement_with_literal");
+        public final String statement_other = Utils.tsPrefixed("statement_other");
     }
 
 }

@@ -11,12 +11,14 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
-import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
+import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 
-public class ProjectStatement {
+public class ProjectStatementWithEntity {
 
     public static void main(String[] args) {
         System.out.println(buildStandalone(new StreamsBuilder()).describe());
@@ -28,17 +30,15 @@ public class ProjectStatement {
 
         return addProcessors(
                 builder,
-                registerOutputTopic.statementEnrichedTable(),
-                registerInputTopic.proInfoProjRelTable(),
-                registerOutputTopic.projectEntityLabelTable()
+                registerOutputTopic.statementWithEntityTable(),
+                registerInputTopic.proInfoProjRelTable()
         ).builder().build();
     }
 
     public static ProjectStatementReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<dev.information.statement.Key, StatementEnrichedValue> enrichedStatementTable,
-            KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable,
-            KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable) {
+            KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
@@ -68,46 +68,13 @@ public class ProjectStatement {
                             .setDeleted$1(deleted)
                             .build();
                 },
-                Materialized.<dev.projects.info_proj_rel.Key, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_join)
+                Materialized.<dev.projects.info_proj_rel.Key, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_with_entity_join)
                         .withKeySerde(avroSerdes.ProInfoProjRelKey())
                         .withValueSerde(avroSerdes.ProjectStatementValue())
         );
 
-        // join subject entity labels to get subject label
-        var joinSubjectEntityLabel = projectStatementJoin.leftJoin(
-                projectEntityLabelTable,
-                projectStatementValue -> ProjectEntityKey.newBuilder()
-                        .setEntityId(projectStatementValue.getStatement().getSubjectId())
-                        .setProjectId(projectStatementValue.getProjectId())
-                        .build(),
-                (projectStatementValue, projectEntityLabelValue) -> {
-                    if (projectEntityLabelValue != null && projectEntityLabelValue.getLabel() != null) {
-                        projectStatementValue.getStatement().setSubjectLabel(projectEntityLabelValue.getLabel());
-                    }
-                    return projectStatementValue;
-                },
-                Materialized.<dev.projects.info_proj_rel.Key, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_join_subject_entity_label)
-                        .withKeySerde(avroSerdes.ProInfoProjRelKey())
-                        .withValueSerde(avroSerdes.ProjectStatementValue())
-        );
 
-        // join object entity labels to get object label
-        var projectStatementTable = joinSubjectEntityLabel.leftJoin(projectEntityLabelTable,
-                projectStatementValue -> ProjectEntityKey.newBuilder()
-                        .setEntityId(projectStatementValue.getStatement().getObjectId())
-                        .setProjectId(projectStatementValue.getProjectId())
-                        .build(),
-                (projectStatementValue, projectEntityLabelValue) -> {
-                    if (projectEntityLabelValue != null && projectEntityLabelValue.getLabel() != null) {
-                        projectStatementValue.getStatement().setObjectLabel(projectEntityLabelValue.getLabel());
-                    }
-                    return projectStatementValue;
-                },
-                Materialized.<dev.projects.info_proj_rel.Key, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_join_object_entity_label)
-                        .withKeySerde(avroSerdes.ProInfoProjRelKey())
-                        .withValueSerde(avroSerdes.ProjectStatementValue()));
-
-        var projectStatementStream = projectStatementTable
+        var projectStatementStream = projectStatementJoin
                 .toStream()
                 .map((key, value) -> {
                     var k = ProjectStatementKey.newBuilder()
@@ -121,7 +88,7 @@ public class ProjectStatement {
 
         /* SINK PROCESSORS */
 
-        projectStatementStream.to(output.TOPICS.project_statement,
+        projectStatementStream.to(output.TOPICS.project_statement_with_entity,
                 Produced.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue()));
 
         return new ProjectStatementReturnValue(builder, projectStatementStream);
@@ -132,21 +99,19 @@ public class ProjectStatement {
     public enum input {
         TOPICS;
         public final String pro_info_proj_rel = DbTopicNames.pro_info_proj_rel.getName();
-        public final String statement_enriched = StatementEnriched.output.TOPICS.statement_enriched;
-        public final String project_entity_label = ProjectEntityLabel.output.TOPICS.project_entity_label;
+        public final String statement_with_entity = StatementEnriched.output.TOPICS.statement_with_entity;
     }
 
 
     public enum inner {
         TOPICS;
-        public final String project_statement_join = "project_statement_join";
-        public final String project_statement_join_subject_entity_label = "project_statement_join_subject_entity_label";
-        public final String project_statement_join_object_entity_label = "project_statement_join_object_entity_label";
+        public final String project_statement_with_entity_join = "project_statement_with_entity_join";
+
     }
 
     public enum output {
         TOPICS;
-        public final String project_statement = Utils.tsPrefixed("project_statement");
+        public final String project_statement_with_entity = Utils.tsPrefixed("project_statement_with_entity");
     }
 
 }

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,7 @@ class ProjectTopOutgoingStatementsTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
     private TestInputTopic<ProjectStatementKey, ProjectStatementValue> projectStatementTopic;
+    private TestInputTopic<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTopic;
     private TestOutputTopic<ProjectTopStatementsKey, ProjectTopStatementsValue> outputTopic;
 
     @BeforeEach
@@ -46,6 +48,10 @@ class ProjectTopOutgoingStatementsTest {
                 avroSerdes.ProjectStatementKey().serializer(),
                 avroSerdes.ProjectStatementValue().serializer());
 
+        projectEntityLabelTopic = testDriver.createInputTopic(
+                ProjectTopOutgoingStatements.input.TOPICS.project_entity_label,
+                avroSerdes.ProjectEntityKey().serializer(),
+                avroSerdes.ProjectEntityLabelValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
                 ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
@@ -275,4 +281,55 @@ class ProjectTopOutgoingStatementsTest {
     }
 
 
+    @Test
+    void testJoinEntityLabels() {
+        var projectId = 10;
+        var propertyId = 30;
+        var subjectId = "i1";
+        var objectId = "i2";
+
+        // add statement
+        var k = ProjectStatementKey.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(1)
+                .build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(3)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setPropertyId(propertyId)
+                                .setObjectId(objectId)
+                                .build()
+                )
+                .setOrdNumOfRange(3)
+                .build();
+        projectStatementTopic.pipeInput(k, v);
+
+        // add subject entity label
+        var kSE = ProjectEntityKey.newBuilder().setEntityId(subjectId).setProjectId(projectId).build();
+        var vSE = ProjectEntityLabelValue.newBuilder().setEntityId(subjectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Jack").build();
+        projectEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // add object entity label
+        var kOE = ProjectEntityKey.newBuilder().setEntityId(objectId).setProjectId(projectId).build();
+        var vOE = ProjectEntityLabelValue.newBuilder().setEntityId(objectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Maria").build();
+        projectEntityLabelTopic.pipeInput(kOE, vOE);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId)
+                .setIsOutgoing(true)
+                .setEntityId(subjectId)
+                .setPropertyId(propertyId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getStatements().get(0).getStatement().getSubjectLabel()).isEqualTo(null);
+        assertThat(record.getStatements().get(0).getStatement().getObjectLabel()).isEqualTo("Maria");
+    }
 }

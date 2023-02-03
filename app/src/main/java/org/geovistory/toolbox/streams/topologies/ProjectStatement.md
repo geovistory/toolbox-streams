@@ -20,7 +20,7 @@ flowchart TD
     subgraph __2
         2a([Join])
     end  
-        subgraph __3
+    subgraph __3
         3a([LeftJoin])
     end
     subgraph __4

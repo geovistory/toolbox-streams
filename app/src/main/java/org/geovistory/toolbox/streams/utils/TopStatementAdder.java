@@ -74,7 +74,7 @@ public class TopStatementAdder {
         if (targetPosition > -1) {
             existingList.add(targetPosition, newItem);
             // if it was inserted before the replaced item...
-            if (targetPosition < replacedItemPosition) {
+            if (targetPosition <= replacedItemPosition) {
                 // ...increase replace item position
                 replacedItemPosition = replacedItemPosition + 1;
             }

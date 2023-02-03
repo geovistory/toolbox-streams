@@ -4,16 +4,10 @@ import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Grouped;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
-import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
-import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
-import org.geovistory.toolbox.streams.avro.ProjectTopStatementsKey;
-import org.geovistory.toolbox.streams.avro.ProjectTopStatementsValue;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.utils.TopStatementAdder;
@@ -32,14 +26,17 @@ public class ProjectTopOutgoingStatements {
 
         return addProcessors(
                 builder,
-                registerOutputTopic.projectStatementTable()
+                registerOutputTopic.projectStatementWithLiteralStream(),
+                registerOutputTopic.projectStatementWithEntityTable(),
+                registerOutputTopic.projectEntityLabelTable()
         ).builder().build();
     }
 
-    //    public static ProjectStatementReturnValue addProcessors(
     public static ProjectTopStatementsReturnValue addProcessors(
             StreamsBuilder builder,
-            KTable<ProjectStatementKey, ProjectStatementValue> projectStatementTable) {
+            KStream<ProjectStatementKey, ProjectStatementValue> projectStatementsWithLiteralStream,
+            KTable<ProjectStatementKey, ProjectStatementValue> projectStatementsWithEntityTable,
+            KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
@@ -47,7 +44,29 @@ public class ProjectTopOutgoingStatements {
         /* STREAM PROCESSORS */
         // 2)
 
-        var grouped = projectStatementTable.groupBy(
+        // join object entity labels to get object label
+        var joinedObjectEntityLabelsTable = projectStatementsWithEntityTable.leftJoin(projectEntityLabelTable,
+                projectStatementValue -> ProjectEntityKey.newBuilder()
+                        .setEntityId(projectStatementValue.getStatement().getObjectId())
+                        .setProjectId(projectStatementValue.getProjectId())
+                        .build(),
+                (projectStatementValue, projectEntityLabelValue) -> {
+                    if (projectEntityLabelValue != null && projectEntityLabelValue.getLabel() != null) {
+                        projectStatementValue.getStatement().setObjectLabel(projectEntityLabelValue.getLabel());
+                    }
+                    return projectStatementValue;
+                },
+                Materialized.<ProjectStatementKey, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_outgoing_statements_join_object_entity_label)
+                        .withKeySerde(avroSerdes.ProjectStatementKey())
+                        .withValueSerde(avroSerdes.ProjectStatementValue()));
+        // 3
+        var statementsStream = joinedObjectEntityLabelsTable.toStream().merge(projectStatementsWithLiteralStream);
+        var statementsTable = statementsStream.toTable(
+                Named.as(inner.TOPICS.project_outgoing_statements),
+                Materialized.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue())
+        );
+        // 3
+        var grouped = statementsTable.groupBy(
                 (key, value) -> KeyValue.pair(
                         ProjectTopStatementsKey.newBuilder()
                                 .setProjectId(value.getProjectId())
@@ -61,7 +80,8 @@ public class ProjectTopOutgoingStatements {
                         .with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectStatementValue())
                         .withName(inner.TOPICS.project_top_outgoing_statements_group_by)
         );
-        // 3
+
+        // 4
         var aggregatedTable = grouped.aggregate(
                 () -> ProjectTopStatementsValue.newBuilder()
                         .setProjectId(0)
@@ -100,13 +120,18 @@ public class ProjectTopOutgoingStatements {
 
     public enum input {
         TOPICS;
-        public final String project_statement = ProjectStatement.output.TOPICS.project_statement;
+        public final String project_statement = ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity;
+        public final String project_entity_label = ProjectEntityLabel.output.TOPICS.project_entity_label;
+
     }
 
 
     public enum inner {
         TOPICS;
         public final String project_top_outgoing_statements_group_by = "project_top_outgoing_statements_group_by";
+        public final String project_top_outgoing_statements_join_object_entity_label = "project_top_outgoing_statements_join_object_entity_label";
+        public final String project_outgoing_statements = "project_outgoing_statements";
+
     }
 
     public enum output {

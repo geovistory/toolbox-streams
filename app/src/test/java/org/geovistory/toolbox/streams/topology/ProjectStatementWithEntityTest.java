@@ -2,27 +2,27 @@ package org.geovistory.toolbox.streams.topology;
 
 
 import org.apache.kafka.streams.*;
-import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
+import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.topologies.ProjectStatement;
+import org.geovistory.toolbox.streams.topologies.ProjectStatementWithEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ProjectStatementTest {
+class ProjectStatementWithEntityTest {
 
-    private static final String SCHEMA_REGISTRY_SCOPE = ProjectStatementTest.class.getName();
+    private static final String SCHEMA_REGISTRY_SCOPE = ProjectStatementWithEntityTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
     private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> infStatementTopic;
     private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
-    private TestInputTopic<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTopic;
     private TestOutputTopic<ProjectStatementKey, ProjectStatementValue> outputTopic;
 
     @BeforeEach
@@ -36,29 +36,24 @@ class ProjectStatementTest {
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
         AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = ProjectStatement.buildStandalone(new StreamsBuilder());
+        Topology topology = ProjectStatementWithEntity.buildStandalone(new StreamsBuilder());
 
         testDriver = new TopologyTestDriver(topology, props);
 
         var avroSerdes = new ConfluentAvroSerdes();
 
         infStatementTopic = testDriver.createInputTopic(
-                ProjectStatement.input.TOPICS.statement_enriched,
+                ProjectStatementWithEntity.input.TOPICS.statement_with_entity,
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer());
 
         proInfoProjRelTopic = testDriver.createInputTopic(
-                ProjectStatement.input.TOPICS.pro_info_proj_rel,
+                ProjectStatementWithEntity.input.TOPICS.pro_info_proj_rel,
                 avroSerdes.ProInfoProjRelKey().serializer(),
                 avroSerdes.ProInfoProjRelValue().serializer());
 
-        projectEntityLabelTopic = testDriver.createInputTopic(
-                ProjectStatement.input.TOPICS.project_entity_label,
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityLabelValue().serializer());
-
         outputTopic = testDriver.createOutputTopic(
-                ProjectStatement.output.TOPICS.project_statement,
+                ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity,
                 avroSerdes.ProjectStatementKey().deserializer(),
                 avroSerdes.ProjectStatementValue().deserializer());
     }
@@ -302,59 +297,6 @@ class ProjectStatementTest {
         assertThat(outRecords.containsKey(resultingKeyTwo)).isTrue();
     }
 
-    @Test
-    void testJoinEntityLabels() {
-        var projectId = 10;
-        var statementId = 20;
-        var propertyId = 30;
-        var subjectId = "i1";
-        var objectId = "i2";
-        // add relation between project and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
-                .setFkEntity(statementId)
-                .setFkProject(projectId)
-                .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
-                .setSchemaName("")
-                .setTableName("")
-                .setEntityVersion(1)
-                .setFkEntity(statementId)
-                .setFkProject(projectId)
-                .setIsInProject(true)
-                .build();
-        proInfoProjRelTopic.pipeInput(kR, vR);
 
-        // add statement
-        var kS = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
-        var vS = StatementEnrichedValue.newBuilder()
-                .setSubjectId(subjectId)
-                .setPropertyId(propertyId)
-                .setObjectId(objectId)
-                .build();
-        infStatementTopic.pipeInput(kS, vS);
-
-        // add subject entity label
-        var kSE = ProjectEntityKey.newBuilder().setEntityId(subjectId).setProjectId(projectId).build();
-        var vSE = ProjectEntityLabelValue.newBuilder().setEntityId(subjectId).setProjectId(projectId)
-                .setLabelSlots(List.of("")).setLabel("Jack").build();
-        projectEntityLabelTopic.pipeInput(kSE, vSE);
-
-        // add object entity label
-        var kOE = ProjectEntityKey.newBuilder().setEntityId(objectId).setProjectId(projectId).build();
-        var vOE = ProjectEntityLabelValue.newBuilder().setEntityId(objectId).setProjectId(projectId)
-                .setLabelSlots(List.of("")).setLabel("Maria").build();
-        projectEntityLabelTopic.pipeInput(kOE, vOE);
-
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
-        assertThat(outRecords).hasSize(1);
-        var resultingKey = ProjectStatementKey.newBuilder()
-                .setProjectId(projectId)
-                .setStatementId(statementId)
-                .build();
-        var record = outRecords.get(resultingKey);
-        assertThat(record.getStatement().getSubjectLabel()).isEqualTo("Jack");
-        assertThat(record.getStatement().getObjectLabel()).isEqualTo("Maria");
-    }
 
 }

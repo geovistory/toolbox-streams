@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "name": "LiteralValue",
+  "name": "ObjectValue",
   "namespace": "org.geovistory.toolbox.streams.avro",
   "doc": "Value of a literal (object of a statement)",
   "fields": [
@@ -18,6 +18,14 @@
       "type": [
         "null",
         "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "entity",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.Entity"
       ],
       "default": null
     },

@@ -64,6 +64,13 @@ public class RegisterInputTopic {
                 .toTable(Materialized.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue()));
     }
 
+    public KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceStream() {
+        return builder.stream(
+                DbTopicNames.inf_resource.getName(),
+                Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
+        );
+    }
+
 
     public KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable() {
         return getRepartitionedTable(

@@ -389,14 +389,14 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<LiteralKey> LiteralKey() {
-        Serde<LiteralKey> serdes = new SpecificAvroSerde<>();
+    public Serde<ObjectKey> LiteralKey() {
+        Serde<ObjectKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
         return serdes;
     }
 
-    public Serde<LiteralValue> LiteralValue() {
-        Serde<LiteralValue> serdes = new SpecificAvroSerde<>();
+    public Serde<ObjectValue> LiteralValue() {
+        Serde<ObjectValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }

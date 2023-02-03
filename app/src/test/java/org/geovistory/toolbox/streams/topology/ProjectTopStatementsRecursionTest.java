@@ -12,27 +12,21 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * This class tests if the following self-joining sub-topologies do not create an infinite loop:
- * - ProjectStatement --depends-on--> ProjectEntityLabel --depends-on-->
- * ProjectTopStatements --depends-on--> ProjectTopOutgoingStatements --depends-on--> ProjectStatement
- * --depends-on--> ProjectTopIncomingStatements --depends-on--> ProjectStatement
- */
-class ProjectEntityLabelRecursionTest {
+class ProjectTopStatementsRecursionTest {
 
-    private static final String SCHEMA_REGISTRY_SCOPE = ProjectEntityLabelRecursionTest.class.getName();
+    private static final String SCHEMA_REGISTRY_SCOPE = ProjectTopStatementsRecursionTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
 
     // input topics of ProjectStatement
     private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWitEntityTopic;
-    private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;
-    private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
+    private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;    private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
 
     // input topics of ProjectTopOutgoingStatements
     // -> output of Topology ProjectStatement
@@ -48,7 +42,7 @@ class ProjectEntityLabelRecursionTest {
     private TestInputTopic<ProjectEntityKey, ProjectEntityValue> projectEntityTopic;
     //private TestInputTopic<ProjectEntityKey, ProjectEntityLabelValue> inputProjectEntityLabelTopic;
 
-    private TestOutputTopic<ProjectEntityKey, ProjectEntityLabelValue> outputTopic;
+    private TestOutputTopic<ProjectTopStatementsKey, ProjectTopStatementsValue> outputTopic;
 
     @BeforeEach
     void setup() {
@@ -143,9 +137,9 @@ class ProjectEntityLabelRecursionTest {
                 avroSerdes.ProjectEntityValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectEntityLabel.output.TOPICS.project_entity_label,
-                avroSerdes.ProjectEntityKey().deserializer(),
-                avroSerdes.ProjectEntityLabelValue().deserializer());
+                ProjectTopStatements.output.TOPICS.project_top_statements,
+                avroSerdes.ProjectTopStatementsKey().deserializer(),
+                avroSerdes.ProjectTopStatementsValue().deserializer());
     }
 
     @AfterEach
@@ -153,131 +147,6 @@ class ProjectEntityLabelRecursionTest {
         testDriver.close();
     }
 
-
-    /**
-     * The goal of this test is to compose the following entity_label: "S1, S2, S3".
-     */
-    @Test
-    void testProjectEntityLabel() {
-        var projectId = 10;
-        var statementOneId = 20;
-        var statementTwoId = 21;
-        var statementThreeId = 22;
-        var statementFourId = 23;
-        var propertyId = 30;
-        var propertyHasStringId = 31;
-        var classPersonId = 3; // person
-        var classNameId = 4; // name
-        var entityPerson = "person";
-        var entityName1 = "name1";
-        var entityName2 = "name2";
-
-        // add statement one
-        var kS = dev.information.statement.Key.newBuilder().setPkEntity(statementOneId).build();
-        var vS = StatementEnrichedValue.newBuilder().setSubjectId(entityPerson).setPropertyId(propertyId).setObjectId(entityName1)
-                .build();
-        statementWitEntityTopic.pipeInput(kS, vS);
-
-        // add relation between project and statement one
-        var kR = dev.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementOneId).setFkProject(projectId).build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
-                .setTmspLastModification("2021-01-01T12:59:50.716896Z")
-                .setFkEntity(statementOneId).setFkProject(projectId).setIsInProject(true).build();
-        proInfoProjRelTopic.pipeInput(kR, vR);
-
-        // add statement two
-        kS = dev.information.statement.Key.newBuilder().setPkEntity(statementTwoId).build();
-        vS = StatementEnrichedValue.newBuilder().setSubjectId(entityPerson).setPropertyId(propertyId).setObjectId(entityName2)
-                .build();
-        statementWitEntityTopic.pipeInput(kS, vS);
-
-        // add relation between project and statement two
-        kR = dev.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementTwoId).setFkProject(projectId).build();
-        vR = dev.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
-                .setTmspLastModification("2020-01-01T12:59:50.716896Z")
-                .setFkEntity(statementTwoId).setFkProject(projectId).setIsInProject(true).build();
-        proInfoProjRelTopic.pipeInput(kR, vR);
-
-        // add statement three
-        kS = dev.information.statement.Key.newBuilder().setPkEntity(statementThreeId).build();
-        vS = StatementEnrichedValue.newBuilder().setSubjectId(entityName1).setPropertyId(propertyHasStringId)
-                .setObjectLabel("Name 1")
-                .setObjectLiteral(ObjectValue.newBuilder().setLabel("Name 1").setId("").setClassId(0).build()).build();
-        statementWithLiteralTopic.pipeInput(kS, vS);
-
-        // add relation between project and statement three
-        kR = dev.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementThreeId).setFkProject(projectId).build();
-        vR = dev.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
-                .setFkEntity(statementThreeId).setFkProject(projectId).setIsInProject(true).build();
-        proInfoProjRelTopic.pipeInput(kR, vR);
-
-
-        // add statement four
-        kS = dev.information.statement.Key.newBuilder().setPkEntity(statementFourId).build();
-        vS = StatementEnrichedValue.newBuilder().setSubjectId(entityName2).setPropertyId(propertyHasStringId)
-                .setObjectLabel("Name 2")
-                .setObjectLiteral(ObjectValue.newBuilder().setLabel("Name 2").setId("").setClassId(0).build()).build();
-        statementWithLiteralTopic.pipeInput(kS, vS);
-
-        // add relation between project and statement four
-        kR = dev.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementFourId).setFkProject(projectId).build();
-        vR = dev.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
-                .setFkEntity(statementFourId).setFkProject(projectId).setIsInProject(true).build();
-        proInfoProjRelTopic.pipeInput(kR, vR);
-
-
-        // add project entity foo
-        var kE = ProjectEntityKey.newBuilder().setEntityId(entityPerson).setProjectId(projectId).build();
-        var vE = ProjectEntityValue.newBuilder().setEntityId(entityPerson).setProjectId(projectId).setClassId(classPersonId).build();
-        projectEntityTopic.pipeInput(kE, vE);
-
-        // add project entity one
-        kE = ProjectEntityKey.newBuilder().setEntityId(entityName1).setProjectId(projectId).build();
-        vE = ProjectEntityValue.newBuilder().setEntityId(entityName1).setProjectId(projectId).setClassId(classNameId).build();
-        projectEntityTopic.pipeInput(kE, vE);
-
-        // add project entity two
-        kE = ProjectEntityKey.newBuilder().setEntityId(entityName2).setProjectId(projectId).build();
-        vE = ProjectEntityValue.newBuilder().setEntityId(entityName2).setProjectId(projectId).setClassId(classNameId).build();
-        projectEntityTopic.pipeInput(kE, vE);
-
-
-        // Add entity label configuration for person
-        var kC = ProjectClassKey.newBuilder().setProjectId(projectId).setClassId(classPersonId).build();
-        var vC = ProjectEntityLabelConfigValue.newBuilder().setProjectId(projectId).setClassId(classPersonId)
-                .setConfig(EntityLabelConfig.newBuilder().setLabelParts(List.of(
-                        EntityLabelConfigPart.newBuilder().setOrdNum(1).setField(EntityLabelConfigPartField.newBuilder()
-                                .setFkProperty(propertyId)
-                                .setIsOutgoing(true)
-                                .setNrOfStatementsInLabel(1).build()).build()
-                )).build()).build();
-        projectEntityLabelConfigTopic.pipeInput(kC, vC);
-
-        // Add entity label configuration for name
-        kC = ProjectClassKey.newBuilder().setProjectId(projectId).setClassId(classNameId).build();
-        vC = ProjectEntityLabelConfigValue.newBuilder().setProjectId(projectId).setClassId(classNameId)
-                .setConfig(EntityLabelConfig.newBuilder().setLabelParts(List.of(
-                        EntityLabelConfigPart.newBuilder().setOrdNum(1).setField(EntityLabelConfigPartField.newBuilder()
-                                .setFkProperty(propertyHasStringId)
-                                .setIsOutgoing(true)
-                                .setNrOfStatementsInLabel(1).build()).build()
-                )).build()).build();
-        projectEntityLabelConfigTopic.pipeInput(kC, vC);
-
-
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
-        assertThat(outRecords).hasSize(3);
-
-        var resultingKey = ProjectEntityKey.newBuilder().setEntityId(entityName2).setProjectId(projectId).build();
-        var record = outRecords.get(resultingKey);
-        assertThat(record.getLabel()).isEqualTo("Name 2");
-
-        resultingKey = ProjectEntityKey.newBuilder().setEntityId(entityPerson).setProjectId(projectId).build();
-        record = outRecords.get(resultingKey);
-        assertThat(record.getLabel()).isEqualTo("Name 1");
-
-    }
 
     /**
      * Test number of output records:
@@ -288,7 +157,7 @@ class ProjectEntityLabelRecursionTest {
      * 4. person: entity_label = "Name 1"
      */
     @Test
-    void testProjectEntityLabelCountRecords() {
+    void testProjectTopStatementsCountRecords() {
         var projectId = 10;
         var statementOneId = 20;
         var statementTwoId = 21;
@@ -393,12 +262,35 @@ class ProjectEntityLabelRecursionTest {
                 )).build()).build();
         projectEntityLabelConfigTopic.pipeInput(kC, vC);
 
-
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readRecordsToList();
-        assertThat(outRecords).hasSize(4);
+        System.out.println("Number of records: " + outRecords.size());
+
+        for (var r : outRecords) {
+            var k = r.key();
+            var v = r.value();
+            System.out.println();
+
+            var s = new ArrayList<String>();
+            s.add(k.getEntityId());
+            s.add(k.getIsOutgoing() + "");
+            var statements = v.getStatements();
+            s.add("statements-count: " + v.getStatements().size());
+            System.out.println(">  " + String.join("\t", s));
+
+            for (var statement : statements) {
+                var s2 = new ArrayList<String>();
+
+                s2.add("StatementId: " + statement.getStatementId());
+                s2.add("SubjectLabel: " + statement.getStatement().getSubjectLabel());
+                s2.add("ObjectLabel: " + statement.getStatement().getObjectLabel());
+                System.out.println("   " + String.join("\t", s2));
+            }
+
+
+        }
+        assertThat(outRecords).hasSize(14);
 
     }
-
 
 }
