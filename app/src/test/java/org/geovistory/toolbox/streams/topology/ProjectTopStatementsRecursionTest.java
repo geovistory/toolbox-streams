@@ -202,7 +202,7 @@ class ProjectTopStatementsRecursionTest {
         kS = dev.information.statement.Key.newBuilder().setPkEntity(statementThreeId).build();
         vS = StatementEnrichedValue.newBuilder().setSubjectId(entityName1).setPropertyId(propertyHasStringId)
                 .setObjectLabel("Name 1")
-                .setObjectLiteral(ObjectValue.newBuilder().setLabel("Name 1").setId("").setClassId(0).build()).build();
+                .setObject(ObjectValue.newBuilder().setLabel("Name 1").setId("").setClassId(0).build()).build();
         statementWithLiteralTopic.pipeInput(kS, vS);
 
         // add relation between project and statement three
@@ -216,7 +216,7 @@ class ProjectTopStatementsRecursionTest {
         kS = dev.information.statement.Key.newBuilder().setPkEntity(statementFourId).build();
         vS = StatementEnrichedValue.newBuilder().setSubjectId(entityName2).setPropertyId(propertyHasStringId)
                 .setObjectLabel("Name 2")
-                .setObjectLiteral(ObjectValue.newBuilder().setLabel("Name 2").setId("").setClassId(0).build()).build();
+                .setObject(ObjectValue.newBuilder().setLabel("Name 2").setId("").setClassId(0).build()).build();
         statementWithLiteralTopic.pipeInput(kS, vS);
 
         // add relation between project and statement four

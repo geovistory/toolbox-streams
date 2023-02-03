@@ -229,8 +229,8 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(expected);
-        assertThat(record.getObjectLiteral().getAppellation()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(expected);
+        assertThat(record.getObject().getAppellation()).isNotNull();
         assertThat(record.getObjectClassId()).isEqualTo(classId);
     }
 
@@ -267,8 +267,8 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
-        assertThat(record.getObjectLiteral().getLanguage()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(label);
+        assertThat(record.getObject().getLanguage()).isNotNull();
     }
 
     @Test
@@ -304,8 +304,8 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
-        assertThat(record.getObjectLiteral().getLangString()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(label);
+        assertThat(record.getObject().getLangString()).isNotNull();
     }
 
     @Test
@@ -341,8 +341,8 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
-        assertThat(record.getObjectLiteral().getLangString()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(label);
+        assertThat(record.getObject().getLangString()).isNotNull();
     }
 
     @Test
@@ -382,8 +382,8 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo("WGS84: " + x + "°, " + y + "°");
-        assertThat(record.getObjectLiteral().getPlace()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo("WGS84: " + x + "°, " + y + "°");
+        assertThat(record.getObject().getPlace()).isNotNull();
     }
 
 
@@ -421,8 +421,8 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isNull();
-        assertThat(record.getObjectLiteral().getTimePrimitive()).isNotNull();
+        assertThat(record.getObject().getLabel()).isNull();
+        assertThat(record.getObject().getTimePrimitive()).isNotNull();
     }
 
     @Test
@@ -459,8 +459,8 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(num + "");
-        assertThat(record.getObjectLiteral().getDimension()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(num + "");
+        assertThat(record.getObject().getDimension()).isNotNull();
     }
 
     @Test
@@ -498,7 +498,7 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getCell().getNumericValue()).isEqualTo(num);
+        assertThat(record.getObject().getCell().getNumericValue()).isEqualTo(num);
     }
 
     @Test
@@ -534,7 +534,7 @@ class StatementEnrichedTest {
         var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getDigital()).isNotNull();
+        assertThat(record.getObject().getDigital()).isNotNull();
     }
 
 }

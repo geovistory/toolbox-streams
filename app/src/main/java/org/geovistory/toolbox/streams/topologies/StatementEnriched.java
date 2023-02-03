@@ -192,15 +192,18 @@ public class StatementEnriched {
                 value -> ObjectKey.newBuilder()
                         .setId(getObjectStringId(value))
                         .build(),
-                (statement, object) -> StatementEnrichedValue.newBuilder()
-                        .setSubjectId(getSubjectStringId(statement))
-                        .setPropertyId(statement.getFkProperty())
-                        .setObjectId(getObjectStringId(statement))
-                        .setObjectLabel(object == null ? null : object.getLabel())
-                        .setObjectLiteral(object)
-                        .setObjectClassId(object == null ? null : object.getClassId())
-                        .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
-                        .build(),
+                (statement, object) -> {
+                    if (object == null) return null;
+                    return StatementEnrichedValue.newBuilder()
+                            .setSubjectId(getSubjectStringId(statement))
+                            .setPropertyId(statement.getFkProperty())
+                            .setObjectId(getObjectStringId(statement))
+                            .setObjectLabel(object.getLabel())
+                            .setObject(object)
+                            .setObjectClassId(object.getClassId())
+                            .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
+                            .build();
+                },
                 Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_object)
                         .withKeySerde(avroSerdes.InfStatementKey())
                         .withValueSerde(avroSerdes.StatementEnrichedValue())
@@ -209,9 +212,9 @@ public class StatementEnriched {
         var stream = statementJoinedWithObjectTable.toStream();
         Map<String, KStream<dev.information.statement.Key, StatementEnrichedValue>> branches =
                 stream.split(Named.as("Branch-"))
-                        .branch((key, value) -> value.getObjectLiteral().getEntity() != null,  /* first predicate  */
+                        .branch((key, value) -> value != null && value.getObject().getEntity() != null,  /* first predicate  */
                                 Branched.as("Entity"))
-                        .branch((key, value) -> value.getObjectLiteral().getEntity() == null,  /* second predicate */
+                        .branch((key, value) -> value != null && value.getObject().getEntity() == null,  /* second predicate */
                                 Branched.as("Literal"))
                         .defaultBranch(Branched.as("Other"));          /* default branch */
 

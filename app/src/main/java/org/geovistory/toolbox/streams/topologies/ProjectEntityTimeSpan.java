@@ -124,7 +124,7 @@ public class ProjectEntityTimeSpan {
         var a = value.getStatement();
         if (a == null) return null;
 
-        var b = a.getObjectLiteral();
+        var b = a.getObject();
         if (b == null) return null;
 
         return b.getTimePrimitive();
