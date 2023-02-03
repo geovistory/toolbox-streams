@@ -62,13 +62,15 @@ public class StatementEnriched {
         var avroSerdes = new ConfluentAvroSerdes();
 
         // Map entities to objects
-        var entityObjects = infResourceTable.map((key, value) -> KeyValue.pair(
-                ObjectKey.newBuilder().setId("i" + value.getPkEntity()).build(),
-                ObjectValue.newBuilder().setId("i" + value.getPkEntity())
-                        .setEntity(tranformEntity(value))
-                        .setClassId(value.getFkClass())
-                        .build()
-        ));
+        var entityObjects = infResourceTable
+                .filter((key, value) -> value.getFkClass() != null)
+                .map((key, value) -> KeyValue.pair(
+                        ObjectKey.newBuilder().setId("i" + value.getPkEntity()).build(),
+                        ObjectValue.newBuilder().setId("i" + value.getPkEntity())
+                                .setEntity(tranformEntity(value))
+                                .setClassId(value.getFkClass())
+                                .build()
+                ));
 
         // Map languages to objects
         var languageObjects = infLanguageStream.map((key, value) -> KeyValue.pair(
