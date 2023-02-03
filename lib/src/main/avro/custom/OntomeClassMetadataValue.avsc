@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "OntomeClassMetadataValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Model to store class metadata",
+  "fields": [
+    {
+      "name": "parent_classes",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    },
+    {
+      "name": "ancestor_classes",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    }
+  ]
+}

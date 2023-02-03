@@ -97,6 +97,13 @@ public class RegisterInputTopic {
         );
     }
 
+    public KStream<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> dfhApiClassStream() {
+        return builder.stream(
+                DbTopicNames.dfh_api_class.getName(),
+                Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue())
+        );
+    }
+
     public KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream() {
         return builder.stream(
                 DbTopicNames.pro_entity_label_config.getName(),

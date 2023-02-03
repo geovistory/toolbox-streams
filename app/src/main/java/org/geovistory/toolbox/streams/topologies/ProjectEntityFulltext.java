@@ -74,7 +74,7 @@ public class ProjectEntityFulltext {
 
         /* SINK PROCESSORS */
 
-        projectEntityFulltextStream.to(output.TOPICS.project_entity_fulltext_label,
+        projectEntityFulltextStream.to(output.TOPICS.project_entity_fulltext,
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityFulltextValue()));
 
         return new ProjectEntityFulltextReturnValue(builder, projectEntityFulltextStream);
@@ -97,7 +97,7 @@ public class ProjectEntityFulltext {
 
     public enum output {
         TOPICS;
-        public final String project_entity_fulltext_label = Utils.tsPrefixed("project_entity_fulltext_label");
+        public final String project_entity_fulltext = Utils.tsPrefixed("project_entity_fulltext");
     }
 
     /**

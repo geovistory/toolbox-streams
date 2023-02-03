@@ -139,4 +139,31 @@ public class RegisterOutputTopic {
                 Consumed.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue()));
     }
 
+    public KTable<ProjectEntityKey, ProjectEntityTypeValue> projectEntityTypeTable() {
+        return builder.table(ProjectEntityType.output.TOPICS.project_entity_type,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTypeValue()));
+    }
+    public KTable<ProjectEntityKey, TimeSpanValue> projectEntityTimeSpanTable() {
+        return builder.table(ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.TimeSpanValue()));
+    }
+    public KTable<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTable() {
+        return builder.table(ProjectEntityFulltext.output.TOPICS.project_entity_fulltext,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityFulltextValue()));
+    }
+    public KTable<ProjectEntityKey, ProjectEntityClassLabelValue> projectEntityClassLabelTable() {
+        return builder.table(ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassLabelValue()));
+    }
+
+    public KTable<OntomeClassKey,OntomeClassMetadataValue> ontomeClassMetadataTable() {
+        return builder.table(OntomeClassMetadata.output.TOPICS.ontome_class_metadata,
+                Consumed.with(avroSerdes.OntomeClassKey(), avroSerdes.OntomeClassMetadataValue()));
+    }
+
+    public KTable<ProjectEntityKey,ProjectEntityClassMetadataValue> projectEntityClassMetadataTable() {
+        return builder.table(ProjectEntityClassMetadata.output.TOPICS.project_entity_class_metadata,
+                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassMetadataValue()));
+    }
+
 }

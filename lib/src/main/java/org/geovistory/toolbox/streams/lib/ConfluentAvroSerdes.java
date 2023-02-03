@@ -557,16 +557,19 @@ public class ConfluentAvroSerdes {
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
         return serdes;
     }
+
     public Serde<HasTypePropertyValue> HasTypePropertyValue() {
         Serde<HasTypePropertyValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
     public Serde<HasTypePropertyGroupByValue> HasTypePropertyGroupByValue() {
         Serde<HasTypePropertyGroupByValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
     public Serde<HasTypePropertyAggregateValue> HasTypePropertyAggregateValue() {
         Serde<HasTypePropertyAggregateValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
@@ -592,4 +595,27 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<EntityPreviewValue> EntityPreviewValue() {
+        Serde<EntityPreviewValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<OntomeClassKey> OntomeClassKey() {
+        Serde<OntomeClassKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<OntomeClassMetadataValue> OntomeClassMetadataValue() {
+        Serde<OntomeClassMetadataValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityClassMetadataValue> ProjectEntityClassMetadataValue() {
+        Serde<ProjectEntityClassMetadataValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 }

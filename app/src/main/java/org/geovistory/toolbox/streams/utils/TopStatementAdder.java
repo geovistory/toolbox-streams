@@ -12,8 +12,8 @@ public class TopStatementAdder {
 
         for (int i = 0; i < existingList.size(); i++) {
             var oldItem = existingList.get(i);
-            var oldOrdNum = isOutgoing ? oldItem.getOrdNumForDomain() : oldItem.getOrdNumForRange();
-            var newOrdNum = isOutgoing ? newItem.getOrdNumForDomain() : newItem.getOrdNumForRange();
+            var oldOrdNum = isOutgoing ? oldItem.getOrdNumOfRange() : oldItem.getOrdNumOfDomain();
+            var newOrdNum = isOutgoing ? newItem.getOrdNumOfRange() : newItem.getOrdNumOfDomain();
             var oldId = oldItem.getStatementId();
             var newId = newItem.getStatementId();
             // if newOrdNum <= oldOrdNum ...

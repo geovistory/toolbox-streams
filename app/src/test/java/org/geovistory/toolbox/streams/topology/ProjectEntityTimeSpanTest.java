@@ -82,7 +82,7 @@ class ProjectEntityTimeSpanTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(ongoingThroughout)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("ongoingThroughout").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -145,7 +145,7 @@ class ProjectEntityTimeSpanTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(ongoingThroughout)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("ongoingThroughout").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -196,7 +196,7 @@ class ProjectEntityTimeSpanTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(nonTemporalProperty)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("nonTemporalProperty").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)

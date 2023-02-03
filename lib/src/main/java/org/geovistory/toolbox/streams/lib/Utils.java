@@ -59,14 +59,11 @@ public class Utils {
         return Objects.equals(s, "true");
     }
 
-    public static Boolean stringIsNotEqualTrue(String s) {
-        return !Objects.equals(s, "true");
-    }
-
     public static Boolean booleanIsNotEqualTrue(Boolean s) {
         if (s == null) return true;
         return !s;
     }
+
     public static Boolean booleanIsEqualTrue(Boolean s) {
         if (s == null) return false;
         return s;
@@ -109,7 +106,6 @@ public class Utils {
             return null;
         }
     }
-
     private static Map<String, Integer> languageMap() {
         Map<String, Integer> map = new HashMap<>();
         map.put("aa", 17082);

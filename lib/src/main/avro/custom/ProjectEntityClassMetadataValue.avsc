@@ -1,0 +1,35 @@
+{
+  "type": "record",
+  "name": "ProjectEntityClassMetadataValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "parent_classes",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    },
+    {
+      "name": "ancestor_classes",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

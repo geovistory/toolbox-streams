@@ -54,7 +54,7 @@ class ProjectEntityFulltextTest {
                 avroSerdes.ProjectEntityLabelConfigValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
+                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext,
                 avroSerdes.ProjectEntityKey().deserializer(),
                 avroSerdes.ProjectEntityFulltextValue().deserializer());
     }
@@ -91,7 +91,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("has friend").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -99,7 +99,7 @@ class ProjectEntityFulltextTest {
                                         .setObjectLabel("foo")
                                         .setSubjectLabel("Max").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -112,7 +112,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdSecondPart)
                 .setEntityId(entityId).setIsOutgoing(false).setPropertyLabel("participates in").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -120,7 +120,7 @@ class ProjectEntityFulltextTest {
                                         .setSubjectLabel("foo")
                                         .setObjectLabel("Voyage 1").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -134,7 +134,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(9876543)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("has fun with").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -142,7 +142,7 @@ class ProjectEntityFulltextTest {
                                         .setSubjectLabel("foo")
                                         .setObjectLabel("Toy 1").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -181,7 +181,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
                 .setEntityId(entityId).setIsOutgoing(false).setPropertyLabel("has friend").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -189,7 +189,7 @@ class ProjectEntityFulltextTest {
                                         .setObjectLabel(null)
                                         .setSubjectLabel(null).build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -241,7 +241,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
                 .setEntityId(entityId).setIsOutgoing(false).setPropertyLabel("has friend").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -249,7 +249,7 @@ class ProjectEntityFulltextTest {
                                         .setObjectLabel("foo")
                                         .setSubjectLabel("Max").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -262,7 +262,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdSecondPart)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("participates in").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -270,7 +270,7 @@ class ProjectEntityFulltextTest {
                                         .setSubjectLabel("foo")
                                         .setObjectLabel("Voyage 1").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -284,7 +284,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(9876543)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("has fun with").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -292,7 +292,7 @@ class ProjectEntityFulltextTest {
                                         .setSubjectLabel("foo")
                                         .setObjectLabel("Toy 1").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -336,7 +336,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
                 .setEntityId(entityId).setIsOutgoing(false).setPropertyLabel("has friend").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -344,7 +344,7 @@ class ProjectEntityFulltextTest {
                                         .setObjectLabel("foo")
                                         .setSubjectLabel("Max").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -357,7 +357,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdSecondPart)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("participates in").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -365,7 +365,7 @@ class ProjectEntityFulltextTest {
                                         .setSubjectLabel("foo")
                                         .setObjectLabel("Voyage 1").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -379,7 +379,7 @@ class ProjectEntityFulltextTest {
                 .setClassId(classId).setProjectId(projectId).setPropertyId(9876543)
                 .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("has fun with").setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(1)
+                                .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)
@@ -387,7 +387,7 @@ class ProjectEntityFulltextTest {
                                         .setSubjectLabel("foo")
                                         .setObjectLabel("Toy 1").build()).build(),
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumForDomain(2)
+                                .setOrdNumOfDomain(2)
                                 .setStatement(StatementEnrichedValue.newBuilder()
                                         .setSubjectId(entityId)
                                         .setObjectId(entityId)

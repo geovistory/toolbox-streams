@@ -70,27 +70,27 @@ class ProjectTopOutgoingStatementsTest {
         var b = ProjectStatementValue.newBuilder();
         var v0 = new ArrayList<ProjectStatementValue>();
         var v1 = TopStatementAdder.addStatement(v0,
-                b.setProjectId(1).setStatementId(4).setStatement(s).setOrdNumForDomain(4).build(), true
+                b.setProjectId(1).setStatementId(4).setStatement(s).setOrdNumOfRange(4).build(), true
         );
         var v2 = TopStatementAdder.addStatement(v1,
-                b.setProjectId(1).setStatementId(3).setStatement(s).setOrdNumForDomain(3).build(), true
+                b.setProjectId(1).setStatementId(3).setStatement(s).setOrdNumOfRange(3).build(), true
         );
         var v3 = TopStatementAdder.addStatement(v2,
-                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForDomain(2).build(), true
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumOfRange(2).build(), true
         );
         var v4 = TopStatementAdder.addStatement(v3,
-                b.setProjectId(1).setStatementId(5).setStatement(s).setOrdNumForDomain(null).build(), true
+                b.setProjectId(1).setStatementId(5).setStatement(s).setOrdNumOfRange(null).build(), true
         );
         var v5 = TopStatementAdder.addStatement(v4,
-                b.setProjectId(1).setStatementId(0).setStatement(s).setOrdNumForDomain(0).build(), true
+                b.setProjectId(1).setStatementId(0).setStatement(s).setOrdNumOfRange(0).build(), true
         );
         var v6 = TopStatementAdder.addStatement(v5,
-                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForDomain(1).build(), true
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumOfRange(1).build(), true
         );
 
         assertThat(v6.size()).isEqualTo(5);
-        assertThat(v6.get(0).getOrdNumForDomain()).isEqualTo(0);
-        assertThat(v6.get(3).getOrdNumForDomain()).isEqualTo(3);
+        assertThat(v6.get(0).getOrdNumOfRange()).isEqualTo(0);
+        assertThat(v6.get(3).getOrdNumOfRange()).isEqualTo(3);
     }
 
     @Test
@@ -141,10 +141,10 @@ class ProjectTopOutgoingStatementsTest {
         var b = ProjectStatementValue.newBuilder();
         var v0 = new ArrayList<ProjectStatementValue>();
         var v1 = TopStatementAdder.addStatement(v0,
-                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForDomain(2).build(), true
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumOfRange(2).build(), true
         );
         var v2 = TopStatementAdder.addStatement(v1,
-                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForDomain(1).build(), true
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumOfRange(1).build(), true
         );
 
         assertThat(v2.size()).isEqualTo(2);
@@ -152,7 +152,7 @@ class ProjectTopOutgoingStatementsTest {
         assertThat(v2.get(1).getStatementId()).isEqualTo(1);
 
         var v3 = TopStatementAdder.addStatement(v2,
-                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForDomain(3).build(), true
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumOfRange(3).build(), true
         );
 
         assertThat(v3.size()).isEqualTo(2);
@@ -172,10 +172,10 @@ class ProjectTopOutgoingStatementsTest {
         var b = ProjectStatementValue.newBuilder();
         var v0 = new ArrayList<ProjectStatementValue>();
         var v1 = TopStatementAdder.addStatement(v0,
-                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForDomain(2).build(), true
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumOfRange(2).build(), true
         );
         var v2 = TopStatementAdder.addStatement(v1,
-                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForDomain(3).build(), true
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumOfRange(3).build(), true
         );
 
         assertThat(v2.size()).isEqualTo(2);
@@ -183,7 +183,7 @@ class ProjectTopOutgoingStatementsTest {
         assertThat(v2.get(1).getStatementId()).isEqualTo(2);
 
         var v3 = TopStatementAdder.addStatement(v2,
-                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForDomain(1).build(), true
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumOfRange(1).build(), true
         );
 
         assertThat(v3.size()).isEqualTo(2);
@@ -203,18 +203,18 @@ class ProjectTopOutgoingStatementsTest {
         var b = ProjectStatementValue.newBuilder();
         var v0 = new ArrayList<ProjectStatementValue>();
         var v1 = TopStatementAdder.addStatement(v0,
-                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForDomain(1).build(), true
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumOfRange(1).build(), true
         );
         var v2 = TopStatementAdder.addStatement(v1,
-                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumForDomain(2).build(), true
+                b.setProjectId(1).setStatementId(2).setStatement(s).setOrdNumOfRange(2).build(), true
         );
         var v3 = TopStatementAdder.addStatement(v2,
-                b.setProjectId(1).setStatementId(3).setStatement(s).setOrdNumForDomain(3).build(), true
+                b.setProjectId(1).setStatementId(3).setStatement(s).setOrdNumOfRange(3).build(), true
         );
         assertThat(v3.get(0).getStatementId()).isEqualTo(1);
 
         var v4 = TopStatementAdder.addStatement(v3,
-                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumForDomain(3).setDeleted$1(true).build(), true
+                b.setProjectId(1).setStatementId(1).setStatement(s).setOrdNumOfRange(3).setDeleted$1(true).build(), true
         );
 
         assertThat(v4.size()).isEqualTo(2);
@@ -243,21 +243,21 @@ class ProjectTopOutgoingStatementsTest {
                                 .setObjectId(objectId)
                                 .build()
                 )
-                .setOrdNumForDomain(3)
+                .setOrdNumOfRange(3)
                 .build();
         projectStatementTopic.pipeInput(k, v);
 
         v.setStatementId(1);
-        v.setOrdNumForDomain(1);
+        v.setOrdNumOfRange(1);
 
         projectStatementTopic.pipeInput(k, v);
 
         v.setStatementId(2);
-        v.setOrdNumForDomain(2);
+        v.setOrdNumOfRange(2);
         projectStatementTopic.pipeInput(k, v);
 
         v.setStatementId(0);
-        v.setOrdNumForDomain(0);
+        v.setOrdNumOfRange(0);
         projectStatementTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isFalse();
@@ -271,7 +271,7 @@ class ProjectTopOutgoingStatementsTest {
                 .build();
         var record = outRecords.get(resultKey);
         assertThat(record.getStatements().size()).isEqualTo(4);
-        assertThat(record.getStatements().get(2).getOrdNumForDomain()).isEqualTo(2);
+        assertThat(record.getStatements().get(2).getOrdNumOfRange()).isEqualTo(2);
     }
 
 

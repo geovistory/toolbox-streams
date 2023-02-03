@@ -5,11 +5,7 @@
   "fields": [
     {
       "name": "fk_entity",
-      "type": [
-        "null",
-        "int"
-      ],
-      "default": null
+      "type": "int"
     },
     {
       "name": "fk_project",

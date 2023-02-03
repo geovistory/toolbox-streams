@@ -35,9 +35,10 @@ public class ProjectClassLabel {
                 registerOutputTopic.ontomeClassLabelStream(),
                 registerOutputTopic.geovClassLabelStream(),
                 registerOutputTopic.projectClassStream()
-        ).build();
+        ).builder().build();
     }
-    public static StreamsBuilder addProcessors(
+
+    public static ProjectClassLabelReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable,
             KStream<OntomeClassLabelKey, OntomeClassLabelValue> ontomeClassLabelStream,
@@ -250,7 +251,7 @@ public class ProjectClassLabel {
                         .withKeySerde(avroSerdes.ProjectClassLabelKey())
                         .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
         );
-        var projectClassLabel = projectClassLabelOptionsAggregated.mapValues((readOnlyKey, map) -> {
+        var projectClassLabelTable = projectClassLabelOptionsAggregated.mapValues((readOnlyKey, map) -> {
             ProjectClassLabelValue o;
             // Label in project language, provided by Geovistory project
             o = toValue(map, "noten_" + LabelSource.GEOV_PROJECT);
@@ -277,15 +278,17 @@ public class ProjectClassLabel {
             if (o != null) return o;
 
             return o;
-        }).toStream();
+        });
+
+        var projectClassLabelStream = projectClassLabelTable.toStream();
 
         /* SINK PROCESSORS */
 
         // 8) to
-        projectClassLabel.to(output.TOPICS.project_class_label,
+        projectClassLabelStream.to(output.TOPICS.project_class_label,
                 Produced.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue()));
 
-        return builder;
+        return new ProjectClassLabelReturnValue(builder, projectClassLabelTable, projectClassLabelStream);
 
     }
 

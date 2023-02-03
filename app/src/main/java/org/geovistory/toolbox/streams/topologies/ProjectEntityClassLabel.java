@@ -29,7 +29,7 @@ public class ProjectEntityClassLabel {
         ).builder().build();
     }
 
-    public static ProjectEntityClassLabelLabelReturnValue addProcessors(
+    public static ProjectEntityClassLabelReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,
             KTable<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelTable
@@ -66,7 +66,7 @@ public class ProjectEntityClassLabel {
         projectEntityClassLabelStream.to(output.TOPICS.project_entity_class_label,
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassLabelValue()));
 
-        return new ProjectEntityClassLabelLabelReturnValue(builder, projectEntityClassLabelStream);
+        return new ProjectEntityClassLabelReturnValue(builder, projectEntityClassLabelTable, projectEntityClassLabelStream);
 
     }
 

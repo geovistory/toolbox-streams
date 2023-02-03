@@ -1,0 +1,117 @@
+{
+  "type": "record",
+  "name": "EntityPreviewValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Entity preview value",
+  "fields": [
+    {
+      "name": "fk_project",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "project",
+      "type": "int"
+    },
+    {
+      "name": "pk_entity",
+      "type": "int"
+    },
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "fk_class",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "fk_type",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "type_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "entity_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "class_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "type_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "entity_type",
+      "type": "string"
+    },
+    {
+      "name": "full_text",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "time_span",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "first_second",
+      "type": [
+        "null",
+        "long"
+      ],
+      "default": null
+    },
+    {
+      "name": "last_second",
+      "type": [
+        "null",
+        "long"
+      ],
+      "default": null
+    },
+    {
+      "name": "parent_classes",
+      "type": "string"
+    },
+    {
+      "name": "ancestor_classes",
+      "type": "string"
+    }
+  ]
+}

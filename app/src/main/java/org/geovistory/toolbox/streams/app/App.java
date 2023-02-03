@@ -64,6 +64,7 @@ class App {
         var datDigitalStream = inputTopics.datDigitalStream();
         var tabCellStream = inputTopics.tabCellStream();
         var dfhApiClassTable = inputTopics.dfhApiClassTable();
+        var dfhApiClassStream = inputTopics.dfhApiClassStream();
         var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
         var sysConfigTable = inputTopics.sysConfigTable();
 
@@ -75,6 +76,9 @@ class App {
         var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
         var projectPropertyLabelTable = outputTopics.projectPropertyLabelTable();
         var projectEntityTopStatementsTable = outputTopics.projectEntityTopStatementsTable();
+        var projectEntityTimeSpanTable = outputTopics.projectEntityTimeSpanTable();
+        var projectEntityFulltextTable = outputTopics.projectEntityFulltextTable();
+        var projectClassLabelTable = outputTopics.projectClassLabelTable();
 
         // add sub-topology ProjectProfiles
         var projectProfiles = ProjectProfiles.addProcessors(builder,
@@ -220,10 +224,38 @@ class App {
         );
 
         // add sub-topology ProjectEntityType
-        ProjectEntityType.addProcessors(builder,
+        var projectEntityType = ProjectEntityType.addProcessors(builder,
                 projectEntityTable,
                 outputTopics.hasTypePropertyTable(),
                 projectTopOutgoingStatements.projectTopStatementTable()
+        );
+
+        // add sub-topology ProjectEntityClassLabel
+        var projectEntityClassLabel = ProjectEntityClassLabel.addProcessors(builder,
+                projectEntityTable,
+                projectClassLabelTable
+        );
+
+        // add sub-topology OntomeClassMetadata
+        var ontomeClassMetadata = OntomeClassMetadata.addProcessors(builder,
+                dfhApiClassStream
+        );
+        // add sub-topology ProjectEntityClassMetadata
+        var projectEntityClassMetadata = ProjectEntityClassMetadata.addProcessors(builder,
+                projectEntityTable,
+                ontomeClassMetadata.ontomeClassMetadataTable()
+        );
+        // add sub-topology ProjectEntityPreview
+        ProjectEntityPreview.addProcessors(builder,
+                projectEntityTable,
+                projectEntityLabelTable,
+                projectEntityClassLabel.projectEntityClassLabelTable(),
+                //projectEntityClassLabelTable,
+                projectEntityType.projectEntityTypeTable(),
+                //projectEntityTypeTable,
+                projectEntityTimeSpanTable,
+                projectEntityFulltextTable,
+                projectEntityClassMetadata.projectEntityClassMetadataTable()
         );
 
     }
@@ -243,6 +275,7 @@ class App {
                 ProjectProperty.output.TOPICS.project_property,
                 ProjectEntity.output.TOPICS.project_entity,
                 ProjectClassLabel.output.TOPICS.project_class_label,
+                ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
                 StatementEnriched.output.TOPICS.statement_enriched,
                 ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config_enriched,
                 CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config,
@@ -255,10 +288,11 @@ class App {
                 GeovPropertyLabel.output.TOPICS.geov_property_label,
                 ProjectPropertyLabel.output.TOPICS.project_property_label,
                 ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
-                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext_label,
+                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext,
                 ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
                 HasTypeProperty.output.TOPICS.has_type_property,
-                ProjectEntityType.output.TOPICS.project_entity_type
+                ProjectEntityType.output.TOPICS.project_entity_type,
+                ProjectEntityPreview.output.TOPICS.project_entity_preview
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
