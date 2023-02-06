@@ -3,10 +3,7 @@ package org.geovistory.toolbox.streams.app;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 
 /**
@@ -56,18 +53,18 @@ public class RegisterInputTopic {
 
 
     public KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable() {
-        return builder.stream(
-                        DbTopicNames.inf_resource.getName(),
-                        Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
-                )
-                .map(KeyValue::pair)
-                .toTable(Materialized.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue()));
+        return getRepartitionedTable(
+                DbTopicNames.inf_resource.getName(),
+                avroSerdes.InfResourceKey(),
+                avroSerdes.InfResourceValue()
+        );
     }
 
     public KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.inf_resource.getName(),
-                Consumed.with(avroSerdes.InfResourceKey(), avroSerdes.InfResourceValue())
+                avroSerdes.InfResourceKey(),
+                avroSerdes.InfResourceValue()
         );
     }
 
@@ -87,86 +84,79 @@ public class RegisterInputTopic {
                 avroSerdes.SysConfigValue()
         );
     }
-/*
-    public KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyTable() {
-        return getRepartitionedTable(
-                DbTopicNames.dfh_api_property.getName(),
-                avroSerdes.DfhApiPropertyKey(),
-                avroSerdes.DfhApiPropertyValue()
-        );
-    }*/
 
     public KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.pro_entity_label_config.getName(),
-                Consumed.with(avroSerdes.ProEntityLabelConfigKey(), avroSerdes.ProEntityLabelConfigValue())
+                avroSerdes.ProEntityLabelConfigKey(),
+                avroSerdes.ProEntityLabelConfigValue()
         );
     }
 
     public KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.inf_language.getName(),
-                Consumed.with(avroSerdes.InfLanguageKey(), avroSerdes.InfLanguageValue())
+                avroSerdes.InfLanguageKey(),
+                avroSerdes.InfLanguageValue()
         );
     }
 
     public KStream<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.inf_appellation.getName(),
-                Consumed.with(avroSerdes.InfAppellationKey(), avroSerdes.InfAppellationValue())
+                avroSerdes.InfAppellationKey(),
+                avroSerdes.InfAppellationValue()
         );
     }
 
     public KStream<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.inf_lang_string.getName(),
-                Consumed.with(avroSerdes.InfLangStringKey(), avroSerdes.InfLangStringValue())
+                avroSerdes.InfLangStringKey(),
+                avroSerdes.InfLangStringValue()
         );
     }
 
     public KStream<dev.information.place.Key, dev.information.place.Value> infPlaceStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.inf_place.getName(),
-                Consumed.with(avroSerdes.InfPlaceKey(), avroSerdes.InfPlaceValue())
+                avroSerdes.InfPlaceKey(),
+                avroSerdes.InfPlaceValue()
         );
     }
 
     public KStream<dev.information.time_primitive.Key, dev.information.time_primitive.Value> infTimePrimitiveStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.inf_time_primitive.getName(),
-                Consumed.with(avroSerdes.InfTimePrimitiveKey(), avroSerdes.InfTimePrimitiveValue())
+                avroSerdes.InfTimePrimitiveKey(),
+                avroSerdes.InfTimePrimitiveValue()
         );
     }
 
     public KStream<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.inf_dimension.getName(),
-                Consumed.with(avroSerdes.InfDimensionKey(), avroSerdes.InfDimensionValue())
+                avroSerdes.InfDimensionKey(),
+                avroSerdes.InfDimensionValue()
         );
     }
 
     public KStream<dev.data.digital.Key, dev.data.digital.Value> datDigitalStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.dat_digital.getName(),
-                Consumed.with(avroSerdes.DatDigitalKey(), avroSerdes.DatDigitalValue())
+                avroSerdes.DatDigitalKey(),
+                avroSerdes.DatDigitalValue()
         );
     }
 
     public KStream<dev.tables.cell.Key, dev.tables.cell.Value> tabCellStream() {
-        return builder.stream(
+        return getStream(
                 DbTopicNames.tab_cell.getName(),
-                Consumed.with(avroSerdes.TabCellKey(), avroSerdes.TabCellValue())
+                avroSerdes.TabCellKey(),
+                avroSerdes.TabCellValue()
         );
     }
 
-/*
-    public KStream<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyStream() {
-        return builder.stream(
-                DbTopicNames.dfh_api_property.getName(),
-                Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue())
-        );
-    }
-*/
 
     /**
      * Register a KStream and map it to a new KTable to ensure proper partitioning
@@ -179,12 +169,16 @@ public class RegisterInputTopic {
      * @return KTable
      */
     private <K, V> KTable<K, V> getRepartitionedTable(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
-        return builder.stream(topicName, Consumed.with(kSerde, vSerde))
-                .map(KeyValue::pair)
-                .toTable(Materialized.with(kSerde, vSerde));
+
+        return getStream(topicName, kSerde, vSerde)
+                .map(KeyValue::pair, Named.as(topicName + "-mark-for-repartition"))
+                .toTable(
+                        Named.as(topicName + "-to-table"),
+                        Materialized.with(kSerde, vSerde));
     }
 
 
-
-
+    private <K, V> KStream<K, V> getStream(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
+        return builder.stream(topicName, Consumed.with(kSerde, vSerde).withName(topicName + "-consumer"));
+    }
 }
