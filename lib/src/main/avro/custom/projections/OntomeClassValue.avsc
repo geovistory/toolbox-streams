@@ -1,0 +1,78 @@
+{
+  "type": "record",
+  "name": "OntomeClassValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "removed_from_api",
+      "type": [
+        {
+          "type": "boolean",
+          "connect.default": false
+        },
+        "null"
+      ],
+      "default": false
+    },
+    {
+      "name": "dfh_pk_class",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_class_label_language",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_class_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_fk_profile",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_parent_classes",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    },
+    {
+      "name": "dfh_ancestor_classes",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}

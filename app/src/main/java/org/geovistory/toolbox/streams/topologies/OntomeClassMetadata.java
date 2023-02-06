@@ -1,7 +1,5 @@
 package org.geovistory.toolbox.streams.topologies;
 
-import dev.data_for_history.api_class.Key;
-import dev.data_for_history.api_class.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -11,9 +9,10 @@ import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassMetadataValue;
+import org.geovistory.toolbox.streams.avro.OntomeClassValue;
+import org.geovistory.toolbox.streams.input.OntomeClassProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -28,17 +27,16 @@ public class OntomeClassMetadata {
 
     public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var register = new RegisterInputTopic(builder);
 
-        var apiClassStream = register.dfhApiClassStream();
+        var ontomeClassStream = new OntomeClassProjected(builder).kStream;
 
-        return addProcessors(builder, apiClassStream).builder().build();
+        return addProcessors(builder, ontomeClassStream).builder().build();
 
     }
 
     public static OntomeClassMetadataReturnValue addProcessors(
             StreamsBuilder builder,
-            KStream<Key, Value> apiClassStream
+            KStream<OntomeClassKey, OntomeClassValue> ontomeClassStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
@@ -46,10 +44,9 @@ public class OntomeClassMetadata {
         /* SOURCE PROCESSORS */
 
         // 2) group by dfh_pk_class
-        var grouped = apiClassStream.groupBy(
-                (key, value) -> OntomeClassKey.newBuilder().setClassId(value.getDfhPkClass()).build(),
+        var grouped = ontomeClassStream.groupByKey(
                 Grouped.with(
-                        avroSerdes.OntomeClassKey(), avroSerdes.DfhApiClassValue()
+                        avroSerdes.OntomeClassKey(), avroSerdes.OntomeClassValue()
                 ).withName(inner.TOPICS.ontome_class_metadata_grouped)
         );
         // 2) aggregate OntomeClassMetadataValue

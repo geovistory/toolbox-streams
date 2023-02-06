@@ -8,9 +8,9 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.input.OntomePropertyProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -25,49 +25,45 @@ public class ProjectProperty {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
         var registerOutputTopic = new RegisterOutputTopic(builder);
 
         return addProcessors(
                 builder,
-                registerInputTopic.dfhApiPropertyStream(),
+                new OntomePropertyProjected(builder).kStream,
                 registerOutputTopic.projectProfileStream()
         ).builder().build();
     }
 
     public static ProjectPropertyReturnValue addProcessors(
             StreamsBuilder builder,
-            KStream<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyStream,
+            KStream<OntomePropertyKey, OntomePropertyValue> ontomePropertyStream,
             KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
-        // 2)
-        var apiPropertyProjected = dfhApiPropertyStream
-                .mapValues((readOnlyKey, value) -> ProfileProperty.newBuilder()
-                        .setProfileId(value.getDfhFkProfile())
-                        .setPropertyId(value.getDfhPkProperty())
-                        .setDomainId(value.getDfhPropertyDomain())
-                        .setRangeId(value.getDfhPropertyRange())
-                        .setDeleted$1(Objects.equals(value.getDeleted$1(), "true"))
-                        .build()
-                );
 
         // 3) GroupBy
-        var propertyByProfileIdGrouped = apiPropertyProjected
+        var propertyByProfileIdGrouped = ontomePropertyStream
                 .groupBy(
-                        (key, value) -> value.getProfileId(),
+                        (key, value) -> value.getDfhFkProfile(),
                         Grouped.with(
-                                Serdes.Integer(), avroSerdes.ProfilePropertyValue()
+                                Serdes.Integer(), avroSerdes.OntomePropertyValue()
                         ));
         // 3) Aggregate
         var propertyByProfileIdAggregated = propertyByProfileIdGrouped.aggregate(
                 () -> ProfilePropertyMap.newBuilder().build(),
                 (aggKey, newValue, aggValue) -> {
-                    var key = newValue.getProfileId() + "_" + newValue.getPropertyId() + "_" + newValue.getDomainId() + "_" + newValue.getRangeId();
-                    aggValue.getMap().put(key, newValue);
+                    var key = newValue.getDfhFkProfile() + "_" + newValue.getDfhPkProperty() + "_" + newValue.getDfhPropertyDomain() + "_" + newValue.getDfhPropertyRange();
+                    var value = ProfileProperty.newBuilder()
+                            .setProfileId(newValue.getDfhFkProfile())
+                            .setPropertyId(newValue.getDfhPkProperty())
+                            .setDomainId(newValue.getDfhPropertyDomain())
+                            .setRangeId(newValue.getDfhPropertyRange())
+                            .setDeleted$1(Objects.equals(newValue.getDeleted$1(), "true"))
+                            .build();
+                    aggValue.getMap().put(key, value);
                     return aggValue;
                 },
                 Named.as(inner.TOPICS.profile_with_properties)

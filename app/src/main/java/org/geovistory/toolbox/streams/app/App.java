@@ -9,6 +9,8 @@ import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.geovistory.toolbox.streams.input.OntomeClassProjected;
+import org.geovistory.toolbox.streams.input.OntomePropertyProjected;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.topologies.*;
 
@@ -64,10 +66,11 @@ class App {
         var infDimensionStream = inputTopics.infDimensionStream();
         var datDigitalStream = inputTopics.datDigitalStream();
         var tabCellStream = inputTopics.tabCellStream();
-        var dfhApiClassTable = inputTopics.dfhApiClassTable();
-        var dfhApiClassStream = inputTopics.dfhApiClassStream();
-        var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
-        var dfhApiPropertyStream = inputTopics.dfhApiPropertyStream();
+
+        var ontomeClass = new OntomeClassProjected(builder);
+        var ontomeProperty = new OntomePropertyProjected(builder);
+
+
         var sysConfigTable = inputTopics.sysConfigTable();
 
         // register input topics as KStreams
@@ -91,19 +94,19 @@ class App {
 
         // add sub-topology ProjectProperty
         var projectProperty = ProjectProperty.addProcessors(builder,
-                dfhApiPropertyStream,
+                ontomeProperty.kStream,
                 projectProfiles.projectProfileStream());
 
         // add sub-topology ProjectClass
         var projectClass = ProjectClass.addProcessors(builder,
                 projectProfiles.projectProfileStream(),
-                dfhApiClassStream
+                ontomeClass.kStream
         );
         var projectClassTable = outputTopics.projectClassTable();
 
         // add sub-topology OntomeClassLabel
         var ontomeClassLabel = OntomeClassLabel.addProcessors(builder,
-                dfhApiClassTable
+                ontomeClass.kStream
         );
 
         // add sub-topology GeovClassLabel
@@ -194,7 +197,7 @@ class App {
 
         // add sub-topology OntomePropertyLabel
         var ontomePropertyLabel = OntomePropertyLabel.addProcessors(builder,
-                dfhApiPropertyTable
+                ontomeProperty.kStream
         );
 
 
@@ -230,7 +233,7 @@ class App {
 
         // add sub-topology HasTypeProperty
         HasTypeProperty.addProcessors(builder,
-                inputTopics.dfhApiPropertyStream()
+                ontomeProperty.kStream
         );
 
         // add sub-topology ProjectEntityType
@@ -248,7 +251,7 @@ class App {
 
         // add sub-topology OntomeClassMetadata
         var ontomeClassMetadata = OntomeClassMetadata.addProcessors(builder,
-                dfhApiClassStream
+                ontomeClass.kStream
         );
         // add sub-topology ProjectEntityClassMetadata
         var projectEntityClassMetadata = ProjectEntityClassMetadata.addProcessors(builder,

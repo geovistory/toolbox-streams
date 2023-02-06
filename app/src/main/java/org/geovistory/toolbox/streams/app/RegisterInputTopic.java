@@ -87,29 +87,14 @@ public class RegisterInputTopic {
                 avroSerdes.SysConfigValue()
         );
     }
-
+/*
     public KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyTable() {
         return getRepartitionedTable(
                 DbTopicNames.dfh_api_property.getName(),
                 avroSerdes.DfhApiPropertyKey(),
                 avroSerdes.DfhApiPropertyValue()
         );
-    }
-
-    public KTable<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> dfhApiClassTable() {
-        return getRepartitionedTable(
-                DbTopicNames.dfh_api_class.getName(),
-                avroSerdes.DfhApiClassKey(),
-                avroSerdes.DfhApiClassValue()
-        );
-    }
-
-    public KStream<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> dfhApiClassStream() {
-        return builder.stream(
-                DbTopicNames.dfh_api_class.getName(),
-                Consumed.with(avroSerdes.DfhApiClassKey(), avroSerdes.DfhApiClassValue())
-        );
-    }
+    }*/
 
     public KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream() {
         return builder.stream(
@@ -174,12 +159,14 @@ public class RegisterInputTopic {
         );
     }
 
+/*
     public KStream<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyStream() {
         return builder.stream(
                 DbTopicNames.dfh_api_property.getName(),
                 Consumed.with(avroSerdes.DfhApiPropertyKey(), avroSerdes.DfhApiPropertyValue())
         );
     }
+*/
 
     /**
      * Register a KStream and map it to a new KTable to ensure proper partitioning
@@ -196,5 +183,8 @@ public class RegisterInputTopic {
                 .map(KeyValue::pair)
                 .toTable(Materialized.with(kSerde, vSerde));
     }
+
+
+
 
 }

@@ -125,11 +125,6 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<ProfileProperty> ProfilePropertyValue() {
-        Serde<ProfileProperty> serdes = new SpecificAvroSerde<>();
-        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
-        return serdes;
-    }
 
     public Serde<ProfilePropertyMap> ProfilePropertyMapValue() {
         Serde<ProfilePropertyMap> serdes = new SpecificAvroSerde<>();
@@ -607,6 +602,12 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<OntomeClassValue> OntomeClassValue() {
+        Serde<OntomeClassValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
     public Serde<OntomeClassMetadataValue> OntomeClassMetadataValue() {
         Serde<OntomeClassMetadataValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
@@ -618,4 +619,18 @@ public class ConfluentAvroSerdes {
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
+
+    public Serde<OntomePropertyKey> OntomePropertyKey() {
+        Serde<OntomePropertyKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<OntomePropertyValue> OntomePropertyValue() {
+        Serde<OntomePropertyValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
 }

@@ -1,16 +1,16 @@
 package org.geovistory.toolbox.streams.topologies;
 
-import dev.data_for_history.api_class.Key;
-import dev.data_for_history.api_class.Value;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
+import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassLabelKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassLabelValue;
+import org.geovistory.toolbox.streams.avro.OntomeClassValue;
+import org.geovistory.toolbox.streams.input.OntomeClassProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -26,25 +26,18 @@ public class OntomeClassLabel {
 
     public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var register = new RegisterInputTopic(builder);
+        var ontomeClassStream = new OntomeClassProjected(builder).kStream;
 
-        var apiClassTable = register.dfhApiClassTable();
-
-        return addProcessors(builder, apiClassTable).builder().build();
+        return addProcessors(builder, ontomeClassStream).builder().build();
 
     }
 
     public static OntomeClassLabelReturnValue addProcessors(
             StreamsBuilder builder,
-            KTable<Key, Value> apiClassTable
+            KStream<OntomeClassKey, OntomeClassValue> ontomeClassStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
-
-        /* SOURCE PROCESSORS */
-
-        // 1) register api_class
-        var ontomeClassStream = apiClassTable.toStream();
 
         /* STREAM PROCESSORS */
         // 2)

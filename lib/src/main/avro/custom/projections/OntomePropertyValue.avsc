@@ -1,0 +1,102 @@
+{
+  "type": "record",
+  "name": "OntomePropertyValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "removed_from_api",
+      "type": [
+        {
+          "type": "boolean",
+          "connect.default": false
+        },
+        "null"
+      ],
+      "default": false
+    },
+    {
+      "name": "dfh_pk_property",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_property_label_language",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_property_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_property_domain",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_property_range",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_fk_profile",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_property_inverse_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "dfh_parent_properties",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    },
+    {
+      "name": "dfh_ancestor_properties",
+      "type": {
+        "type": "array",
+        "items": [
+          "null",
+          "int"
+        ]
+      }
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}

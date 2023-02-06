@@ -8,9 +8,9 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.input.OntomeClassProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -25,27 +25,24 @@ public class ProjectClass {
 
     public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var registerInputTopic = new RegisterInputTopic(builder);
         var registerOutputTopic = new RegisterOutputTopic(builder);
-
-
-        var apiClassTable = registerInputTopic.dfhApiClassStream();
         var projectProfileStream = registerOutputTopic.projectProfileStream();
+        var ontomeClassStream = new OntomeClassProjected(builder).kStream;
 
-        return addProcessors(builder, projectProfileStream, apiClassTable).builder().build();
+        return addProcessors(builder, projectProfileStream, ontomeClassStream).builder().build();
     }
 
     public static ProjectClassReturnValue addProcessors(
             StreamsBuilder builder,
             KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream,
-            KStream<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> apiClassStream
+            KStream<OntomeClassKey, OntomeClassValue> ontomeClassStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
         /* STREAM PROCESSORS */
         // 2)
-        var apiClassProjected = apiClassStream
+        var ontomeClassProjected = ontomeClassStream
                 .mapValues((readOnlyKey, value) -> ProfileClass.newBuilder()
                         .setProfileId(value.getDfhFkProfile())
                         .setClassId(value.getDfhPkClass())
@@ -54,7 +51,7 @@ public class ProjectClass {
                 );
 
         // 3) GroupBy
-        var classByProfileIdGrouped = apiClassProjected
+        var classByProfileIdGrouped = ontomeClassProjected
                 .groupBy(
                         (key, value) -> value.getProfileId(),
                         Grouped.with(

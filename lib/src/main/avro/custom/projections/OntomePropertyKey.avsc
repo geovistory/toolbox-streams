@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "OntomePropertyKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Model to store property id",
+  "fields": [
+    {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    }
+  ]
+}

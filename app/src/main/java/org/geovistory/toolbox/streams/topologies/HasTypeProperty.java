@@ -1,7 +1,5 @@
 package org.geovistory.toolbox.streams.topologies;
 
-import dev.data_for_history.api_property.Key;
-import dev.data_for_history.api_property.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -12,8 +10,8 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.Prop;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.input.OntomePropertyProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -29,17 +27,14 @@ public class HasTypeProperty {
 
     public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var register = new RegisterInputTopic(builder);
 
-        var apiPropertyStream = register.dfhApiPropertyStream();
-
-        return addProcessors(builder, apiPropertyStream).builder().build();
+        return addProcessors(builder, new OntomePropertyProjected(builder).kStream).builder().build();
 
     }
 
     public static HasTypePropertyReturnValue addProcessors(
             StreamsBuilder builder,
-            KStream<Key, Value> apiPropertyStream
+            KStream<OntomePropertyKey, OntomePropertyValue> apiPropertyStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
@@ -119,7 +114,7 @@ public class HasTypeProperty {
 
     }
 
-    public static boolean isHasTypeProperty(Value property) {
+    public static boolean isHasTypeProperty(OntomePropertyValue property) {
         if (property.getDfhPkProperty() == Prop.HAS_TYPE.get()) return true;
         else if (property.getDfhParentProperties() != null
                 && property.getDfhParentProperties().contains(Prop.HAS_TYPE.get())
