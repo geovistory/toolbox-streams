@@ -1,16 +1,17 @@
 package org.geovistory.toolbox.streams.topologies;
 
-import dev.data_for_history.api_property.Key;
-import dev.data_for_history.api_property.Value;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
+import org.geovistory.toolbox.streams.avro.OntomePropertyKey;
 import org.geovistory.toolbox.streams.avro.OntomePropertyLabelKey;
 import org.geovistory.toolbox.streams.avro.OntomePropertyLabelValue;
+import org.geovistory.toolbox.streams.avro.OntomePropertyValue;
+import org.geovistory.toolbox.streams.input.OntomePropertyProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -26,53 +27,50 @@ public class OntomePropertyLabel {
 
     public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var register = new RegisterInputTopic(builder);
 
-        var apiPropertyTable = register.dfhApiPropertyTable();
-
-        return addProcessors(builder, apiPropertyTable).builder().build();
+        return addProcessors(builder, new OntomePropertyProjected(builder).kStream).builder().build();
 
     }
 
     public static OntomePropertyLabelReturnValue addProcessors(
             StreamsBuilder builder,
-            KTable<Key, Value> apiPropertyTable
+            KStream<OntomePropertyKey, OntomePropertyValue> ontomePropertyStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
-        /* SOURCE PROCESSORS */
-
-        // 1) register api_property
-        var ontomePropertyStream = apiPropertyTable.toStream();
 
         /* STREAM PROCESSORS */
         // 2)
         var ontomePropertyLabel = ontomePropertyStream
-                .flatMap((key, value) -> {
-                    List<KeyValue<OntomePropertyLabelKey, OntomePropertyLabelValue>> result = new LinkedList<>();
+                .flatMap(
+                        (key, value) -> {
+                            List<KeyValue<OntomePropertyLabelKey, OntomePropertyLabelValue>> result = new LinkedList<>();
 
-                    var langId = Utils.isoLangToGeoId(value.getDfhPropertyLabelLanguage());
-                    if (langId == null) return result;
-                    var k = OntomePropertyLabelKey.newBuilder()
-                            .setPropertyId(value.getDfhPkProperty())
-                            .setLanguageId(langId)
-                            .build();
-                    var v = OntomePropertyLabelValue.newBuilder()
-                            .setPropertyId(value.getDfhPkProperty())
-                            .setLanguageId(langId)
-                            .setLabel(value.getDfhPropertyLabel())
-                            .setInverseLabel(value.getDfhPropertyInverseLabel())
-                            .build();
-                    result.add(KeyValue.pair(k, v));
-                    return result;
-                });
+                            var langId = Utils.isoLangToGeoId(value.getDfhPropertyLabelLanguage());
+                            if (langId == null) return result;
+                            var k = OntomePropertyLabelKey.newBuilder()
+                                    .setPropertyId(value.getDfhPkProperty())
+                                    .setLanguageId(langId)
+                                    .build();
+                            var v = OntomePropertyLabelValue.newBuilder()
+                                    .setPropertyId(value.getDfhPkProperty())
+                                    .setLanguageId(langId)
+                                    .setLabel(value.getDfhPropertyLabel())
+                                    .setInverseLabel(value.getDfhPropertyInverseLabel())
+                                    .build();
+                            result.add(KeyValue.pair(k, v));
+                            return result;
+                        },
+                        Named.as("kstream-flatmap-ontome-property-to-ontome-property-label")
+                );
 
         /* SINK PROCESSORS */
         ontomePropertyLabel
                 .to(
                         output.TOPICS.ontome_property_label,
                         Produced.with(avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue())
+                                .withName(output.TOPICS.ontome_property_label + "-producer")
                 );
 
 

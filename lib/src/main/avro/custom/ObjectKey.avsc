@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "name": "LiteralKey",
+  "name": "ObjectKey",
   "namespace": "org.geovistory.toolbox.streams.avro",
   "doc": "Key of a literal (object of a statement)",
   "fields": [

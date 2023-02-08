@@ -57,10 +57,12 @@ public class RegisterOutputTopic {
         return builder.stream(GeovPropertyLabel.output.TOPICS.geov_property_label,
                 Consumed.with(avroSerdes.GeovPropertyLabelKey(), avroSerdes.GeovPropertyLabelValue()));
     }
+
     public KStream<ProjectPropertyKey, ProjectPropertyValue> projectPropertyStream() {
         return builder.stream(ProjectProperty.output.TOPICS.project_property,
                 Consumed.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()));
     }
+
     public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
         return builder.table(ProjectEntity.output.TOPICS.project_entity,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityValue()));
@@ -71,16 +73,25 @@ public class RegisterOutputTopic {
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTopStatementsValue()));
     }
 
-    public KTable<dev.information.statement.Key, StatementEnrichedValue> statementEnrichedTable() {
-        return builder.table(StatementEnriched.output.TOPICS.statement_enriched,
+    public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTable() {
+        return builder.table(StatementEnriched.output.TOPICS.statement_with_literal,
                 Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
+    }
+
+    public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithEntityTable() {
+        return builder.table(StatementEnriched.output.TOPICS.statement_with_entity,
+                Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
+    }
+
+    public KTable<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityTable() {
+        return builder.table(ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity,
+                Consumed.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue()));
 
     }
 
-    public KTable<ProjectStatementKey, ProjectStatementValue> projectStatementTable() {
-        return builder.table(ProjectStatement.output.TOPICS.project_statement,
+    public KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteralStream() {
+        return builder.stream(ProjectStatementWithLiteral.output.TOPICS.project_statement_with_literal,
                 Consumed.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue()));
-
     }
 
     public KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable() {
@@ -98,6 +109,7 @@ public class RegisterOutputTopic {
                 Consumed.with(avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelValue()));
 
     }
+
     public KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsStream() {
         return builder.stream(ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
                 Consumed.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
@@ -143,25 +155,28 @@ public class RegisterOutputTopic {
         return builder.table(ProjectEntityType.output.TOPICS.project_entity_type,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTypeValue()));
     }
+
     public KTable<ProjectEntityKey, TimeSpanValue> projectEntityTimeSpanTable() {
         return builder.table(ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.TimeSpanValue()));
     }
+
     public KTable<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTable() {
         return builder.table(ProjectEntityFulltext.output.TOPICS.project_entity_fulltext,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityFulltextValue()));
     }
+
     public KTable<ProjectEntityKey, ProjectEntityClassLabelValue> projectEntityClassLabelTable() {
         return builder.table(ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassLabelValue()));
     }
 
-    public KTable<OntomeClassKey,OntomeClassMetadataValue> ontomeClassMetadataTable() {
+    public KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable() {
         return builder.table(OntomeClassMetadata.output.TOPICS.ontome_class_metadata,
                 Consumed.with(avroSerdes.OntomeClassKey(), avroSerdes.OntomeClassMetadataValue()));
     }
 
-    public KTable<ProjectEntityKey,ProjectEntityClassMetadataValue> projectEntityClassMetadataTable() {
+    public KTable<ProjectEntityKey, ProjectEntityClassMetadataValue> projectEntityClassMetadataTable() {
         return builder.table(ProjectEntityClassMetadata.output.TOPICS.project_entity_class_metadata,
                 Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassMetadataValue()));
     }

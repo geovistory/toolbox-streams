@@ -6,6 +6,7 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.I;
@@ -66,17 +67,21 @@ public class CommunityEntityLabelConfig {
                         return null;
                     }
                     return result;
-                }
+                },
+                Named.as("kstream-flatmap-project-entity-label-config-to-community-entity-label-config")
         );
         /* SINK PROCESSORS */
 
         // 8) to
         communityEntityLabelConfigStream.to(output.TOPICS.community_entity_label_config,
-                Produced.with(avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue()));
+                Produced.with(avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue())
+                        .withName(output.TOPICS.community_entity_label_config + "-producer")
+        );
 
         return new CommunityEntityLabelConfigReturnValue(builder, communityEntityLabelConfigStream);
 
     }
+
     public enum input {
         TOPICS;
         public final String entity_label_config = DbTopicNames.pro_entity_label_config.getName();

@@ -3,9 +3,7 @@ package org.geovistory.toolbox.streams.topologies;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
@@ -51,17 +49,22 @@ public class ProjectEntityClassMetadata {
                         .setAncestorClasses(value2.getAncestorClasses())
                         .setDeleted$1(Utils.booleanIsEqualTrue(value1.getDeleted$1()))
                         .build(),
+                TableJoined.as(inner.TOPICS.project_entity_with_class_metadata+ "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityClassMetadataValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_class_metadata)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityClassMetadataValue())
         );
 
 
-        var projectEntityClassMetadataStream = projectEntityClassMetadataTable.toStream();
+        var projectEntityClassMetadataStream = projectEntityClassMetadataTable.toStream(
+                Named.as(inner.TOPICS.project_entity_with_class_metadata + "-to-stream")
+        );
         /* SINK PROCESSORS */
 
         projectEntityClassMetadataStream.to(output.TOPICS.project_entity_class_metadata,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassMetadataValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassMetadataValue())
+                        .withName(output.TOPICS.project_entity_class_metadata + "-producer")
+        );
 
         return new ProjectEntityClassMetadataReturnValue(builder, projectEntityClassMetadataTable, projectEntityClassMetadataStream);
 

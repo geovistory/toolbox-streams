@@ -4,9 +4,7 @@ import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
@@ -61,13 +59,16 @@ public class ProjectEntity {
                             .setDeleted$1(deleted)
                             .build();
                 },
-                Materialized.<dev.projects.info_proj_rel.Key, ProjectEntityValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.projectEntityJoin)
+                TableJoined.as(inner.TOPICS.project_entity_join+ "-fk-join"),
+                Materialized.<dev.projects.info_proj_rel.Key, ProjectEntityValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_join)
                         .withKeySerde(avroSerdes.ProInfoProjRelKey())
                         .withValueSerde(avroSerdes.ProjectEntityValue())
         );
 
         var projectEntityStream = projectEntityJoin
-                .toStream()
+                .toStream(
+                        Named.as(inner.TOPICS.project_entity_join + "-to-stream")
+                )
                 .map((key, value) -> {
                     var k = ProjectEntityKey.newBuilder()
                             .setProjectId(key.getFkProject())
@@ -80,12 +81,16 @@ public class ProjectEntity {
                             .setDeleted$1(value.getDeleted$1())
                             .build();
                     return KeyValue.pair(k, v);
-                });
+                },
+                        Named.as("kstream-map-project-entity")
+                );
 
         /* SINK PROCESSORS */
 
         projectEntityStream.to(output.TOPICS.project_entity,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityValue())
+                        .withName(output.TOPICS.project_entity + "-producer")
+        );
 
         return new ProjectEntityReturnValue(builder, projectEntityStream);
 
@@ -101,7 +106,7 @@ public class ProjectEntity {
 
     public enum inner {
         TOPICS;
-        public final String projectEntityJoin = "projectEntityJoin";
+        public final String project_entity_join = "project_entity_join";
     }
 
     public enum output {

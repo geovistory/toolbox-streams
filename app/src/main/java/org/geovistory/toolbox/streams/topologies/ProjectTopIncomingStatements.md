@@ -4,17 +4,23 @@ This topology aggregates the top 5 incoming statements of an entity's property.
 
 ```mermaid
 flowchart TD
-    1a-->2a-->3a-->3b
-   
+    1a-->2a-->4a-->5a-->5b
+    1c-->2a
+
     subgraph 1
-        1a[project_statement_enriched]
+        1a[project_statement_with_entity]
+        1b[project_statement_with_literal]
+        1c[project_entity_label]
     end
     subgraph __2
-        2a([GroupBy])
+        2a([Join])
     end  
-    subgraph __3
-        3a([Aggregate])
-        3b[project_top_incoming_statements]
+    subgraph __4
+        4a([GroupBy])
+    end  
+    subgraph __5
+        5a([Aggregate])
+        5b[project_top_incoming_statements]
     end
 
 ```
@@ -22,8 +28,10 @@ flowchart TD
 | Step |                                                                     |
 |------|---------------------------------------------------------------------|
 | 1    | input topic                                                         |
-| 2    | GroupBy: group by subject_id                                        |
-| 3    | Aggregate: create a list of statements, ordered by ord_num_of_range |
+| 2    | Filter: drop statements with literals, ToTable                      |
+| 3    | LeftJoin: entity label to set subject label                         |
+| 4    | GroupBy: group by subject_id                                        |
+| 5    | Aggregate: create a list of statements, ordered by ord_num_of_range |
 |      | To topic `project_top_incoming_statements`                          |
 
 ## Input Topics
@@ -32,9 +40,9 @@ _{prefix_in} = TS_INPUT_TOPIC_NAME_PREFIX_
 
 _{prefix_out} = TS_OUTPUT_TOPIC_NAME_PREFIX_
 
-| name                                    | label in diagram           | Type   |
-|-----------------------------------------|----------------------------|--------|
-| {prefix_out}_project_statement_enriched | project_statement_enriched | KTable |
+| name                                    | label in diagram           | Type    |
+|-----------------------------------------|----------------------------|---------|
+| {prefix_out}_project_statement_enriched | project_statement_enriched | KStream |
 
 ## Output topic
 

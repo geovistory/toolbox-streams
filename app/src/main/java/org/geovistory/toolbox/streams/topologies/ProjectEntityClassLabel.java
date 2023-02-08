@@ -3,9 +3,7 @@ package org.geovistory.toolbox.streams.topologies;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
@@ -54,17 +52,22 @@ public class ProjectEntityClassLabel {
                         .setClassLabel(value2.getLabel())
                         .setDeleted$1(Utils.includesTrue(value1.getDeleted$1(), value2.getDeleted$1()))
                         .build(),
+                TableJoined.as(inner.TOPICS.project_entity_with_class_label+ "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityClassLabelValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_class_label)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityClassLabelValue())
         );
 
 
-        var projectEntityClassLabelStream = projectEntityClassLabelTable.toStream();
+        var projectEntityClassLabelStream = projectEntityClassLabelTable.toStream(
+                Named.as(inner.TOPICS.project_entity_with_class_label + "-to-stream")
+        );
         /* SINK PROCESSORS */
 
         projectEntityClassLabelStream.to(output.TOPICS.project_entity_class_label,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassLabelValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassLabelValue())
+                        .withName(output.TOPICS.project_entity_class_label + "-producer")
+        );
 
         return new ProjectEntityClassLabelReturnValue(builder, projectEntityClassLabelTable, projectEntityClassLabelStream);
 

@@ -27,6 +27,9 @@ dependencies {
     // Use assertj for testing.
     testImplementation 'org.assertj:assertj-core:3.15.0'
 
+    // Use underscore for testing.
+    testImplementation 'com.github.javadev:underscore:1.86'
+
     // logging
     implementation 'org.slf4j:slf4j-simple:2.0.3'
 }

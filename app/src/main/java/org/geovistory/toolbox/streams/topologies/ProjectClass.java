@@ -8,9 +8,9 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.input.OntomeClassProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -25,38 +25,37 @@ public class ProjectClass {
 
     public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var registerInputTopic = new RegisterInputTopic(builder);
         var registerOutputTopic = new RegisterOutputTopic(builder);
-
-
-        var apiClassTable = registerInputTopic.dfhApiClassTable();
         var projectProfileStream = registerOutputTopic.projectProfileStream();
+        var ontomeClassStream = new OntomeClassProjected(builder).kStream;
 
-        return addProcessors(builder, projectProfileStream, apiClassTable).builder().build();
+        return addProcessors(builder, projectProfileStream, ontomeClassStream).builder().build();
     }
 
     public static ProjectClassReturnValue addProcessors(
             StreamsBuilder builder,
             KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream,
-            KTable<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> apiClassTable
+            KStream<OntomeClassKey, OntomeClassValue> ontomeClassStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
         /* STREAM PROCESSORS */
         // 2)
-        KTable<dev.data_for_history.api_class.Key, ProfileClass> apiClassProjected = apiClassTable
-                .mapValues((readOnlyKey, value) -> ProfileClass.newBuilder()
+        var ontomeClassProjected = ontomeClassStream
+                .mapValues(
+                        (readOnlyKey, value) -> ProfileClass.newBuilder()
                         .setProfileId(value.getDfhFkProfile())
                         .setClassId(value.getDfhPkClass())
                         .setDeleted$1(Objects.equals(value.getDeleted$1(), "true"))
-                        .build()
+                        .build(),
+                        Named.as("kstream-mapvalues-ontome-class-to-profile-class")
                 );
 
         // 3) GroupBy
-        KGroupedTable<Integer, ProfileClass> classByProfileIdGrouped = apiClassProjected
+        var classByProfileIdGrouped = ontomeClassProjected
                 .groupBy(
-                        (key, value) -> KeyValue.pair(value.getProfileId(), value),
+                        (key, value) -> value.getProfileId(),
                         Grouped.with(
                                 Serdes.Integer(), avroSerdes.ProfileClassValue()
                         ));
@@ -68,7 +67,6 @@ public class ProjectClass {
                     aggValue.getMap().put(key, newValue);
                     return aggValue;
                 },
-                (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(inner.TOPICS.profile_with_classes)
                 ,
                 Materialized.<Integer, ProfileClassMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_classes)
@@ -80,11 +78,16 @@ public class ProjectClass {
         // 4)
         var projectProfileTable = projectProfileStream
                 .toTable(
-                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
+                        Named.as(inner.TOPICS.profile_with_classes + "-to-table"),
+                        Materialized
+                                .<ProjectProfileKey, ProjectProfileValue, KeyValueStore<Bytes, byte[]>>
+                                        as(inner.TOPICS.profile_with_classes + "-store")
+                                .withKeySerde(avroSerdes.ProjectProfileKey())
+                                .withValueSerde(avroSerdes.ProjectProfileValue())
                 );
 
         // 5)
-        var projectPropertiesPerProfile = projectProfileTable.join(
+        var projectClassPerProfile = projectProfileTable.join(
                 classByProfileIdAggregated,
                 ProjectProfileValue::getProfileId,
                 (projectProfileValue, profileClassMap) -> {
@@ -104,14 +107,15 @@ public class ProjectClass {
                                 projectProperyMap.getMap().put(key, v);
                             });
                     return projectProperyMap;
-                }
+                },
+                TableJoined.as("project_classes_per_profile"+ "-fk-join")
         );
 
 // 3)
 
-        var projectClassFlat = projectPropertiesPerProfile
+        var projectClassFlat = projectClassPerProfile
                 .toStream(
-                        Named.as(inner.TOPICS.project_classes_stream)
+                        Named.as(inner.TOPICS.project_classes_stream + "-to-stream")
                 )
                 .flatMap((key, value) -> value.getMap().values().stream().map(projectClassValue -> {
                                     var k = ProjectClassKey.newBuilder()
@@ -124,7 +128,9 @@ public class ProjectClass {
                         Named.as(inner.TOPICS.project_classes_flat));
 
         projectClassFlat.to(output.TOPICS.project_class,
-                Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue()));
+                Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
+                        .withName(output.TOPICS.project_class + "-producer")
+        );
 
         return new ProjectClassReturnValue(builder, projectClassFlat);
 

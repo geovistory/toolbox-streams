@@ -43,10 +43,10 @@
       "default": null
     },
     {
-      "name": "object_literal",
+      "name": "object",
       "type": [
         "null",
-        "org.geovistory.toolbox.streams.avro.LiteralValue"
+        "org.geovistory.toolbox.streams.avro.ObjectValue"
       ],
       "default": null
     },

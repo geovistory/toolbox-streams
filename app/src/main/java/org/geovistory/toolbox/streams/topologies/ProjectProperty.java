@@ -8,9 +8,9 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.input.OntomePropertyProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -25,52 +25,47 @@ public class ProjectProperty {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
         var registerOutputTopic = new RegisterOutputTopic(builder);
 
         return addProcessors(
                 builder,
-                registerInputTopic.dfhApiPropertyTable(),
+                new OntomePropertyProjected(builder).kStream,
                 registerOutputTopic.projectProfileStream()
         ).builder().build();
     }
 
     public static ProjectPropertyReturnValue addProcessors(
             StreamsBuilder builder,
-            KTable<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> dfhApiPropertyTable,
+            KStream<OntomePropertyKey, OntomePropertyValue> ontomePropertyStream,
             KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
-        // 2)
-        KTable<dev.data_for_history.api_property.Key, ProfileProperty> apiPropertyProjected = dfhApiPropertyTable
-                .mapValues((readOnlyKey, value) -> ProfileProperty.newBuilder()
-                        .setProfileId(value.getDfhFkProfile())
-                        .setPropertyId(value.getDfhPkProperty())
-                        .setDomainId(value.getDfhPropertyDomain())
-                        .setRangeId(value.getDfhPropertyRange())
-                        .setDeleted$1(Objects.equals(value.getDeleted$1(), "true"))
-                        .build()
-                );
 
         // 3) GroupBy
-        KGroupedTable<Integer, ProfileProperty> propertyByProfileIdGrouped = apiPropertyProjected
+        var propertyByProfileIdGrouped = ontomePropertyStream
                 .groupBy(
-                        (key, value) -> KeyValue.pair(value.getProfileId(), value),
+                        (key, value) -> value.getDfhFkProfile(),
                         Grouped.with(
-                                Serdes.Integer(), avroSerdes.ProfilePropertyValue()
+                                Serdes.Integer(), avroSerdes.OntomePropertyValue()
                         ));
         // 3) Aggregate
         var propertyByProfileIdAggregated = propertyByProfileIdGrouped.aggregate(
                 () -> ProfilePropertyMap.newBuilder().build(),
                 (aggKey, newValue, aggValue) -> {
-                    var key = newValue.getProfileId() + "_" + newValue.getPropertyId() + "_" + newValue.getDomainId() + "_" + newValue.getRangeId();
-                    aggValue.getMap().put(key, newValue);
+                    var key = newValue.getDfhFkProfile() + "_" + newValue.getDfhPkProperty() + "_" + newValue.getDfhPropertyDomain() + "_" + newValue.getDfhPropertyRange();
+                    var value = ProfileProperty.newBuilder()
+                            .setProfileId(newValue.getDfhFkProfile())
+                            .setPropertyId(newValue.getDfhPkProperty())
+                            .setDomainId(newValue.getDfhPropertyDomain())
+                            .setRangeId(newValue.getDfhPropertyRange())
+                            .setDeleted$1(Objects.equals(newValue.getDeleted$1(), "true"))
+                            .build();
+                    aggValue.getMap().put(key, value);
                     return aggValue;
                 },
-                (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(inner.TOPICS.profile_with_properties)
                 ,
                 Materialized.<Integer, ProfilePropertyMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_properties)
@@ -82,7 +77,12 @@ public class ProjectProperty {
         // 4)
         var projectProfileTable = projectProfileStream
                 .toTable(
-                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
+                        Named.as(inner.TOPICS.profile_with_properties + "-to-table"),
+                        Materialized
+                                .<ProjectProfileKey, ProjectProfileValue, KeyValueStore<Bytes, byte[]>>
+                                        as(inner.TOPICS.profile_with_properties + "-store")
+                                .withKeySerde(avroSerdes.ProjectProfileKey())
+                                .withValueSerde(avroSerdes.ProjectProfileValue())
                 );
 
         // 5)
@@ -108,7 +108,8 @@ public class ProjectProperty {
                                 projectPropertyMap.getMap().put(key, v);
                             });
                     return projectPropertyMap;
-                }
+                },
+                TableJoined.as("project_properties_per_profile"+ "-fk-join")
         );
 
 // 3)
@@ -136,7 +137,9 @@ public class ProjectProperty {
                         Named.as(inner.TOPICS.project_properties_flat));
 
         projectPropertyStream.to(output.TOPICS.project_property,
-                Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()));
+                Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue())
+                        .withName(output.TOPICS.project_property + "-producer")
+        );
 
         return new ProjectPropertyReturnValue(builder, projectPropertyStream);
 

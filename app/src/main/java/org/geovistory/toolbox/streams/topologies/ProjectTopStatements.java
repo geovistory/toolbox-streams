@@ -1,11 +1,13 @@
 package org.geovistory.toolbox.streams.topologies;
 
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.ProjectTopStatementsKey;
 import org.geovistory.toolbox.streams.avro.ProjectTopStatementsValue;
@@ -40,16 +42,25 @@ public class ProjectTopStatements {
 
         /* STREAM PROCESSORS */
         // 2)
-        var topStatementsStream = outgoingTopStatementsStream.merge(incomingTopStatementsStream);
+        var topStatementsStream = outgoingTopStatementsStream.merge(
+                incomingTopStatementsStream,
+                Named.as("kstream-merge-project-top-out-s-and-project-top-in-s")
+        );
 
         /* SINK PROCESSORS */
 
         topStatementsStream.to(output.TOPICS.project_top_statements,
-                Produced.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
+                Produced.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue())
+                        .withName(output.TOPICS.project_top_statements + "-producer")
+        );
 
         var topStatementsTable = topStatementsStream.toTable(
                 Named.as(output.TOPICS.project_top_statements),
-                Materialized.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue())
+                Materialized
+                        .<ProjectTopStatementsKey, ProjectTopStatementsValue, KeyValueStore<Bytes, byte[]>>
+                                as(output.TOPICS.project_top_statements + "-store")
+                        .withKeySerde(avroSerdes.ProjectTopStatementsKey())
+                        .withValueSerde(avroSerdes.ProjectTopStatementsValue())
         );
 
 

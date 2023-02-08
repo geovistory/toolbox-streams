@@ -9,6 +9,8 @@ import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.geovistory.toolbox.streams.input.OntomeClassProjected;
+import org.geovistory.toolbox.streams.input.OntomePropertyProjected;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.topologies.*;
 
@@ -17,8 +19,6 @@ import java.util.Properties;
 class App {
     public static void main(String[] args) {
 
-        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-        createTopics();
 
         StreamsBuilder builder = new StreamsBuilder();
 
@@ -27,6 +27,11 @@ class App {
 
         // build the topology
         var topology = builder.build();
+
+        System.out.println(topology.describe());
+
+        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
+        createTopics();
 
         // print configuration information
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
@@ -50,10 +55,11 @@ class App {
 
         // register input topics as KTables
         var proProjectTable = inputTopics.proProjectTable();
-        var proTextPropertyTable = inputTopics.proTextPropertyTable();
+        var proTextPropertyStream = inputTopics.proTextPropertyStream();
         var proProfileProjRelTable = inputTopics.proProfileProjRelTable();
         var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
         var infResourceTable = inputTopics.infResourceTable();
+        var infResourceStream = inputTopics.infResourceStream();
         var infStatementTable = inputTopics.infStatementTable();
         var infLanguageStream = inputTopics.infLanguageStream();
         var infAppellationStream = inputTopics.infAppellationStream();
@@ -63,16 +69,19 @@ class App {
         var infDimensionStream = inputTopics.infDimensionStream();
         var datDigitalStream = inputTopics.datDigitalStream();
         var tabCellStream = inputTopics.tabCellStream();
-        var dfhApiClassTable = inputTopics.dfhApiClassTable();
-        var dfhApiClassStream = inputTopics.dfhApiClassStream();
-        var dfhApiPropertyTable = inputTopics.dfhApiPropertyTable();
+
+        var ontomeClass = new OntomeClassProjected(builder);
+        var ontomeProperty = new OntomePropertyProjected(builder);
+
+
         var sysConfigTable = inputTopics.sysConfigTable();
 
         // register input topics as KStreams
         var proEntityLabelConfigStream = inputTopics.proEntityLabelConfigStream();
 
         // register output topics as KTables
-        var statementEnrichedTable = outputTopics.statementEnrichedTable();
+        var statementWithEntityTable = outputTopics.statementWithEntityTable();
+        var statementWithLiteralTable = outputTopics.statementWithLiteralTable();
         var projectEntityLabelTable = outputTopics.projectEntityLabelTable();
         var projectPropertyLabelTable = outputTopics.projectPropertyLabelTable();
         var projectEntityTopStatementsTable = outputTopics.projectEntityTopStatementsTable();
@@ -88,24 +97,24 @@ class App {
 
         // add sub-topology ProjectProperty
         var projectProperty = ProjectProperty.addProcessors(builder,
-                dfhApiPropertyTable,
+                ontomeProperty.kStream,
                 projectProfiles.projectProfileStream());
 
         // add sub-topology ProjectClass
         var projectClass = ProjectClass.addProcessors(builder,
                 projectProfiles.projectProfileStream(),
-                dfhApiClassTable
+                ontomeClass.kStream
         );
         var projectClassTable = outputTopics.projectClassTable();
 
         // add sub-topology OntomeClassLabel
         var ontomeClassLabel = OntomeClassLabel.addProcessors(builder,
-                dfhApiClassTable
+                ontomeClass.kStream
         );
 
         // add sub-topology GeovClassLabel
         var geovClassLabel = GeovClassLabel.addProcessors(builder,
-                proTextPropertyTable
+                proTextPropertyStream
         );
 
         // add sub-topology ProjectClassLabel
@@ -133,7 +142,7 @@ class App {
         // add sub-topology StatementEnriched
         StatementEnriched.addProcessors(builder,
                 infStatementTable,
-                infResourceTable,
+                infResourceStream,
                 infLanguageStream,
                 infAppellationStream,
                 infLangStringStream,
@@ -144,22 +153,29 @@ class App {
                 tabCellStream
         );
 
-        // add sub-topology ProjectStatement
-        ProjectStatement.addProcessors(builder,
-                statementEnrichedTable,
-                proInfoProjRelTable,
-                projectEntityLabelTable
+        // add sub-topology ProjectStatementWithEntity
+        ProjectStatementWithEntity.addProcessors(builder,
+                statementWithEntityTable,
+                proInfoProjRelTable
         );
-        var projectStatementTable = outputTopics.projectStatementTable();
+        var projectStatementWithEntityTable = outputTopics.projectStatementWithEntityTable();
 
+        // add sub-topology ProjectStatementWithLiteral
+        var projectStatementWithLiteral = ProjectStatementWithLiteral.addProcessors(builder,
+                statementWithLiteralTable,
+                proInfoProjRelTable
+        );
         // add sub-topology ProjectTopIncomingStatements
         var projectTopIncomingStatements = ProjectTopIncomingStatements.addProcessors(builder,
-                projectStatementTable
+                projectStatementWithEntityTable,
+                projectEntityLabelTable
         );
 
         // add sub-topology ProjectTopOutgoingStatements
         var projectTopOutgoingStatements = ProjectTopOutgoingStatements.addProcessors(builder,
-                projectStatementTable
+                projectStatementWithLiteral.ProjectStatementStream(),
+                projectStatementWithEntityTable,
+                projectEntityLabelTable
         );
 
         // add sub-topology ProjectTopStatements
@@ -184,13 +200,13 @@ class App {
 
         // add sub-topology OntomePropertyLabel
         var ontomePropertyLabel = OntomePropertyLabel.addProcessors(builder,
-                dfhApiPropertyTable
+                ontomeProperty.kStream
         );
 
 
         // add sub-topology GeovPropertyLabel
         var geovPropertyLabel = GeovPropertyLabel.addProcessors(builder,
-                proTextPropertyTable
+                proTextPropertyStream
         );
 
         // add sub-topology ProjectPropertyLabel
@@ -220,7 +236,7 @@ class App {
 
         // add sub-topology HasTypeProperty
         HasTypeProperty.addProcessors(builder,
-                inputTopics.dfhApiPropertyStream()
+                ontomeProperty.kStream
         );
 
         // add sub-topology ProjectEntityType
@@ -238,7 +254,7 @@ class App {
 
         // add sub-topology OntomeClassMetadata
         var ontomeClassMetadata = OntomeClassMetadata.addProcessors(builder,
-                dfhApiClassStream
+                ontomeClass.kStream
         );
         // add sub-topology ProjectEntityClassMetadata
         var projectEntityClassMetadata = ProjectEntityClassMetadata.addProcessors(builder,
@@ -276,10 +292,12 @@ class App {
                 ProjectEntity.output.TOPICS.project_entity,
                 ProjectClassLabel.output.TOPICS.project_class_label,
                 ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
-                StatementEnriched.output.TOPICS.statement_enriched,
+                StatementEnriched.output.TOPICS.statement_with_entity,
+                StatementEnriched.output.TOPICS.statement_with_literal,
+                StatementEnriched.output.TOPICS.statement_other,
                 ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config_enriched,
                 CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config,
-                ProjectStatement.output.TOPICS.project_statement,
+                ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity,
                 ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
                 ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
                 ProjectTopStatements.output.TOPICS.project_top_statements,

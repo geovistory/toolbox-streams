@@ -1,19 +1,14 @@
 package org.geovistory.toolbox.streams.topologies;
 
-import dev.data_for_history.api_property.Key;
-import dev.data_for_history.api_property.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Grouped;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.Prop;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.input.OntomePropertyProjected;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -29,17 +24,14 @@ public class HasTypeProperty {
 
     public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var register = new RegisterInputTopic(builder);
 
-        var apiPropertyStream = register.dfhApiPropertyStream();
-
-        return addProcessors(builder, apiPropertyStream).builder().build();
+        return addProcessors(builder, new OntomePropertyProjected(builder).kStream).builder().build();
 
     }
 
     public static HasTypePropertyReturnValue addProcessors(
             StreamsBuilder builder,
-            KStream<Key, Value> apiPropertyStream
+            KStream<OntomePropertyKey, OntomePropertyValue> apiPropertyStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
@@ -48,22 +40,25 @@ public class HasTypeProperty {
         // 2)
         // Filter has type sub-properties
         var hasTypeStream = apiPropertyStream
-                .flatMapValues((key, value) -> {
-                    List<HasTypePropertyGroupByValue> result = new LinkedList<>();
+                .flatMapValues(
+                        (key, value) -> {
+                            List<HasTypePropertyGroupByValue> result = new LinkedList<>();
 
-                    if (isHasTypeProperty(value)) {
-                        var deleted = Utils.booleanIsEqualTrue(value.getRemovedFromApi()) ||
-                                Utils.stringIsEqualTrue(value.getDeleted$1());
-                        result.add(HasTypePropertyGroupByValue.newBuilder()
-                                .setPropertyId(value.getDfhPkProperty())
-                                .setClassId(value.getDfhPropertyDomain())
-                                .setProfileId(value.getDfhFkProfile())
-                                .setDeleted(deleted)
-                                .build());
-                    }
+                            if (isHasTypeProperty(value)) {
+                                var deleted = Utils.booleanIsEqualTrue(value.getRemovedFromApi()) ||
+                                        Utils.stringIsEqualTrue(value.getDeleted$1());
+                                result.add(HasTypePropertyGroupByValue.newBuilder()
+                                        .setPropertyId(value.getDfhPkProperty())
+                                        .setClassId(value.getDfhPropertyDomain())
+                                        .setProfileId(value.getDfhFkProfile())
+                                        .setDeleted(deleted)
+                                        .build());
+                            }
 
-                    return result;
-                });
+                            return result;
+                        },
+                        Named.as("kstream-flat-map-values-ontome-properties-to-has-type-properties")
+                );
 
         var groupedByDomain = hasTypeStream.groupBy(
                 (key, value) -> HasTypePropertyKey.newBuilder()
@@ -95,8 +90,11 @@ public class HasTypeProperty {
                         .withValueSerde(avroSerdes.HasTypePropertyAggregateValue()));
 
         var hasTypePropertyStream = hasTypePropertyTable
-                .toStream()
-                .mapValues((readOnlyKey, value) -> {
+                .toStream(
+                        Named.as(inner.TOPICS.has_type_properties_aggregated + "-to-stream")
+                )
+                .mapValues(
+                        (readOnlyKey, value) -> {
                             // if all are deleted, mark as deleted
                             var deleted = !value.getDeletedMap().getItem().containsValue(false);
                             return HasTypePropertyValue.newBuilder()
@@ -104,7 +102,8 @@ public class HasTypeProperty {
                                     .setPropertyId(value.getPropertyId())
                                     .setDeleted$1(deleted)
                                     .build();
-                        }
+                        },
+                        Named.as("kstream-mapvalues-mark-has-type-property-as-deleted")
                 );
 
         /* SINK PROCESSORS */
@@ -112,6 +111,7 @@ public class HasTypeProperty {
                 .to(
                         output.TOPICS.has_type_property,
                         Produced.with(avroSerdes.HasTypePropertyKey(), avroSerdes.HasTypePropertyValue())
+                                .withName(output.TOPICS.has_type_property + "-producer")
                 );
 
 
@@ -119,7 +119,7 @@ public class HasTypeProperty {
 
     }
 
-    public static boolean isHasTypeProperty(Value property) {
+    public static boolean isHasTypeProperty(OntomePropertyValue property) {
         if (property.getDfhPkProperty() == Prop.HAS_TYPE.get()) return true;
         else if (property.getDfhParentProperties() != null
                 && property.getDfhParentProperties().contains(Prop.HAS_TYPE.get())

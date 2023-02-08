@@ -51,15 +51,24 @@ public class ProjectPropertyLabel {
         /* SOURCE PROCESSORS */
         var projectPropertyTable = projectPropertyStream.toTable(
                 Named.as("project_property_table"),
-                Materialized.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue())
+                Materialized.<ProjectPropertyKey, ProjectPropertyValue, KeyValueStore<Bytes, byte[]>>
+                                as("project_property_table" + "-store")
+                        .withKeySerde(avroSerdes.ProjectPropertyKey())
+                        .withValueSerde(avroSerdes.ProjectPropertyValue())
         );
         var ontomePropertyLabelTable = ontomePropertyLabelStream.toTable(
                 Named.as("ontome_property_label_table"),
-                Materialized.with(avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue())
+                Materialized.<OntomePropertyLabelKey, OntomePropertyLabelValue, KeyValueStore<Bytes, byte[]>>
+                                as("ontome_property_label_table" + "-store")
+                        .withKeySerde(avroSerdes.OntomePropertyLabelKey())
+                        .withValueSerde(avroSerdes.OntomePropertyLabelValue())
         );
         var geovPropertyLabelTable = geovPropertyLabelStream.toTable(
                 Named.as("geov_property_label_table"),
-                Materialized.with(avroSerdes.GeovPropertyLabelKey(), avroSerdes.GeovPropertyLabelValue())
+                Materialized.<GeovPropertyLabelKey, GeovPropertyLabelValue, KeyValueStore<Bytes, byte[]>>
+                                as("geov_property_label_table" + "-store")
+                        .withKeySerde(avroSerdes.GeovPropertyLabelKey())
+                        .withValueSerde(avroSerdes.GeovPropertyLabelValue())
         );
 
         /* STREAM PROCESSORS */
@@ -75,96 +84,106 @@ public class ProjectPropertyLabel {
                         .setLanguageId(value2.getFkLanguage())
                         .setDeleted$1(Boolean.TRUE.equals(value1.getDeleted$1()) || Objects.equals(value2.getDeleted$1(), "true"))
                         .build(),
+                TableJoined.as("project_property_language" + "-fk-join"),
                 Materialized.<ProjectPropertyKey, ProjectPropertyLanguageValue, KeyValueStore<Bytes, byte[]>>as("project_property_language")
                         .withKeySerde(avroSerdes.ProjectPropertyKey())
                         .withValueSerde(avroSerdes.ProjectPropertyLanguageValue())
         );
         // 3
         var projectPropertyLabelOptionsTable = projectPropertyLanguage
-                .toStream()
-                .flatMap((key, value) -> {
-                    List<KeyValue<ProjectFieldLanguageKey, ProjectFieldLanguageValue>> result = new LinkedList<>();
+                .toStream(
+                        Named.as("project_property_language" + "-to-stream")
+                )
+                .flatMap(
+                        (key, value) -> {
+                            List<KeyValue<ProjectFieldLanguageKey, ProjectFieldLanguageValue>> result = new LinkedList<>();
 
-                    // add record for outgoing in project's language
-                    var kProjectLang = ProjectFieldLanguageKey.newBuilder()
-                            .setProjectId(value.getProjectId())
-                            .setClassId(value.getDomainId())
-                            .setPropertyId(value.getPropertyId())
-                            .setIsOutgoing(true)
-                            .setLanguageId(value.getLanguageId())
-                            .build();
-                    var vProjectLang = ProjectFieldLanguageValue.newBuilder()
-                            .setProjectId(value.getProjectId())
-                            .setClassId(value.getDomainId())
-                            .setPropertyId(value.getPropertyId())
-                            .setIsOutgoing(true)
-                            .setLanguageId(value.getLanguageId())
-                            .setDeleted$1(value.getDeleted$1())
-                            .build();
-                    result.add(KeyValue.pair(kProjectLang, vProjectLang));
+                            // add record for outgoing in project's language
+                            var kProjectLang = ProjectFieldLanguageKey.newBuilder()
+                                    .setProjectId(value.getProjectId())
+                                    .setClassId(value.getDomainId())
+                                    .setPropertyId(value.getPropertyId())
+                                    .setIsOutgoing(true)
+                                    .setLanguageId(value.getLanguageId())
+                                    .build();
+                            var vProjectLang = ProjectFieldLanguageValue.newBuilder()
+                                    .setProjectId(value.getProjectId())
+                                    .setClassId(value.getDomainId())
+                                    .setPropertyId(value.getPropertyId())
+                                    .setIsOutgoing(true)
+                                    .setLanguageId(value.getLanguageId())
+                                    .setDeleted$1(value.getDeleted$1())
+                                    .build();
+                            result.add(KeyValue.pair(kProjectLang, vProjectLang));
 
-                    // add record for incoming in project's language
-                    kProjectLang = ProjectFieldLanguageKey.newBuilder()
-                            .setProjectId(value.getProjectId())
-                            .setClassId(value.getRangeId())
-                            .setPropertyId(value.getPropertyId())
-                            .setIsOutgoing(false)
-                            .setLanguageId(value.getLanguageId())
-                            .build();
-                    vProjectLang = ProjectFieldLanguageValue.newBuilder()
-                            .setProjectId(value.getProjectId())
-                            .setClassId(value.getRangeId())
-                            .setPropertyId(value.getPropertyId())
-                            .setIsOutgoing(false)
-                            .setLanguageId(value.getLanguageId())
-                            .setDeleted$1(value.getDeleted$1())
-                            .build();
-                    result.add(KeyValue.pair(kProjectLang, vProjectLang));
+                            // add record for incoming in project's language
+                            kProjectLang = ProjectFieldLanguageKey.newBuilder()
+                                    .setProjectId(value.getProjectId())
+                                    .setClassId(value.getRangeId())
+                                    .setPropertyId(value.getPropertyId())
+                                    .setIsOutgoing(false)
+                                    .setLanguageId(value.getLanguageId())
+                                    .build();
+                            vProjectLang = ProjectFieldLanguageValue.newBuilder()
+                                    .setProjectId(value.getProjectId())
+                                    .setClassId(value.getRangeId())
+                                    .setPropertyId(value.getPropertyId())
+                                    .setIsOutgoing(false)
+                                    .setLanguageId(value.getLanguageId())
+                                    .setDeleted$1(value.getDeleted$1())
+                                    .build();
+                            result.add(KeyValue.pair(kProjectLang, vProjectLang));
 
-                    // if language is not english (18889) add english record
-                    if (value.getLanguageId() != I.EN.get()) {
-                        // add record for outgoing in english
-                        var kEnglish = ProjectFieldLanguageKey.newBuilder()
-                                .setProjectId(value.getProjectId())
-                                .setClassId(value.getDomainId())
-                                .setPropertyId(value.getPropertyId())
-                                .setIsOutgoing(true)
-                                .setLanguageId(I.EN.get())
-                                .build();
-                        var vEnglish = ProjectFieldLanguageValue.newBuilder()
-                                .setProjectId(value.getProjectId())
-                                .setClassId(value.getDomainId())
-                                .setPropertyId(value.getPropertyId())
-                                .setIsOutgoing(true)
-                                .setLanguageId(I.EN.get())
-                                .setDeleted$1(value.getDeleted$1())
-                                .build();
-                        result.add(KeyValue.pair(kEnglish, vEnglish));
+                            // if language is not english (18889) add english record
+                            if (value.getLanguageId() != I.EN.get()) {
+                                // add record for outgoing in english
+                                var kEnglish = ProjectFieldLanguageKey.newBuilder()
+                                        .setProjectId(value.getProjectId())
+                                        .setClassId(value.getDomainId())
+                                        .setPropertyId(value.getPropertyId())
+                                        .setIsOutgoing(true)
+                                        .setLanguageId(I.EN.get())
+                                        .build();
+                                var vEnglish = ProjectFieldLanguageValue.newBuilder()
+                                        .setProjectId(value.getProjectId())
+                                        .setClassId(value.getDomainId())
+                                        .setPropertyId(value.getPropertyId())
+                                        .setIsOutgoing(true)
+                                        .setLanguageId(I.EN.get())
+                                        .setDeleted$1(value.getDeleted$1())
+                                        .build();
+                                result.add(KeyValue.pair(kEnglish, vEnglish));
 
-                        // add record for incoming in english
-                        kEnglish = ProjectFieldLanguageKey.newBuilder()
-                                .setProjectId(value.getProjectId())
-                                .setClassId(value.getRangeId())
-                                .setPropertyId(value.getPropertyId())
-                                .setIsOutgoing(false)
-                                .setLanguageId(I.EN.get())
-                                .build();
-                        vEnglish = ProjectFieldLanguageValue.newBuilder()
-                                .setProjectId(value.getProjectId())
-                                .setClassId(value.getRangeId())
-                                .setPropertyId(value.getPropertyId())
-                                .setIsOutgoing(false)
-                                .setLanguageId(I.EN.get())
-                                .setDeleted$1(value.getDeleted$1())
-                                .build();
-                        result.add(KeyValue.pair(kEnglish, vEnglish));
-                    }
+                                // add record for incoming in english
+                                kEnglish = ProjectFieldLanguageKey.newBuilder()
+                                        .setProjectId(value.getProjectId())
+                                        .setClassId(value.getRangeId())
+                                        .setPropertyId(value.getPropertyId())
+                                        .setIsOutgoing(false)
+                                        .setLanguageId(I.EN.get())
+                                        .build();
+                                vEnglish = ProjectFieldLanguageValue.newBuilder()
+                                        .setProjectId(value.getProjectId())
+                                        .setClassId(value.getRangeId())
+                                        .setPropertyId(value.getPropertyId())
+                                        .setIsOutgoing(false)
+                                        .setLanguageId(I.EN.get())
+                                        .setDeleted$1(value.getDeleted$1())
+                                        .build();
+                                result.add(KeyValue.pair(kEnglish, vEnglish));
+                            }
 
-                    return result;
-                })
+                            return result;
+                        },
+                        Named.as("kstream-project-property-lang-to-project-fields-in-project-lang-and-english")
+                )
                 .toTable(
                         Named.as(inner.TOPICS.project_property_label_options),
-                        Materialized.with(avroSerdes.ProjectPropertyLanguageKey(), avroSerdes.ProjectFieldLanguageValue())
+                        Materialized
+                                .<ProjectFieldLanguageKey, ProjectFieldLanguageValue, KeyValueStore<Bytes, byte[]>>
+                                        as(inner.TOPICS.project_property_label_options + "-store")
+                                .withKeySerde(avroSerdes.ProjectPropertyLanguageKey())
+                                .withValueSerde(avroSerdes.ProjectFieldLanguageValue())
                 );
 
         // 4.1) left join labels of project
@@ -207,6 +226,7 @@ public class ProjectPropertyLabel {
                     }
                     return result;
                 },
+                TableJoined.as("project_property_label_options_with_geov" + "-fk-left-join"),
                 Materialized.<ProjectFieldLanguageKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_property_label_options_with_geov")
                         .withKeySerde(avroSerdes.ProjectPropertyLanguageKey())
                         .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
@@ -245,6 +265,7 @@ public class ProjectPropertyLabel {
                     }
                     return value1;
                 },
+                TableJoined.as("project_property_label_options_with_geov_and_default" + "-fk-left-join"),
                 Materialized.<ProjectFieldLanguageKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_property_label_options_with_geov_and_default")
                         .withKeySerde(avroSerdes.ProjectPropertyLanguageKey())
                         .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
@@ -280,27 +301,31 @@ public class ProjectPropertyLabel {
                     }
                     return value1;
                 },
+                TableJoined.as("project_property_label_options_with_geov_and_default_and_ontome" + "-fk-left-join"),
                 Materialized.<ProjectFieldLanguageKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_property_label_options_with_geov_and_default_and_ontome")
                         .withKeySerde(avroSerdes.ProjectPropertyLanguageKey())
                         .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
         );
 
+        // 6) group by
+        var projectPropertyLabelOptionsGrouped = withGeovAndOntome
+                .toStream(
+                        Named.as("project_property_label_options_with_geov_and_default_and_ontome" + "-to-stream")
+                )
+                .groupBy(
+                        (key, value) ->
+                                ProjectFieldLabelKey.newBuilder()
+                                        .setProjectId(key.getProjectId())
+                                        .setClassId(value.getClassId())
+                                        .setPropertyId(key.getPropertyId())
+                                        .setIsOutgoing(value.getIsOutgoing())
+                                        .build(),
+                        Grouped.with(
+                                inner.TOPICS.project_property_label_options_grouped,
+                                avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelOptionMapValue()
+                        ));
 
-// 6) group by
-        var projectPropertyLabelOptionsGrouped = withGeovAndOntome.groupBy(
-                (key, value) -> KeyValue.pair(
-                        ProjectFieldLabelKey.newBuilder()
-                                .setProjectId(key.getProjectId())
-                                .setClassId(value.getClassId())
-                                .setPropertyId(key.getPropertyId())
-                                .setIsOutgoing(value.getIsOutgoing())
-                                .build(),
-                        value),
-                Grouped.with(
-                        inner.TOPICS.project_property_label_options_grouped,
-                        avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelOptionMapValue()
-                ));
-// 7) aggregate
+        // 7) aggregate
         var projectPropertyLabelOptionsAggregated = projectPropertyLabelOptionsGrouped.aggregate(
                 () -> ProjectFieldLabelOptionMap.newBuilder()
                         .setProjectId(0)
@@ -318,48 +343,54 @@ public class ProjectPropertyLabel {
                     aggValue.getMap().putAll(newValue.getMap());
                     return aggValue;
                 },
-                (aggKey, oldValue, aggValue) -> aggValue,
                 Named.as(inner.TOPICS.project_property_label_options_aggregated),
                 Materialized.<ProjectFieldLabelKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_property_label_options_aggregated)
                         .withKeySerde(avroSerdes.ProjectPropertyLabelKey())
                         .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
         );
-        var projectPropertyLabelTable = projectPropertyLabelOptionsAggregated.mapValues((readOnlyKey, map) -> {
-            ProjectFieldLabelValue o;
-            var direction = readOnlyKey.getIsOutgoing() ? "out" : "in";
-            // Label in project language, provided by Geovistory project
-            o = toValue(map, "noten_" + direction + "_" + LabelSource.GEOV_PROJECT);
-            if (o != null) return o;
+        var projectPropertyLabelTable = projectPropertyLabelOptionsAggregated.mapValues(
+                (readOnlyKey, map) -> {
+                    ProjectFieldLabelValue o;
+                    var direction = readOnlyKey.getIsOutgoing() ? "out" : "in";
+                    // Label in project language, provided by Geovistory project
+                    o = toValue(map, "noten_" + direction + "_" + LabelSource.GEOV_PROJECT);
+                    if (o != null) return o;
 
-            // Label in project language, provided by Geovistory default project
-            o = toValue(map, "noten_" + direction + "_" + LabelSource.GEOV_DEFAULT_PROJECT);
-            if (o != null) return o;
+                    // Label in project language, provided by Geovistory default project
+                    o = toValue(map, "noten_" + direction + "_" + LabelSource.GEOV_DEFAULT_PROJECT);
+                    if (o != null) return o;
 
-            // Label in project language, provided by OntoME
-            o = toValue(map, "noten_" + direction + "_" + LabelSource.ONTOME);
-            if (o != null) return o;
+                    // Label in project language, provided by OntoME
+                    o = toValue(map, "noten_" + direction + "_" + LabelSource.ONTOME);
+                    if (o != null) return o;
 
-            // Label in english, provided by Geovistory project
-            o = toValue(map, "en_" + direction + "_" + LabelSource.GEOV_PROJECT);
-            if (o != null) return o;
+                    // Label in english, provided by Geovistory project
+                    o = toValue(map, "en_" + direction + "_" + LabelSource.GEOV_PROJECT);
+                    if (o != null) return o;
 
-            // Label in english, provided by Geovistory default project
-            o = toValue(map, "en_" + direction + "_" + LabelSource.GEOV_DEFAULT_PROJECT);
-            if (o != null) return o;
+                    // Label in english, provided by Geovistory default project
+                    o = toValue(map, "en_" + direction + "_" + LabelSource.GEOV_DEFAULT_PROJECT);
+                    if (o != null) return o;
 
-            // Label in english, provided by OntoME
-            o = toValue(map, "en_" + direction + "_" + LabelSource.ONTOME);
-            if (o != null) return o;
+                    // Label in english, provided by OntoME
+                    o = toValue(map, "en_" + direction + "_" + LabelSource.ONTOME);
+                    if (o != null) return o;
 
-            return o;
-        });
-        var projectPropertyLabelStream = projectPropertyLabelTable.toStream();
+                    return o;
+                },
+                Named.as("ktable-mapvalues-project-property-label")
+        );
+        var projectPropertyLabelStream = projectPropertyLabelTable.toStream(
+                Named.as("project_property_label_table" + "-to-stream")
+        );
 
         /* SINK PROCESSORS */
 
         // 8) to
         projectPropertyLabelStream.to(output.TOPICS.project_property_label,
-                Produced.with(avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelValue()));
+                Produced.with(avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelValue())
+                        .withName(output.TOPICS.project_property_label + "-producer")
+        );
 
         return new ProjectPropertyLabelReturnValue(builder, projectPropertyLabelTable, projectPropertyLabelStream);
 

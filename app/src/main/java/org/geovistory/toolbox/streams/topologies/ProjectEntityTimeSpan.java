@@ -3,6 +3,7 @@ package org.geovistory.toolbox.streams.topologies;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
@@ -45,18 +46,23 @@ public class ProjectEntityTimeSpan {
         /* STREAM PROCESSORS */
         // 2)
 
-        var stream = projectEntityTopStatementsValueStream.flatMapValues((readOnlyKey, value) -> {
-            List<TimeSpanValue> result = new LinkedList<>();
-            var tspv = createTimeSpan(value);
-            if (tspv != null) result.add(tspv);
-            return result;
-        });
+        var stream = projectEntityTopStatementsValueStream.flatMapValues(
+                (readOnlyKey, value) -> {
+                    List<TimeSpanValue> result = new LinkedList<>();
+                    var tspv = createTimeSpan(value);
+                    if (tspv != null) result.add(tspv);
+                    return result;
+                },
+                Named.as("kstream-flat-map-project-entity-top-statements-to-time-span")
+        );
 
 
 
         /* SINK PROCESSORS */
         stream.to(output.TOPICS.project_entity_time_span,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.TimeSpanValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.TimeSpanValue())
+                        .withName(output.TOPICS.project_entity_time_span + "-producer")
+        );
 
         return new ProjectEntityTimeSpanReturnValue(builder, stream);
 
@@ -124,7 +130,7 @@ public class ProjectEntityTimeSpan {
         var a = value.getStatement();
         if (a == null) return null;
 
-        var b = a.getObjectLiteral();
+        var b = a.getObject();
         if (b == null) return null;
 
         return b.getTimePrimitive();

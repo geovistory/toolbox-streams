@@ -31,7 +31,9 @@ class StatementEnrichedTest {
     private TestInputTopic<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionTopic;
     private TestInputTopic<dev.data.digital.Key, dev.data.digital.Value> datDigitalTopic;
     private TestInputTopic<dev.tables.cell.Key, dev.tables.cell.Value> tabCellTopic;
-    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> outputTopic;
+    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithEntityTopic;
+    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;
+    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> statementOtherTopic;
 
     @BeforeEach
     void setup() {
@@ -102,8 +104,19 @@ class StatementEnrichedTest {
         );
 
 
-        outputTopic = testDriver.createOutputTopic(
-                StatementEnriched.output.TOPICS.statement_enriched,
+        statementWithEntityTopic = testDriver.createOutputTopic(
+                StatementEnriched.output.TOPICS.statement_with_entity,
+                avroSerdes.InfStatementKey().deserializer(),
+                avroSerdes.StatementEnrichedValue().deserializer());
+
+
+        statementWithLiteralTopic = testDriver.createOutputTopic(
+                StatementEnriched.output.TOPICS.statement_with_literal,
+                avroSerdes.InfStatementKey().deserializer(),
+                avroSerdes.StatementEnrichedValue().deserializer());
+
+        statementOtherTopic = testDriver.createOutputTopic(
+                StatementEnriched.output.TOPICS.statement_with_literal,
                 avroSerdes.InfStatementKey().deserializer(),
                 avroSerdes.StatementEnrichedValue().deserializer());
     }
@@ -132,7 +145,9 @@ class StatementEnrichedTest {
                 .build();
         infStatementTopic.pipeInput(kS, vS);
 
-        assertThat(outputTopic.isEmpty()).isTrue();
+        assertThat(statementWithEntityTopic.isEmpty()).isTrue();
+        assertThat(statementWithLiteralTopic.isEmpty()).isTrue();
+        assertThat(statementOtherTopic.isEmpty()).isTrue();
 
     }
 
@@ -166,8 +181,8 @@ class StatementEnrichedTest {
                 .build();
         infResourceTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithEntityTopic.isEmpty()).isFalse();
+        var outRecords = statementWithEntityTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
         assertThat(record.getObjectClassId()).isEqualTo(classId);
@@ -210,12 +225,12 @@ class StatementEnrichedTest {
                 .build();
         infAppellationTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(expected);
-        assertThat(record.getObjectLiteral().getAppellation()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(expected);
+        assertThat(record.getObject().getAppellation()).isNotNull();
         assertThat(record.getObjectClassId()).isEqualTo(classId);
     }
 
@@ -248,12 +263,12 @@ class StatementEnrichedTest {
                 .build();
         infLanguageTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
-        assertThat(record.getObjectLiteral().getLanguage()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(label);
+        assertThat(record.getObject().getLanguage()).isNotNull();
     }
 
     @Test
@@ -285,12 +300,12 @@ class StatementEnrichedTest {
                 .build();
         infLangStringTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
-        assertThat(record.getObjectLiteral().getLangString()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(label);
+        assertThat(record.getObject().getLangString()).isNotNull();
     }
 
     @Test
@@ -322,12 +337,12 @@ class StatementEnrichedTest {
                 .build();
         infLangStringTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(label);
-        assertThat(record.getObjectLiteral().getLangString()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(label);
+        assertThat(record.getObject().getLangString()).isNotNull();
     }
 
     @Test
@@ -363,12 +378,12 @@ class StatementEnrichedTest {
                 .build();
         infPlaceTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo("WGS84: " + x + "°, " + y + "°");
-        assertThat(record.getObjectLiteral().getPlace()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo("WGS84: " + x + "°, " + y + "°");
+        assertThat(record.getObject().getPlace()).isNotNull();
     }
 
 
@@ -402,12 +417,12 @@ class StatementEnrichedTest {
                 .build();
         infTimePrimitiveTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isNull();
-        assertThat(record.getObjectLiteral().getTimePrimitive()).isNotNull();
+        assertThat(record.getObject().getLabel()).isNull();
+        assertThat(record.getObject().getTimePrimitive()).isNotNull();
     }
 
     @Test
@@ -440,12 +455,12 @@ class StatementEnrichedTest {
                 .build();
         infDimensionTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getLabel()).isEqualTo(num + "");
-        assertThat(record.getObjectLiteral().getDimension()).isNotNull();
+        assertThat(record.getObject().getLabel()).isEqualTo(num + "");
+        assertThat(record.getObject().getDimension()).isNotNull();
     }
 
     @Test
@@ -479,11 +494,11 @@ class StatementEnrichedTest {
                 .build();
         tabCellTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getCell().getNumericValue()).isEqualTo(num);
+        assertThat(record.getObject().getCell().getNumericValue()).isEqualTo(num);
     }
 
     @Test
@@ -515,11 +530,11 @@ class StatementEnrichedTest {
                 .build();
         datDigitalTopic.pipeInput(k, v);
 
-        assertThat(outputTopic.isEmpty()).isFalse();
-        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(statementWithLiteralTopic.isEmpty()).isFalse();
+        var outRecords = statementWithLiteralTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
-        assertThat(record.getObjectLiteral().getDigital()).isNotNull();
+        assertThat(record.getObject().getDigital()).isNotNull();
     }
 
 }
