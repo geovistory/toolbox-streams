@@ -632,5 +632,20 @@ public class ConfluentAvroSerdes {
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+    public Serde<FieldChangeJoin> FieldChangeJoin() {
+        Serde<FieldChangeJoin> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+    public Serde<FieldChangeKey> FieldChangeKey() {
+        Serde<FieldChangeKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+    public Serde<FieldChangeValue> FieldChangeValue() {
+        Serde<FieldChangeValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 
 }

@@ -1,0 +1,43 @@
+{
+  "type": "record",
+  "name": "FieldChangeJoin",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Intermediate data for field change",
+  "fields": [
+    {
+      "name": "fk_project",
+      "type": "int"
+    },
+    {
+      "name": "fk_subject_info",
+      "type": "int"
+    },
+    {
+      "name": "fk_subject_tables_cell",
+      "type": "long"
+    },
+    {
+      "name": "fk_object_info",
+      "type": "int"
+    },
+    {
+      "name": "fk_object_tables_cell",
+      "type": "long"
+    },
+    {
+      "name": "fk_property",
+      "type": "int"
+    },
+    {
+      "name": "fk_property_of_property",
+      "type": "int"
+    },
+    {
+      "name": "tmsp_last_modification",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    }
+  ]
+}
