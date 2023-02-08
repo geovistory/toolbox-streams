@@ -3,10 +3,7 @@ package org.geovistory.toolbox.streams.topologies;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Grouped;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
@@ -65,12 +62,15 @@ public class OntomeClassMetadata {
                         .withValueSerde(avroSerdes.OntomeClassMetadataValue())
         );
 
-        var stream = table.toStream();
+        var stream = table.toStream(
+                Named.as(inner.TOPICS.ontome_class_metadata_aggregated + "-to-stream")
+        );
         /* SINK PROCESSORS */
         stream
                 .to(
                         output.TOPICS.ontome_class_metadata,
                         Produced.with(avroSerdes.OntomeClassKey(), avroSerdes.OntomeClassMetadataValue())
+                                .withName(output.TOPICS.ontome_class_metadata + "-producer")
                 );
 
 

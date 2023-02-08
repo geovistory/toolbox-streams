@@ -55,11 +55,17 @@ public class ProjectTopOutgoingStatements {
                     }
                     return projectStatementValue;
                 },
+                TableJoined.as(inner.TOPICS.project_top_outgoing_statements_join_object_entity_label + "-fk-left-join"),
                 Materialized.<ProjectStatementKey, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_outgoing_statements_join_object_entity_label)
                         .withKeySerde(avroSerdes.ProjectStatementKey())
                         .withValueSerde(avroSerdes.ProjectStatementValue()));
         // 3
-        var statementsStream = joinedObjectEntityLabelsTable.toStream().merge(projectStatementsWithLiteralStream);
+        var statementsStream = joinedObjectEntityLabelsTable.toStream(
+                Named.as(inner.TOPICS.project_top_outgoing_statements_join_object_entity_label + "-to-stream")
+        ).merge(
+                projectStatementsWithLiteralStream,
+                Named.as("kstream-merge-project-top-out-s-with-entity-label-and-project-top-out-s-with-literal")
+        );
 
         // 4
         var grouped = statementsStream.groupBy(
@@ -93,18 +99,23 @@ public class ProjectTopOutgoingStatements {
                     aggValue.setStatements(newStatements);
                     return aggValue;
                 },
+                Named.as("project_top_outgoing_statements_aggregate"),
                 Materialized.<ProjectTopStatementsKey, ProjectTopStatementsValue, KeyValueStore<Bytes, byte[]>>as("project_top_outgoing_statements_aggregate")
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
                         .withValueSerde(avroSerdes.ProjectTopStatementsValue())
         );
 
 
-        var aggregatedStream = aggregatedTable.toStream();
+        var aggregatedStream = aggregatedTable.toStream(
+                Named.as("project_top_outgoing_statements_aggregate" + "-to-stream")
+        );
 
         /* SINK PROCESSORS */
 
         aggregatedStream.to(output.TOPICS.project_top_outgoing_statements,
-                Produced.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
+                Produced.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue())
+                        .withName(output.TOPICS.project_top_outgoing_statements + "-producer")
+        );
 
         return new ProjectTopStatementsReturnValue(builder, aggregatedTable, aggregatedStream);
 

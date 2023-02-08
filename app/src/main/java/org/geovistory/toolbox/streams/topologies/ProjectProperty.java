@@ -77,7 +77,12 @@ public class ProjectProperty {
         // 4)
         var projectProfileTable = projectProfileStream
                 .toTable(
-                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
+                        Named.as(inner.TOPICS.profile_with_properties + "-to-table"),
+                        Materialized
+                                .<ProjectProfileKey, ProjectProfileValue, KeyValueStore<Bytes, byte[]>>
+                                        as(inner.TOPICS.profile_with_properties + "-store")
+                                .withKeySerde(avroSerdes.ProjectProfileKey())
+                                .withValueSerde(avroSerdes.ProjectProfileValue())
                 );
 
         // 5)
@@ -103,7 +108,8 @@ public class ProjectProperty {
                                 projectPropertyMap.getMap().put(key, v);
                             });
                     return projectPropertyMap;
-                }
+                },
+                TableJoined.as("project_properties_per_profile"+ "-fk-join")
         );
 
 // 3)
@@ -131,7 +137,9 @@ public class ProjectProperty {
                         Named.as(inner.TOPICS.project_properties_flat));
 
         projectPropertyStream.to(output.TOPICS.project_property,
-                Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()));
+                Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue())
+                        .withName(output.TOPICS.project_property + "-producer")
+        );
 
         return new ProjectPropertyReturnValue(builder, projectPropertyStream);
 

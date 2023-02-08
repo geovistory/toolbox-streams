@@ -3,9 +3,7 @@ package org.geovistory.toolbox.streams.topologies;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
@@ -56,26 +54,33 @@ public class ProjectEntityFulltext {
                         .setEntityTopStatements(value1)
                         .setLabelConfig(value2)
                         .build(),
+                TableJoined.as(inner.TOPICS.project_entity_top_statements_with_label_config+ "-fk-left-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityTopStatementsWithConfigValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_top_statements_with_label_config)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityTopStatementsWithConfigValue())
         );
 
         // 3
-        var projectEntityFulltextStream = projectEntityWithConfigTable.toStream()
-                .mapValues((readOnlyKey, value) -> {
+        var projectEntityFulltextStream = projectEntityWithConfigTable.toStream(
+                        Named.as(inner.TOPICS.project_entity_top_statements_with_label_config + "-to-stream")
+                )
+                .mapValues(
+                        (readOnlyKey, value) -> {
                             var fulltext = createFulltext(value);
                             return ProjectEntityFulltextValue.newBuilder()
                                     .setProjectId(readOnlyKey.getProjectId())
                                     .setEntityId(readOnlyKey.getEntityId())
                                     .setFulltext(fulltext).build();
-                        }
+                        },
+                        Named.as("kstream-mapvalues-project-entity-top-statements-with-config-value-to-project-entity-fulltext-value")
                 );
 
         /* SINK PROCESSORS */
 
         projectEntityFulltextStream.to(output.TOPICS.project_entity_fulltext,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityFulltextValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityFulltextValue())
+                        .withName(output.TOPICS.project_entity_fulltext + "-producer")
+        );
 
         return new ProjectEntityFulltextReturnValue(builder, projectEntityFulltextStream);
 

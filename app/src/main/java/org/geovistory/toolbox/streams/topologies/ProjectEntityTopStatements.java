@@ -61,6 +61,7 @@ public class ProjectEntityTopStatements {
                             .setClassId(value2.getClassId())
                             .build();
                 },
+                TableJoined.as(inner.TOPICS.project_top_statements_with_class_id+ "-fk-left-join"),
                 Materialized.<ProjectTopStatementsKey, ProjectTopStatementsWithClassValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_statements_with_class_id)
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
                         .withValueSerde(avroSerdes.ProjectTopStatementsWithClassValue())
@@ -85,6 +86,7 @@ public class ProjectEntityTopStatements {
                         .setEntityId(v.getEntityId())
                         .setPropertyLabel(value2 != null ? value2.getLabel() : null)
                         .build(),
+                TableJoined.as(inner.TOPICS.project_top_statements_with_prop_label+ "-fk-left-join"),
                 Materialized.<ProjectTopStatementsKey, ProjectTopStatementsWithPropLabelValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_statements_with_prop_label)
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
                         .withValueSerde(avroSerdes.ProjectTopStatementsWithPropLabelValue())
@@ -93,17 +95,19 @@ public class ProjectEntityTopStatements {
         // 4)
         // GroupBy ProjectEntityKey
         var groupedTable = topStatementsWithPropLabelTable
-                .toStream()
+                .toStream(
+                        Named.as(inner.TOPICS.project_top_statements_with_prop_label + "-to-stream")
+                )
                 .groupBy(
-                (key, value) ->
-                        ProjectEntityKey.newBuilder()
-                                .setEntityId(key.getEntityId())
-                                .setProjectId(key.getProjectId())
-                                .build(),
-                Grouped.with(
-                        avroSerdes.ProjectEntityKey(), avroSerdes.ProjectTopStatementsWithPropLabelValue()
-                ).withName("project_entity_top_statements_with_prop_label_grouped")
-        );
+                        (key, value) ->
+                                ProjectEntityKey.newBuilder()
+                                        .setEntityId(key.getEntityId())
+                                        .setProjectId(key.getProjectId())
+                                        .build(),
+                        Grouped.with(
+                                avroSerdes.ProjectEntityKey(), avroSerdes.ProjectTopStatementsWithPropLabelValue()
+                        ).withName("project_entity_top_statements_with_prop_label_grouped")
+                );
         // 5)
         // Aggregate ProjectEntityTopStatementsValue, where the ProjectTopStatementKey is transformed to a string,
         // to be used as key in a map.
@@ -124,18 +128,23 @@ public class ProjectEntityTopStatements {
                     }
                     return aggValue;
                 },
-                Named.as(ProjectEntityTopStatements.inner.TOPICS.project_entity_top_tatements_aggregated),
-                Materialized.<ProjectEntityKey, ProjectEntityTopStatementsValue, KeyValueStore<Bytes, byte[]>>as(ProjectEntityTopStatements.inner.TOPICS.project_entity_top_tatements_aggregated)
+                Named.as(inner.TOPICS.project_entity_top_tatements_aggregated),
+                Materialized.<ProjectEntityKey, ProjectEntityTopStatementsValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_top_tatements_aggregated)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityTopStatementsValue())
         );
 
 
-        var aggregatedStream = aggregatedTable.toStream();
+        var aggregatedStream = aggregatedTable.toStream(
+                Named.as(inner.TOPICS.project_entity_top_tatements_aggregated + "-to-stream")
+        );
 
         /* SINK PROCESSORS */
         aggregatedStream.to(output.TOPICS.project_entity_top_statements,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTopStatementsValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTopStatementsValue())
+                        .withName(output.TOPICS.project_entity_top_statements + "-producer")
+
+        );
 
         return new ProjectEntityTopStatementsReturnValue(builder, aggregatedTable, aggregatedStream);
 

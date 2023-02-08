@@ -19,8 +19,6 @@ import java.util.Properties;
 class App {
     public static void main(String[] args) {
 
-        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-        createTopics();
 
         StreamsBuilder builder = new StreamsBuilder();
 
@@ -29,6 +27,11 @@ class App {
 
         // build the topology
         var topology = builder.build();
+
+        System.out.println(topology.describe());
+
+        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
+        createTopics();
 
         // print configuration information
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
@@ -52,7 +55,7 @@ class App {
 
         // register input topics as KTables
         var proProjectTable = inputTopics.proProjectTable();
-        var proTextPropertyTable = inputTopics.proTextPropertyTable();
+        var proTextPropertyStream = inputTopics.proTextPropertyStream();
         var proProfileProjRelTable = inputTopics.proProfileProjRelTable();
         var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
         var infResourceTable = inputTopics.infResourceTable();
@@ -111,7 +114,7 @@ class App {
 
         // add sub-topology GeovClassLabel
         var geovClassLabel = GeovClassLabel.addProcessors(builder,
-                proTextPropertyTable
+                proTextPropertyStream
         );
 
         // add sub-topology ProjectClassLabel
@@ -203,7 +206,7 @@ class App {
 
         // add sub-topology GeovPropertyLabel
         var geovPropertyLabel = GeovPropertyLabel.addProcessors(builder,
-                proTextPropertyTable
+                proTextPropertyStream
         );
 
         // add sub-topology ProjectPropertyLabel

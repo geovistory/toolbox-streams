@@ -1,9 +1,12 @@
 package org.geovistory.toolbox.streams.topologies;
 
+import dev.projects.text_property.Key;
+import dev.projects.text_property.Value;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
@@ -28,61 +31,61 @@ public class GeovPropertyLabel {
 
         return addProcessors(
                 builder,
-                register.proTextPropertyTable()
+                register.proTextPropertyStream()
         ).builder().build();
     }
 
     public static GeovPropertyLabelReturnValue addProcessors(
             StreamsBuilder builder,
-            KTable<dev.projects.text_property.Key, dev.projects.text_property.Value> proTextPropertyTable
+            KStream<Key, Value> proTextPropertyStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
         /* SOURCE PROCESSORS */
 
-        // 1) register text_property
-        var textPropertyStream = proTextPropertyTable.toStream();
-
         /* STREAM PROCESSORS */
 
         // 2)
-        var geovPropertyLabel = textPropertyStream
-                .flatMap((key, value) -> {
-                    List<KeyValue<GeovPropertyLabelKey, GeovPropertyLabelValue>> result = new LinkedList<>();
-                    var propertyId = value.getFkDfhProperty();
-                    var domainId = value.getFkDfhPropertyDomain();
-                    var rangeId = value.getFkDfhPropertyRange();
+        var geovPropertyLabel = proTextPropertyStream
+                .flatMap(
+                        (key, value) -> {
+                            List<KeyValue<GeovPropertyLabelKey, GeovPropertyLabelValue>> result = new LinkedList<>();
+                            var propertyId = value.getFkDfhProperty();
+                            var domainId = value.getFkDfhPropertyDomain();
+                            var rangeId = value.getFkDfhPropertyRange();
 
-                    // validate
-                    if (propertyId == null) return result;
-                    if (value.getFkDfhProperty() == null) return result;
-                    if (domainId == null && rangeId == null) return result;
+                            // validate
+                            if (propertyId == null) return result;
+                            if (value.getFkDfhProperty() == null) return result;
+                            if (domainId == null && rangeId == null) return result;
 
-                    int classId = domainId != null ? domainId : rangeId;
-                    var isOutgoing = domainId != null;
+                            int classId = domainId != null ? domainId : rangeId;
+                            var isOutgoing = domainId != null;
 
-                    var k = GeovPropertyLabelKey.newBuilder()
-                            .setProjectId(value.getFkProject())
-                            .setClassId(classId)
-                            .setIsOutgoing(isOutgoing)
-                            .setPropertyId(value.getFkDfhProperty())
-                            .setLanguageId(value.getFkLanguage())
-                            .build();
-                    var v = GeovPropertyLabelValue.newBuilder()
-                            .setProjectId(value.getFkProject())
-                            .setProjectId(value.getFkProject())
-                            .setClassId(classId)
-                            .setIsOutgoing(isOutgoing)
-                            .setPropertyId(value.getFkDfhProperty())
-                            .setLanguageId(value.getFkLanguage())
-                            .setLabel(value.getString())
-                            .setDeleted$1(Objects.equals(value.getDeleted$1(), "true"))
-                            .build();
+                            var k = GeovPropertyLabelKey.newBuilder()
+                                    .setProjectId(value.getFkProject())
+                                    .setClassId(classId)
+                                    .setIsOutgoing(isOutgoing)
+                                    .setPropertyId(value.getFkDfhProperty())
+                                    .setLanguageId(value.getFkLanguage())
+                                    .build();
+                            var v = GeovPropertyLabelValue.newBuilder()
+                                    .setProjectId(value.getFkProject())
+                                    .setProjectId(value.getFkProject())
+                                    .setClassId(classId)
+                                    .setIsOutgoing(isOutgoing)
+                                    .setPropertyId(value.getFkDfhProperty())
+                                    .setLanguageId(value.getFkLanguage())
+                                    .setLabel(value.getString())
+                                    .setDeleted$1(Objects.equals(value.getDeleted$1(), "true"))
+                                    .build();
 
-                    result.add(KeyValue.pair(k, v));
-                    return result;
-                });
+                            result.add(KeyValue.pair(k, v));
+                            return result;
+                        },
+                        Named.as("kstream-flatmap-pro-text-property-to-geov-property-label")
+                );
 
         /* SINK PROCESSORS */
         geovPropertyLabel

@@ -43,11 +43,13 @@ public class ProjectClass {
         /* STREAM PROCESSORS */
         // 2)
         var ontomeClassProjected = ontomeClassStream
-                .mapValues((readOnlyKey, value) -> ProfileClass.newBuilder()
+                .mapValues(
+                        (readOnlyKey, value) -> ProfileClass.newBuilder()
                         .setProfileId(value.getDfhFkProfile())
                         .setClassId(value.getDfhPkClass())
                         .setDeleted$1(Objects.equals(value.getDeleted$1(), "true"))
-                        .build()
+                        .build(),
+                        Named.as("kstream-mapvalues-ontome-class-to-profile-class")
                 );
 
         // 3) GroupBy
@@ -76,11 +78,16 @@ public class ProjectClass {
         // 4)
         var projectProfileTable = projectProfileStream
                 .toTable(
-                        Materialized.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
+                        Named.as(inner.TOPICS.profile_with_classes + "-to-table"),
+                        Materialized
+                                .<ProjectProfileKey, ProjectProfileValue, KeyValueStore<Bytes, byte[]>>
+                                        as(inner.TOPICS.profile_with_classes + "-store")
+                                .withKeySerde(avroSerdes.ProjectProfileKey())
+                                .withValueSerde(avroSerdes.ProjectProfileValue())
                 );
 
         // 5)
-        var projectPropertiesPerProfile = projectProfileTable.join(
+        var projectClassPerProfile = projectProfileTable.join(
                 classByProfileIdAggregated,
                 ProjectProfileValue::getProfileId,
                 (projectProfileValue, profileClassMap) -> {
@@ -100,14 +107,15 @@ public class ProjectClass {
                                 projectProperyMap.getMap().put(key, v);
                             });
                     return projectProperyMap;
-                }
+                },
+                TableJoined.as("project_classes_per_profile"+ "-fk-join")
         );
 
 // 3)
 
-        var projectClassFlat = projectPropertiesPerProfile
+        var projectClassFlat = projectClassPerProfile
                 .toStream(
-                        Named.as(inner.TOPICS.project_classes_stream)
+                        Named.as(inner.TOPICS.project_classes_stream + "-to-stream")
                 )
                 .flatMap((key, value) -> value.getMap().values().stream().map(projectClassValue -> {
                                     var k = ProjectClassKey.newBuilder()
@@ -120,7 +128,9 @@ public class ProjectClass {
                         Named.as(inner.TOPICS.project_classes_flat));
 
         projectClassFlat.to(output.TOPICS.project_class,
-                Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue()));
+                Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
+                        .withName(output.TOPICS.project_class + "-producer")
+        );
 
         return new ProjectClassReturnValue(builder, projectClassFlat);
 

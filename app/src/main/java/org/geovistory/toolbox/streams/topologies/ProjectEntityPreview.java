@@ -5,6 +5,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.Klass;
@@ -72,6 +73,7 @@ public class ProjectEntityPreview {
 
                     return newVal;
                 },
+                Named.as(inner.TOPICS.project_entity_preview_label_join+ "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_label_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -86,6 +88,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
+                Named.as(inner.TOPICS.project_entity_preview_class_label_join+ "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_class_label_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -104,6 +107,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
+                Named.as(inner.TOPICS.project_entity_preview_type_join+ "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_type_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -119,6 +123,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
+                Named.as(inner.TOPICS.project_entity_preview_time_span_join+ "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_time_span_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -132,6 +137,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
+                Named.as(inner.TOPICS.project_entity_preview_fulltext_join+ "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_fulltext_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -153,17 +159,22 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
+                Named.as(inner.TOPICS.project_entity_class_metadata_join+ "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_class_metadata_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
         );
 
-        var projectEntityPreviewStream = classMetadata.toStream();
+        var projectEntityPreviewStream = classMetadata.toStream(
+                Named.as(inner.TOPICS.project_entity_class_metadata_join + "-to-stream")
+        );
 
         /* SINK PROCESSORS */
 
         projectEntityPreviewStream.to(output.TOPICS.project_entity_preview,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.EntityPreviewValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.EntityPreviewValue())
+                        .withName(output.TOPICS.project_entity_preview + "-producer")
+        );
 
         return new ProjectEntityPreviewReturnValue(builder, projectEntityPreviewStream);
 

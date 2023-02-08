@@ -55,6 +55,7 @@ public class ProjectEntityLabelConfig {
                         Named.as(inner.TOPICS.project_entity_label_config_by_project_class)
                 )
                 .toTable(
+                        Named.as(inner.TOPICS.project_entity_label_config_by_project_class + "-to-table"),
                         Materialized.<ProjectClassKey, Value, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_label_config_by_project_class)
                                 .withKeySerde(avroSerdes.ProjectClassKey())
                                 .withValueSerde(avroSerdes.ProEntityLabelConfigValue())
@@ -81,6 +82,7 @@ public class ProjectEntityLabelConfig {
                     }
                     return result;
                 },
+                Named.as(inner.TOPICS.project_class_with_project_label_config+ "-fk-left-join"),
                 Materialized.<ProjectClassKey, ProjectEntityLabelConfigValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_class_with_project_label_config)
                         .withKeySerde(avroSerdes.ProjectClassKey())
                         .withValueSerde(avroSerdes.ProjectEntityLabelConfigValue())
@@ -111,17 +113,21 @@ public class ProjectEntityLabelConfig {
                     }
                     return result.build();
                 },
+                TableJoined.as(output.TOPICS.project_entity_label_config_enriched+ "-fk-left-join"),
                 Materialized.<ProjectClassKey, ProjectEntityLabelConfigValue, KeyValueStore<Bytes, byte[]>>as(output.TOPICS.project_entity_label_config_enriched)
                         .withKeySerde(avroSerdes.ProjectClassKey())
                         .withValueSerde(avroSerdes.ProjectEntityLabelConfigValue())
         );
 
-        projectEntityLabelConfigEnrichedTable.toStream().to(
+        projectEntityLabelConfigEnrichedTable.toStream(
+                Named.as(output.TOPICS.project_entity_label_config_enriched + "-to-stream")
+        ).to(
                 output.TOPICS.project_entity_label_config_enriched,
                 Produced.with(
                         avroSerdes.ProjectClassKey(),
                         avroSerdes.ProjectEntityLabelConfigValue()
                 )
+                        .withName(output.TOPICS.project_entity_label_config_enriched + "-producer")
         );
 
 

@@ -73,52 +73,62 @@ public class ProjectClassLabel {
                         .setLanguageId(value2.getFkLanguage())
                         .setDeleted$1(Boolean.TRUE.equals(value1.getDeleted$1()) || Objects.equals(value2.getDeleted$1(), "true"))
                         .build(),
+                TableJoined.as("project_class_language" + "-fk-join"),
                 Materialized.<ProjectClassKey, ProjectClassLanguageValue, KeyValueStore<Bytes, byte[]>>as("project_class_language")
                         .withKeySerde(avroSerdes.ProjectClassKey())
                         .withValueSerde(avroSerdes.ProjectClassLanguageValue())
         );
         // 3
         var projectClassLabelOptionsTable = projectClassLanguage
-                .toStream()
-                .flatMap((key, value) -> {
-                    List<KeyValue<ProjectClassLanguageKey, ProjectClassLanguageValue>> result = new LinkedList<>();
+                .toStream(
+                        Named.as("project_class_language" + "-to-stream")
+                )
+                .flatMap(
+                        (key, value) -> {
+                            List<KeyValue<ProjectClassLanguageKey, ProjectClassLanguageValue>> result = new LinkedList<>();
 
-                    // add record for project's language
-                    var kProjectLang = ProjectClassLanguageKey.newBuilder()
-                            .setClassId(value.getClassId())
-                            .setProjectId(value.getProjectId())
-                            .setLanguageId(value.getLanguageId())
-                            .build();
-                    var vProjectLang = ProjectClassLanguageValue.newBuilder()
-                            .setClassId(value.getClassId())
-                            .setProjectId(value.getProjectId())
-                            .setLanguageId(value.getLanguageId())
-                            .setDeleted$1(value.getDeleted$1())
-                            .build();
-                    result.add(KeyValue.pair(kProjectLang, vProjectLang));
+                            // add record for project's language
+                            var kProjectLang = ProjectClassLanguageKey.newBuilder()
+                                    .setClassId(value.getClassId())
+                                    .setProjectId(value.getProjectId())
+                                    .setLanguageId(value.getLanguageId())
+                                    .build();
+                            var vProjectLang = ProjectClassLanguageValue.newBuilder()
+                                    .setClassId(value.getClassId())
+                                    .setProjectId(value.getProjectId())
+                                    .setLanguageId(value.getLanguageId())
+                                    .setDeleted$1(value.getDeleted$1())
+                                    .build();
+                            result.add(KeyValue.pair(kProjectLang, vProjectLang));
 
-                    // if language is not english (18889) add english record
-                    if (value.getLanguageId() != 18889) {
-                        // add record for english
-                        var kEnglish = ProjectClassLanguageKey.newBuilder()
-                                .setClassId(value.getClassId())
-                                .setProjectId(value.getProjectId())
-                                .setLanguageId(18889)
-                                .build();
-                        var vEnglish = ProjectClassLanguageValue.newBuilder()
-                                .setClassId(value.getClassId())
-                                .setProjectId(value.getProjectId())
-                                .setLanguageId(18889)
-                                .setDeleted$1(value.getDeleted$1())
-                                .build();
-                        result.add(KeyValue.pair(kEnglish, vEnglish));
-                    }
+                            // if language is not english (18889) add english record
+                            if (value.getLanguageId() != 18889) {
+                                // add record for english
+                                var kEnglish = ProjectClassLanguageKey.newBuilder()
+                                        .setClassId(value.getClassId())
+                                        .setProjectId(value.getProjectId())
+                                        .setLanguageId(18889)
+                                        .build();
+                                var vEnglish = ProjectClassLanguageValue.newBuilder()
+                                        .setClassId(value.getClassId())
+                                        .setProjectId(value.getProjectId())
+                                        .setLanguageId(18889)
+                                        .setDeleted$1(value.getDeleted$1())
+                                        .build();
+                                result.add(KeyValue.pair(kEnglish, vEnglish));
+                            }
 
-                    return result;
-                })
+                            return result;
+                        },
+                        Named.as("kstream-flatmap-project-class-language-to-project-class-lang-and-english")
+                )
                 .toTable(
                         Named.as(inner.TOPICS.project_class_label_options),
-                        Materialized.with(avroSerdes.ProjectClassLanguageKey(), avroSerdes.ProjectClassLanguageValue())
+                        Materialized
+                                .<ProjectClassLanguageKey, ProjectClassLanguageValue, KeyValueStore<Bytes, byte[]>>
+                                        as(inner.TOPICS.project_class_label_options + "-store")
+                                .withKeySerde(avroSerdes.ProjectClassLanguageKey())
+                                .withValueSerde(avroSerdes.ProjectClassLanguageValue())
                 );
 // 4) left join
         var withGeov = projectClassLabelOptionsTable.leftJoin(
@@ -152,6 +162,7 @@ public class ProjectClassLabel {
                     }
                     return result;
                 },
+                TableJoined.as("project_class_label_options_with_geov" + "-fk-left-join"),
                 Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov")
                         .withKeySerde(avroSerdes.ProjectClassLanguageKey())
                         .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
@@ -183,6 +194,7 @@ public class ProjectClassLabel {
                     }
                     return value1;
                 },
+                TableJoined.as("project_class_label_options_with_geov_and_default" + "-fk-left-join"),
                 Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov_and_default")
                         .withKeySerde(avroSerdes.ProjectClassLanguageKey())
                         .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
@@ -213,6 +225,7 @@ public class ProjectClassLabel {
                     }
                     return value1;
                 },
+                TableJoined.as("project_class_label_options_with_geov_and_default_and_ontome" + "-fk-left-join"),
                 Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov_and_default_and_ontome")
                         .withKeySerde(avroSerdes.ProjectClassLanguageKey())
                         .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
@@ -221,17 +234,19 @@ public class ProjectClassLabel {
 
         // 6) group by
         var projectClassLabelOptionsGrouped = withGeovAndOntome
-                .toStream()
+                .toStream(
+                        Named.as("project_class_label_options_with_geov_and_default_and_ontome" + "-to-stream")
+                )
                 .groupBy(
-                (key, value) ->
-                        ProjectClassLabelKey.newBuilder()
-                                .setProjectId(key.getProjectId())
-                                .setClassId(key.getClassId())
-                                .build(),
-                Grouped.with(
-                        inner.TOPICS.project_class_label_options_grouped,
-                        avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelOptionMapValue()
-                ));
+                        (key, value) ->
+                                ProjectClassLabelKey.newBuilder()
+                                        .setProjectId(key.getProjectId())
+                                        .setClassId(key.getClassId())
+                                        .build(),
+                        Grouped.with(
+                                inner.TOPICS.project_class_label_options_grouped,
+                                avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelOptionMapValue()
+                        ));
 
         // 7) aggregate
         var projectClassLabelOptionsAggregated = projectClassLabelOptionsGrouped.aggregate(
@@ -252,42 +267,49 @@ public class ProjectClassLabel {
                         .withKeySerde(avroSerdes.ProjectClassLabelKey())
                         .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
         );
-        var projectClassLabelTable = projectClassLabelOptionsAggregated.mapValues((readOnlyKey, map) -> {
-            ProjectClassLabelValue o;
-            // Label in project language, provided by Geovistory project
-            o = toValue(map, "noten_" + LabelSource.GEOV_PROJECT);
-            if (o != null) return o;
+        var projectClassLabelTable = projectClassLabelOptionsAggregated.mapValues(
+                (readOnlyKey, map) -> {
+                    ProjectClassLabelValue o;
+                    // Label in project language, provided by Geovistory project
+                    o = toValue(map, "noten_" + LabelSource.GEOV_PROJECT);
+                    if (o != null) return o;
 
-            // Label in project language, provided by Geovistory default project
-            o = toValue(map, "noten_" + LabelSource.GEOV_DEFAULT_PROJECT);
-            if (o != null) return o;
+                    // Label in project language, provided by Geovistory default project
+                    o = toValue(map, "noten_" + LabelSource.GEOV_DEFAULT_PROJECT);
+                    if (o != null) return o;
 
-            // Label in project language, provided by OntoME
-            o = toValue(map, "noten_" + LabelSource.ONTOME);
-            if (o != null) return o;
+                    // Label in project language, provided by OntoME
+                    o = toValue(map, "noten_" + LabelSource.ONTOME);
+                    if (o != null) return o;
 
-            // Label in english, provided by Geovistory project
-            o = toValue(map, "en_" + LabelSource.GEOV_PROJECT);
-            if (o != null) return o;
+                    // Label in english, provided by Geovistory project
+                    o = toValue(map, "en_" + LabelSource.GEOV_PROJECT);
+                    if (o != null) return o;
 
-            // Label in english, provided by Geovistory default project
-            o = toValue(map, "en_" + LabelSource.GEOV_DEFAULT_PROJECT);
-            if (o != null) return o;
+                    // Label in english, provided by Geovistory default project
+                    o = toValue(map, "en_" + LabelSource.GEOV_DEFAULT_PROJECT);
+                    if (o != null) return o;
 
-            // Label in english, provided by OntoME
-            o = toValue(map, "en_" + LabelSource.ONTOME);
-            if (o != null) return o;
+                    // Label in english, provided by OntoME
+                    o = toValue(map, "en_" + LabelSource.ONTOME);
+                    if (o != null) return o;
 
-            return o;
-        });
+                    return o;
+                },
+                Named.as("ktable-mapvalues-project-class-label")
+        );
 
-        var projectClassLabelStream = projectClassLabelTable.toStream();
+        var projectClassLabelStream = projectClassLabelTable.toStream(
+                Named.as("project_class_label" + "-to-stream")
+        );
 
         /* SINK PROCESSORS */
 
         // 8) to
         projectClassLabelStream.to(output.TOPICS.project_class_label,
-                Produced.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue()));
+                Produced.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue())
+                        .withName(output.TOPICS.project_class_label + "-producer")
+        );
 
         return new ProjectClassLabelReturnValue(builder, projectClassLabelTable, projectClassLabelStream);
 

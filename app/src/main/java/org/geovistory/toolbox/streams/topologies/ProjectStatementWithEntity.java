@@ -1,12 +1,9 @@
 package org.geovistory.toolbox.streams.topologies;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.app.RegisterInputTopic;
@@ -68,6 +65,7 @@ public class ProjectStatementWithEntity {
                             .setDeleted$1(deleted)
                             .build();
                 },
+                TableJoined.as(inner.TOPICS.project_statement_with_entity_join + "-fk-join"),
                 Materialized.<dev.projects.info_proj_rel.Key, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_with_entity_join)
                         .withKeySerde(avroSerdes.ProInfoProjRelKey())
                         .withValueSerde(avroSerdes.ProjectStatementValue())
@@ -75,21 +73,25 @@ public class ProjectStatementWithEntity {
 
 
         var projectStatementStream = projectStatementJoin
-                .toStream()
-                .map((key, value) -> {
-                    var k = ProjectStatementKey.newBuilder()
-                            .setProjectId(key.getFkProject())
-                            .setStatementId(key.getFkEntity())
-                            .build();
-                    return KeyValue.pair(k, value);
-                });
+                .toStream(
+                        Named.as(inner.TOPICS.project_statement_with_entity_join + "-to-stream")
+                )
+                .selectKey((key, value) -> ProjectStatementKey.newBuilder()
+                        .setProjectId(key.getFkProject())
+                        .setStatementId(key.getFkEntity())
+                        .build(),
+                        Named.as("kstream-select-key-project-statement")
+                );
+
 
 
 
         /* SINK PROCESSORS */
 
         projectStatementStream.to(output.TOPICS.project_statement_with_entity,
-                Produced.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue()));
+                Produced.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue())
+                        .withName(output.TOPICS.project_statement_with_entity + "-producer")
+        );
 
         return new ProjectStatementReturnValue(builder, projectStatementStream);
 

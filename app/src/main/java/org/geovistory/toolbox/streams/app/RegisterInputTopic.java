@@ -1,9 +1,11 @@
 package org.geovistory.toolbox.streams.app;
 
 import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 
 /**
@@ -27,8 +29,8 @@ public class RegisterInputTopic {
         );
     }
 
-    public KTable<dev.projects.text_property.Key, dev.projects.text_property.Value> proTextPropertyTable() {
-        return getRepartitionedTable(
+    public KStream<dev.projects.text_property.Key, dev.projects.text_property.Value> proTextPropertyStream() {
+        return getRepartitionedStream(
                 DbTopicNames.pro_text_property.getName(),
                 avroSerdes.ProTextPropertyKey(),
                 avroSerdes.ProTextPropertyValue()
@@ -174,11 +176,25 @@ public class RegisterInputTopic {
                 .map(KeyValue::pair, Named.as(topicName + "-mark-for-repartition"))
                 .toTable(
                         Named.as(topicName + "-to-table"),
-                        Materialized.with(kSerde, vSerde));
+                        Materialized
+                                .<K, V, KeyValueStore<Bytes, byte[]>>as(topicName + "-store")
+                                .withKeySerde(kSerde)
+                                .withValueSerde(vSerde)
+                );
     }
 
 
     private <K, V> KStream<K, V> getStream(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
         return builder.stream(topicName, Consumed.with(kSerde, vSerde).withName(topicName + "-consumer"));
+    }
+
+    private <K, V> KStream<K, V> getRepartitionedStream(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
+        return getStream(topicName, kSerde, vSerde)
+                .map(KeyValue::pair, Named.as(topicName + "-mark-for-repartition"))
+                .repartition(
+                        Repartitioned.<K, V>as(topicName + "-repartitioned")
+                                .withKeySerde(kSerde)
+                                .withValueSerde(vSerde)
+                );
     }
 }

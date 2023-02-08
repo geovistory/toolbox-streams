@@ -4,6 +4,7 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.app.DbTopicNames;
 import org.geovistory.toolbox.streams.avro.OntomePropertyKey;
@@ -27,7 +28,6 @@ public class OntomePropertyLabel {
     public static Topology buildStandalone(StreamsBuilder builder) {
 
 
-
         return addProcessors(builder, new OntomePropertyProjected(builder).kStream).builder().build();
 
     }
@@ -43,30 +43,34 @@ public class OntomePropertyLabel {
         /* STREAM PROCESSORS */
         // 2)
         var ontomePropertyLabel = ontomePropertyStream
-                .flatMap((key, value) -> {
-                    List<KeyValue<OntomePropertyLabelKey, OntomePropertyLabelValue>> result = new LinkedList<>();
+                .flatMap(
+                        (key, value) -> {
+                            List<KeyValue<OntomePropertyLabelKey, OntomePropertyLabelValue>> result = new LinkedList<>();
 
-                    var langId = Utils.isoLangToGeoId(value.getDfhPropertyLabelLanguage());
-                    if (langId == null) return result;
-                    var k = OntomePropertyLabelKey.newBuilder()
-                            .setPropertyId(value.getDfhPkProperty())
-                            .setLanguageId(langId)
-                            .build();
-                    var v = OntomePropertyLabelValue.newBuilder()
-                            .setPropertyId(value.getDfhPkProperty())
-                            .setLanguageId(langId)
-                            .setLabel(value.getDfhPropertyLabel())
-                            .setInverseLabel(value.getDfhPropertyInverseLabel())
-                            .build();
-                    result.add(KeyValue.pair(k, v));
-                    return result;
-                });
+                            var langId = Utils.isoLangToGeoId(value.getDfhPropertyLabelLanguage());
+                            if (langId == null) return result;
+                            var k = OntomePropertyLabelKey.newBuilder()
+                                    .setPropertyId(value.getDfhPkProperty())
+                                    .setLanguageId(langId)
+                                    .build();
+                            var v = OntomePropertyLabelValue.newBuilder()
+                                    .setPropertyId(value.getDfhPkProperty())
+                                    .setLanguageId(langId)
+                                    .setLabel(value.getDfhPropertyLabel())
+                                    .setInverseLabel(value.getDfhPropertyInverseLabel())
+                                    .build();
+                            result.add(KeyValue.pair(k, v));
+                            return result;
+                        },
+                        Named.as("kstream-flatmap-ontome-property-to-ontome-property-label")
+                );
 
         /* SINK PROCESSORS */
         ontomePropertyLabel
                 .to(
                         output.TOPICS.ontome_property_label,
                         Produced.with(avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue())
+                                .withName(output.TOPICS.ontome_property_label + "-producer")
                 );
 
 

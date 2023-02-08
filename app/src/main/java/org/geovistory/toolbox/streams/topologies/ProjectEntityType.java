@@ -3,9 +3,7 @@ package org.geovistory.toolbox.streams.topologies;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.app.RegisterOutputTopic;
 import org.geovistory.toolbox.streams.avro.*;
@@ -53,6 +51,7 @@ public class ProjectEntityType {
                         .setHasTypePropertyId(value2.getPropertyId())
                         .setDeleted$1(value2.getDeleted$1())
                         .build(),
+                TableJoined.as(inner.TOPICS.project_entity_with_has_type_property+ "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityHasTypePropValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_has_type_property)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityHasTypePropValue())
@@ -90,16 +89,21 @@ public class ProjectEntityType {
                     }
 
                 },
+                TableJoined.as(inner.TOPICS.project_entity_with_has_type_statement+ "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityTypeValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_has_type_statement)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityTypeValue())
         );
 
-        var projectEntityTypeStream = projectEntityTypeTable.toStream();
+        var projectEntityTypeStream = projectEntityTypeTable.toStream(
+                Named.as(inner.TOPICS.project_entity_with_has_type_statement + "-to-stream")
+        );
         /* SINK PROCESSORS */
 
         projectEntityTypeStream.to(output.TOPICS.project_entity_type,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTypeValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTypeValue())
+                        .withName(output.TOPICS.project_entity_type + "-producer")
+        );
 
         return new ProjectEntityTypeReturnValue(builder, projectEntityTypeTable, projectEntityTypeStream);
 

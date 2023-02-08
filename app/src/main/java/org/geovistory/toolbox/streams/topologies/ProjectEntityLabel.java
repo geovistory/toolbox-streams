@@ -59,6 +59,7 @@ public class ProjectEntityLabel {
                         .setEntity(value1)
                         .setLabelConfig(value2)
                         .build(),
+                TableJoined.as(inner.TOPICS.project_entity_with_label_config + "-fk-left-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityWithConfigValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_label_config)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityWithConfigValue())
@@ -66,45 +67,51 @@ public class ProjectEntityLabel {
 
         // 3
         var projectEntityLabelSlots = projectEntityWithConfigTable
-                .toStream()
-                .flatMap((key, value) -> {
-                    List<KeyValue<ProjectEntityLabelPartKey, ProjectEntityLabelPartValue>> result = new LinkedList<>();
+                .toStream(
+                        Named.as(inner.TOPICS.project_entity_with_label_config + "-to-stream")
+                )
+                .flatMap(
+                        (key, value) -> {
+                            List<KeyValue<ProjectEntityLabelPartKey, ProjectEntityLabelPartValue>> result = new LinkedList<>();
 
-                    if (value.getLabelConfig() == null) return result;
-                    if (value.getLabelConfig().getConfig() == null) return result;
-                    if (value.getLabelConfig().getConfig().getLabelParts() == null) return result;
+                            if (value.getLabelConfig() == null) return result;
+                            if (value.getLabelConfig().getConfig() == null) return result;
+                            if (value.getLabelConfig().getConfig().getLabelParts() == null) return result;
 
-                    var labelParts = value.getLabelConfig().getConfig().getLabelParts();
-                    // sort parts according to ord num
-                    labelParts.sort(Comparator.comparingInt(EntityLabelConfigPart::getOrdNum));
+                            var labelParts = value.getLabelConfig().getConfig().getLabelParts();
+                            // sort parts according to ord num
+                            labelParts.sort(Comparator.comparingInt(EntityLabelConfigPart::getOrdNum));
 
-                    // create  slots, be they configured or not
-                    for (int i = 0; i < NUMBER_OF_SLOTS; i++) {
-                        var k = ProjectEntityLabelPartKey.newBuilder()
-                                .setEntityId(key.getEntityId())
-                                .setProjectId(key.getProjectId())
-                                .setOrdNum(i)
-                                .build();
+                            // create  slots, be they configured or not
+                            for (int i = 0; i < NUMBER_OF_SLOTS; i++) {
+                                var k = ProjectEntityLabelPartKey.newBuilder()
+                                        .setEntityId(key.getEntityId())
+                                        .setProjectId(key.getProjectId())
+                                        .setOrdNum(i)
+                                        .build();
 
-                        // if no config for slot, then v = null
-                        ProjectEntityLabelPartValue v = null;
-                        // else assign the value
-                        if (labelParts.size() > i && labelParts.get(i) != null && labelParts.get(i).getField() != null) {
-                            v = ProjectEntityLabelPartValue.newBuilder()
-                                    .setEntityId(key.getEntityId())
-                                    .setProjectId(key.getProjectId())
-                                    .setOrdNum(i)
-                                    .setConfiguration(labelParts.get(i).getField())
-                                    .build();
-                        }
-                        result.add(KeyValue.pair(k, v));
-                    }
+                                // if no config for slot, then v = null
+                                ProjectEntityLabelPartValue v = null;
+                                // else assign the value
+                                if (labelParts.size() > i && labelParts.get(i) != null && labelParts.get(i).getField() != null) {
+                                    v = ProjectEntityLabelPartValue.newBuilder()
+                                            .setEntityId(key.getEntityId())
+                                            .setProjectId(key.getProjectId())
+                                            .setOrdNum(i)
+                                            .setConfiguration(labelParts.get(i).getField())
+                                            .build();
+                                }
+                                result.add(KeyValue.pair(k, v));
+                            }
 
-                    return result;
-                });
+                            return result;
+                        },
+                        Named.as("kstream-flatmap-project-entity-with-config-to-project-entity-label-slots")
+                );
 
         // 4
         var projectEntityLabelSlotsTable = projectEntityLabelSlots.toTable(
+                Named.as(inner.TOPICS.project_entity_label_slots + "-to-table"),
                 Materialized.<ProjectEntityLabelPartKey, ProjectEntityLabelPartValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_label_slots)
                         .withKeySerde(avroSerdes.ProjectEntityLabelPartKey())
                         .withValueSerde(avroSerdes.ProjectEntityLabelPartValue())
@@ -156,6 +163,7 @@ public class ProjectEntityLabel {
                     result.setString(slotLabel);
                     return result;
                 },
+                TableJoined.as(inner.TOPICS.project_entity_label_slots_with_strings + "-fk-left-join"),
                 Materialized.<ProjectEntityLabelPartKey, ProjectEntityLabelSlotWithStringValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_label_slots_with_strings)
                         .withKeySerde(avroSerdes.ProjectEntityLabelPartKey())
                         .withValueSerde(avroSerdes.ProjectEntityLabelSlotWithStringValue())
@@ -163,23 +171,29 @@ public class ProjectEntityLabel {
 
 
         var aggregatedStream = projectEntityLabelSlotsWithStrings
-                .toStream()
+                .toStream(
+                        Named.as(inner.TOPICS.project_entity_label_slots_with_strings + "-to-stream")
+                )
                 .selectKey((k, v) -> ProjectEntityKey.newBuilder()
                         .setProjectId(k.getProjectId())
                         .setEntityId(k.getEntityId())
-                        .build()
+                        .build(),
+                        Named.as("kstream-select-key-of-project-entity-label-slots")
                 )
                 .repartition(
                         Repartitioned.<ProjectEntityKey, ProjectEntityLabelSlotWithStringValue>as(inner.TOPICS.project_entity_label_slots_with_strings_repart)
                                 .withKeySerde(avroSerdes.ProjectEntityKey())
                                 .withValueSerde(avroSerdes.ProjectEntityLabelSlotWithStringValue())
+                                .withName(inner.TOPICS.project_entity_label_slots_with_strings_repart)
                 )
                 .transform(new EntityLabelsAggregatorSupplier("project_entity_labels_agg"));
 
         /* SINK PROCESSORS */
 
         aggregatedStream.to(output.TOPICS.project_entity_label,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelValue()));
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelValue())
+                        .withName(output.TOPICS.project_entity_label + "-producer")
+        );
 
         return new ProjectEntityLabelReturnValue(builder, aggregatedStream);
 
