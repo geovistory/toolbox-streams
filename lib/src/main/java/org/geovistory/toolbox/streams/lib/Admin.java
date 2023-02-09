@@ -1,10 +1,9 @@
-package org.geovistory.toolbox.streams.app;
+package org.geovistory.toolbox.streams.lib;
 
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.errors.TopicExistsException;
-import org.geovistory.toolbox.streams.lib.AppConfig;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;

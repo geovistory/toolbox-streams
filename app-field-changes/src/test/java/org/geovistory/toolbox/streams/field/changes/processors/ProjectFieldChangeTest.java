@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.topology;
+package org.geovistory.toolbox.streams.field.changes.processors;
 
 
 import org.apache.kafka.streams.*;
@@ -6,7 +6,6 @@ import org.geovistory.toolbox.streams.avro.FieldChangeKey;
 import org.geovistory.toolbox.streams.avro.FieldChangeValue;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.topologies.ProjectFieldChange;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

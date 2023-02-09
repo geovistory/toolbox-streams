@@ -1,14 +1,19 @@
 name: Test and Dockerize
 
 on:
-  pull_request:
-    branches: [ "main" ]
-
+  workflow_dispatch:
+    inputs:
+      subproject:
+        description: 'Dockerize subproject'
+        required: true
+        type: choice
+        options:
+          - app
+          - app-field-changes
 jobs:
   dockerize:
 
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
 

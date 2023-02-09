@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.app;
+package org.geovistory.toolbox.streams.lib;
 
 import org.apache.kafka.streams.state.RocksDBConfigSetter;
 import org.rocksdb.BlockBasedTableConfig;

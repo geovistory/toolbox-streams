@@ -1,6 +1,12 @@
 package org.geovistory.toolbox.streams.lib;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.config.TopicConfig;
+import org.apache.kafka.streams.StreamsConfig;
+
+import java.util.Properties;
 
 
 public enum AppConfig {
@@ -312,4 +318,57 @@ public enum AppConfig {
         System.out.println("streamsReceiveBufferBytes: " + streamsReceiveBufferBytes);
         System.out.println("streamsBufferedRecordsPerPartition: " + streamsBufferedRecordsPerPartition);
     }
+
+
+    public static Properties getConfig() {
+        
+        // set the required properties for running Kafka Streams
+        Properties props = new Properties();
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG, INSTANCE.getApplicationId());
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, INSTANCE.getKafkaBootstrapServers());
+        props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
+
+        props.put(StreamsConfig.STATE_DIR_CONFIG, INSTANCE.getStateDir());
+
+        props.put(StreamsConfig.topicPrefix(TopicConfig.CLEANUP_POLICY_CONFIG), TopicConfig.CLEANUP_POLICY_COMPACT);
+
+        // See this for producer configs:
+        // https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#ak-consumers-producer-and-admin-client-configuration-parameters
+        props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "20971760");
+
+        // rocksdb memory management
+        // see https://medium.com/@grinfeld_433/kafka-streams-and-rocksdb-in-the-space-time-continuum-and-a-little-bit-of-configuration-40edb5ee9ed7
+        // see https://kafka.apache.org/33/documentation/streams/developer-guide/memory-mgmt.html#id3
+        props.put(StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG, BoundedMemoryRocksDBConfig.class.getName());
+        props.put(BoundedMemoryRocksDBConfig.TOTAL_OFF_HEAP_SIZE_MB, INSTANCE.getRocksdbTotalOffHeapMb());
+        props.put(BoundedMemoryRocksDBConfig.TOTAL_MEMTABLE_MB, INSTANCE.getRocksdbTotalMemtableMb());
+
+        // streams memory management
+        props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, INSTANCE.getStreamsCacheMaxBytesBuffering());
+        props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, INSTANCE.getStreamsCommitIntervalMs());
+        props.put(StreamsConfig.BUFFERED_RECORDS_PER_PARTITION_CONFIG, INSTANCE.getStreamsBufferedRecordsPerPartition());
+
+        // producer memory management
+        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, INSTANCE.getStreamsBufferMemory());
+        props.put(ProducerConfig.SEND_BUFFER_CONFIG, INSTANCE.getStreamsSendBufferBytes());
+
+        // consumer memory management
+        props.put(ConsumerConfig.FETCH_MAX_BYTES_CONFIG, INSTANCE.getStreamsFetchMaxBytes());
+        props.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, INSTANCE.getStreamsFetchMaxWaitMs());
+        props.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, INSTANCE.getStreamsReceiveBufferBytes());
+
+
+        /*
+
+        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, AvroSerde.class);
+        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, AvroSerde.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        // URL for Apicurio Registry connection (including basic auth parameters)
+        props.put(SerdeConfig.REGISTRY_URL, INSTANCE.getApicurioRegistryUrl());
+        // Specify using specific (generated) Avro schema classes
+        props.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, "true");
+        props.put(SerdeConfig.AUTO_REGISTER_ARTIFACT, true);*/
+        return props;
+    }
+
 }

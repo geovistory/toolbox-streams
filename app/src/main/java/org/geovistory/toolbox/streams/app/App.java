@@ -11,7 +11,9 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.geovistory.toolbox.streams.input.OntomeClassProjected;
 import org.geovistory.toolbox.streams.input.OntomePropertyProjected;
+import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.lib.BoundedMemoryRocksDBConfig;
 import org.geovistory.toolbox.streams.topologies.*;
 
 import java.util.Properties;

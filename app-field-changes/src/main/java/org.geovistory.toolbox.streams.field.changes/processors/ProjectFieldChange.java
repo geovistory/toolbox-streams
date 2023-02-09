@@ -1,15 +1,15 @@
-package org.geovistory.toolbox.streams.topologies;
+package org.geovistory.toolbox.streams.field.changes.processors;
 
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.geovistory.toolbox.streams.app.DbTopicNames;
-import org.geovistory.toolbox.streams.app.RegisterInputTopic;
 import org.geovistory.toolbox.streams.avro.FieldChangeJoin;
 import org.geovistory.toolbox.streams.avro.FieldChangeKey;
 import org.geovistory.toolbox.streams.avro.FieldChangeValue;
+import org.geovistory.toolbox.streams.field.changes.DbTopicNames;
+import org.geovistory.toolbox.streams.field.changes.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
