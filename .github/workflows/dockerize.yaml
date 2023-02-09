@@ -350,6 +350,7 @@ jobs:
 
     # about needs and if see: https://stackoverflow.com/a/66358138/11786845
     needs: [
+      pull-request-number,
       dockerize-app,
       dockerize-app-field-changes,
       dockerize-app-base-model,
@@ -371,7 +372,7 @@ jobs:
       # this will update metadata about PR for the docker tag in /build.gradle
       - name: Update pull request metadata in build.gradle
         id: version
-        run: bash updatePRMetadata.bash ${{ steps.pull_request.outputs.number }}
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
 
       # commit the PR metadata updates
       - uses: EndBug/add-and-commit@v5
