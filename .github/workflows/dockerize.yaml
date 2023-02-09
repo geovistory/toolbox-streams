@@ -7,7 +7,7 @@ on:
 jobs:
 
   # JOB to run change detection
-  changes:
+  detect-changes:
     runs-on: ubuntu-latest
     # Required permissions
     permissions:
@@ -28,7 +28,7 @@ jobs:
               - 'app-field-changes/**'
 
   # JOB to extract PR metadata
-  pr:
+  pull-request-number:
     runs-on: ubuntu-latest
     outputs:
       number: ${{ steps.pull_request.outputs.number }}
@@ -43,8 +43,8 @@ jobs:
       run: echo Pull request branch is '${{ steps.pull_request.outputs.number }}'
 
   dockerize-app:
-    needs: [changes, pr]
-    if: ${{ needs.changes.outputs.app == 'true' }}
+    needs: [detect-changes, pull-request-number]
+    if: ${{ needs.detect-changes.outputs.app == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -53,7 +53,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
           title: "Test and Dockerize 'app'"
-          description: "PR: ${{ needs.pr.outputs.number }}"
+          description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
 
@@ -118,8 +118,8 @@ jobs:
           username: GitHub Actions
 
   dockerize-app-field-changes:
-    needs: [changes, pr]
-    if: ${{ needs.changes.outputs.app-field-changes == 'true' }}
+    needs: [detect-changes, pull-request-number]
+    if: ${{ needs.detect-changes.outputs.app-field-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -128,7 +128,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
           title: "Test and Dockerize 'app-field-changes'"
-          description: "PR: ${{ needs.pr.outputs.number }}"
+          description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
 
