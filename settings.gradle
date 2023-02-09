@@ -8,4 +8,10 @@
  */
 
 rootProject.name = 'toolbox-streams'
-include('app-field-changes', 'app', 'lib', 'utilities')
+include(
+        'app-field-changes',
+        'app-statement-enriched',
+        'app',
+        'lib',
+        'utilities'
+)
