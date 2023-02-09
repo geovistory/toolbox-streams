@@ -11,6 +11,7 @@ rootProject.name = 'toolbox-streams'
 include(
         'app-field-changes',
         'app-statement-enriched',
+        'app-base-model',
         'app',
         'lib',
         'utilities'

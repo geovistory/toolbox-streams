@@ -11,6 +11,10 @@ on:
         options:
           - toolbox-streams
           - toolbox-streams-field-changes
+      version:
+        description: "Version"
+        required: true
+        type: string
       env:
         description: "To Environment"
         required: true
@@ -29,22 +33,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate tag
-        run: |
-          echo "No tag specified. Choose a tag from workflow dispatch UI."
-          exit 1
-        if: ${{ github.ref_type != 'tag' }}
-
-      - name: Deploy only on staging if up to date with main branch
-        run: bash ./main-not-ahead-of.sh --branch ${GITHUB_REF/refs\/tags\//}
-        if: ${{ github.event.inputs.env == 'stag' }}
-
-      - name: Get the tag
-        id: get_version
-        run: echo ::set-output name=tag::${GITHUB_REF/refs\/tags\/v/}
-
-      - name: Echo tag
-        run: echo ${{steps.get_version.outputs.tag}}
 
       - name: Echo env
         run: echo {{github.event.inputs.env}}
@@ -59,7 +47,7 @@ jobs:
           inputs: |
             {
               "service": "${{github.event.inputs.app}}",
-              "tag": "${{steps.get_version.outputs.tag}}",
+              "tag": "${{github.event.inputs.version}}",
               "environment": "${{github.event.inputs.env}}"
             }
 

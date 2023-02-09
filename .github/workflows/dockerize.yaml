@@ -219,6 +219,5 @@ jobs:
       - uses: EndBug/add-and-commit@v5
         with:
           message: 'chore(): update pr metadata'
-          tag: v${{ steps.extract_docker_tag_suffix.outputs.value }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
