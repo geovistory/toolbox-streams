@@ -16,6 +16,8 @@ jobs:
     outputs:
       app: ${{ steps.filter.outputs.app }}
       app-field-changes: ${{ steps.filter.outputs.app-field-changes }}
+      app-base-model: ${{ steps.filter.outputs.app-base-model }}
+      app-statement-enriched: ${{ steps.filter.outputs.app-statement-enriched }}
     steps:
       # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v2
