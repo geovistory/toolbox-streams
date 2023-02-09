@@ -96,6 +96,16 @@ public class Utils {
         else return inputString;
     }
 
+    public static Instant InstantFromIso(String s) {
+        try {
+
+            TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(s);
+            return Instant.from(ta);
+        } catch (NullPointerException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     public static Date DateFromIso(String s) {
         try {
 
@@ -106,6 +116,7 @@ public class Utils {
             return null;
         }
     }
+
     private static Map<String, Integer> languageMap() {
         Map<String, Integer> map = new HashMap<>();
         map.put("aa", 17082);

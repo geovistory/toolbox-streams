@@ -32,6 +32,9 @@ dependencies {
 
     // logging
     implementation 'org.slf4j:slf4j-simple:2.0.3'
+
+    // Kafka streams
+    implementation 'org.apache.kafka:kafka-streams:3.3.1'
 }
 
 tasks.named('test') {

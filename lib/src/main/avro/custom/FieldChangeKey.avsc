@@ -1,0 +1,37 @@
+{
+  "type": "record",
+  "name": "FieldChangeKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of field change",
+  "fields": [
+    {
+      "name": "fk_project",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "fk_source_info",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "fk_source_tables_cell",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "fk_property",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "fk_property_of_property",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "is_outgoing",
+      "type": "boolean"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "FieldChangeValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of field change",
+  "fields": [
+    {
+      "name": "tmsp_last_modification",
+      "type" : {
+        "type" : "long",
+        "logicalType" : "timestamp-millis"
+      }
+    }
+  ]
+}

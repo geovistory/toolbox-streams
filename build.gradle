@@ -1,8 +1,4 @@
-plugins {
-    id 'com.glovoapp.semantic-versioning' version '1.1.10'
-}
-
 ext {
-    pullRequestNumber = 49
-    pullRequestPushCount = 6
+    pullRequestNumber = null
+    pullRequestPushCount = null
 }
