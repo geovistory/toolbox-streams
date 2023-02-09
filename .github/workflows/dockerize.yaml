@@ -196,7 +196,7 @@ jobs:
   update-pull-request-metadata:
 
     # about needs and if see: https://stackoverflow.com/a/66358138/11786845
-    needs: [ app, app-field-changes ]
+    needs: [ dockerize-app, dockerize-app-field-changes ]
     # contains(needs.*.result, 'success') will be true if at least one of the jobs succeeded.
     # !(contains(needs.*.result, 'failure')) is false if any job failed
     if: |
