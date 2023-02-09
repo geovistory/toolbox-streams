@@ -26,6 +26,10 @@ jobs:
               - 'app/**'
             app-field-changes:
               - 'app-field-changes/**'
+            app-base-model:
+              - 'app-base-model/**'
+            app-field-changes:
+              - 'app-field-changes/**'
 
   # JOB to extract PR metadata
   pull-request-number:
