@@ -19,11 +19,11 @@ flowchart BT
     base.statement_enriched
     base.field-changes
     
-    project.model-->base.model
-    project.entity_label-->project.model
+    project.config-->base.model
+    project.entity_label-->project.config
     project.entity_label-->base.statement_enriched
     project.entity-->project.entity_label
-    project.entity-->project.model
+    project.entity-->project.config
     project.entity_preview-->project.entity
     project.entity_preview-->project.entity_label
 ```

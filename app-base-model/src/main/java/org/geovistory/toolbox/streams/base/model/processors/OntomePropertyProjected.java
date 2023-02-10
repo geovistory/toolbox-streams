@@ -44,9 +44,9 @@ public class OntomePropertyProjected extends ProjectedTableRegistrar<
                                 .setDeleted$1(value.getDeleted$1())
                                 .build()
                 ),
-                // input key serde
+                // output key serde
                 new ConfluentAvroSerdes().OntomePropertyKey(),
-                // input value serde
+                // output value serde
                 new ConfluentAvroSerdes().OntomePropertyValue()
         );
     }
