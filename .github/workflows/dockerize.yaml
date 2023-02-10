@@ -587,6 +587,7 @@ jobs:
       dockerize-app-base-model,
       dockerize-app-field-changes,
       dockerize-app-project-config,
+      dockerize-app-project-entity,
       dockerize-app-project-entity-label,
       dockerize-app-statement-enriched
     ]
