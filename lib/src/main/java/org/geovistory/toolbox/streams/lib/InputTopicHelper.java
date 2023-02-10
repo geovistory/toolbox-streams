@@ -7,9 +7,14 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 
+import java.util.HashMap;
+import java.util.Map;
+
 abstract public class InputTopicHelper {
 
     public StreamsBuilder builder;
+
+    public Map<String, KStream<?, ?>> streamCache = new HashMap<>();
 
     public InputTopicHelper(StreamsBuilder builder) {
         this.builder = builder;
@@ -40,7 +45,22 @@ abstract public class InputTopicHelper {
 
 
     protected <K, V> KStream<K, V> getStream(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
-        return builder.stream(topicName, Consumed.with(kSerde, vSerde).withName(topicName + "-consumer"));
+        if (streamCache.containsKey(topicName)) {
+            return (KStream<K, V>) streamCache.get(topicName);
+        }
+        var s = builder.stream(topicName, Consumed.with(kSerde, vSerde).withName(topicName + "-consumer"));
+        this.streamCache.put(topicName, s);
+        return s;
+    }
+
+    protected <K, V> KTable<K, V> getTable(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
+        return getStream(topicName, kSerde, vSerde).toTable(
+                Named.as(topicName + "-to-table"),
+                Materialized
+                        .<K, V, KeyValueStore<Bytes, byte[]>>as(topicName + "-store")
+                        .withKeySerde(kSerde)
+                        .withValueSerde(vSerde)
+        );
     }
 
     protected <K, V> KStream<K, V> getRepartitionedStream(String topicName, Serde<K> kSerde, Serde<V> vSerde) {

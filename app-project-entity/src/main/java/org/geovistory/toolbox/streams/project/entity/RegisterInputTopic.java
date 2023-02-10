@@ -1,7 +1,6 @@
 package org.geovistory.toolbox.streams.project.entity;
 
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
@@ -21,42 +20,67 @@ public class RegisterInputTopic extends InputTopicHelper {
     }
 
     public KTable<ProjectClassKey, ProjectEntityLabelConfigValue> projectEntityLabelConfigTable() {
-        return builder.table(Env.INSTANCE.TOPIC_PROJECT_ENTITY_LABEL_CONFIG,
-                Consumed.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectEntityLabelConfigValue()));
+        return getTable(
+                Env.INSTANCE.TOPIC_PROJECT_ENTITY_LABEL_CONFIG,
+                avroSerdes.ProjectClassKey(),
+                avroSerdes.ProjectEntityLabelConfigValue()
+        );
     }
 
-    public KStream<ProjectEntityKey, ProjectEntityTopStatementsValue> projectEntityTopStatementsStream() {
-        return builder.stream(Env.INSTANCE.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS,
-                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTopStatementsValue()));
-    }
+
     public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
-        return builder.table(Env.INSTANCE.TOPIC_PROJECT_ENTITY,
-                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityValue()));
+        return getTable(
+                Env.INSTANCE.TOPIC_PROJECT_ENTITY,
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityValue()
+        );
     }
 
     public KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsTable() {
-        return builder.table(Env.INSTANCE.TOPIC_PROJECT_TOP_OUTGOING_STATEMENTS,
-                Consumed.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue()));
+        return getTable(
+                Env.INSTANCE.TOPIC_PROJECT_TOP_OUTGOING_STATEMENTS,
+                avroSerdes.ProjectTopStatementsKey(),
+                avroSerdes.ProjectTopStatementsValue()
+        );
     }
 
     public KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable() {
-        return builder.table(Env.INSTANCE.TOPIC_ONTOME_CLASS_METADATA,
-                Consumed.with(avroSerdes.OntomeClassKey(), avroSerdes.OntomeClassMetadataValue()));
+        return getTable(
+                Env.INSTANCE.TOPIC_ONTOME_CLASS_METADATA,
+                avroSerdes.OntomeClassKey(),
+                avroSerdes.OntomeClassMetadataValue()
+        );
     }
 
     public KTable<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelTable() {
-        return builder.table(Env.INSTANCE.TOPIC_PROJECT_CLASS_LABEL,
-                Consumed.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue()));
+        return getTable(
+                Env.INSTANCE.TOPIC_PROJECT_CLASS_LABEL,
+                avroSerdes.ProjectClassLabelKey(),
+                avroSerdes.ProjectClassLabelValue()
+        );
     }
 
     public KTable<ProjectEntityKey, ProjectEntityTopStatementsValue> projectEntityTopStatementsTable() {
-        return builder.table(Env.INSTANCE.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS,
-                Consumed.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTopStatementsValue()));
+        return getTable(
+                Env.INSTANCE.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS,
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityTopStatementsValue()
+        );
+    }
+    public KStream<ProjectEntityKey, ProjectEntityTopStatementsValue> projectEntityTopStatementsStream() {
+        return getStream(
+                Env.INSTANCE.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS,
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityTopStatementsValue()
+        );
     }
 
     public KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable() {
-        return builder.table(Env.INSTANCE.TOPIC_HAS_TYPE_PROPERTY,
-                Consumed.with(avroSerdes.HasTypePropertyKey(), avroSerdes.HasTypePropertyValue()));
+        return getTable(
+                Env.INSTANCE.TOPIC_HAS_TYPE_PROPERTY,
+                avroSerdes.HasTypePropertyKey(),
+                avroSerdes.HasTypePropertyValue()
+        );
     }
 
 }
