@@ -9,6 +9,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.project.entity.Env;
+import org.geovistory.toolbox.streams.project.entity.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.project.entity.RegisterInputTopic;
 
 import java.util.ArrayList;
@@ -25,11 +26,12 @@ public class ProjectEntityFulltext {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
+        var innerTopic = new RegisterInnerTopic(builder);
         var inputTopic = new RegisterInputTopic(builder);
 
         return addProcessors(
                 builder,
-                inputTopic.projectEntityTopStatementsTable(),
+                innerTopic.projectEntityTopStatementsTable(),
                 inputTopic.projectEntityLabelConfigTable()
         ).builder().build();
     }
@@ -91,7 +93,7 @@ public class ProjectEntityFulltext {
     public enum input {
         TOPICS;
         public final String project_entity_label_config_enriched = Env.INSTANCE.TOPIC_PROJECT_ENTITY_LABEL_CONFIG;
-        public final String project_entity_top_statements = Env.INSTANCE.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS;
+        public final String project_entity_top_statements = ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements;
     }
 
 

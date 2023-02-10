@@ -8,8 +8,7 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
-import org.geovistory.toolbox.streams.project.entity.Env;
-import org.geovistory.toolbox.streams.project.entity.RegisterInputTopic;
+import org.geovistory.toolbox.streams.project.entity.RegisterInnerTopic;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -26,9 +25,9 @@ public class ProjectEntityTimeSpan {
 
     public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var inputTopic = new RegisterInputTopic(builder);
+        var innerTopic = new RegisterInnerTopic(builder);
 
-        var projectEntityTopStatementsValueStream = inputTopic.projectEntityTopStatementsStream();
+        var projectEntityTopStatementsValueStream = innerTopic.projectEntityTopStatementsStream();
 
         return addProcessors(builder, projectEntityTopStatementsValueStream).builder().build();
     }
@@ -188,7 +187,7 @@ public class ProjectEntityTimeSpan {
 
     public enum input {
         TOPICS;
-        public final String project_entity_top_statements = Env.INSTANCE.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS;
+        public final String project_entity_top_statements = ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements;
 
 
     }

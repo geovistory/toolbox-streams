@@ -3,7 +3,9 @@ package org.geovistory.toolbox.streams.project.entity.label;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KTable;
-import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.avro.ProjectClassKey;
+import org.geovistory.toolbox.streams.avro.ProjectEntityLabelConfigValue;
+import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.InputTopicHelper;
 
@@ -54,9 +56,4 @@ public class RegisterInputTopics extends InputTopicHelper {
                 Consumed.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectEntityLabelConfigValue()));
     }
 
-    public KTable<ProjectFieldLabelKey, ProjectFieldLabelValue> projectPropertyLabelTable() {
-        return builder.table(Env.INSTANCE.TOPIC_PROJECT_PROPERTY_LABEL,
-                Consumed.with(avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelValue()));
-
-    }
 }

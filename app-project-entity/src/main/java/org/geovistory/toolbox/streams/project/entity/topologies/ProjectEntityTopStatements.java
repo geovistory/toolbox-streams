@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.project.entity.label.processors;
+package org.geovistory.toolbox.streams.project.entity.topologies;
 
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -8,9 +8,8 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
-import org.geovistory.toolbox.streams.project.entity.label.Env;
-import org.geovistory.toolbox.streams.project.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.project.entity.label.RegisterInputTopics;
+import org.geovistory.toolbox.streams.project.entity.Env;
+import org.geovistory.toolbox.streams.project.entity.RegisterInputTopic;
 
 import java.util.HashMap;
 
@@ -22,13 +21,12 @@ public class ProjectEntityTopStatements {
     }
 
     public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInnerTopic = new RegisterInnerTopic(builder);
-        var registerInputTopics = new RegisterInputTopics(builder);
+        var registerInputTopics = new RegisterInputTopic(builder);
 
         return addProcessors(
                 builder,
-                registerInnerTopic.projectEntityTable(),
-                registerInnerTopic.projectTopStatementsTable(),
+                registerInputTopics.projectEntityTable(),
+                registerInputTopics.projectTopStatementsTable(),
                 registerInputTopics.projectPropertyLabelTable()
         ).builder().build();
     }
@@ -64,7 +62,7 @@ public class ProjectEntityTopStatements {
                             .setClassId(value2.getClassId())
                             .build();
                 },
-                TableJoined.as(inner.TOPICS.project_top_statements_with_class_id+ "-fk-left-join"),
+                TableJoined.as(inner.TOPICS.project_top_statements_with_class_id + "-fk-left-join"),
                 Materialized.<ProjectTopStatementsKey, ProjectTopStatementsWithClassValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_statements_with_class_id)
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
                         .withValueSerde(avroSerdes.ProjectTopStatementsWithClassValue())
@@ -89,7 +87,7 @@ public class ProjectEntityTopStatements {
                         .setEntityId(v.getEntityId())
                         .setPropertyLabel(value2 != null ? value2.getLabel() : null)
                         .build(),
-                TableJoined.as(inner.TOPICS.project_top_statements_with_prop_label+ "-fk-left-join"),
+                TableJoined.as(inner.TOPICS.project_top_statements_with_prop_label + "-fk-left-join"),
                 Materialized.<ProjectTopStatementsKey, ProjectTopStatementsWithPropLabelValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_statements_with_prop_label)
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
                         .withValueSerde(avroSerdes.ProjectTopStatementsWithPropLabelValue())
@@ -156,8 +154,8 @@ public class ProjectEntityTopStatements {
 
     public enum input {
         TOPICS;
-        public final String project_top_statements = ProjectTopStatements.output.TOPICS.project_top_statements;
-        public final String project_entity = ProjectEntity.output.TOPICS.project_entity;
+        public final String project_top_statements = Env.INSTANCE.TOPIC_PROJECT_TOP_STATEMENTS;
+        public final String project_entity = Env.INSTANCE.TOPIC_PROJECT_ENTITY;
         public final String project_property_label = Env.INSTANCE.TOPIC_PROJECT_PROPERTY_LABEL;
 
     }

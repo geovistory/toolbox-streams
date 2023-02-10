@@ -1,12 +1,12 @@
-package org.geovistory.toolbox.streams.topology;
+package org.geovistory.toolbox.streams.project.entity.processors;
 
 
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.project.entity.label.I;
-import org.geovistory.toolbox.streams.project.entity.label.processors.ProjectEntityTopStatements;
+import org.geovistory.toolbox.streams.project.entity.I;
+import org.geovistory.toolbox.streams.project.entity.topologies.ProjectEntityTopStatements;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -10,8 +10,8 @@ public enum Env {
     // Name of topic PROJECT_ENTITY_LABEL_CONFIG
     public final String TOPIC_PROJECT_ENTITY_LABEL_CONFIG;
 
-    // Name of topic PROJECT_ENTITY_TOP_STATEMENTS
-    public final String TOPIC_PROJECT_ENTITY_TOP_STATEMENTS;
+    // Name of topic PROJECT_TOP_STATEMENTS
+    public final String TOPIC_PROJECT_TOP_STATEMENTS;
 
     // Name of topic PROJECT_ENTITY_TABLE
     public final String TOPIC_PROJECT_ENTITY;
@@ -28,6 +28,10 @@ public enum Env {
     // Name of topic HAS_TYPE_PROPERTY
     public final String TOPIC_HAS_TYPE_PROPERTY;
 
+    // Name of topic project_property_label
+    public final String TOPIC_PROJECT_PROPERTY_LABEL;
+
+
     Env() {
         // load .env for local development
         Dotenv dotenv = Dotenv
@@ -41,11 +45,11 @@ public enum Env {
                 dotenv.get("TS_TOPIC_PROJECT_ENTITY_LABEL_CONFIG"),
                 "TS_TOPIC_PROJECT_ENTITY_LABEL_CONFIG"
         );
-        this.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS = Utils.coalesce(
-                System.getProperty("TS_TOPIC_PROJECT_ENTITY_TOP_STATEMENTS"),
-                System.getenv("TS_TOPIC_PROJECT_ENTITY_TOP_STATEMENTS"),
-                dotenv.get("TS_TOPIC_PROJECT_ENTITY_TOP_STATEMENTS"),
-                "TS_TOPIC_PROJECT_ENTITY_TOP_STATEMENTS"
+        this.TOPIC_PROJECT_TOP_STATEMENTS = Utils.coalesce(
+                System.getProperty("TS_TOPIC_PROJECT_TOP_STATEMENTS"),
+                System.getenv("TS_TOPIC_PROJECT_TOP_STATEMENTS"),
+                dotenv.get("TS_TOPIC_PROJECT_TOP_STATEMENTS"),
+                "TS_TOPIC_PROJECT_TOP_STATEMENTS"
         );
         this.TOPIC_PROJECT_ENTITY = Utils.coalesce(
                 System.getProperty("TS_TOPIC_PROJECT_ENTITY"),
@@ -77,6 +81,11 @@ public enum Env {
                 dotenv.get("TS_TOPIC_HAS_TYPE_PROPERTY"),
                 "TS_TOPIC_HAS_TYPE_PROPERTY"
         );
-
+        this.TOPIC_PROJECT_PROPERTY_LABEL = Utils.coalesce(
+                System.getProperty("TS_TOPIC_PROJECT_PROPERTY_LABEL"),
+                System.getenv("TS_TOPIC_PROJECT_PROPERTY_LABEL"),
+                dotenv.get("TS_TOPIC_PROJECT_PROPERTY_LABEL"),
+                "TS_TOPIC_PROJECT_PROPERTY_LABEL"
+        );
     }
 }

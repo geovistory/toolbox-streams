@@ -123,7 +123,6 @@ class App {
                 ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
                 ProjectTopStatements.output.TOPICS.project_top_statements,
                 ProjectEntityLabel.output.TOPICS.project_entity_label,
-                ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
         }, outputTopicPartitions, outputTopicReplicationFactor);
     }
 

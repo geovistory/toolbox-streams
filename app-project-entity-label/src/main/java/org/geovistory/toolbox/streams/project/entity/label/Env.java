@@ -16,8 +16,6 @@ public enum Env {
     // Name of topic project_entity_label_config
     public final String TOPIC_PROJECT_ENTITY_LABEL_CONFIG;
 
-    // Name of topic project_property_label
-    public final String TOPIC_PROJECT_PROPERTY_LABEL;
 
 
     Env() {
@@ -44,12 +42,6 @@ public enum Env {
                 System.getenv("TS_TOPIC_PROJECT_ENTITY_LABEL_CONFIG"),
                 dotenv.get("TS_TOPIC_PROJECT_ENTITY_LABEL_CONFIG"),
                 "TS_TOPIC_PROJECT_ENTITY_LABEL_CONFIG"
-        );
-        this.TOPIC_PROJECT_PROPERTY_LABEL = Utils.coalesce(
-                System.getProperty("TS_TOPIC_PROJECT_PROPERTY_LABEL"),
-                System.getenv("TS_TOPIC_PROJECT_PROPERTY_LABEL"),
-                dotenv.get("TS_TOPIC_PROJECT_PROPERTY_LABEL"),
-                "TS_TOPIC_PROJECT_PROPERTY_LABEL"
         );
     }
 }

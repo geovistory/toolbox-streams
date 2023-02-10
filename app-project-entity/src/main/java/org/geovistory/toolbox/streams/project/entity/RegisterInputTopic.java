@@ -1,7 +1,6 @@
 package org.geovistory.toolbox.streams.project.entity;
 
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -60,18 +59,11 @@ public class RegisterInputTopic extends InputTopicHelper {
         );
     }
 
-    public KTable<ProjectEntityKey, ProjectEntityTopStatementsValue> projectEntityTopStatementsTable() {
+    public KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopStatementsTable() {
         return getTable(
-                Env.INSTANCE.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS,
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityTopStatementsValue()
-        );
-    }
-    public KStream<ProjectEntityKey, ProjectEntityTopStatementsValue> projectEntityTopStatementsStream() {
-        return getStream(
-                Env.INSTANCE.TOPIC_PROJECT_ENTITY_TOP_STATEMENTS,
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityTopStatementsValue()
+                Env.INSTANCE.TOPIC_PROJECT_TOP_STATEMENTS,
+                avroSerdes.ProjectTopStatementsKey(),
+                avroSerdes.ProjectTopStatementsValue()
         );
     }
 
@@ -80,6 +72,14 @@ public class RegisterInputTopic extends InputTopicHelper {
                 Env.INSTANCE.TOPIC_HAS_TYPE_PROPERTY,
                 avroSerdes.HasTypePropertyKey(),
                 avroSerdes.HasTypePropertyValue()
+        );
+    }
+
+    public KTable<ProjectFieldLabelKey, ProjectFieldLabelValue> projectPropertyLabelTable() {
+        return getTable(
+                Env.INSTANCE.TOPIC_PROJECT_PROPERTY_LABEL,
+                avroSerdes.ProjectPropertyLabelKey(),
+                avroSerdes.ProjectPropertyLabelValue()
         );
     }
 

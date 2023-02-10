@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.project.entity.label.processors;
+package org.geovistory.toolbox.streams.project.entity.topologies;
 
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.KStream;

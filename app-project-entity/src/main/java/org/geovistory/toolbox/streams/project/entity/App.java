@@ -3,18 +3,14 @@
  */
 package org.geovistory.toolbox.streams.project.entity;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.BoundedMemoryRocksDBConfig;
 import org.geovistory.toolbox.streams.project.entity.topologies.*;
 
-import java.util.Properties;
+import static org.geovistory.toolbox.streams.project.entity.BuildProperties.getDockerImageTag;
+import static org.geovistory.toolbox.streams.project.entity.BuildProperties.getDockerTagSuffix;
 
 class App {
     public static void main(String[] args) {
@@ -34,13 +30,13 @@ class App {
         createTopics();
 
         // print configuration information
-        System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
+        System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
         System.out.println("With config:");
         AppConfig.INSTANCE.printConfigs();
 
         // create the streams app
         // noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, getConfig());
+        KafkaStreams streams = new KafkaStreams(topology, AppConfig.getConfig());
 
         // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
@@ -60,20 +56,26 @@ class App {
         var ontomeClassMetadataTable = inputTopic.ontomeClassMetadataTable();
 
         // register input topics as KStreams
-        var projectEntityTopStatementsStream = inputTopic.projectEntityTopStatementsStream();
         var projectClassLabelTable = inputTopic.projectClassLabelTable();
-        var projectEntityTopStatementsTable = inputTopic.projectEntityTopStatementsTable();
+        var projectTopStatementsTable = inputTopic.projectTopStatementsTable();
+        var projectPropertyLabelTable = inputTopic.projectPropertyLabelTable();
 
+        // add sub-topology ProjectEntityTopStatements
+        var projectEntityTopStatements = ProjectEntityTopStatements.addProcessors(builder,
+                projectEntityTable,
+                projectTopStatementsTable,
+                projectPropertyLabelTable
+        );
 
         // add sub-topology ProjectEntityFulltext
         ProjectEntityFulltext.addProcessors(builder,
-                projectEntityTopStatementsTable,
+                projectEntityTopStatements.projectEntityTopStatementTable(),
                 projectEntityLabelConfigTable
         );
 
         // add sub-topology ProjectEntityTimeSpan
         ProjectEntityTimeSpan.addProcessors(builder,
-                projectEntityTopStatementsStream
+                projectEntityTopStatements.projectEntityTopStatementStream()
         );
 
         // add sub-topology ProjectEntityType
@@ -110,69 +112,10 @@ class App {
                 ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
                 ProjectEntityClassMetadata.output.TOPICS.project_entity_class_metadata,
                 ProjectEntityType.output.TOPICS.project_entity_type,
+                ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
-       /* // Use the KafkaFuture object to block and wait for the topic creation to complete
-        try {
-            kafkaFuture.get();
-            System.out.println("Topics created successfully");
-        } catch (InterruptedException | ExecutionException e) {
-            System.out.println("Error creating topics: " + e.getMessage());
-        }*/
-    }
-
-    private static Properties getConfig() {
-
-        AppConfig appConfig = AppConfig.INSTANCE;
-
-        // set the required properties for running Kafka Streams
-        Properties props = new Properties();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, appConfig.getApplicationId());
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, appConfig.getKafkaBootstrapServers());
-        props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
-
-        props.put(StreamsConfig.STATE_DIR_CONFIG, appConfig.getStateDir());
-
-        props.put(StreamsConfig.topicPrefix(TopicConfig.CLEANUP_POLICY_CONFIG), TopicConfig.CLEANUP_POLICY_COMPACT);
-
-        // See this for producer configs:
-        // https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#ak-consumers-producer-and-admin-client-configuration-parameters
-        props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "20971760");
-
-        // rocksdb memory management
-        // see https://medium.com/@grinfeld_433/kafka-streams-and-rocksdb-in-the-space-time-continuum-and-a-little-bit-of-configuration-40edb5ee9ed7
-        // see https://kafka.apache.org/33/documentation/streams/developer-guide/memory-mgmt.html#id3
-        props.put(StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG, BoundedMemoryRocksDBConfig.class.getName());
-        props.put(BoundedMemoryRocksDBConfig.TOTAL_OFF_HEAP_SIZE_MB, appConfig.getRocksdbTotalOffHeapMb());
-        props.put(BoundedMemoryRocksDBConfig.TOTAL_MEMTABLE_MB, appConfig.getRocksdbTotalMemtableMb());
-
-        // streams memory management
-        props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, appConfig.getStreamsCacheMaxBytesBuffering());
-        props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, appConfig.getStreamsCommitIntervalMs());
-        props.put(StreamsConfig.BUFFERED_RECORDS_PER_PARTITION_CONFIG, appConfig.getStreamsBufferedRecordsPerPartition());
-
-        // producer memory management
-        props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, appConfig.getStreamsBufferMemory());
-        props.put(ProducerConfig.SEND_BUFFER_CONFIG, appConfig.getStreamsSendBufferBytes());
-
-        // consumer memory management
-        props.put(ConsumerConfig.FETCH_MAX_BYTES_CONFIG, appConfig.getStreamsFetchMaxBytes());
-        props.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, appConfig.getStreamsFetchMaxWaitMs());
-        props.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, appConfig.getStreamsReceiveBufferBytes());
-
-
-        /*
-
-        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, AvroSerde.class);
-        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, AvroSerde.class);
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        // URL for Apicurio Registry connection (including basic auth parameters)
-        props.put(SerdeConfig.REGISTRY_URL, appConfig.getApicurioRegistryUrl());
-        // Specify using specific (generated) Avro schema classes
-        props.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, "true");
-        props.put(SerdeConfig.AUTO_REGISTER_ARTIFACT, true);*/
-        return props;
     }
 
 
