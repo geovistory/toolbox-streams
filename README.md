@@ -9,6 +9,24 @@ root
 |- utilities # helpers for developers
 ```
 
+## Dependencies
+The apps depend on each others output topics.
+
+```mermaid
+flowchart BT
+    
+    base.model
+    base.statement_enriched
+    base.field-changes
+    
+    project.model-->base.model
+    project.entity_label-->project.model
+    project.entity_label-->base.statement_enriched
+    project.entity-->project.entity_label
+    project.entity-->project.model
+    project.entity_preview-->project.entity
+    project.entity_preview-->project.entity_label
+```
 
 ## Run
 ### Requirements
