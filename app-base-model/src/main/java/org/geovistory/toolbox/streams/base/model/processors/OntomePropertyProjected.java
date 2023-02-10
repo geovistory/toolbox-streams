@@ -9,7 +9,6 @@ import org.geovistory.toolbox.streams.avro.OntomePropertyValue;
 import org.geovistory.toolbox.streams.base.model.DbTopicNames;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.ProjectedTableRegistrar;
-import org.geovistory.toolbox.streams.lib.Utils;
 
 public class OntomePropertyProjected extends ProjectedTableRegistrar<
         Key,
@@ -27,7 +26,7 @@ public class OntomePropertyProjected extends ProjectedTableRegistrar<
                 // input value serde
                 new ConfluentAvroSerdes().DfhApiPropertyValue(),
                 // prefix for outputs
-                Utils.tsPrefixed("ontome_property"),
+                "ontome_property",
                 (key, value) -> KeyValue.pair(
                         OntomePropertyKey.newBuilder().setPropertyId(value.getDfhPkProperty()).build(),
                         OntomePropertyValue.newBuilder()
