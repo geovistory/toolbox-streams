@@ -34,8 +34,8 @@ jobs:
               - 'app-field-changes/**'
             app-project-config:
               - 'app-project-config/**'
-            app-entity-label:
-              - 'app-entity-label/**'
+            app-project-entity-label:
+              - 'app-project-entity-label/**'
             app-statement-enriched:
               - 'app-statement-enriched/**'
 
