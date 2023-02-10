@@ -15,6 +15,7 @@ include(
         'app-project-config',
         'app-project-entity',
         'app-project-entity-label',
+        'app-project-entity-preview',
         'app',
         'lib',
         'utilities'

@@ -15,6 +15,7 @@ on:
           - toolbox-streams-project-config
           - toolbox-streams-entity
           - toolbox-streams-entity-label
+          - toolbox-streams-entity-preview
           - toolbox-streams-statement-enriched
       version:
         description: "Version"
