@@ -13,6 +13,7 @@ include(
         'app-statement-enriched',
         'app-base-model',
         'app-project-config',
+        'app-project-entity',
         'app-project-entity-label',
         'app',
         'lib',

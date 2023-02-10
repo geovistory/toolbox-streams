@@ -9,6 +9,9 @@ import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.project.entity.label.processors.*;
 
+import static org.geovistory.toolbox.streams.project.entity.label.BuildProperties.getDockerImageTag;
+import static org.geovistory.toolbox.streams.project.entity.label.BuildProperties.getDockerTagSuffix;
+
 class App {
     public static void main(String[] args) {
 
@@ -27,7 +30,7 @@ class App {
         createTopics();
 
         // print configuration information
-        System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
+        System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
         System.out.println("With config:");
         AppConfig.INSTANCE.printConfigs();
 
