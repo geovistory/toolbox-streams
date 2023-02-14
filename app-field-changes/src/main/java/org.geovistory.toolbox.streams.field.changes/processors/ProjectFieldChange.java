@@ -56,6 +56,7 @@ public class ProjectFieldChange {
                         .setFkSubjectInfo(statement.getFkSubjectInfo())
                         .setFkSubjectTablesCell(statement.getFkObjectTablesCell())
                         .setTmspLastModification(Utils.InstantFromIso(projectRelation.getTmspLastModification()))
+                        .setWallClock(Instant.now())
                         .build(),
                 TableJoined.as(inner.TOPICS.project_statement_modification_date_join + "-fk-join"),
                 Materialized.<dev.projects.info_proj_rel.Key, FieldChangeJoin, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_modification_date_join)
@@ -87,6 +88,7 @@ public class ProjectFieldChange {
         var aggregatedByObject = groupedByObject.aggregate(
                 () -> FieldChangeValue.newBuilder()
                         .setTmspLastModification(Instant.EPOCH)
+                        .setWallClock(Instant.now())
                         .build(),
                 (key, value, aggregate) -> {
                     if (value.getTmspLastModification().isAfter(aggregate.getTmspLastModification())) {
@@ -115,6 +117,7 @@ public class ProjectFieldChange {
         var aggregatedBySubject = groupedBySubject.aggregate(
                 () -> FieldChangeValue.newBuilder()
                         .setTmspLastModification(Instant.EPOCH)
+                        .setWallClock(Instant.now())
                         .build(),
                 (key, value, aggregate) -> {
                     if (value.getTmspLastModification().isAfter(aggregate.getTmspLastModification())) {

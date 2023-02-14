@@ -10,6 +10,13 @@
         "type" : "long",
         "logicalType" : "timestamp-millis"
       }
+    },
+    {
+      "name": "wall_clock",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-micros"
+      }
     }
   ]
 }

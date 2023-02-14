@@ -22,7 +22,7 @@ class App {
         addSubTopologies(builder);
 
         // build the topology
-        var topology = builder.build();
+        var topology = builder.build(AppConfig.getConfig());
 
         System.out.println(topology.describe());
 
