@@ -59,6 +59,7 @@ class ProjectEntityLabelRecursionTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
+        props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
         AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
         StreamsBuilder builder = new StreamsBuilder();
@@ -110,7 +111,7 @@ class ProjectEntityLabelRecursionTest {
         );
 
 
-        Topology topology = builder.build();
+        Topology topology = builder.build(props);
 
         testDriver = new TopologyTestDriver(topology, props);
 

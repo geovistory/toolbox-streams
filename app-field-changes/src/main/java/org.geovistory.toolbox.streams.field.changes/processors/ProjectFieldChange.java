@@ -54,7 +54,7 @@ public class ProjectFieldChange {
                         .setFkObjectInfo(statement.getFkObjectInfo())
                         .setFkObjectTablesCell(statement.getFkObjectTablesCell())
                         .setFkSubjectInfo(statement.getFkSubjectInfo())
-                        .setFkSubjectTablesCell(statement.getFkObjectTablesCell())
+                        .setFkSubjectTablesCell(statement.getFkSubjectTablesCell())
                         .setTmspLastModification(Utils.InstantFromIso(projectRelation.getTmspLastModification()))
                         .build(),
                 TableJoined.as(inner.TOPICS.project_statement_modification_date_join + "-fk-join"),
@@ -73,11 +73,11 @@ public class ProjectFieldChange {
         // 3
         var groupedByObject = statementWithDateTableStream.groupBy(
                 (key, value) -> FieldChangeKey.newBuilder()
-                        .setFkProject(value.getFkProject())
-                        .setFkProperty(value.getFkProperty())
-                        .setFkPropertyOfProperty(value.getFkPropertyOfProperty())
-                        .setFkSourceInfo(value.getFkObjectInfo())
-                        .setFkSourceTablesCell(value.getFkObjectTablesCell())
+                        .setFkProject(Utils.coalesce(value.getFkProject(), 0))
+                        .setFkProperty(Utils.coalesce(value.getFkProperty(), 0))
+                        .setFkPropertyOfProperty(Utils.coalesce(value.getFkPropertyOfProperty(), 0))
+                        .setFkSourceInfo(Utils.coalesce(value.getFkObjectInfo(), 0))
+                        .setFkSourceTablesCell(Utils.coalesce(value.getFkObjectTablesCell(), 0L))
                         .setIsOutgoing(false)
                         .build(),
                 Grouped.with(

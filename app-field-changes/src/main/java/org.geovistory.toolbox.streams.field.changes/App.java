@@ -21,9 +21,16 @@ class App {
         // add processors of sub-topologies
         addSubTopologies(builder);
 
-        // build the topology
-        var topology = builder.build();
+        // get config
+        var config = AppConfig.getConfig();
 
+        // print config
+        AppConfig.INSTANCE.printConfigs();
+
+        // build the topology
+        var topology = builder.build(config);
+
+        // print topology
         System.out.println(topology.describe());
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
@@ -32,11 +39,10 @@ class App {
         // print configuration information
         System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
         System.out.println("With config:");
-        AppConfig.INSTANCE.printConfigs();
 
         // create the streams app
         // noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, AppConfig.INSTANCE.getConfig());
+        KafkaStreams streams = new KafkaStreams(topology, config);
 
         // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));

@@ -11,6 +11,7 @@ abstract public class InputTopicHelper {
 
     public StreamsBuilder builder;
 
+
     public InputTopicHelper(StreamsBuilder builder) {
         this.builder = builder;
     }
@@ -41,6 +42,10 @@ abstract public class InputTopicHelper {
 
     protected <K, V> KStream<K, V> getStream(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
         return builder.stream(topicName, Consumed.with(kSerde, vSerde).withName(topicName + "-consumer"));
+    }
+
+    protected <K, V> KTable<K, V> getTable(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
+        return builder.table(topicName, Consumed.with(kSerde, vSerde).withName(topicName + "-consumer"));
     }
 
     protected <K, V> KStream<K, V> getRepartitionedStream(String topicName, Serde<K> kSerde, Serde<V> vSerde) {
