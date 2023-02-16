@@ -54,7 +54,7 @@ public class ProjectFieldChange {
                         .setFkObjectInfo(statement.getFkObjectInfo())
                         .setFkObjectTablesCell(statement.getFkObjectTablesCell())
                         .setFkSubjectInfo(statement.getFkSubjectInfo())
-                        .setFkSubjectTablesCell(statement.getFkObjectTablesCell())
+                        .setFkSubjectTablesCell(statement.getFkSubjectTablesCell())
                         .setTmspLastModification(Utils.InstantFromIso(projectRelation.getTmspLastModification()))
                         .setWallClock(Instant.now())
                         .build(),

@@ -28,15 +28,27 @@ flowchart BT
     project.entity_preview-->project.entity_label
 ```
 
-## Run
-### Requirements
 
-- Kafka
-- Schema Registry
-
-### Environment
 
 ## Develop
+
+### Environment
+To setup a local dev environment, we recommend https://github.com/lensesio/fast-data-dev.
+
+```bash
+docker run --rm -p 2181:2181 -p 3030:3030 -p 8081-8083:8081-8083 -p 9581-9585:9581-9585 -p 9092:9092 -e ADV_HOST=127.0.0.1 lensesio/fast-data-dev:latest
+```
+
+For Apple Silicon (M1,M2):
+
+```bash
+docker run --rm -p 2181:2181 -p 3030:3030 -p 8081-8083:8081-8083 -p 9581-9585:9581-9585 -p 9092:9092 -e ADV_HOST=127.0.0.1 dougdonohoe/fast-data-dev:latest
+```
+
+That's it. Visit http://192.168.99.100:3030 to get into the fast-data-dev environment
+
+### Add source connector
+
 
 ### CLI
 
