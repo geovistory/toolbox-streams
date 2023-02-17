@@ -17,7 +17,7 @@ jobs:
       app: ${{ steps.filter.outputs.app }}
       app-base-model: ${{ steps.filter.outputs.app-base-model }}
       app-field-changes: ${{ steps.filter.outputs.app-field-changes }}
-      app-project-config: ${{ steps.filter.outputs.app-project-config }}
+      app-base-config: ${{ steps.filter.outputs.app-base-config }}
       app-project-entity: ${{ steps.filter.outputs.app-project-entity }}
       app-project-entity-label: ${{ steps.filter.outputs.app-project-entity-label }}
       app-project-entity-preview: ${{ steps.filter.outputs.app-project-entity-preview }}
@@ -34,8 +34,8 @@ jobs:
               - 'app-base-model/**'
             app-field-changes:
               - 'app-field-changes/**'
-            app-project-config:
-              - 'app-project-config/**'
+            app-base-config:
+              - 'app-base-config/**'
             app-project-entity:
               - 'app-project-entity/**'
             app-project-entity-label:
@@ -282,9 +282,9 @@ jobs:
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
-  dockerize-app-project-config:
+  dockerize-app-base-config:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-project-config == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-base-config == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -292,7 +292,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-project-config'"
+          title: "Test and Dockerize 'app-base-config'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -323,11 +323,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-project-config:build # "app-project-config:" points to /app-project-config
+          arguments: app-base-config:build # "app-base-config:" points to /app-base-config
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-project-config:jibDockerBuild
+        run: ./gradlew app-base-config:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -339,20 +339,20 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app-project-config:printDockerImageTag)
+        run: docker push $(gradle -q app-base-config:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app-project-config:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-base-config:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-project-config' > Done"
+          title: "Dockerize 'app-base-config' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
@@ -664,7 +664,7 @@ jobs:
       dockerize-app,
       dockerize-app-base-model,
       dockerize-app-field-changes,
-      dockerize-app-project-config,
+      dockerize-app-base-config,
       dockerize-app-project-entity,
       dockerize-app-project-entity-label,
       dockerize-app-project-entity-preview,

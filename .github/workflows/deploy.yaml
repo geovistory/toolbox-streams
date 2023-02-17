@@ -12,7 +12,7 @@ on:
           - toolbox-streams
           - toolbox-streams-base-model
           - toolbox-streams-field-changes
-          - toolbox-streams-project-config
+          - toolbox-streams-base-config
           - toolbox-streams-entity
           - toolbox-streams-entity-label
           - toolbox-streams-entity-preview

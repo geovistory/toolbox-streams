@@ -10,23 +10,61 @@ root
 ```
 
 ## Dependencies
-The apps depend on each others output topics.
-
+The apps depend on each others output topics. 
 ```mermaid
-flowchart BT
+flowchart TD
+ 
     
-    base.model
-    base.statement_enriched
-    base.field-changes
+    base-model-->base-config
+    statement-enriched-->community-entity-label
+    community-entity-label-->community-entity
+    community-entity-label-->project-entity-label
+    community-entity-label-->community-entity-preview
+    community-entity-->community-entity-preview
+    community-entity-preview-->entity-preview
+    base-config-->project-entity-label
+    base-config-->community-entity-label
+    base-config-->community-entity
+    statement-enriched-->project-entity-label
+    project-entity-label-->project-entity
+    base-config-->project-entity
+    project-entity-->project-entity-preview
+    project-entity-label-->project-entity-preview
+    project-entity-preview-->entity-preview
     
-    project.config-->base.model
-    project.entity_label-->project.config
-    project.entity_label-->base.statement_enriched
-    project.entity-->project.entity_label
-    project.entity-->project.config
-    project.entity_preview-->project.entity
-    project.entity_preview-->project.entity_label
+    subgraph level-0
+        base-model
+        statement-enriched
+        field-changes
+    end 
+    subgraph level-1
+        base-config
+    end 
+    subgraph level-2
+        community-entity-label
+    end 
+    subgraph level-3
+        project-entity-label
+        community-entity
+    end 
+    subgraph level-4
+        project-entity
+        community-entity-preview
+    end
+    subgraph level-5
+        project-entity-preview
+    end
+    subgraph level-6
+        entity-preview
+    end
+    
 ```
+
+The arrows point from dependency to dependent app.
+The level indicates the level of dependency. For the deployment of new app versions, you can follow the level number.
+
+Example:
+If you have a new version of 
 
 
 

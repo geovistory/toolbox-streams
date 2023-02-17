@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "CommunityPropertyLabelValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of community property label",
+  "fields": [
+    {
+      "name": "label",
+      "type": "string"
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}
