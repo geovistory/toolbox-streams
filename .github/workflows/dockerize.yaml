@@ -14,36 +14,33 @@ jobs:
       pull-requests: read
     # Set job outputs to values from filter step
     outputs:
-      app: ${{ steps.filter.outputs.app }}
-      app-base-model: ${{ steps.filter.outputs.app-base-model }}
-      app-field-changes: ${{ steps.filter.outputs.app-field-changes }}
-      app-base-config: ${{ steps.filter.outputs.app-base-config }}
-      app-project-entity: ${{ steps.filter.outputs.app-project-entity }}
-      app-project-entity-label: ${{ steps.filter.outputs.app-project-entity-label }}
-      app-project-entity-preview: ${{ steps.filter.outputs.app-project-entity-preview }}
-      app-statement-enriched: ${{ steps.filter.outputs.app-statement-enriched }}
+      app-0-base-model: ${{ steps.filter.outputs.app-0-base-model }}
+      app-0-field-changes: ${{ steps.filter.outputs.app-0-field-changes }}
+      app-1-base-config: ${{ steps.filter.outputs.app-1-base-config }}
+      app-4-project-entity: ${{ steps.filter.outputs.app-4-project-entity }}
+      app-3-project-entity-label: ${{ steps.filter.outputs.app-3-project-entity-label }}
+      app-5-project-entity-preview: ${{ steps.filter.outputs.app-5-project-entity-preview }}
+      app-0-statement-enriched: ${{ steps.filter.outputs.app-0-statement-enriched }}
     steps:
-      # For pull requests it's not necessary to checkout the code
+      # For pull requests it's not necessary to check out the code
       - uses: dorny/paths-filter@v2
         id: filter
         with:
           filters: |
-            app:
-              - 'app/**'
-            app-base-model:
-              - 'app-base-model/**'
-            app-field-changes:
-              - 'app-field-changes/**'
-            app-base-config:
-              - 'app-base-config/**'
-            app-project-entity:
-              - 'app-project-entity/**'
-            app-project-entity-label:
-              - 'app-project-entity-label/**'
-            app-project-entity-preview:
-              - 'app-project-entity-preview/**'
-            app-statement-enriched:
-              - 'app-statement-enriched/**'
+            app-0-base-model:
+              - 'app-0-base-model/**'
+            app-0-field-changes:
+              - 'app-0-field-changes/**'
+            app-1-base-config:
+              - 'app-1-base-config/**'
+            app-4-project-entity:
+              - 'app-4-project-entity/**'
+            app-3-project-entity-label:
+              - 'app-3-project-entity-label/**'
+            app-5-project-entity-preview:
+              - 'app-5-project-entity-preview/**'
+            app-0-statement-enriched:
+              - 'app-0-statement-enriched/**'
 
   # JOB to extract PR metadata
   pull-request-number:
@@ -60,9 +57,9 @@ jobs:
     - name: Prints number of pull request
       run: echo Pull request branch is '${{ steps.pull_request.outputs.number }}'
 
-  dockerize-app:
+  dockerize-app-0-base-model:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-0-base-model == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -70,7 +67,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app'"
+          title: "Test and Dockerize 'app-0-base-model'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -101,11 +98,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app:build # "app:" points to /app
+          arguments: app-0-base-model:build # "app-0-base-model:" points to /app-0-base-model
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app:jibDockerBuild
+        run: ./gradlew app-0-base-model:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -117,26 +114,26 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app:printDockerImageTag)
+        run: docker push $(gradle -q app-0-base-model:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-0-base-model:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app' > Done"
+          title: "Dockerize 'app-0-base-model' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
-  dockerize-app-base-model:
+  dockerize-app-0-field-changes:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-base-model == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-0-field-changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -144,7 +141,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-base-model'"
+          title: "Test and Dockerize 'app-0-field-changes'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -175,11 +172,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-base-model:build # "app-base-model:" points to /app-base-model
+          arguments: app-0-field-changes:build # "app-0-field-changes:" points to /app-0-field-changes
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-base-model:jibDockerBuild
+        run: ./gradlew app-0-field-changes:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -191,26 +188,26 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app-base-model:printDockerImageTag)
+        run: docker push $(gradle -q app-0-field-changes:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app-base-model:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-0-field-changes:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-base-model' > Done"
+          title: "Dockerize 'app-0-field-changes' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
-  dockerize-app-field-changes:
+  dockerize-app-1-base-config:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-field-changes == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-1-base-config == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -218,7 +215,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-field-changes'"
+          title: "Test and Dockerize 'app-1-base-config'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -249,11 +246,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-field-changes:build # "app-field-changes:" points to /app-field-changes
+          arguments: app-1-base-config:build # "app-1-base-config:" points to /app-1-base-config
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-field-changes:jibDockerBuild
+        run: ./gradlew app-1-base-config:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -265,101 +262,27 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app-field-changes:printDockerImageTag)
+        run: docker push $(gradle -q app-1-base-config:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app-field-changes:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-1-base-config:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-field-changes' > Done"
-          description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
-          color: 0x0000ff
-          username: GitHub Actions
-  dockerize-app-base-config:
-    needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-base-config == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Discord Notification
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-base-config'"
-          description: "PR: ${{ needs.pull-request-number.outputs.number }}"
-          color: 0xffed2b
-          username: GitHub Actions
-
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
-
-      - name: Git Identity
-        run: |
-          git config --global user.name 'geovbot'
-          git config --global user.email 'github.bot@geovistory.org'
-          git remote set-url origin https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'adopt'
-
-      # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
-      # the workflow execution time. For more information see:
-      # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
-        with:
-          arguments: app-base-config:build # "app-base-config:" points to /app-base-config
-
-      # Create docker image
-      - name: Create docker image
-        run: ./gradlew app-base-config:jibDockerBuild
-
-      # login to ghcr.io
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # push docker image
-      - name: Push docker image
-        run: docker push $(gradle -q app-base-config:printDockerImageTag)
-
-      # extract tag (e.g. 1.0.1-pr-32.0)
-      - name: Extract docker tag suffix
-        id: extract_docker_tag_suffix
-        run: |
-          echo ::set-output name=value::$(gradle -q app-base-config:printDockerTagSuffix)
-
-      - name: Send Discord Notification
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-base-config' > Done"
+          title: "Dockerize 'app-1-base-config' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
 
-  dockerize-app-project-entity:
+  dockerize-app-4-project-entity:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-project-entity == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-4-project-entity == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -367,7 +290,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-project-entity'"
+          title: "Test and Dockerize 'app-4-project-entity'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -398,11 +321,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-project-entity:build # "app-project-entity:" points to /app-project-entity
+          arguments: app-4-project-entity:build # "app-4-project-entity:" points to /app-4-project-entity
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-project-entity:jibDockerBuild
+        run: ./gradlew app-4-project-entity:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -414,26 +337,26 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app-project-entity:printDockerImageTag)
+        run: docker push $(gradle -q app-4-project-entity:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app-project-entity:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-4-project-entity:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-project-entity' > Done"
+          title: "Dockerize 'app-4-project-entity' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
-  dockerize-app-project-entity-label:
+  dockerize-app-3-project-entity-label:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-project-entity-label == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-3-project-entity-label == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -441,7 +364,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-project-entity-label'"
+          title: "Test and Dockerize 'app-3-project-entity-label'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -472,11 +395,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-project-entity-label:build # "app-project-entity-label:" points to /app-project-entity-label
+          arguments: app-3-project-entity-label:build # "app-3-project-entity-label:" points to /app-3-project-entity-label
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-project-entity-label:jibDockerBuild
+        run: ./gradlew app-3-project-entity-label:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -488,26 +411,26 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app-project-entity-label:printDockerImageTag)
+        run: docker push $(gradle -q app-3-project-entity-label:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app-project-entity-label:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-3-project-entity-label:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-project-entity-label' > Done"
+          title: "Dockerize 'app-3-project-entity-label' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
-  dockerize-app-project-entity-preview:
+  dockerize-app-5-project-entity-preview:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-project-entity-preview == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-5-project-entity-preview == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -515,7 +438,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-project-entity-preview'"
+          title: "Test and Dockerize 'app-5-project-entity-preview'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -546,11 +469,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-project-entity-preview:build # "app-project-entity-preview:" points to /app-project-entity-preview
+          arguments: app-5-project-entity-preview:build # "app-5-project-entity-preview:" points to /app-5-project-entity-preview
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-project-entity-preview:jibDockerBuild
+        run: ./gradlew app-5-project-entity-preview:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -562,27 +485,27 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app-project-entity-preview:printDockerImageTag)
+        run: docker push $(gradle -q app-5-project-entity-preview:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app-project-entity-preview:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-5-project-entity-preview:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-project-entity-preview' > Done"
+          title: "Dockerize 'app-5-project-entity-preview' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
 
-  dockerize-app-statement-enriched:
+  dockerize-app-0-statement-enriched:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-statement-enriched == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-0-statement-enriched == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -590,7 +513,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-statement-enriched'"
+          title: "Test and Dockerize 'app-0-statement-enriched'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -621,11 +544,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-statement-enriched:build # "app-statement-enriched:" points to /app-statement-enriched
+          arguments: app-0-statement-enriched:build # "app-0-statement-enriched:" points to /app-0-statement-enriched
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-statement-enriched:jibDockerBuild
+        run: ./gradlew app-0-statement-enriched:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -637,20 +560,20 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app-statement-enriched:printDockerImageTag)
+        run: docker push $(gradle -q app-0-statement-enriched:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app-statement-enriched:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-0-statement-enriched:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-statement-enriched' > Done"
+          title: "Dockerize 'app-0-statement-enriched' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
@@ -662,13 +585,13 @@ jobs:
     needs: [
       pull-request-number,
       dockerize-app,
-      dockerize-app-base-model,
-      dockerize-app-field-changes,
-      dockerize-app-base-config,
-      dockerize-app-project-entity,
-      dockerize-app-project-entity-label,
-      dockerize-app-project-entity-preview,
-      dockerize-app-statement-enriched
+      dockerize-app-0-base-model,
+      dockerize-app-0-field-changes,
+      dockerize-app-1-base-config,
+      dockerize-app-4-project-entity,
+      dockerize-app-3-project-entity-label,
+      dockerize-app-5-project-entity-preview,
+      dockerize-app-0-statement-enriched
     ]
     # contains(needs.*.result, 'success') will be true if at least one of the jobs succeeded.
     # !(contains(needs.*.result, 'failure')) is false if any job failed
