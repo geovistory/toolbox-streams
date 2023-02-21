@@ -390,14 +390,14 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<ObjectKey> LiteralKey() {
-        Serde<ObjectKey> serdes = new SpecificAvroSerde<>();
+    public Serde<NodeKey> LiteralKey() {
+        Serde<NodeKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
         return serdes;
     }
 
-    public Serde<ObjectValue> LiteralValue() {
-        Serde<ObjectValue> serdes = new SpecificAvroSerde<>();
+    public Serde<NodeValue> LiteralValue() {
+        Serde<NodeValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
@@ -665,6 +665,40 @@ public class ConfluentAvroSerdes {
 
     public Serde<CommunityPropertyLabelValue> CommunityPropertyLabelValue() {
         Serde<CommunityPropertyLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityKey> CommunityEntityKey() {
+        Serde<CommunityEntityKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+
+    public Serde<CommunityEntityValue> CommunityEntityValue() {
+        Serde<CommunityEntityValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityVisibilityValue> ProjectEntityVisibilityValue() {
+        Serde<ProjectEntityVisibilityValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+    public Serde<CommunityStatementKey> CommunityStatementKey() {
+        Serde<CommunityStatementKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+    public Serde<CommunityStatementValue> CommunityStatementValue() {
+        Serde<CommunityStatementValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+    public Serde<DRMap> DRMap() {
+        Serde<DRMap> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }

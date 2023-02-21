@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "CommunityEntityKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Model to store entity id",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": {
+        "type": "string"
+      }
+    }
+  ]
+}

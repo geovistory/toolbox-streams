@@ -19,6 +19,14 @@
       "default": ""
     },
     {
+      "name": "subject_class_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
       "name": "object_class_id",
       "type": [
         "null",
@@ -43,10 +51,18 @@
       "default": null
     },
     {
+      "name": "subject",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NodeValue"
+      ],
+      "default": null
+    },
+    {
       "name": "object",
       "type": [
         "null",
-        "org.geovistory.toolbox.streams.avro.ObjectValue"
+        "org.geovistory.toolbox.streams.avro.NodeValue"
       ],
       "default": null
     },

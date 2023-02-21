@@ -1,5 +1,7 @@
 package org.geovistory.toolbox.streams.statement.enriched.processors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.information.statement.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
@@ -11,6 +13,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
+import org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility;
 import org.geovistory.toolbox.streams.statement.enriched.DbTopicNames;
 import org.geovistory.toolbox.streams.statement.enriched.RegisterInputTopic;
 
@@ -24,6 +27,9 @@ public class StatementEnriched {
     public static void main(String[] args) {
         System.out.println(buildStandalone(new StreamsBuilder()).describe());
     }
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+
 
     public static Topology buildStandalone(StreamsBuilder builder) {
         var registerInputTopic = new RegisterInputTopic(builder);
@@ -61,15 +67,15 @@ public class StatementEnriched {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
-        // Map entities to objects
+        // Map entities to nodes
         var entityObjects = infResourceTable
                 .filter(
                         (key, value) -> value.getFkClass() != null,
                         Named.as("kstream-filter-inf-resource-with-class-id")
                 )
                 .map((key, value) -> KeyValue.pair(
-                                ObjectKey.newBuilder().setId("i" + value.getPkEntity()).build(),
-                                ObjectValue.newBuilder().setId("i" + value.getPkEntity())
+                                NodeKey.newBuilder().setId("i" + value.getPkEntity()).build(),
+                                NodeValue.newBuilder().setId("i" + value.getPkEntity())
                                         .setEntity(tranformEntity(value))
                                         .setClassId(value.getFkClass())
                                         .build()
@@ -77,10 +83,10 @@ public class StatementEnriched {
                         Named.as("kstream-map-inf-resource-to-entity-object")
                 );
 
-        // Map languages to objects
+        // Map languages to nodes
         var languageObjects = infLanguageStream.map((key, value) -> KeyValue.pair(
-                        ObjectKey.newBuilder().setId("i" + value.getPkEntity()).build(),
-                        ObjectValue.newBuilder().setId("i" + value.getPkEntity())
+                        NodeKey.newBuilder().setId("i" + value.getPkEntity()).build(),
+                        NodeValue.newBuilder().setId("i" + value.getPkEntity())
                                 .setLanguage(tranformLanguage(value))
                                 .setClassId(value.getFkClass())
                                 .setLabel(value.getNotes())
@@ -90,12 +96,12 @@ public class StatementEnriched {
         );
 
 
-        // Map appellations to objects
+        // Map appellations to nodes
         var appellationObjects = infAppellationStream.map((key, value) -> {
                     var transformedValue = tranformAppellation(value);
                     return KeyValue.pair(
-                            ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                            ObjectValue.newBuilder().setId("i" + key.getPkEntity())
+                            NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                            NodeValue.newBuilder().setId("i" + key.getPkEntity())
                                     .setAppellation(transformedValue)
                                     .setClassId(value.getFkClass())
                                     .setLabel(transformedValue.getString())
@@ -105,12 +111,12 @@ public class StatementEnriched {
                 Named.as("kstream-map-inf-appellation-to-appellation-object")
         );
 
-        // Map langStrings to objects
+        // Map langStrings to nodes
         var langStringObjects = infLangStringStream.map((key, value) -> {
                     var transformedValue = tranformLangString(value);
                     return KeyValue.pair(
-                            ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                            ObjectValue.newBuilder().setId("i" + key.getPkEntity())
+                            NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                            NodeValue.newBuilder().setId("i" + key.getPkEntity())
                                     .setLangString(transformedValue)
                                     .setClassId(value.getFkClass())
                                     .setLabel(transformedValue.getString())
@@ -120,15 +126,15 @@ public class StatementEnriched {
                 Named.as("kstream-map-inf-lang_string-to-lang_string-object")
         );
 
-        // Map places to objects
+        // Map places to nodes
         var placeObjects = infPlaceStream.map((key, value) -> {
                     var wkb = value.getGeoPoint().getWkb();
                     var point = GeoUtils.bytesToPoint(wkb);
                     var x = point.getX();
                     var y = point.getY();
                     return KeyValue.pair(
-                            ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                            ObjectValue.newBuilder().setId("i" + key.getPkEntity())
+                            NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                            NodeValue.newBuilder().setId("i" + key.getPkEntity())
                                     .setPlace(tranformPlace(value))
                                     .setClassId(value.getFkClass())
                                     .setLabel(
@@ -139,10 +145,10 @@ public class StatementEnriched {
                 Named.as("kstream-map-inf-place-to-place-object")
         );
 
-        // Map timePrimitives to objects
+        // Map timePrimitives to nodes
         var timePrimitiveObjects = infTimePrimitiveStream.map((key, value) -> KeyValue.pair(
-                        ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                        ObjectValue.newBuilder().setId("i" + key.getPkEntity())
+                        NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                        NodeValue.newBuilder().setId("i" + key.getPkEntity())
                                 .setTimePrimitive(tranformTimePrimitive(value))
                                 .setClassId(value.getFkClass())
                                 .setLabel(null)
@@ -151,10 +157,10 @@ public class StatementEnriched {
                 Named.as("kstream-map-inf-time-primitive-to-time-primitive-object")
         );
 
-        // Map dimensions to objects
+        // Map dimensions to nodes
         var dimensionObjects = infDimensionStream.map((key, value) -> KeyValue.pair(
-                        ObjectKey.newBuilder().setId("i" + key.getPkEntity()).build(),
-                        ObjectValue.newBuilder().setId("i" + key.getPkEntity())
+                        NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
+                        NodeValue.newBuilder().setId("i" + key.getPkEntity())
                                 .setDimension(tranformDimension(value))
                                 .setClassId(value.getFkClass())
                                 .setLabel(value.getNumericValue() + "")
@@ -163,10 +169,10 @@ public class StatementEnriched {
                 Named.as("kstream-map-inf-dimension-to-dimension-object")
         );
 
-        // Map digital (table value) to objects
+        // Map digital (table value) to nodes
         var tableValueObjects = datDigitalStream.map((key, value) -> KeyValue.pair(
-                        ObjectKey.newBuilder().setId("d" + key.getPkEntity()).build(),
-                        ObjectValue.newBuilder().setId("d" + key.getPkEntity())
+                        NodeKey.newBuilder().setId("d" + key.getPkEntity()).build(),
+                        NodeValue.newBuilder().setId("d" + key.getPkEntity())
                                 .setDigital(tranformDigital(value))
                                 .setClassId(936) // https://ontome.net/ontology/c936
                                 .setLabel(null)
@@ -175,10 +181,10 @@ public class StatementEnriched {
                 Named.as("kstream-map-dat-digital-to-digital-object")
         );
 
-        // Map cell to objects
+        // Map cell to nodes
         var cellObjects = tabCellStream.map((key, value) -> KeyValue.pair(
-                        ObjectKey.newBuilder().setId("t" + key.getPkCell()).build(),
-                        ObjectValue.newBuilder().setId("t" + key.getPkCell())
+                        NodeKey.newBuilder().setId("t" + key.getPkCell()).build(),
+                        NodeValue.newBuilder().setId("t" + key.getPkCell())
                                 .setCell(tranformCell(value))
                                 .setClassId(521) // https://ontome.net/ontology/c521
                                 .setLabel(null)
@@ -187,40 +193,60 @@ public class StatementEnriched {
                 Named.as("kstream-map-tab-cell-to-cell-object")
         );
 
-        var objects = entityObjects
-                .merge(languageObjects, Named.as("kstream-merge-language-objects"))
-                .merge(appellationObjects, Named.as("kstream-merge-appellation-objects"))
-                .merge(langStringObjects, Named.as("kstream-merge-langString-objects"))
-                .merge(placeObjects, Named.as("kstream-merge-place-objects"))
-                .merge(timePrimitiveObjects, Named.as("kstream-merge-timePrimitive-objects"))
-                .merge(dimensionObjects, Named.as("kstream-merge-dimension-objects"))
-                .merge(tableValueObjects, Named.as("kstream-merge-tableValue-objects"))
-                .merge(cellObjects, Named.as("kstream-merge-cell-objects"));
+        var nodes = entityObjects
+                .merge(languageObjects, Named.as("kstream-merge-language-nodes"))
+                .merge(appellationObjects, Named.as("kstream-merge-appellation-nodes"))
+                .merge(langStringObjects, Named.as("kstream-merge-langString-nodes"))
+                .merge(placeObjects, Named.as("kstream-merge-place-nodes"))
+                .merge(timePrimitiveObjects, Named.as("kstream-merge-timePrimitive-nodes"))
+                .merge(dimensionObjects, Named.as("kstream-merge-dimension-nodes"))
+                .merge(tableValueObjects, Named.as("kstream-merge-tableValue-nodes"))
+                .merge(cellObjects, Named.as("kstream-merge-cell-nodes"));
 
-        var literalTable = objects.toTable(
-                Named.as(inner.TOPICS.objects),
+        var literalTable = nodes.toTable(
+                Named.as(inner.TOPICS.nodes),
 
-                Materialized.<ObjectKey, ObjectValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.objects)
+                Materialized.<NodeKey, NodeValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.nodes)
                         .withKeySerde(avroSerdes.LiteralKey())
                         .withValueSerde(avroSerdes.LiteralValue())
         );
 
-        var statementJoinedWithObjectTable = infStatementTable.join(
+        // join subject
+        var statementJoinedWithSubjectTable = infStatementTable.join(
                 literalTable,
-                value -> ObjectKey.newBuilder()
-                        .setId(getObjectStringId(value))
+                value -> NodeKey.newBuilder()
+                        .setId(getSubjectStringId(value))
                         .build(),
-                (statement, object) -> {
-                    if (object == null) return null;
+                (statement, subject) -> {
+                    if (subject == null) return null;
                     return StatementEnrichedValue.newBuilder()
                             .setSubjectId(getSubjectStringId(statement))
                             .setPropertyId(statement.getFkProperty())
                             .setObjectId(getObjectStringId(statement))
-                            .setObjectLabel(object.getLabel())
-                            .setObject(object)
-                            .setObjectClassId(object.getClassId())
+                            .setSubjectLabel(subject.getLabel())
+                            .setSubject(subject)
+                            .setSubjectClassId(subject.getClassId())
                             .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
                             .build();
+                },
+                TableJoined.as(inner.TOPICS.statement_joined_with_subject + "-fk-join"),
+                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_subject)
+                        .withKeySerde(avroSerdes.InfStatementKey())
+                        .withValueSerde(avroSerdes.StatementEnrichedValue())
+        );
+
+        // join object
+        var statementJoinedWithObjectTable = statementJoinedWithSubjectTable.join(
+                literalTable,
+                value -> NodeKey.newBuilder()
+                        .setId(value.getObjectId())
+                        .build(),
+                (statementEnrichedValue, object) -> {
+                    if (object == null) return null;
+                    statementEnrichedValue.setObjectLabel(object.getLabel());
+                    statementEnrichedValue.setObject(object);
+                    statementEnrichedValue.setObjectClassId(object.getClassId());
+                    return statementEnrichedValue;
                 },
                 TableJoined.as(inner.TOPICS.statement_joined_with_object + "-fk-join"),
                 Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_object)
@@ -304,9 +330,24 @@ public class StatementEnriched {
      * @return a projected, more lightweight, value
      */
     private static Entity tranformEntity(dev.information.resource.Value infEntity) {
+        var communityCanSeeInToolbox = false;
+        var communityCanSeeInDataApi = false;
+        var communityCanSeeInWebsite = false;
+        try {
+            var communitVisibility = mapper.readValue(infEntity.getCommunityVisibility(), CommunityVisibility.class);
+            if (communitVisibility.toolbox) communityCanSeeInToolbox = true;
+            if (communitVisibility.dataApi) communityCanSeeInDataApi = true;
+            if (communitVisibility.website) communityCanSeeInWebsite = true;
+        } catch (JsonProcessingException e) {
+            System.out.println("ERROR parsing the community visibility: ");
+            e.printStackTrace();
+        }
         return Entity.newBuilder()
                 .setPkEntity(infEntity.getPkEntity())
                 .setFkClass(infEntity.getFkClass())
+                .setCommunityVisibilityToolbox(communityCanSeeInToolbox)
+                .setCommunityVisibilityDataApi(communityCanSeeInDataApi)
+                .setCommunityVisibilityWebsite(communityCanSeeInWebsite)
                 .build();
     }
 
@@ -435,7 +476,8 @@ public class StatementEnriched {
 
     public enum inner {
         TOPICS;
-        public final String objects = "objects";
+        public final String nodes = "nodes";
+        public final String statement_joined_with_subject = "statement_joined_with_subject";
         public final String statement_joined_with_object = "statement_joined_with_object";
     }
 
