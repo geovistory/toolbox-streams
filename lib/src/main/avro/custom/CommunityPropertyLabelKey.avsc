@@ -1,0 +1,32 @@
+{
+  "type": "record",
+  "name": "CommunityPropertyLabelKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of community property label",
+  "fields": [
+    {
+      "name": "class_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "is_outgoing",
+      "type": {
+        "type": "boolean"
+      }
+    },
+    {
+      "name": "language_id",
+      "type": {
+        "type": "int"
+      }
+    }
+  ]
+}

@@ -194,6 +194,12 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<CommunityClassLabelValue> CommunityClassLabelValue() {
+        Serde<CommunityClassLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
     public Serde<GeovPropertyLabelKey> GeovPropertyLabelKey() {
         Serde<GeovPropertyLabelKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
@@ -632,18 +638,33 @@ public class ConfluentAvroSerdes {
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
     public Serde<FieldChangeJoin> FieldChangeJoin() {
         Serde<FieldChangeJoin> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
     public Serde<FieldChangeKey> FieldChangeKey() {
         Serde<FieldChangeKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
         return serdes;
     }
+
     public Serde<FieldChangeValue> FieldChangeValue() {
         Serde<FieldChangeValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityPropertyLabelKey> CommunityPropertyLabelKey() {
+        Serde<CommunityPropertyLabelKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<CommunityPropertyLabelValue> CommunityPropertyLabelValue() {
+        Serde<CommunityPropertyLabelValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }

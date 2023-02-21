@@ -9,14 +9,14 @@
 
 rootProject.name = 'toolbox-streams'
 include(
-        'app-field-changes',
-        'app-statement-enriched',
-        'app-base-model',
-        'app-project-config',
-        'app-project-entity',
-        'app-project-entity-label',
-        'app-project-entity-preview',
-        'app',
+        'app-0-base-model',
+        'app-0-field-changes',
+        'app-0-statement-enriched',
+        'app-1-base-config',
+        'app-1-community-config',
+        'app-3-project-entity-label',
+        'app-4-project-entity',
+        'app-5-project-entity-preview',
         'lib',
         'utilities'
 )

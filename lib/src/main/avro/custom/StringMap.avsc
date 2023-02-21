@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "StringMap",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "String-string-map for generic purpose",
+  "fields": [
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values" : "string",
+        "default": {}
+      },
+      "default": {}
+    }
+  ]
+}
