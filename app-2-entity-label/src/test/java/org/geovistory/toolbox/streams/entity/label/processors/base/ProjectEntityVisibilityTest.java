@@ -135,6 +135,7 @@ class ProjectEntityVisibilityTest {
                 .setTableName("")
                 .setPkEntity(entityId)
                 .setFkClass(classId)
+                .setCommunityVisibility("{ \"toolbox\": true, \"dataApi\": true, \"website\": true}")
                 .build();
         infResourceTopic.pipeInput(kE, vE);
 
@@ -180,6 +181,7 @@ class ProjectEntityVisibilityTest {
                 .setTableName("")
                 .setPkEntity(entityId)
                 .setFkClass(classId)
+                .setCommunityVisibility("{ \"toolbox\": true, \"dataApi\": true, \"website\": true}")
                 .build();
         infResourceTopic.pipeInput(kE, vE);
 
@@ -225,6 +227,7 @@ class ProjectEntityVisibilityTest {
                 .setTableName("")
                 .setPkEntity(entityId)
                 .setFkClass(classId)
+                .setCommunityVisibility("{ \"toolbox\": true, \"dataApi\": true, \"website\": true}")
                 .build();
         infResourceTopic.pipeInput(kE, vE);
 
@@ -287,6 +290,7 @@ class ProjectEntityVisibilityTest {
                 .setTableName("")
                 .setPkEntity(entityId)
                 .setFkClass(classId)
+                .setCommunityVisibility("{ \"toolbox\": true, \"dataApi\": true, \"website\": true}")
                 .build();
         infResourceTopic.pipeInput(kE, vE);
 

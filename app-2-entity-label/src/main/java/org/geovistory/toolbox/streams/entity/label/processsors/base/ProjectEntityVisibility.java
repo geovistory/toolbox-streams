@@ -51,6 +51,7 @@ public class ProjectEntityVisibility {
                         .build(),
                 (value1, value2) -> {
                     if (value2.getFkClass() == null) return null;
+                    if (value2.getCommunityVisibility() == null) return null;
                     var v1Deleted = Utils.stringIsEqualTrue(value1.getDeleted$1());
                     var v2Deleted = Utils.stringIsEqualTrue(value2.getDeleted$1());
                     var notInProject = !value1.getIsInProject();
