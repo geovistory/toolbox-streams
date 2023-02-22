@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "CommunityTopStatementsKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of statements grouped by entity, property and direction",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "is_outgoing",
+      "type": "boolean"
+    }
+  ]
+}

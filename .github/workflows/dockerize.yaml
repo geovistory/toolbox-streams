@@ -18,7 +18,7 @@ jobs:
       app-0-field-changes: ${{ steps.filter.outputs.app-0-field-changes }}
       app-1-base-config: ${{ steps.filter.outputs.app-1-base-config }}
       app-4-project-entity: ${{ steps.filter.outputs.app-4-project-entity }}
-      app-3-project-entity-label: ${{ steps.filter.outputs.app-3-project-entity-label }}
+      app-2-entity-label: ${{ steps.filter.outputs.app-2-entity-label }}
       app-5-project-entity-preview: ${{ steps.filter.outputs.app-5-project-entity-preview }}
       app-0-statement-enriched: ${{ steps.filter.outputs.app-0-statement-enriched }}
     steps:
@@ -35,8 +35,8 @@ jobs:
               - 'app-1-base-config/**'
             app-4-project-entity:
               - 'app-4-project-entity/**'
-            app-3-project-entity-label:
-              - 'app-3-project-entity-label/**'
+            app-2-entity-label:
+              - 'app-2-entity-label/**'
             app-5-project-entity-preview:
               - 'app-5-project-entity-preview/**'
             app-0-statement-enriched:
@@ -279,7 +279,6 @@ jobs:
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
-
   dockerize-app-4-project-entity:
     needs: [detect-changes, pull-request-number]
     if: ${{ needs.detect-changes.outputs.app-4-project-entity == 'true' }}
@@ -354,9 +353,9 @@ jobs:
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
-  dockerize-app-3-project-entity-label:
+  dockerize-app-2-entity-label:
     needs: [detect-changes, pull-request-number]
-    if: ${{ needs.detect-changes.outputs.app-3-project-entity-label == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-2-entity-label == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -364,7 +363,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-3-project-entity-label'"
+          title: "Test and Dockerize 'app-2-entity-label'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -395,11 +394,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-3-project-entity-label:build # "app-3-project-entity-label:" points to /app-3-project-entity-label
+          arguments: app-2-entity-label:build # "app-2-entity-label:" points to /app-2-entity-label
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-3-project-entity-label:jibDockerBuild
+        run: ./gradlew app-2-entity-label:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -411,23 +410,24 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(gradle -q app-3-project-entity-label:printDockerImageTag)
+        run: docker push $(gradle -q app-2-entity-label:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(gradle -q app-3-project-entity-label:printDockerTagSuffix)
+          echo ::set-output name=value::$(gradle -q app-2-entity-label:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-3-project-entity-label' > Done"
+          title: "Dockerize 'app-2-entity-label' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
+
   dockerize-app-5-project-entity-preview:
     needs: [detect-changes, pull-request-number]
     if: ${{ needs.detect-changes.outputs.app-5-project-entity-preview == 'true' }}
@@ -588,7 +588,7 @@ jobs:
       dockerize-app-0-field-changes,
       dockerize-app-1-base-config,
       dockerize-app-4-project-entity,
-      dockerize-app-3-project-entity-label,
+      dockerize-app-2-entity-label,
       dockerize-app-5-project-entity-preview,
       dockerize-app-0-statement-enriched
     ]

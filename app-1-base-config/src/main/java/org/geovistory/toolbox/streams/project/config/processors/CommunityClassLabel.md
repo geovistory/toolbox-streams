@@ -10,7 +10,7 @@ flowchart TD
     2a-->2b-->2c
     subgraph 1
         1c[geov_class_label]
-        1d[ontome_class_label]
+        **x**[ontome_class_label]
     end
     subgraph __2
         2a([Outer Join])

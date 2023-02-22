@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "CommunityEntityLabelValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "label",
+      "type": "string"
+    },
+    {
+      "name": "label_slots",
+      "type": {
+        "type": "array",
+        "items": "string"
+      }
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}
