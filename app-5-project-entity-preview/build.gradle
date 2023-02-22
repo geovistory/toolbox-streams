@@ -20,12 +20,12 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.geovistory.toolbox.streams.project.entity.preview.App'
+    mainClassName= 'org.geovistory.toolbox.streams.project.entity.preview.App'
 }
 
 
 jar {
-    manifest.attributes('Main-Class': application.mainClass)
+    manifest.attributes('Main-Class': application.mainClassName)
 }
 
 jib {
