@@ -585,9 +585,9 @@ jobs:
     # about needs and if see: https://stackoverflow.com/a/66358138/11786845
     needs: [
       pull-request-number,
-      dockerize-app-0-base-model,
+     # dockerize-app-0-base-model,
       dockerize-app-0-field-changes,
-     # dockerize-app-1-base-config,
+      dockerize-app-1-base-config,
       dockerize-app-4-project-entity,
       dockerize-app-2-entity-label,
       dockerize-app-5-project-entity-preview,
