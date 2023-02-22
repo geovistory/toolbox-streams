@@ -98,6 +98,7 @@ class App {
         );
 
 
+
         // add sub-topology ProjectEntityVisibility
         var projectEntityVisibility = ProjectEntityVisibility.addProcessors(builder,
                 infResourceTable,
@@ -153,6 +154,7 @@ class App {
         );
 
 
+
     }
 
     private static void createTopics() {
@@ -163,13 +165,17 @@ class App {
 
         // create output topics (with number of partitions and delete.policy=compact)
         admin.createOrConfigureTopics(new String[]{
+                ProjectEntityVisibility.output.TOPICS.project_entity_visibility,
+
                 ProjectEntity.output.TOPICS.project_entity,
                 ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity,
+                ProjectStatementWithLiteral.output.TOPICS.project_statement_with_literal,
                 ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
                 ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
                 ProjectTopStatements.output.TOPICS.project_top_statements,
                 ProjectEntityLabel.output.TOPICS.project_entity_label,
-                ProjectEntityVisibility.output.TOPICS.project_entity_visibility,
+
+                CommunityToolboxEntity.output.TOPICS.community_toolbox_entity,
                 CommunityToolboxStatementWithEntity.output.TOPICS.community_toolbox_statement_with_entity,
                 CommunityToolboxStatementWithLiteral.output.TOPICS.community_toolbox_statement_with_literal,
                 CommunityToolboxTopIncomingStatements.output.TOPICS.community_toolbox_top_incoming_statements,
