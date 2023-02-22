@@ -187,6 +187,14 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # echo gradle version
+      - name: Push docker image
+        run: echo $(gradle -v)
+
+      # echo ./gradlew version
+      - name: Push docker image
+        run: echo $(./gradlew -v)
+
       # push docker image
       - name: Push docker image
         run: docker push $(gradle -q app-0-field-changes:printDockerImageTag)
