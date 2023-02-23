@@ -20,7 +20,7 @@ jobs:
       app-1-base-config: ${{ steps.filter.outputs.app-1-base-config }}
       app-2-entity-label: ${{ steps.filter.outputs.app-2-entity-label }}
       app-3-entity: ${{ steps.filter.outputs.app-3-entity }}
-      app-5-project-entity-preview: ${{ steps.filter.outputs.app-5-project-entity-preview }}
+      app-4-entity-preview: ${{ steps.filter.outputs.app-4-entity-preview }}
     steps:
       # For pull requests it's not necessary to check out the code
       - uses: dorny/paths-filter@v2
@@ -39,8 +39,8 @@ jobs:
               - 'app-2-entity-label/**'
             app-3-entity:
               - 'app-3-entity/**'
-            app-5-project-entity-preview:
-              - 'app-5-project-entity-preview/**'
+            app-4-entity-preview:
+              - 'app-4-entity-preview/**'
 
   # JOB to extract PR metadata
   pull-request-number:
@@ -507,9 +507,9 @@ jobs:
           color: 0x0000ff
           username: GitHub Actions
 
-  dockerize-app-5-project-entity-preview:
+  dockerize-app-4-entity-preview:
     needs: [ detect-changes, pull-request-number ]
-    if: ${{ needs.detect-changes.outputs.app-5-project-entity-preview == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-4-entity-preview == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -517,7 +517,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-5-project-entity-preview'"
+          title: "Test and Dockerize 'app-4-entity-preview'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -548,11 +548,11 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
-          arguments: app-5-project-entity-preview:build # "app-5-project-entity-preview:" points to /app-5-project-entity-preview
+          arguments: app-4-entity-preview:build # "app-4-entity-preview:" points to /app-4-entity-preview
 
       # Create docker image
       - name: Create docker image
-        run: ./gradlew app-5-project-entity-preview:jibDockerBuild
+        run: ./gradlew app-4-entity-preview:jibDockerBuild
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -564,20 +564,20 @@ jobs:
 
       # push docker image
       - name: Push docker image
-        run: docker push $(./gradlew -q app-5-project-entity-preview:printDockerImageTag)
+        run: docker push $(./gradlew -q app-4-entity-preview:printDockerImageTag)
 
       # extract tag (e.g. 1.0.1-pr-32.0)
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(./gradlew -q app-5-project-entity-preview:printDockerTagSuffix)
+          echo ::set-output name=value::$(./gradlew -q app-4-entity-preview:printDockerTagSuffix)
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-5-project-entity-preview' > Done"
+          title: "Dockerize 'app-4-entity-preview' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
@@ -594,7 +594,7 @@ jobs:
       dockerize-app-1-base-config,
       dockerize-app-2-entity-label,
       dockerize-app-3-entity,
-      dockerize-app-5-project-entity-preview,
+      dockerize-app-4-entity-preview,
     ]
     # contains(needs.*.result, 'success') will be true if at least one of the jobs succeeded.
     # !(contains(needs.*.result, 'failure')) is false if any job failed

@@ -15,7 +15,7 @@ include(
         'app-1-base-config',
         'app-2-entity-label',
         'app-3-entity',
-        'app-5-project-entity-preview',
+        'app-4-entity-preview',
         'lib',
         'utilities'
 )

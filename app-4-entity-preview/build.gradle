@@ -20,7 +20,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName= 'org.geovistory.toolbox.streams.entity.App'
+    mainClassName= 'org.geovistory.toolbox.streams.entity.preview.App'
 }
 
 
@@ -43,10 +43,10 @@ jib {
 }
 /**
  * Get docker image tag
- * @return for example "ghcr.io/geovistory/toolbox-streams-entity:0.1.0"
+ * @return for example "ghcr.io/geovistory/toolbox-streams-entity-preview:0.1.0"
  */
 String getDockerImageTag() {
-    return 'ghcr.io/geovistory/toolbox-streams-entity' + ':' + getDockerTagSuffix()
+    return 'ghcr.io/geovistory/toolbox-streams-entity-preview' + ':' + getDockerTagSuffix()
 }
 
 /**
@@ -77,11 +77,11 @@ task generateJava {
     ext.outputDir = "$buildDir/generated/java"
     outputs.dir outputDir
     doLast {
-        mkdir "$outputDir/org/geovistory/toolbox/streams/entity"
-        file("$outputDir/org/geovistory/toolbox/streams/entity/BuildProperties.java").text =
-                """|package org.geovistory.toolbox.streams.entity;
+        mkdir "$outputDir/org/geovistory/toolbox/streams/entity/preview"
+        file("$outputDir/org/geovistory/toolbox/streams/entity/preview/BuildProperties.java").text =
+                """|package org.geovistory.toolbox.streams.entity.preview;
                |public class BuildProperties {
-               |    public static String getDockerTagSuffix() { return "${getDockerTagSuffix()}"; }        
+               |    public static String getDockerTagSuffix() { return "${getDockerTagSuffix()}"; }
                |    public static String getDockerImageTag() { return "${getDockerImageTag()}"; }
                |}""".stripMargin()
     }
