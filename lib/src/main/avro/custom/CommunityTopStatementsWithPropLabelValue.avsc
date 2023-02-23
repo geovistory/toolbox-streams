@@ -1,0 +1,39 @@
+{
+  "type": "record",
+  "name": "CommunityTopStatementsWithPropLabelValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of statements grouped by entity, property and direction, including project property label",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "is_outgoing",
+      "type": "boolean"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "property_label",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": ""
+    },
+    {
+      "name": "statements",
+      "type": {
+        "type": "array",
+        "items": "org.geovistory.toolbox.streams.avro.CommunityStatementValue"
+      }
+    }
+  ]
+}

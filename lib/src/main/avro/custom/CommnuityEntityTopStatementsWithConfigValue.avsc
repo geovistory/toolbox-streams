@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "ProjectEntityTopStatementsWithConfigValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Combination of project entity and its label configuration",
+  "fields": [
+    {
+      "name": "entity_top_statements",
+      "type": "org.geovistory.toolbox.streams.avro.ProjectEntityTopStatementsValue"
+    },
+    {
+      "name": "label_config",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.ProjectEntityLabelConfigValue"
+      ],
+      "default": null
+    }
+  ]
+}

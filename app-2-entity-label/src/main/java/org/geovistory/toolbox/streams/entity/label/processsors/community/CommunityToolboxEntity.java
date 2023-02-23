@@ -156,6 +156,7 @@ public class CommunityToolboxEntity {
             // create CommunityEntityValue
             var v = CommunityEntityValue.newBuilder()
                     .setClassId(projectEntityValue.getClassId())
+                    .setEntityId(key.getEntityId())
                     .setProjectCount(countMap.getItem().size())
                     .build();
 

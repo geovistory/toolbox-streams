@@ -1,21 +1,28 @@
 {
   "type": "record",
-  "name": "CommunityEntityValue",
+  "name": "CommunityEntityHasTypePropValue",
   "namespace": "org.geovistory.toolbox.streams.avro",
-  "doc": "Model to store entity value",
   "fields": [
     {
       "name": "entity_id",
       "type": "string"
     },
     {
-      "name": "class_id",
+      "name": "has_type_property_id",
       "type": "int"
     },
     {
       "name": "project_count",
       "type": "int",
       "default": 0
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
     }
   ]
 }

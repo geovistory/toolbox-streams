@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "CommunityEntityTopStatementsValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Top statements of community entity",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values" : "org.geovistory.toolbox.streams.avro.CommunityTopStatementsWithPropLabelValue",
+        "default": {}
+      },
+      "default": {}
+    },
+    {
+      "name": "project_count",
+      "type":"int",
+      "default": 0
+    }
+  ]
+}

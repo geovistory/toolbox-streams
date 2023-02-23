@@ -742,5 +742,57 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<CommunityEntityClassLabelValue> CommunityEntityClassLabelValue() {
+        Serde<CommunityEntityClassLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 
+    public Serde<CommunityEntityClassMetadataValue> CommunityEntityClassMetadataValue() {
+        Serde<CommunityEntityClassMetadataValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityTopStatementsWithConfigValue> CommunityEntityTopStatementsWithConfigValue() {
+        Serde<CommunityEntityTopStatementsWithConfigValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityTopStatementsValue> CommunityEntityTopStatementsValue() {
+        Serde<CommunityEntityTopStatementsValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityFulltextValue> CommunityEntityFulltextValue() {
+        Serde<CommunityEntityFulltextValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityTopStatementsWithClassValue> CommunityTopStatementsWithClassValue() {
+        Serde<CommunityTopStatementsWithClassValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityTopStatementsWithPropLabelValue> CommunityTopStatementsWithPropLabelValue() {
+        Serde<CommunityTopStatementsWithPropLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityTypeValue> CommunityEntityTypeValue() {
+        Serde<CommunityEntityTypeValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityHasTypePropValue> CommunityEntityHasTypePropValue() {
+        Serde<CommunityEntityHasTypePropValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 }

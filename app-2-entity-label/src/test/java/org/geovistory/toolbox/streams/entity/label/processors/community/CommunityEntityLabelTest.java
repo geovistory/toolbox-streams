@@ -85,7 +85,7 @@ class CommunityEntityLabelTest {
 
         // add an entity
         var kE = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
-        var vE = CommunityEntityValue.newBuilder().setClassId(3).setProjectCount(1).build();
+        var vE = CommunityEntityValue.newBuilder().setEntityId(entityId).setClassId(3).setProjectCount(1).build();
         communityToolboxEntityTopic.pipeInput(kE, vE);
         /*
          * The entity label configuration is:
@@ -204,7 +204,7 @@ class CommunityEntityLabelTest {
 
         // add an entity
         var kE = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
-        var vE = CommunityEntityValue.newBuilder().setClassId(3).setProjectCount(1).build();
+        var vE = CommunityEntityValue.newBuilder().setEntityId(entityId).setClassId(3).setProjectCount(1).build();
         communityToolboxEntityTopic.pipeInput(kE, vE);
         /*
          * The entity label configuration is:
