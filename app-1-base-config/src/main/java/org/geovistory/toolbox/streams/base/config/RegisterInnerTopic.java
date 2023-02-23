@@ -8,7 +8,6 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.processors.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.InputTopicHelper;
-import org.geovistory.toolbox.streams.project.config.processors.*;
 
 /**
  * This class provides helper methods to register

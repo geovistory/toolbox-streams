@@ -13,7 +13,6 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
-import org.geovistory.toolbox.streams.project.config.*;
 
 import java.util.LinkedList;
 

@@ -9,7 +9,6 @@ import org.apache.kafka.streams.kstream.Named;
 import org.geovistory.toolbox.streams.base.config.processors.*;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.project.config.processors.*;
 
 import static org.geovistory.toolbox.streams.base.config.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.base.config.BuildProperties.getDockerTagSuffix;
