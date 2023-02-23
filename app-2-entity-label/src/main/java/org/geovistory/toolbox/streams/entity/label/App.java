@@ -124,6 +124,11 @@ class App {
                 projectStatementWithEntity.ProjectStatementStream()
         );
 
+        // add sub-topology CommunityToolboxEntity
+        CommunityToolboxEntity.addProcessors(builder,
+                projectEntityVisibility.projectEntityVisibilityStream()
+        );
+
         // add sub-topology CommunityToolboxStatementWithLiteral
         var communityToolboxStatementWithLiteral = CommunityToolboxStatementWithLiteral.addProcessors(builder,
                 projectStatementWithLiteral.ProjectStatementStream()
