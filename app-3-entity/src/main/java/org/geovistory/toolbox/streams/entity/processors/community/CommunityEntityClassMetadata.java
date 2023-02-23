@@ -37,7 +37,7 @@ public class CommunityEntityClassMetadata {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
-        var joinName = "communtiy_" + nameSupplement + "_entity_with_class_metadata";
+        var joinName = "communtiy_" + nameSupplement + "_entity_joins_class_metadata";
 
         /* STREAM PROCESSORS */
         // 2)
@@ -66,7 +66,7 @@ public class CommunityEntityClassMetadata {
 
         projectEntityClassMetadataStream.to(getOutputTopicName(nameSupplement),
                 Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityClassMetadataValue())
-                        .withName(getOutputTopicName(nameSupplement) + "-producer")
+                        .withName(getOutputTopicName(nameSupplement) + "-to-producer")
         );
 
         return new CommunityEntityClassMetadataReturnValue(builder, projectEntityClassMetadataTable, projectEntityClassMetadataStream);
