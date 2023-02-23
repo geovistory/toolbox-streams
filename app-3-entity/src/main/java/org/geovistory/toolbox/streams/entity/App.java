@@ -10,8 +10,9 @@ import org.geovistory.toolbox.streams.entity.processors.project.*;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
-import static org.geovistory.toolbox.streams.project.entity.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.project.entity.BuildProperties.getDockerTagSuffix;
+import static org.geovistory.toolbox.streams.entity.BuildProperties.getDockerImageTag;
+import static org.geovistory.toolbox.streams.entity.BuildProperties.getDockerTagSuffix;
+
 
 class App {
     public static void main(String[] args) {

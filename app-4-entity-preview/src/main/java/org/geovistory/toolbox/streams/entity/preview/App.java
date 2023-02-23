@@ -11,8 +11,8 @@ import org.geovistory.toolbox.streams.entity.preview.processors.project.ProjectE
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
-import static org.geovistory.toolbox.streams.project.entity.preview.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.project.entity.preview.BuildProperties.getDockerTagSuffix;
+import static org.geovistory.toolbox.streams.entity.preview.BuildProperties.getDockerImageTag;
+import static org.geovistory.toolbox.streams.entity.preview.BuildProperties.getDockerTagSuffix;
 
 class App {
     public static void main(String[] args) {
