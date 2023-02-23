@@ -39,7 +39,7 @@ public class CommunityEntityFulltext {
     public static CommunityEntityFulltextReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<CommunityEntityKey, CommunityEntityTopStatementsValue> communityEntityTopStatementsTable,
-            KTable<OntomeClassKey, CommunityEntityLabelConfigValue> communityLabelConfigTable,
+            KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityLabelConfigTable,
             String nameSupplement
     ) {
 
@@ -52,7 +52,7 @@ public class CommunityEntityFulltext {
 
         var communityEntityWithConfigTable = communityEntityTopStatementsTable.leftJoin(
                 communityLabelConfigTable,
-                communityEntityValue -> OntomeClassKey.newBuilder()
+                communityEntityValue -> CommunityEntityLabelConfigKey.newBuilder()
                         .setClassId(communityEntityValue.getClassId())
                         .build(),
                 (value1, value2) -> CommunityEntityTopStatementsWithConfigValue.newBuilder()

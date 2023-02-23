@@ -22,7 +22,7 @@ class CommunityEntityFulltextTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
     private TestInputTopic<CommunityEntityKey, CommunityEntityTopStatementsValue> commnuityEntityTopStatementsTopic;
-    private TestInputTopic<OntomeClassKey, CommunityEntityLabelConfigValue> commnuityEntityLabelConfigTopic;
+    private TestInputTopic<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> commnuityEntityLabelConfigTopic;
 
     private TestOutputTopic<CommunityEntityKey, CommunityEntityFulltextValue> outputTopic;
 
@@ -51,7 +51,7 @@ class CommunityEntityFulltextTest {
 
         commnuityEntityLabelConfigTopic = testDriver.createInputTopic(
                 Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG,
-                avroSerdes.OntomeClassKey().serializer(),
+                avroSerdes.CommunityEntityLabelConfigKey().serializer(),
                 avroSerdes.CommunityEntityLabelConfigValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
@@ -216,7 +216,7 @@ class CommunityEntityFulltextTest {
         var entityId = "foo";
         var propIdSecondPart = 3;
         var propIdFirstPart = 4;
-        var kC = OntomeClassKey.newBuilder().setClassId(classId).build();
+        var kC = CommunityEntityLabelConfigKey.newBuilder().setClassId(classId).build();
         var vC = CommunityEntityLabelConfigValue.newBuilder().setClassId(classId)
                 .setConfig(EntityLabelConfig.newBuilder().setLabelParts(List.of(
                         // second part

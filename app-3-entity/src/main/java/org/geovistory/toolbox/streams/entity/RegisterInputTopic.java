@@ -90,10 +90,10 @@ public class RegisterInputTopic extends InputTopicHelper {
 
 
 
-    public KTable<OntomeClassKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable() {
+    public KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable() {
         return getTable(
                 Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG,
-                avroSerdes.OntomeClassKey(),
+                avroSerdes.CommunityEntityLabelConfigKey(),
                 avroSerdes.CommunityEntityLabelConfigValue()
         );
     }
