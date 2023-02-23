@@ -5,6 +5,11 @@ package org.geovistory.toolbox.streams.entity;
 
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.kstream.KTable;
+import org.geovistory.toolbox.streams.avro.HasTypePropertyKey;
+import org.geovistory.toolbox.streams.avro.HasTypePropertyValue;
+import org.geovistory.toolbox.streams.avro.OntomeClassKey;
+import org.geovistory.toolbox.streams.avro.OntomeClassMetadataValue;
 import org.geovistory.toolbox.streams.entity.processors.community.*;
 import org.geovistory.toolbox.streams.entity.processors.project.*;
 import org.geovistory.toolbox.streams.lib.Admin;
@@ -49,9 +54,21 @@ class App {
 
     private static void addSubTopologies(StreamsBuilder builder) {
         var inputTopic = new RegisterInputTopic(builder);
-
-        addProjectView(builder, inputTopic);
-        addCommunityToolboxView(builder, inputTopic, "toolbox");
+        var hasTypePropertyTable = inputTopic.hasTypePropertyTable();
+        var ontomeClassMetadataTable = inputTopic.ontomeClassMetadataTable();
+        addProjectView(
+                builder,
+                inputTopic,
+                hasTypePropertyTable,
+                ontomeClassMetadataTable
+        );
+        addCommunityToolboxView(
+                builder,
+                inputTopic,
+                "toolbox",
+                hasTypePropertyTable,
+                ontomeClassMetadataTable
+        );
 
     }
 
@@ -66,13 +83,16 @@ class App {
 
     }
 
-    private static void addProjectView(StreamsBuilder builder, RegisterInputTopic inputTopic) {
+    private static void addProjectView(
+            StreamsBuilder builder,
+            RegisterInputTopic inputTopic,
+            KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
+            KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
+    ) {
         // register input topics as KTables
         var projectEntityLabelConfigTable = inputTopic.projectEntityLabelConfigTable();
         var projectEntityTable = inputTopic.projectEntityTable();
         var projectTopOutgoingStatementsTable = inputTopic.projectTopOutgoingStatementsTable();
-        var hasTypePropertyTable = inputTopic.hasTypePropertyTable();
-        var ontomeClassMetadataTable = inputTopic.ontomeClassMetadataTable();
 
         // register input topics as KStreams
         var projectClassLabelTable = inputTopic.projectClassLabelTable();
@@ -120,13 +140,15 @@ class App {
     private static void addCommunityToolboxView(
             StreamsBuilder builder,
             RegisterInputTopic inputTopic,
-            String nameSupplement) {
+            String nameSupplement,
+            KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
+            KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
+    ) {
         // register input topics as KTables
         var communityEntityLabelConfigTable = inputTopic.communityEntityLabelConfigTable();
         var communityEntityTable = inputTopic.communityEntityTable();
         var communityTopOutgoingStatementsTable = inputTopic.communityTopOutgoingStatementsTable();
-        var hasTypePropertyTable = inputTopic.hasTypePropertyTable();
-        var ontomeClassMetadataTable = inputTopic.ontomeClassMetadataTable();
+
 
         // register input topics as KStreams
         var communityClassLabelTable = inputTopic.communityClassLabelTable();
