@@ -100,6 +100,11 @@ jobs:
         with:
           arguments: app-0-base-model:build # "app-0-base-model:" points to /app-0-base-model
 
+      # this will update metadata about PR for the docker tag in /build.gradle
+      - name: Update pull request metadata in build.gradle
+        id: version
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
+
       # Create docker image
       - name: Create docker image
         run: ./gradlew app-0-base-model:jibDockerBuild
@@ -174,6 +179,11 @@ jobs:
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
           arguments: app-0-field-changes:build # "app-0-field-changes:" points to /app-0-field-changes
+
+      # this will update metadata about PR for the docker tag in /build.gradle
+      - name: Update pull request metadata in build.gradle
+        id: version
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
 
       # Create docker image
       - name: Create docker image
@@ -250,6 +260,11 @@ jobs:
         with:
           arguments: app-0-statement-enriched:build # "app-0-statement-enriched:" points to /app-0-statement-enriched
 
+      # this will update metadata about PR for the docker tag in /build.gradle
+      - name: Update pull request metadata in build.gradle
+        id: version
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
+
       # Create docker image
       - name: Create docker image
         run: ./gradlew app-0-statement-enriched:jibDockerBuild
@@ -324,6 +339,11 @@ jobs:
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
           arguments: app-1-base-config:build # "app-1-base-config:" points to /app-1-base-config
+
+      # this will update metadata about PR for the docker tag in /build.gradle
+      - name: Update pull request metadata in build.gradle
+        id: version
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
 
       # Create docker image
       - name: Create docker image
@@ -400,6 +420,11 @@ jobs:
         with:
           arguments: app-2-entity-label:build # "app-2-entity-label:" points to /app-2-entity-label
 
+      # this will update metadata about PR for the docker tag in /build.gradle
+      - name: Update pull request metadata in build.gradle
+        id: version
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
+
       # Create docker image
       - name: Create docker image
         run: ./gradlew app-2-entity-label:jibDockerBuild
@@ -475,6 +500,11 @@ jobs:
         with:
           arguments: app-3-entity:build # "app-3-entity:" points to /app-3-entity
 
+      # this will update metadata about PR for the docker tag in /build.gradle
+      - name: Update pull request metadata in build.gradle
+        id: version
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
+
       # Create docker image
       - name: Create docker image
         run: ./gradlew app-3-entity:jibDockerBuild
@@ -549,6 +579,11 @@ jobs:
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         with:
           arguments: app-4-entity-preview:build # "app-4-entity-preview:" points to /app-4-entity-preview
+
+      # this will update metadata about PR for the docker tag in /build.gradle
+      - name: Update pull request metadata in build.gradle
+        id: version
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
 
       # Create docker image
       - name: Create docker image

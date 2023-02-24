@@ -129,7 +129,6 @@ public class ProjectClass {
                                             return KeyValue.pair(k, projectClassValue);
                                         }
                                 ).toList();
-
                             } catch (RuntimeException e) {
                                 return new LinkedList<>();
                             }
