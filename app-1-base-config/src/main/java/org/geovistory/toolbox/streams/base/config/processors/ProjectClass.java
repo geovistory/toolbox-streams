@@ -14,6 +14,7 @@ import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import java.util.LinkedList;
 import java.util.Objects;
 
 
@@ -118,14 +119,21 @@ public class ProjectClass {
                 .toStream(
                         Named.as(inner.TOPICS.project_classes_stream + "-to-stream")
                 )
-                .flatMap((key, value) -> value.getMap().values().stream().map(projectClassValue -> {
-                                    var k = ProjectClassKey.newBuilder()
-                                            .setClassId(projectClassValue.getClassId())
-                                            .setProjectId(projectClassValue.getProjectId())
-                                            .build();
-                                    return KeyValue.pair(k, projectClassValue);
-                                }
-                        ).toList(),
+                .flatMap((key, value) -> {
+                            try {
+                                return value.getMap().values().stream().map(projectClassValue -> {
+                                            var k = ProjectClassKey.newBuilder()
+                                                    .setClassId(projectClassValue.getClassId())
+                                                    .setProjectId(projectClassValue.getProjectId())
+                                                    .build();
+                                            return KeyValue.pair(k, projectClassValue);
+                                        }
+                                ).toList();
+
+                            } catch (RuntimeException e) {
+                                return new LinkedList<>();
+                            }
+                        },
                         Named.as(inner.TOPICS.project_classes_flat));
 
         projectClassFlat.to(output.TOPICS.project_class,
