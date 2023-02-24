@@ -12,7 +12,6 @@ plugins {
     id 'com.google.cloud.tools.jib' version '3.3.0'
 }
 
-
 dependencies {
     // for .env
     implementation 'io.github.cdimascio:dotenv-java:2.2.4'
