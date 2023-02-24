@@ -28,6 +28,7 @@ public class CLI {
     public static final Option OPT_LIST_TOPIC_CONFIGS = new Option(null, "list-topic-configs", false, "list topic configs");
     public static final Option OPT_DELETE_TOPICS = new Option(null, "delete-topics", true, "delete topics containing the provided <arg> string. This will not delete unless you provide the --confirm flag.");
     public static final Option OPT_CONFIRM = new Option(null, "confirm", false, "Confirm performing a dangerous opteration.");
+    public static final Option OPT_DELETE_SCHEMAS_AND_TOPICS = new Option("d", "delete-schemas-and-topics", true, "executes --delete-topics and --delete-schemas");
 
     public static void printHelp(Options options) {
         HelpFormatter formatter = new HelpFormatter();
@@ -54,7 +55,7 @@ public class CLI {
         options.addOption(OPT_DELETE_TOPICS);
         options.addOption(OPT_CONFIRM);
         options.addOption(OPT_LIST_TOPIC_CONFIGS);
-
+        options.addOption(OPT_DELETE_SCHEMAS_AND_TOPICS);
 
         try {
             // parse the command line arguments
@@ -77,6 +78,10 @@ public class CLI {
                 Boolean confirmed = line.hasOption(OPT_CONFIRM.getLongOpt());
                 deleteTopics(line.getOptionValue(OPT_DELETE_TOPICS.getLongOpt()), confirmed);
 
+            } else if (line.hasOption(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt())) {
+                Boolean confirmed = line.hasOption(OPT_CONFIRM.getLongOpt());
+                deleteSchemas(line.getOptionValue(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt()), confirmed);
+                deleteTopics(line.getOptionValue(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt()), confirmed);
             } else if (line.hasOption(OPT_LIST_TOPIC_CONFIGS.getLongOpt())) {
                 var configs = getTopicConfigs();
                 configs.forEach(System.out::println);

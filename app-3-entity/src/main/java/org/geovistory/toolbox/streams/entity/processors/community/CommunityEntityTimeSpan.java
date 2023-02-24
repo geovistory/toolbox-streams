@@ -72,7 +72,7 @@ public class CommunityEntityTimeSpan {
 
 
     public static String getOutputTopicName(String nameSupplement) {
-        return Utils.tsPrefixed("community_" + nameSupplement + "_entity_class_metadata");
+        return Utils.tsPrefixed("community_" + nameSupplement + "_entity_time_span");
     }
 
 
