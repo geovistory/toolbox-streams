@@ -390,13 +390,13 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<NodeKey> LiteralKey() {
+    public Serde<NodeKey> NodeKey() {
         Serde<NodeKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
         return serdes;
     }
 
-    public Serde<NodeValue> LiteralValue() {
+    public Serde<NodeValue> NodeValue() {
         Serde<NodeValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;

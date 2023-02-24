@@ -68,7 +68,7 @@ public class StatementEnriched {
         var avroSerdes = new ConfluentAvroSerdes();
 
         // Map entities to nodes
-        var entityObjects = infResourceTable
+        var entityNodes = infResourceTable
                 .filter(
                         (key, value) -> value.getFkClass() != null,
                         Named.as("kstream-filter-inf-resource-with-class-id")
@@ -84,7 +84,7 @@ public class StatementEnriched {
                 );
 
         // Map languages to nodes
-        var languageObjects = infLanguageStream.map((key, value) -> KeyValue.pair(
+        var languageNodes = infLanguageStream.map((key, value) -> KeyValue.pair(
                         NodeKey.newBuilder().setId("i" + value.getPkEntity()).build(),
                         NodeValue.newBuilder().setId("i" + value.getPkEntity())
                                 .setLanguage(tranformLanguage(value))
@@ -97,7 +97,7 @@ public class StatementEnriched {
 
 
         // Map appellations to nodes
-        var appellationObjects = infAppellationStream.map((key, value) -> {
+        var appellationNodes = infAppellationStream.map((key, value) -> {
                     var transformedValue = tranformAppellation(value);
                     return KeyValue.pair(
                             NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
@@ -112,7 +112,7 @@ public class StatementEnriched {
         );
 
         // Map langStrings to nodes
-        var langStringObjects = infLangStringStream.map((key, value) -> {
+        var langStringNodes = infLangStringStream.map((key, value) -> {
                     var transformedValue = tranformLangString(value);
                     return KeyValue.pair(
                             NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
@@ -127,7 +127,7 @@ public class StatementEnriched {
         );
 
         // Map places to nodes
-        var placeObjects = infPlaceStream.map((key, value) -> {
+        var placeNodes = infPlaceStream.map((key, value) -> {
                     var wkb = value.getGeoPoint().getWkb();
                     var point = GeoUtils.bytesToPoint(wkb);
                     var x = point.getX();
@@ -146,7 +146,7 @@ public class StatementEnriched {
         );
 
         // Map timePrimitives to nodes
-        var timePrimitiveObjects = infTimePrimitiveStream.map((key, value) -> KeyValue.pair(
+        var timePrimitiveNodes = infTimePrimitiveStream.map((key, value) -> KeyValue.pair(
                         NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
                         NodeValue.newBuilder().setId("i" + key.getPkEntity())
                                 .setTimePrimitive(tranformTimePrimitive(value))
@@ -158,7 +158,7 @@ public class StatementEnriched {
         );
 
         // Map dimensions to nodes
-        var dimensionObjects = infDimensionStream.map((key, value) -> KeyValue.pair(
+        var dimensionNodes = infDimensionStream.map((key, value) -> KeyValue.pair(
                         NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
                         NodeValue.newBuilder().setId("i" + key.getPkEntity())
                                 .setDimension(tranformDimension(value))
@@ -170,7 +170,7 @@ public class StatementEnriched {
         );
 
         // Map digital (table value) to nodes
-        var tableValueObjects = datDigitalStream.map((key, value) -> KeyValue.pair(
+        var tableValueNodes = datDigitalStream.map((key, value) -> KeyValue.pair(
                         NodeKey.newBuilder().setId("d" + key.getPkEntity()).build(),
                         NodeValue.newBuilder().setId("d" + key.getPkEntity())
                                 .setDigital(tranformDigital(value))
@@ -182,7 +182,7 @@ public class StatementEnriched {
         );
 
         // Map cell to nodes
-        var cellObjects = tabCellStream.map((key, value) -> KeyValue.pair(
+        var cellNodes = tabCellStream.map((key, value) -> KeyValue.pair(
                         NodeKey.newBuilder().setId("t" + key.getPkCell()).build(),
                         NodeValue.newBuilder().setId("t" + key.getPkCell())
                                 .setCell(tranformCell(value))
@@ -193,22 +193,30 @@ public class StatementEnriched {
                 Named.as("kstream-map-tab-cell-to-cell-object")
         );
 
-        var nodes = entityObjects
-                .merge(languageObjects, Named.as("kstream-merge-language-nodes"))
-                .merge(appellationObjects, Named.as("kstream-merge-appellation-nodes"))
-                .merge(langStringObjects, Named.as("kstream-merge-langString-nodes"))
-                .merge(placeObjects, Named.as("kstream-merge-place-nodes"))
-                .merge(timePrimitiveObjects, Named.as("kstream-merge-timePrimitive-nodes"))
-                .merge(dimensionObjects, Named.as("kstream-merge-dimension-nodes"))
-                .merge(tableValueObjects, Named.as("kstream-merge-tableValue-nodes"))
-                .merge(cellObjects, Named.as("kstream-merge-cell-nodes"));
+        var nodes = entityNodes
+                .merge(languageNodes, Named.as("kstream-merge-language-nodes"))
+                .merge(appellationNodes, Named.as("kstream-merge-appellation-nodes"))
+                .merge(langStringNodes, Named.as("kstream-merge-langString-nodes"))
+                .merge(placeNodes, Named.as("kstream-merge-place-nodes"))
+                .merge(timePrimitiveNodes, Named.as("kstream-merge-timePrimitive-nodes"))
+                .merge(dimensionNodes, Named.as("kstream-merge-dimension-nodes"))
+                .merge(tableValueNodes, Named.as("kstream-merge-tableValue-nodes"))
+                .merge(cellNodes, Named.as("kstream-merge-cell-nodes"))
+
+                // repartition
+                .repartition(
+                        Repartitioned.<NodeKey, NodeValue>as(inner.TOPICS.nodes + "-repartitioned")
+                                .withKeySerde(avroSerdes.NodeKey())
+                                .withValueSerde(avroSerdes.NodeValue())
+                );
+
 
         var literalTable = nodes.toTable(
                 Named.as(inner.TOPICS.nodes),
 
                 Materialized.<NodeKey, NodeValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.nodes)
-                        .withKeySerde(avroSerdes.LiteralKey())
-                        .withValueSerde(avroSerdes.LiteralValue())
+                        .withKeySerde(avroSerdes.NodeKey())
+                        .withValueSerde(avroSerdes.NodeValue())
         );
 
         // join subject
