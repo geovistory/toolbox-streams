@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "NodeKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of a node (subject or object of statement)",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "default": ""
+    }
+  ]
+}

@@ -16,21 +16,12 @@ flowchart TD
  
     
     base-model-->base-config
-    statement-enriched-->community-entity-label
-    community-entity-label-->community-entity
-    community-entity-label-->project-entity-label
-    community-entity-label-->community-entity-preview
-    community-entity-->community-entity-preview
-    community-entity-preview-->entity-preview
-    base-config-->project-entity-label
-    base-config-->community-entity-label
-    base-config-->community-entity
-    statement-enriched-->project-entity-label
-    project-entity-label-->project-entity
-    base-config-->project-entity
-    project-entity-->project-entity-preview
-    project-entity-label-->project-entity-preview
-    project-entity-preview-->entity-preview
+    statement-enriched-->entity-label
+    base-config-->entity-label
+    entity-label-->entity
+    base-config-->entity
+    entity-->entity-preview
+    entity-label-->entity-preview
     
     subgraph level-0
         base-model
@@ -41,20 +32,12 @@ flowchart TD
         base-config
     end 
     subgraph level-2
-        community-entity-label
+        entity-label
     end 
     subgraph level-3
-        project-entity-label
-        community-entity
-    end 
+        entity
+    end
     subgraph level-4
-        project-entity
-        community-entity-preview
-    end
-    subgraph level-5
-        project-entity-preview
-    end
-    subgraph level-6
         entity-preview
     end
     

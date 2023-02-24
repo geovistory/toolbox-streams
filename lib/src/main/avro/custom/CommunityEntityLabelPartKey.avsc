@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "CommunityEntityLabelPartKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "ord_num",
+      "type": "int"
+    }
+  ]
+}

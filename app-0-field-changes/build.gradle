@@ -19,11 +19,11 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.geovistory.toolbox.streams.field.changes.App'
+    mainClassName= 'org.geovistory.toolbox.streams.field.changes.App'
 }
 
 jar {
-    manifest.attributes('Main-Class': application.mainClass)
+    manifest.attributes('Main-Class': application.mainClassName)
 }
 
 jib {

@@ -170,13 +170,25 @@ class StatementEnrichedTest {
                 .build();
         infStatementTopic.pipeInput(kS, vS);
 
-        // add entity
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(classId)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
+        // add object entity
         var k = dev.information.resource.Key.newBuilder().setPkEntity(objectId).build();
         var v = dev.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(objectId)
                 .setFkClass(classId)
+                .setCommunityVisibility("{ \"toolbox\": true, \"dataApi\": false, \"website\": true}")
                 .build();
         infResourceTopic.pipeInput(k, v);
 
@@ -185,12 +197,32 @@ class StatementEnrichedTest {
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kS);
         assertThat(record.getObjectClassId()).isEqualTo(classId);
+        assertThat(record.getObject().getEntity().getCommunityVisibilityToolbox()).isEqualTo(true);
+        assertThat(record.getObject().getEntity().getCommunityVisibilityDataApi()).isEqualTo(false);
+        assertThat(record.getObject().getEntity().getCommunityVisibilityWebsite()).isEqualTo(true);
+
+        assertThat(record.getSubject().getEntity().getCommunityVisibilityToolbox()).isEqualTo(false);
+        assertThat(record.getSubject().getEntity().getCommunityVisibilityDataApi()).isEqualTo(true);
+        assertThat(record.getSubject().getEntity().getCommunityVisibilityWebsite()).isEqualTo(false);
     }
 
     @Test
     void testStatementWithAppellation() {
         int objectId = 30;
         int classId = 40;
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(classId)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+
+        infResourceTopic.pipeInput(k2, v2);
 
         // string with more than 100
         String label = "Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_";
@@ -205,7 +237,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectInfo(objectId)
                 .build();
@@ -237,6 +269,19 @@ class StatementEnrichedTest {
     void testStatementWithLanguage() {
         int objectId = 30;
         String label = "English";
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(1)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -244,7 +289,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectInfo(objectId)
                 .build();
@@ -274,6 +319,19 @@ class StatementEnrichedTest {
     void testStatementWithLangString() {
         int objectId = 30;
         String label = "Label";
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(1)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -281,7 +339,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectInfo(objectId)
                 .build();
@@ -311,6 +369,19 @@ class StatementEnrichedTest {
     void testStatementWithNullLangString() {
         int objectId = 30;
         String label = null;
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(1)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -318,7 +389,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectInfo(objectId)
                 .build();
@@ -347,6 +418,19 @@ class StatementEnrichedTest {
     @Test
     void testStatementWithPlace() {
         int objectId = 30;
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(1)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -354,7 +438,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectInfo(objectId)
                 .build();
@@ -389,6 +473,19 @@ class StatementEnrichedTest {
     @Test
     void testStatementWithTimePrimitive() {
         int objectId = 30;
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(1)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -396,7 +493,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectInfo(objectId)
                 .build();
@@ -428,6 +525,19 @@ class StatementEnrichedTest {
     void testStatementWithDimension() {
         int objectId = 30;
         double num = 111;
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(1)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -435,7 +545,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectInfo(objectId)
                 .build();
@@ -466,6 +576,19 @@ class StatementEnrichedTest {
     void testStatementWithCell() {
         long objectId = 30;
         double num = 111;
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(1)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -473,7 +596,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectTablesCell(objectId)
                 .build();
@@ -503,6 +626,19 @@ class StatementEnrichedTest {
     @Test
     void testStatementWithDigital() {
         int objectId = 30;
+        int subjectId = 10;
+
+        // add subject entity
+        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(subjectId).build();
+        var v2 = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(subjectId)
+                .setFkClass(1)
+                .setCommunityVisibility("{ \"toolbox\": false, \"dataApi\": true, \"website\": false}")
+                .build();
+        infResourceTopic.pipeInput(k2, v2);
+
         // add statement
         var kS = dev.information.statement.Key.newBuilder()
                 .setPkEntity(1)
@@ -510,7 +646,7 @@ class StatementEnrichedTest {
         var vS = dev.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
-                .setFkSubjectInfo(10)
+                .setFkSubjectInfo(subjectId)
                 .setFkProperty(20)
                 .setFkObjectData(objectId)
                 .build();

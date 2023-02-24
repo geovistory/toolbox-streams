@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "CommunityEntityClassLabelValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "class_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "class_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "project_count",
+      "type": "int",
+      "default": 0
+    }
+  ]
+}

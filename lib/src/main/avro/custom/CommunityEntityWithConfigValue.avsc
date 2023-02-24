@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "CommunityEntityWithConfigValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Combination of community entity and its label configuration",
+  "fields": [
+    {
+      "name": "entity",
+      "type": "org.geovistory.toolbox.streams.avro.CommunityEntityValue"
+    },
+    {
+      "name": "label_config",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.CommunityEntityLabelConfigValue"
+      ],
+      "default": null
+    }
+  ]
+}

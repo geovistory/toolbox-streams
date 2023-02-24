@@ -1,0 +1,21 @@
+{
+  "type": "record",
+  "name": "CommunityEntityValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Model to store entity value",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "project_count",
+      "type": "int",
+      "default": 0
+    }
+  ]
+}

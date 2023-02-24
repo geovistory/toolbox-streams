@@ -1,0 +1,36 @@
+{
+  "type": "record",
+  "name": "CommunityEntityTypeValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "type_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "type_id",
+      "type": "string"
+    },
+    {
+      "name": "project_count",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

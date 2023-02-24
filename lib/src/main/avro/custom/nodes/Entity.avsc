@@ -1,0 +1,31 @@
+{
+  "type": "record",
+  "name": "Entity",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": {
+        "type": "int",
+        "connect.default": 0
+      },
+      "default": 0
+    },
+    {
+      "name": "fk_class",
+      "type": "int"
+    },
+    {
+      "name": "community_visibility_toolbox",
+      "type": "boolean"
+    },
+    {
+      "name": "community_visibility_data_api",
+      "type": "boolean"
+    },
+    {
+      "name": "community_visibility_website",
+      "type": "boolean"
+    }
+  ]
+}

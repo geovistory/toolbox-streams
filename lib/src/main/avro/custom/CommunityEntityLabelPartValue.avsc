@@ -1,0 +1,27 @@
+{
+  "type": "record",
+  "name": "CommunityEntityLabelPartValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "ord_num",
+      "type": "int"
+    },
+    {
+      "name": "configuration",
+      "type": "org.geovistory.toolbox.streams.avro.EntityLabelConfigPartField"
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "DR",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "DR integers",
+  "fields": [
+    {
+      "name": "d",
+      "type":["null","int"],
+      "default": null
+    },
+    {
+      "name": "r",
+      "type":["null","int"],
+      "default": null
+    }
+  ]
+}

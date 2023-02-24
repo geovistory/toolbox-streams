@@ -18,12 +18,12 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.geovistory.toolbox.streams.base.model.App'
+    mainClassName= 'org.geovistory.toolbox.streams.base.model.App'
 }
 
 
 jar {
-    manifest.attributes('Main-Class': application.mainClass)
+    manifest.attributes('Main-Class': application.mainClassName)
 }
 
 jib {
@@ -80,6 +80,7 @@ task generateJava {
                 """|package org.geovistory.toolbox.streams.base.model;
                |public class BuildProperties {
                |    public static String getDockerTagSuffix() { return "${getDockerTagSuffix()}"; }
+               |    public static String getDockerImageTag() { return "${getDockerImageTag()}"; }
                |}""".stripMargin()
     }
 }

@@ -390,14 +390,14 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<ObjectKey> LiteralKey() {
-        Serde<ObjectKey> serdes = new SpecificAvroSerde<>();
+    public Serde<NodeKey> LiteralKey() {
+        Serde<NodeKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
         return serdes;
     }
 
-    public Serde<ObjectValue> LiteralValue() {
-        Serde<ObjectValue> serdes = new SpecificAvroSerde<>();
+    public Serde<NodeValue> LiteralValue() {
+        Serde<NodeValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
@@ -511,8 +511,8 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<ProjectEntityLabelSlotWithStringValue> ProjectEntityLabelSlotWithStringValue() {
-        Serde<ProjectEntityLabelSlotWithStringValue> serdes = new SpecificAvroSerde<>();
+    public Serde<EntityLabelSlotWithStringValue> ProjectEntityLabelSlotWithStringValue() {
+        Serde<EntityLabelSlotWithStringValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
@@ -669,4 +669,130 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<CommunityEntityKey> CommunityEntityKey() {
+        Serde<CommunityEntityKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+
+    public Serde<CommunityEntityValue> CommunityEntityValue() {
+        Serde<CommunityEntityValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityVisibilityValue> ProjectEntityVisibilityValue() {
+        Serde<ProjectEntityVisibilityValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityStatementKey> CommunityStatementKey() {
+        Serde<CommunityStatementKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<CommunityStatementValue> CommunityStatementValue() {
+        Serde<CommunityStatementValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<DRMap> DRMap() {
+        Serde<DRMap> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityLabelValue> CommunityEntityLabelValue() {
+        Serde<CommunityEntityLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityTopStatementsKey> CommunityTopStatementsKey() {
+        Serde<CommunityTopStatementsKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<CommunityTopStatementsValue> CommunityTopStatementsValue() {
+        Serde<CommunityTopStatementsValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityWithConfigValue> CommunityEntityWithConfigValue() {
+        Serde<CommunityEntityWithConfigValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityLabelPartKey> CommunityEntityLabelPartKey() {
+        Serde<CommunityEntityLabelPartKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityLabelPartValue> CommunityEntityLabelPartValue() {
+        Serde<CommunityEntityLabelPartValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityClassLabelValue> CommunityEntityClassLabelValue() {
+        Serde<CommunityEntityClassLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityClassMetadataValue> CommunityEntityClassMetadataValue() {
+        Serde<CommunityEntityClassMetadataValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityTopStatementsWithConfigValue> CommunityEntityTopStatementsWithConfigValue() {
+        Serde<CommunityEntityTopStatementsWithConfigValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityTopStatementsValue> CommunityEntityTopStatementsValue() {
+        Serde<CommunityEntityTopStatementsValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityFulltextValue> CommunityEntityFulltextValue() {
+        Serde<CommunityEntityFulltextValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityTopStatementsWithClassValue> CommunityTopStatementsWithClassValue() {
+        Serde<CommunityTopStatementsWithClassValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityTopStatementsWithPropLabelValue> CommunityTopStatementsWithPropLabelValue() {
+        Serde<CommunityTopStatementsWithPropLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityTypeValue> CommunityEntityTypeValue() {
+        Serde<CommunityEntityTypeValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    public Serde<CommunityEntityHasTypePropValue> CommunityEntityHasTypePropValue() {
+        Serde<CommunityEntityHasTypePropValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 }

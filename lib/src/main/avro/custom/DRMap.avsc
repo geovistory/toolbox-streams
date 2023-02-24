@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "DRMap",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "String-boolean-map for generic purpose",
+  "fields": [
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values": "org.geovistory.toolbox.streams.avro.DR",
+        "default": {}
+      },
+      "default": {}
+    }
+  ]
+}

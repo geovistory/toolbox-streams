@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "CommunityEntityFulltextValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "fulltext",
+      "type": "string"
+    },
+    {
+      "name": "project_count",
+      "type": "int",
+      "default": 0
+    }
+  ]
+}

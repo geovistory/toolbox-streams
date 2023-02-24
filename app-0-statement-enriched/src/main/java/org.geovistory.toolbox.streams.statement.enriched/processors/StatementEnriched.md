@@ -4,7 +4,7 @@ This topology enriches statements with their objects.
 
 ```mermaid
 flowchart TD
-    1a-->4a
+    1a-->5a
     1b-->2b-->3a
     1c-->2c-->3a-->3b
     1d-->2d-->3b-->3c 
@@ -13,8 +13,8 @@ flowchart TD
     1g-->2g-->3e-->3f
     1h-->2h-->3f-->3g 
     1i-->2i-->3g-->3h
-    1j-->2j-->3h-->4a-->4b-->4c-->4d
-    4c-->4e
+    1j-->2j-->3h-->5a-->5b-->5c-->5d
+    5c-->5e
     subgraph 1
         1a[statement]
         1b[language]
@@ -50,21 +50,26 @@ flowchart TD
         3h([3h Merge])
     end  
     subgraph __4
-        4a([Left Join])
-        4b([ToStream])
-        4c([To])
-        4d[project_statement_with_entity]
-        4e[project_statement_with_literal]
+        4a([Join])
+    end  
+    subgraph __5
+        5a([Join])
+        5b([ToStream])
+        5c([To])
+        5d[project_statement_with_entity]
+        5e[project_statement_with_literal]
     end  
     
 ```
 
-| Step |                                                         |
-|------|---------------------------------------------------------|
-| 1    | input topics                                            |
-| 2    | MapValues to  StatementObject                           |
-| 3    | merge streams enriching StatementObject                 |
-| 4    | Left join statement objects with statement on object id |
+| Step |                                                                                   |
+|------|-----------------------------------------------------------------------------------|
+| 1    | input topics                                                                      |
+| 2    | MapValues to Node                                                                 |
+| 3    | merge streams enriching Node                                                      |
+| 4    | Join statement with Nodes on subject id                                           |
+| 5    | Join statement with Nodes on object id                                            |
+| 6    | Split stream in branches of statements with literals and statements with entities |
 
 class StatementObject
 
@@ -111,11 +116,12 @@ InfStatementKey
 
 ### Value
 
-| field       | type            |
-|-------------|-----------------|
-| subjectId   | int             |
-| propertyId  | int             |
-| objectId    | int             |
-| objectValue | StatementObject |
-| deleted     | boolean, null   |
+| field      | type          |
+|------------|---------------|
+| subjectId  | int           |
+| propertyId | int           |
+| objectId   | int           |
+| subject    | Node          |
+| object     | Node          |
+| deleted    | boolean, null |
 
