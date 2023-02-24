@@ -7,6 +7,7 @@ import okhttp3.Response;
 import org.apache.commons.cli.*;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.common.config.ConfigResource;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ public class CLI {
     public static final Option OPT_LIST_SCHEMAS = new Option("s", "list-schemas", false, "list schemas of schema registry");
     public static final Option OPT_DELETE_SCHEMAS = new Option("d", "delete-schemas", true, "soft-delete schemas of schema registry containing the provided <arg> string. This will not delete unless you provide the --confirm flag.");
     public static final Option OPT_LIST_TOPICS = new Option(null, "list-topics", false, "list topics");
+    public static final Option OPT_LIST_TOPIC_CONFIGS = new Option(null, "list-topic-configs", false, "list topic configs");
     public static final Option OPT_DELETE_TOPICS = new Option(null, "delete-topics", true, "delete topics containing the provided <arg> string. This will not delete unless you provide the --confirm flag.");
     public static final Option OPT_CONFIRM = new Option(null, "confirm", false, "Confirm performing a dangerous opteration.");
 
@@ -51,6 +53,7 @@ public class CLI {
         options.addOption(OPT_LIST_TOPICS);
         options.addOption(OPT_DELETE_TOPICS);
         options.addOption(OPT_CONFIRM);
+        options.addOption(OPT_LIST_TOPIC_CONFIGS);
 
 
         try {
@@ -73,6 +76,12 @@ public class CLI {
             } else if (line.hasOption(OPT_DELETE_TOPICS.getLongOpt())) {
                 Boolean confirmed = line.hasOption(OPT_CONFIRM.getLongOpt());
                 deleteTopics(line.getOptionValue(OPT_DELETE_TOPICS.getLongOpt()), confirmed);
+
+            } else if (line.hasOption(OPT_LIST_TOPIC_CONFIGS.getLongOpt())) {
+                var configs = getTopicConfigs();
+                configs.forEach(System.out::println);
+                System.out.println(configs.size() + " topic configs listed.");
+
             } else {
                 printHelp(options);
             }
@@ -112,6 +121,23 @@ public class CLI {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static List<String> getTopicConfigs() {
+        AdminClient adminClient = getAdminClient();
+        var x = getTopics().stream().map(s -> new ConfigResource(ConfigResource.Type.TOPIC, s)).toList();
+        var res = adminClient.describeConfigs(x);
+
+        try {
+            var v = res.all().get();
+            return v.entrySet().stream().map(config -> config.getKey()
+                    .name() + "\n" +
+                    "cleanup.policy:" + config.getValue().get("cleanup.policy").value() + "\n"
+            ).toList();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
 
     }
 
@@ -136,8 +162,7 @@ public class CLI {
                 throw new RuntimeException(e);
             }
 
-        }
-        else{
+        } else {
             System.out.println("To delete the above " + filtered.size() + " topics add the flag --confirm");
         }
     }

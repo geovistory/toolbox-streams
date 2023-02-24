@@ -150,6 +150,8 @@ class App {
                 ProjectProperty.output.TOPICS.project_property,
                 ProjectClassLabel.output.TOPICS.project_class_label,
                 CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config,
+                CommunityClassLabel.output.TOPICS.community_class_label,
+                CommunityPropertyLabel.output.TOPICS.community_property_label,
                 GeovPropertyLabel.output.TOPICS.geov_property_label,
                 ProjectPropertyLabel.output.TOPICS.project_property_label,
                 ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config,
