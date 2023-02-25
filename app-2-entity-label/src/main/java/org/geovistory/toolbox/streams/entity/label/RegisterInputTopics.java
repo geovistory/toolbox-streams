@@ -37,12 +37,12 @@ public class RegisterInputTopics extends InputTopicHelper {
 
 
     public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTable() {
-        return getTable(Env.INSTANCE.TOPIC_STATEMENT_WITH_LITERAL,
+        return getRepartitionedTable(Env.INSTANCE.TOPIC_STATEMENT_WITH_LITERAL,
                 avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue());
     }
 
     public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithEntityTable() {
-        return getTable(Env.INSTANCE.TOPIC_STATEMENT_WITH_ENTITY,
+        return getRepartitionedTable(Env.INSTANCE.TOPIC_STATEMENT_WITH_ENTITY,
                 avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue());
     }
 
