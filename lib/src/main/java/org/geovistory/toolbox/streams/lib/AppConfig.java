@@ -148,6 +148,11 @@ public enum AppConfig {
             ""
     );
 
+    private final String processingGuaranteeConfig = parseEnv(
+            "PROCESSING_GUARANTEE_CONFIG",
+            "at_least_once"
+    );
+
     AppConfig() {
 
 
@@ -250,6 +255,7 @@ public enum AppConfig {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, INSTANCE.getApplicationId());
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, INSTANCE.getKafkaBootstrapServers());
         props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
+        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, INSTANCE.processingGuaranteeConfig);
 
         props.put(StreamsConfig.STATE_DIR_CONFIG, INSTANCE.getStateDir());
 
