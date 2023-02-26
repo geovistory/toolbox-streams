@@ -148,10 +148,16 @@ public enum AppConfig {
             ""
     );
 
-    private final String processingGuaranteeConfig = parseEnv(
-            "PROCESSING_GUARANTEE_CONFIG",
-            "at_least_once"
+    private final String streamsProcessingGuaranteeConfig = parseEnv(
+            "STREAMS_PROCESSING_GUARANTEE_CONFIG",
+            "exactly_once_v2"
     );
+
+    private final String streamsConsumerIsolationLevelConfig = parseEnv(
+            "STREAMS_CONSUMER_ISOLATION_LEVEL_CONFIG",
+            "read_uncommitted"
+    );
+
 
     AppConfig() {
 
@@ -255,15 +261,17 @@ public enum AppConfig {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, INSTANCE.getApplicationId());
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, INSTANCE.getKafkaBootstrapServers());
         props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
-        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, INSTANCE.processingGuaranteeConfig);
+        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, INSTANCE.streamsProcessingGuaranteeConfig);
 
-        props.put(StreamsConfig.STATE_DIR_CONFIG, INSTANCE.getStateDir());
 
         props.put(StreamsConfig.topicPrefix(TopicConfig.CLEANUP_POLICY_CONFIG), TopicConfig.CLEANUP_POLICY_COMPACT);
 
         // See this for producer configs:
         // https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#ak-consumers-producer-and-admin-client-configuration-parameters
         props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "20971760");
+
+        // consumer config
+        props.put(StreamsConfig.consumerPrefix(ConsumerConfig.ISOLATION_LEVEL_CONFIG), INSTANCE.streamsConsumerIsolationLevelConfig);
 
         // rocksdb memory management
         // see https://medium.com/@grinfeld_433/kafka-streams-and-rocksdb-in-the-space-time-continuum-and-a-little-bit-of-configuration-40edb5ee9ed7
