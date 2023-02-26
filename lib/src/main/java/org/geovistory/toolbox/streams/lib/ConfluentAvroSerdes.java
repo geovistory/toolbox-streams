@@ -795,4 +795,11 @@ public class ConfluentAvroSerdes {
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }
+
+    // TODO delete
+    public Serde<ProjectStatementFlatValue> ProjectStatementFlatValue() {
+        Serde<ProjectStatementFlatValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
 }
