@@ -16,6 +16,7 @@ include(
         'app-2-entity-label',
         'app-3-entity',
         'app-4-entity-preview',
+        'app-5-rdf-serializer',
         'lib',
         'utilities'
 )
