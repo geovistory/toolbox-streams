@@ -390,13 +390,13 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
-    public Serde<NodeKey> LiteralKey() {
+    public Serde<NodeKey> NodeKey() {
         Serde<NodeKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
         return serdes;
     }
 
-    public Serde<NodeValue> LiteralValue() {
+    public Serde<NodeValue> NodeValue() {
         Serde<NodeValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
@@ -792,6 +792,13 @@ public class ConfluentAvroSerdes {
 
     public Serde<CommunityEntityHasTypePropValue> CommunityEntityHasTypePropValue() {
         Serde<CommunityEntityHasTypePropValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
+    // TODO delete
+    public Serde<ProjectStatementFlatValue> ProjectStatementFlatValue() {
+        Serde<ProjectStatementFlatValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
         return serdes;
     }

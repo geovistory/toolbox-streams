@@ -174,8 +174,8 @@ public class CommunityToolboxEntityLabel {
                         Named.as(inner.TOPICS.community_toolbox_entity_label_slots_with_strings + "-to-stream")
                 )
                 .selectKey((k, v) -> CommunityEntityKey.newBuilder()
-                        .setEntityId(k.getEntityId())
-                        .build(),
+                                .setEntityId(k.getEntityId())
+                                .build(),
                         Named.as("kstream-select-key-of-community-toolbox-entity-label-slots")
                 )
                 .repartition(
@@ -271,10 +271,34 @@ public class CommunityToolboxEntityLabel {
                     .setEntityId(key.getEntityId())
                     .build();
 
-            var slotNum = value.getOrdNum();
-
             // get previous entity label value
             var oldVal = kvStore.get(groupKey);
+
+            // validate value
+
+            // if no slot value
+            if (value == null) {
+
+                // initialize label value
+                if (oldVal == null) {
+
+                    ArrayList<String> stringList = new ArrayList<>();
+                    for (int i = 0; i < NUMBER_OF_SLOTS; i++) {
+                        stringList.add("");
+                    }
+
+                    oldVal = CommunityEntityLabelValue.newBuilder()
+                            .setEntityId(key.getEntityId())
+                            .setLabel("")
+                            .setLabelSlots(stringList)
+                            .build();
+
+                    kvStore.put(groupKey, oldVal);
+                }
+                // return old value
+                return KeyValue.pair(groupKey, oldVal);
+            }
+            var slotNum = value.getOrdNum();
 
             // if no oldVal, initialize one
             if (oldVal == null) {

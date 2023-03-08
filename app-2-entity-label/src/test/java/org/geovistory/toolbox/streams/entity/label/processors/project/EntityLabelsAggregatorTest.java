@@ -74,4 +74,18 @@ class EntityLabelsAggregatorTest {
     }
 
 
+    @Test
+    public void testTransformerWithNullValue() {
+
+        var transformer = new ProjectEntityLabel.EntityLabelsAggregator(storeName);
+        transformer.init(processorContext);
+
+
+        var key2 = ProjectEntityKey.newBuilder()
+                .setEntityId("i1").setProjectId(1).build();
+
+        assertThat(transformer.transform(key2, null).value.getLabelSlots().size()).isEqualTo(ProjectEntityLabel.NUMBER_OF_SLOTS);
+    }
+
+
 }

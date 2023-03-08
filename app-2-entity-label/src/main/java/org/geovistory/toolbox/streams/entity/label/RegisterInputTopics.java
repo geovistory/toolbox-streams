@@ -1,7 +1,6 @@
 package org.geovistory.toolbox.streams.entity.label;
 
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -38,24 +37,24 @@ public class RegisterInputTopics extends InputTopicHelper {
 
 
     public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTable() {
-        return builder.table(Env.INSTANCE.TOPIC_STATEMENT_WITH_LITERAL,
-                Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
+        return getRepartitionedTable(Env.INSTANCE.TOPIC_STATEMENT_WITH_LITERAL,
+                avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue());
     }
 
     public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithEntityTable() {
-        return builder.table(Env.INSTANCE.TOPIC_STATEMENT_WITH_ENTITY,
-                Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()));
+        return getRepartitionedTable(Env.INSTANCE.TOPIC_STATEMENT_WITH_ENTITY,
+                avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue());
     }
 
 
     public KTable<ProjectClassKey, ProjectEntityLabelConfigValue> projectEntityLabelConfigTable() {
-        return builder.table(Env.INSTANCE.TOPIC_PROJECT_ENTITY_LABEL_CONFIG,
-                Consumed.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectEntityLabelConfigValue()));
+        return getRepartitionedTable(Env.INSTANCE.TOPIC_PROJECT_ENTITY_LABEL_CONFIG,
+                avroSerdes.ProjectClassKey(), avroSerdes.ProjectEntityLabelConfigValue());
     }
 
     public KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable() {
-        return builder.table(Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG,
-                Consumed.with(avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue()));
+        return getRepartitionedTable(Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG,
+                avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue());
     }
 
 }

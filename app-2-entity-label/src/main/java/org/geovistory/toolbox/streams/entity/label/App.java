@@ -10,6 +10,7 @@ import org.geovistory.toolbox.streams.entity.label.processsors.community.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.project.*;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.lib.Utils;
 
 import static org.geovistory.toolbox.streams.entity.label.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.entity.label.BuildProperties.getDockerTagSuffix;
@@ -179,6 +180,9 @@ class App {
                 ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
                 ProjectTopStatements.output.TOPICS.project_top_statements,
                 ProjectEntityLabel.output.TOPICS.project_entity_label,
+
+                // TODO delete
+                Utils.tsPrefixed("test_project_statement_w_l_join"),
 
                 CommunityToolboxEntity.output.TOPICS.community_toolbox_entity,
                 CommunityToolboxStatementWithEntity.output.TOPICS.community_toolbox_statement_with_entity,

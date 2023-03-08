@@ -65,7 +65,7 @@ public class CommunityEntityPreview {
                 (value1, value2) -> {
                     if (value1.getProjectCount() == 0) return null;
                     var newVal = EntityPreviewValue.newBuilder()
-                            .setFkProject(0)
+                            .setFkProject(null)
                             .setProject(0)
                             .setEntityId(value1.getEntityId())
                             .setPkEntity(parseStringId(value1.getEntityId()))

@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "ProjectStatementFlatValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Flat Value of project statement (for debug reasons)",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "statement_id",
+      "type": "int"
+    },
+    {
+      "name": "subject_id",
+      "type": "string"
+    },
+    {
+      "name": "object_id",
+      "type": "string"
+    }
+  ]
+}

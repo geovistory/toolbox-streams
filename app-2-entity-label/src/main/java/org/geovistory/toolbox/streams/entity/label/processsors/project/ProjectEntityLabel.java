@@ -178,9 +178,9 @@ public class ProjectEntityLabel {
                         Named.as(inner.TOPICS.project_entity_label_slots_with_strings + "-to-stream")
                 )
                 .selectKey((k, v) -> ProjectEntityKey.newBuilder()
-                        .setProjectId(k.getProjectId())
-                        .setEntityId(k.getEntityId())
-                        .build(),
+                                .setProjectId(k.getProjectId())
+                                .setEntityId(k.getEntityId())
+                                .build(),
                         Named.as("kstream-select-key-of-project-entity-label-slots")
                 )
                 .repartition(
@@ -272,15 +272,41 @@ public class ProjectEntityLabel {
                 ProjectEntityKey key,
                 EntityLabelSlotWithStringValue value
         ) {
+
+
             var groupKey = ProjectEntityKey.newBuilder()
                     .setEntityId(key.getEntityId())
                     .setProjectId(key.getProjectId())
                     .build();
 
-            var slotNum = value.getOrdNum();
-
             // get previous entity label value
             var oldVal = kvStore.get(groupKey);
+
+            // if no slot value
+            if (value == null) {
+
+                // initialize label value
+                if (oldVal == null) {
+
+                    ArrayList<String> stringList = new ArrayList<>();
+                    for (int i = 0; i < NUMBER_OF_SLOTS; i++) {
+                        stringList.add("");
+                    }
+
+                    oldVal = ProjectEntityLabelValue.newBuilder()
+                            .setProjectId(key.getProjectId())
+                            .setEntityId(key.getEntityId())
+                            .setLabel("")
+                            .setLabelSlots(stringList)
+                            .build();
+
+                    kvStore.put(groupKey, oldVal);
+                }
+                // return old value
+                return KeyValue.pair(groupKey, oldVal);
+            }
+
+            var slotNum = value.getOrdNum();
 
             // if no oldVal, initialize one
             if (oldVal == null) {
