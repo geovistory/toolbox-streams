@@ -796,6 +796,18 @@ public class ConfluentAvroSerdes {
         return serdes;
     }
 
+    public Serde<ProjectRdfKey> ProjectRdfKey() {
+        Serde<ProjectRdfKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectRdfValue> ProjectRdfValue() {
+        Serde<ProjectRdfValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(ConfluentAvroSerdesConfig.INSTANCE.getConfig(), false);
+        return serdes;
+    }
+
     // TODO delete
     public Serde<ProjectStatementFlatValue> ProjectStatementFlatValue() {
         Serde<ProjectStatementFlatValue> serdes = new SpecificAvroSerde<>();
