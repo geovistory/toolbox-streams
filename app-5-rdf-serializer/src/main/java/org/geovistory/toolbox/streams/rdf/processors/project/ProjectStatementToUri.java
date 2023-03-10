@@ -67,7 +67,7 @@ public class ProjectStatementToUri {
 
                 var ki = ProjectRdfKey.newBuilder()
                         .setProjectId(value.getProjectId())
-                        .setTurtle("<http://geovistory.org/resource/"+objectId+"> <https://ontome.net/ontology/p"+propertyId+"> <http://geovistory.org/resource/"+subjectId+">")
+                        .setTurtle("<http://geovistory.org/resource/"+objectId+"> <https://ontome.net/ontology/p"+propertyId+"i> <http://geovistory.org/resource/"+subjectId+">")
                         .build();
                 result.add(KeyValue.pair(ki, v));
 
