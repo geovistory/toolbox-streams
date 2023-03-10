@@ -12,9 +12,7 @@ import org.geovistory.toolbox.streams.lib.AppConfig;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,6 +24,7 @@ public class CLI {
     public static final Option OPT_DELETE_SCHEMAS = new Option("d", "delete-schemas", true, "soft-delete schemas of schema registry containing the provided <arg> string. This will not delete unless you provide the --confirm flag.");
     public static final Option OPT_LIST_TOPICS = new Option(null, "list-topics", false, "list topics");
     public static final Option OPT_LIST_TOPIC_CONFIGS = new Option(null, "list-topic-configs", false, "list topic configs");
+    public static final Option OPT_LIST_TOPIC_PARTITION_SIZE = new Option(null, "list-topic-partition-size", false, "list topics with the number of partitions");
     public static final Option OPT_DELETE_TOPICS = new Option(null, "delete-topics", true, "delete topics containing the provided <arg> string. This will not delete unless you provide the --confirm flag.");
     public static final Option OPT_CONFIRM = new Option(null, "confirm", false, "Confirm performing a dangerous opteration.");
     public static final Option OPT_DELETE_SCHEMAS_AND_TOPICS = new Option("d", "delete-schemas-and-topics", true, "executes --delete-topics and --delete-schemas");
@@ -56,6 +55,7 @@ public class CLI {
         options.addOption(OPT_CONFIRM);
         options.addOption(OPT_LIST_TOPIC_CONFIGS);
         options.addOption(OPT_DELETE_SCHEMAS_AND_TOPICS);
+        options.addOption(OPT_LIST_TOPIC_PARTITION_SIZE);
 
         try {
             // parse the command line arguments
@@ -80,12 +80,21 @@ public class CLI {
 
             } else if (line.hasOption(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt())) {
                 Boolean confirmed = line.hasOption(OPT_CONFIRM.getLongOpt());
-                deleteSchemas(line.getOptionValue(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt()), confirmed);
-                deleteTopics(line.getOptionValue(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt()), confirmed);
+                var strings = Arrays.stream(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt().split(",")).toList();
+                for (var s : strings) {
+                    deleteSchemas(line.getOptionValue(s.trim()), confirmed);
+                    deleteTopics(line.getOptionValue(s.trim()), confirmed);
+                }
+
             } else if (line.hasOption(OPT_LIST_TOPIC_CONFIGS.getLongOpt())) {
                 var configs = getTopicConfigs();
                 configs.forEach(System.out::println);
                 System.out.println(configs.size() + " topic configs listed.");
+
+            } else if (line.hasOption(OPT_LIST_TOPIC_PARTITION_SIZE.getLongOpt())) {
+                var configs = getTopicPartitionCounts();
+                configs.forEach(System.out::println);
+                System.out.println(configs.size() + " topic partition size listed.");
 
             } else {
                 printHelp(options);
@@ -142,8 +151,23 @@ public class CLI {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    public static List<String> getTopicPartitionCounts() {
+        AdminClient adminClient = getAdminClient();
+        var x = getTopics();
+        var res = adminClient.describeTopics(x);
 
+        try {
+            var v = res.all().get();
+            return v.entrySet().stream()
+                    .sorted(Comparator.comparingInt(o -> o.getValue().partitions().size()))
+                    .map(config -> config.getValue().partitions().size() + " partitions: "
+                            + config.getKey()
+                    ).toList();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static AdminClient getAdminClient() {
