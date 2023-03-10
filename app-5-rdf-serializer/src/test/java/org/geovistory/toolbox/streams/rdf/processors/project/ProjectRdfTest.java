@@ -151,7 +151,7 @@ class ProjectRdfTest {
 
         var expectedKey2 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i1>")
+                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9i> <http://geovistory.org/resource/i1>")
                 .build();
 
         var record2 = outRecords.get(expectedKey2);
@@ -181,7 +181,7 @@ class ProjectRdfTest {
 
         expectedKey = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i1>")
+                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9i> <http://geovistory.org/resource/i1>")
                 .build();
 
         record = outRecords.get(expectedKey);
@@ -228,7 +228,7 @@ class ProjectRdfTest {
 
         var expectedKey2 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i1>")
+                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9i> <http://geovistory.org/resource/i1>")
                 .build();
         var expectedValue2 = ProjectRdfValue.newBuilder()
                 .setOperation(Operation.insert)
