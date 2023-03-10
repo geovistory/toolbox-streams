@@ -14,19 +14,35 @@
     },
     {
       "name": "label",
-      "type": "string"
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
     },
     {
       "name": "iso6391",
-      "type": "string"
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
     },
     {
       "name": "iso6392b",
-      "type": "string"
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
     },
     {
       "name": "iso6392t",
-      "type": "string"
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
     }
   ]
 }

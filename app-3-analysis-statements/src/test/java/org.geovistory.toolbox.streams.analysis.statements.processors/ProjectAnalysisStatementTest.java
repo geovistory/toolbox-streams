@@ -1,6 +1,7 @@
 package org.geovistory.toolbox.streams.analysis.statements.processors;
 
 
+import io.debezium.data.geometry.Geography;
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.analysis.statements.AnalysisConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.analysis.statements.Env;
@@ -8,6 +9,7 @@ import org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisStatement
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -150,5 +152,227 @@ class ProjectAnalysisStatementTest {
         assertThat(record.getObjectInfoValue().getTimePrimitive().getJulianDay()).isEqualTo(2362729);
 
     }
+
+
+    @Test
+    void testLanguage() {
+
+
+        var projectId = 1;
+        var statementId = 2;
+
+        // add a class label
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId("i8")
+                                .setPropertyId(2)
+                                .setObjectId("i9")
+                                .setObject(NodeValue.newBuilder().setLabel("Name 2").setId("i2").setClassId(1)
+                                        .setLanguage(Language.newBuilder()
+                                                .setFkClass(2)
+                                                .setPkEntity(2)
+                                                .setPkLanguage("1")
+                                                .setNotes("Italian")
+                                                .build()
+                                        ).build()).build()
+                )
+                .setOrdNumOfDomain(1)
+                .setOrdNumOfRange(2)
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
+        var record = outRecords.get(expectedKey);
+        assertThat(record.getObjectInfoValue().getLanguage().getLabel()).isEqualTo("Italian");
+
+    }
+
+
+
+
+    @Test
+    void testLangString() {
+
+
+        var projectId = 1;
+        var statementId = 2;
+
+        // add a class label
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId("i8")
+                                .setPropertyId(2)
+                                .setObjectId("i9")
+                                .setObject(NodeValue.newBuilder().setLabel("Name 2").setId("i2").setClassId(1)
+                                        .setLangString(LangString.newBuilder()
+                                                .setFkClass(2)
+                                                .setPkEntity(2)
+                                                .setString("Foo")
+                                                .setFkLanguage(123)
+                                                .build()
+                                        ).build()).build()
+                )
+                .setOrdNumOfDomain(1)
+                .setOrdNumOfRange(2)
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
+        var record = outRecords.get(expectedKey);
+        assertThat(record.getObjectInfoValue().getLangString().getString()).isEqualTo("Foo");
+
+    }
+
+
+
+    @Test
+    void testCell() {
+
+
+        var projectId = 1;
+        var statementId = 2;
+
+        // add a class label
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId("i8")
+                                .setPropertyId(2)
+                                .setObjectId("i9")
+                                .setObject(NodeValue.newBuilder().setLabel("Name 2").setId("i2").setClassId(1)
+                                        .setCell(Cell.newBuilder()
+                                                .setFkClass(2)
+                                                .setNumericValue(2D)
+                                                .setFkDigital(1)
+                                                .setPkCell(1L)
+                                                .setFkRow(2L)
+                                                .setFkColumn(2)
+                                                .build()
+                                        ).build()).build()
+                )
+                .setOrdNumOfDomain(1)
+                .setOrdNumOfRange(2)
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
+        var record = outRecords.get(expectedKey);
+        assertThat(record.getObjectInfoValue().getCell().getFkColumn()).isEqualTo(2);
+
+    }
+
+
+    @Test
+    void testDimension() {
+
+
+        var projectId = 1;
+        var statementId = 2;
+
+        // add a class label
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId("i8")
+                                .setPropertyId(2)
+                                .setObjectId("i9")
+                                .setObject(NodeValue.newBuilder().setLabel("Name 2").setId("i2").setClassId(1)
+                                        .setDimension(Dimension.newBuilder()
+                                                .setFkClass(2)
+                                                .setNumericValue(2.3D)
+                                                .setFkMeasurementUnit(2)
+                                                .build()
+                                        ).build()).build()
+                )
+                .setOrdNumOfDomain(1)
+                .setOrdNumOfRange(2)
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
+        var record = outRecords.get(expectedKey);
+        assertThat(record.getObjectInfoValue().getDimension().getNumericValue()).isEqualTo(2.3D);
+
+    }
+
+
+
+    @Test
+    void testGeometry() {
+
+
+        var projectId = 1;
+        var statementId = 2;
+
+        // add a class label
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId("i8")
+                                .setPropertyId(2)
+                                .setObjectId("i9")
+                                .setObject(NodeValue.newBuilder().setLabel("Name 2").setId("i2").setClassId(1)
+                                        .setPlace(Place.newBuilder()
+                                                .setFkClass(2)
+                                                .setGeoPoint(Geography.newBuilder()
+                                                        .setWkb(GeoUtils.pointToBytes(33, 44, 4326))
+                                                        .setSrid(4326)
+                                                        .build())
+                                                .build()
+                                        ).build()).build()
+                )
+                .setOrdNumOfDomain(1)
+                .setOrdNumOfRange(2)
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
+        var record = outRecords.get(expectedKey);
+        assertThat(record.getObjectInfoValue().getGeometry().getGeoJSON().getCoordinates().get(0)).isEqualTo(33);
+
+    }
+
 
 }
