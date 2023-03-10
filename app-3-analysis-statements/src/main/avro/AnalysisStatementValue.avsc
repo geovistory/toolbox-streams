@@ -1,0 +1,67 @@
+{
+  "type": "record",
+  "name": "AnalysisStatementValue",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store AnalysisStatementValue",
+  "fields": [
+    {
+      "name": "pk_entity",
+      "type": "int"
+    },
+    {
+      "name": "fk_project",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "project",
+      "type": "int"
+    },
+    {
+      "name": "fk_property",
+      "type": "int"
+    },
+    {
+      "name": "fk_object_info",
+      "type": "int"
+    },
+    {
+      "name": "fk_subject_info",
+      "type": "int"
+    },
+    {
+      "name": "ord_num_of_domain",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "ord_num_of_range",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "is_in_project_count",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "object_info_value",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.analysis.statements.avro.ObjectInfoValue"
+      ]
+    }
+  ]
+}

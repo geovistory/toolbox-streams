@@ -1,0 +1,40 @@
+{
+  "type": "record",
+  "name": "AnalysisTimePrimitive",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store AnalysisTimePrimitive",
+  "fields": [
+    {
+      "name": "fkClass",
+      "type": "int"
+    },
+    {
+      "name": "pkEntity",
+      "type": "int"
+    },
+    {
+      "name": "from",
+      "type": "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisTimePrimitiveBoundary"
+    },
+    {
+      "name": "to",
+      "type": "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisTimePrimitiveBoundary"
+    },
+    {
+      "name": "label",
+      "type": "string"
+    },
+    {
+      "name": "calendar",
+      "type": "string"
+    },
+    {
+      "name": "duration",
+      "type": "string"
+    },
+    {
+      "name": "julianDay",
+      "type": "int"
+    }
+  ]
+}

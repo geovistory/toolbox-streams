@@ -24,6 +24,27 @@
       "type": "string"
     },
     {
+      "name": "setIso6391",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "setIso6392b",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "setIso6392t",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
       "name": "fk_class",
       "type": [
         "null",

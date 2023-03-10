@@ -1,0 +1,37 @@
+{
+  "type": "record",
+  "name": "AnalysisGeometry",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store AnalysisGeometry",
+  "fields": [
+    {
+      "name": "fkClass",
+      "type": "int"
+    },
+    {
+      "name": "pkEntity",
+      "type": "int"
+    },
+    {
+      "name": "geoJSON",
+      "type": {
+        "type": "record",
+        "name": "GeoJson",
+        "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+        "fields": [
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "coordinates",
+            "type": {
+              "type": "array",
+              "items": "double"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

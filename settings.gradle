@@ -14,6 +14,7 @@ include(
         'app-0-statement-enriched',
         'app-1-base-config',
         'app-2-entity-label',
+        'app-3-analysis-statements',
         'app-3-entity',
         'app-4-entity-preview',
         'lib',
