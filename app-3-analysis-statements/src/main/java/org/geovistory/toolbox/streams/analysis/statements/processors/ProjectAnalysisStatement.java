@@ -143,6 +143,7 @@ public class ProjectAnalysisStatement {
             v.setTimePrimitive(AnalysisTimePrimitive.newBuilder()
                     .setPkEntity(o.getPkEntity())
                     .setFkClass(o.getFkClass())
+                    .setJulianDay(o.getJulianDay())
                     .setCalendar(o.getCalendar())
                     .setDuration(o.getDuration())
                     .setFrom(from)

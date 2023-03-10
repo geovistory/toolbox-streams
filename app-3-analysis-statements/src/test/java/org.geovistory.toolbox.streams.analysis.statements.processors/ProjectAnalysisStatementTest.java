@@ -107,4 +107,48 @@ class ProjectAnalysisStatementTest {
 
     }
 
+    @Test
+    void testTimePrimitive() {
+
+
+        var projectId = 1;
+        var statementId = 2;
+
+        // add a class label
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId("i8")
+                                .setPropertyId(2)
+                                .setObjectId("i9")
+                                .setObject(NodeValue.newBuilder().setLabel("Name 2").setId("i2").setClassId(1)
+                                        .setTimePrimitive(
+                                                TimePrimitive.newBuilder()
+                                                        .setFkClass(0)
+                                                        .setPkEntity(0)
+                                                        .setJulianDay(2362729)
+                                                        .setDuration("1 day")
+                                                        .setCalendar("gregorian")
+                                                        .build()
+                                        ).build()).build()
+                )
+                .setOrdNumOfDomain(1)
+                .setOrdNumOfRange(2)
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
+        var record = outRecords.get(expectedKey);
+        assertThat(record.getObjectInfoValue().getTimePrimitive().getJulianDay()).isEqualTo(2362729);
+
+    }
+
 }
