@@ -3,9 +3,9 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.base.config.I;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.base.config.I;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -136,9 +136,24 @@ class CommuntiyEntityLabelConfigTest {
 
         proEntityLabelConfigTopic.pipeInput(kR, vR);
 
-        // delete
-        vR.setDeleted$1("true");
-        proEntityLabelConfigTopic.pipeInput(kR, vR);
+        // mimic Debezium delete.handling.mode=rewrite
+        var vRewrite = dev.projects.entity_label_config.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setEntityVersion(null)
+                .setFkClass(null)
+                .setFkProject(null)
+                .setConfig(null)
+                .setDeleted$1("true")
+                .build();
+
+        proEntityLabelConfigTopic.pipeInput(kR, vRewrite);
+
+
+        // mimic Debezium drop.tombstones=false
+
+        proEntityLabelConfigTopic.pipeInput(kR, null);
+
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
