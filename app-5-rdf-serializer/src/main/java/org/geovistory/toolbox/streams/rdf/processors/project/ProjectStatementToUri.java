@@ -53,17 +53,23 @@ public class ProjectStatementToUri {
                                 Utils.booleanIsEqualTrue(value.getDeleted$1()) ? Operation.delete : Operation.insert)
                         .build();
 
+                //get subject, object and property ids
+                var subjectId = value.getStatement().getSubjectId();
+                var objectId = value.getStatement().getObjectId();
+                var propertyId = value.getStatement().getPropertyId();
+
                 // add the normal triple
                 var k = ProjectRdfKey.newBuilder()
                         .setProjectId(value.getProjectId())
-                        .setTurtle("<TODO>") //TODO convert value to RDF turtle string
+                        .setTurtle("<http://geovistory.org/resource/"+subjectId+"> <https://ontome.net/ontology/p"+propertyId+"> <http://geovistory.org/resource/"+objectId+">")
                         .build();
                 result.add(KeyValue.pair(k, v));
 
-
-                // add the inverse triple
-                k.setTurtle("<TODO>"); //TODO convert value to RDF turtle string
-                result.add(KeyValue.pair(k, v));
+                var ki = ProjectRdfKey.newBuilder()
+                        .setProjectId(value.getProjectId())
+                        .setTurtle("<http://geovistory.org/resource/"+objectId+"> <https://ontome.net/ontology/p"+propertyId+"> <http://geovistory.org/resource/"+subjectId+">")
+                        .build();
+                result.add(KeyValue.pair(ki, v));
 
                 return result;
             }

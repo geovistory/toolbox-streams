@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,9 +56,11 @@ class ProjectRdfTest {
         testDriver.close();
     }
 
-
+    /**
+     * The goal of this test is to check if the output is not empty
+     */
     @Test
-    void testProcessor() {
+    void testOutputIsNotEmpty() {
 
         var projectId = 1;
         var statementId = 123212;
@@ -77,27 +81,163 @@ class ProjectRdfTest {
                 .build();
         projectStatementWithEntityTopic.pipeInput(k, v);
 
+        assertThat(outputTopic.isEmpty()).isFalse();
+    }
+
+    /**
+     * The goal of this test is to check if the output has the correct size (should be equals to twice the number of statements in the input topic)
+     */
+    @Test
+    void testSizeOfOutput() {
+
+        var projectId = 1;
+        var statementId = 123212;
+        var subjectId = "i1";
+        var objectId = "i2";
+        var propertyId = 9;
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .build())
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(2);
+    }
+
+    /**
+     * The goal of this test is to check if the operation value (insert or delete) is correctly set in the output topic
+     */
+    @Test
+    void testOperationValue() {
+
+        var projectId = 1;
+        var statementId = 123212;
+        var subjectId = "i1";
+        var objectId = "i2";
+        var propertyId = 9;
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .build())
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
 
         var expectedKey = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<s> <p> <o>")
+                .setTurtle("<http://geovistory.org/resource/i1> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i2>")
                 .build();
 
         var record = outRecords.get(expectedKey);
         assertThat(record.getOperation()).isEqualTo(Operation.insert);
 
+        var expectedKey2 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i1>")
+                .build();
+
+        var record2 = outRecords.get(expectedKey2);
+        assertThat(record2.getOperation()).isEqualTo(Operation.insert);
+
+        var v2 = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .build())
+                .setDeleted$1(true)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v2);
+        outRecords = outputTopic.readKeyValuesToMap();
+
         expectedKey = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<o> <p i> <s>")
+                .setTurtle("<http://geovistory.org/resource/i1> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i2>")
                 .build();
 
         record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
+        assertThat(record.getOperation()).isEqualTo(Operation.delete);
 
+        expectedKey = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i1>")
+                .build();
+
+        record = outRecords.get(expectedKey);
+        assertThat(record.getOperation()).isEqualTo(Operation.delete);
+    }
+
+    /**
+     * The goal of this test is to check if the key/value pairs generated in the processor match the expected list of key/value pairs
+     */
+    @Test
+    void testListKeyValuePairs() {
+
+        var projectId = 1;
+        var statementId = 123212;
+        var subjectId = "i1";
+        var objectId = "i2";
+        var propertyId = 9;
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .build())
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+        List<KeyValue<ProjectRdfKey, ProjectRdfValue>> expectedList = new LinkedList<>();
+
+
+        var outRecordsList = outputTopic.readKeyValuesToList();
+
+        var expectedKey = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<http://geovistory.org/resource/i1> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i2>")
+                .build();
+        var expectedValue = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+
+        var expectedKey2 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<http://geovistory.org/resource/i2> <https://ontome.net/ontology/p9> <http://geovistory.org/resource/i1>")
+                .build();
+        var expectedValue2 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+
+        expectedList.add(KeyValue.pair(expectedKey, expectedValue));
+        expectedList.add(KeyValue.pair(expectedKey2, expectedValue2));
+
+        assertThat(expectedList.equals(outRecordsList)).isTrue();
     }
 
 }
