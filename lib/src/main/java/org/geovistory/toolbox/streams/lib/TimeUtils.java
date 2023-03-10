@@ -68,7 +68,7 @@ public class TimeUtils {
 
         var added = localDate.plus(amountToAdd, unit);
 
-        return added.get(JulianFields.JULIAN_DAY);
+        return Math.toIntExact(added.getLong(JulianFields.JULIAN_DAY));
     }
 
 
