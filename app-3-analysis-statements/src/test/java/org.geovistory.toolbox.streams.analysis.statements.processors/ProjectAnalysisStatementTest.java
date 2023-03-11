@@ -6,6 +6,7 @@ import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.analysis.statements.AnalysisConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.analysis.statements.Env;
 import org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisStatementValue;
+import org.geovistory.toolbox.streams.analysis.statements.avro.ObjectInfoValue;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -13,7 +14,9 @@ import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +29,8 @@ class ProjectAnalysisStatementTest {
     private TestInputTopic<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteralTopic;
     private TestInputTopic<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityTopic;
     private TestOutputTopic<AnalysisStatementKey, AnalysisStatementValue> outputTopic;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setup() {
@@ -69,7 +74,7 @@ class ProjectAnalysisStatementTest {
 
 
     @Test
-    void testAppellation() {
+    void testAppellation() throws IOException {
 
 
         var projectId = 1;
@@ -105,12 +110,14 @@ class ProjectAnalysisStatementTest {
         assertThat(outRecords).hasSize(1);
         var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
         var record = outRecords.get(expectedKey);
-        assertThat(record.getObjectInfoValue().getString().getString()).isEqualTo("Name 2");
+        var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
+
+        assertThat(objectInfoValue.getString().getString()).isEqualTo("Name 2");
 
     }
 
     @Test
-    void testTimePrimitive() {
+    void testTimePrimitive() throws IOException {
 
 
         var projectId = 1;
@@ -149,13 +156,15 @@ class ProjectAnalysisStatementTest {
         assertThat(outRecords).hasSize(1);
         var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
         var record = outRecords.get(expectedKey);
-        assertThat(record.getObjectInfoValue().getTimePrimitive().getJulianDay()).isEqualTo(2362729);
+        var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
+
+        assertThat(objectInfoValue.getTimePrimitive().getJulianDay()).isEqualTo(2362729);
 
     }
 
 
     @Test
-    void testLanguage() {
+    void testLanguage() throws IOException {
 
 
         var projectId = 1;
@@ -192,15 +201,15 @@ class ProjectAnalysisStatementTest {
         assertThat(outRecords).hasSize(1);
         var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
         var record = outRecords.get(expectedKey);
-        assertThat(record.getObjectInfoValue().getLanguage().getLabel()).isEqualTo("Italian");
+        var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
+
+        assertThat(objectInfoValue.getLanguage().getLabel()).isEqualTo("Italian");
 
     }
 
 
-
-
     @Test
-    void testLangString() {
+    void testLangString() throws IOException {
 
 
         var projectId = 1;
@@ -237,14 +246,15 @@ class ProjectAnalysisStatementTest {
         assertThat(outRecords).hasSize(1);
         var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
         var record = outRecords.get(expectedKey);
-        assertThat(record.getObjectInfoValue().getLangString().getString()).isEqualTo("Foo");
+        var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
+
+        assertThat(objectInfoValue.getLangString().getString()).isEqualTo("Foo");
 
     }
 
 
-
     @Test
-    void testCell() {
+    void testCell() throws IOException {
 
 
         var projectId = 1;
@@ -283,13 +293,15 @@ class ProjectAnalysisStatementTest {
         assertThat(outRecords).hasSize(1);
         var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
         var record = outRecords.get(expectedKey);
-        assertThat(record.getObjectInfoValue().getCell().getFkColumn()).isEqualTo(2);
+        var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
+
+        assertThat(objectInfoValue.getCell().getFkColumn()).isEqualTo(2);
 
     }
 
 
     @Test
-    void testDimension() {
+    void testDimension() throws IOException {
 
 
         var projectId = 1;
@@ -325,14 +337,15 @@ class ProjectAnalysisStatementTest {
         assertThat(outRecords).hasSize(1);
         var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
         var record = outRecords.get(expectedKey);
-        assertThat(record.getObjectInfoValue().getDimension().getNumericValue()).isEqualTo(2.3D);
+        var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
+
+        assertThat(objectInfoValue.getDimension().getNumericValue()).isEqualTo(2.3D);
 
     }
 
 
-
     @Test
-    void testGeometry() {
+    void testGeometry() throws IOException {
 
 
         var projectId = 1;
@@ -370,7 +383,9 @@ class ProjectAnalysisStatementTest {
         assertThat(outRecords).hasSize(1);
         var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
         var record = outRecords.get(expectedKey);
-        assertThat(record.getObjectInfoValue().getGeometry().getGeoJSON().getCoordinates().get(0)).isEqualTo(33);
+        var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
+
+        assertThat(objectInfoValue.getGeometry().getGeoJSON().getCoordinates().get(0)).isEqualTo(33);
 
     }
 

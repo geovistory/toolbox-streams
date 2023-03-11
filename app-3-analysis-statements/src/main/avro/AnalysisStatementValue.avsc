@@ -60,7 +60,7 @@
       "name": "object_info_value",
       "type": [
         "null",
-        "org.geovistory.toolbox.streams.analysis.statements.avro.ObjectInfoValue"
+        "string"
       ]
     }
   ]

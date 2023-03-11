@@ -64,7 +64,7 @@ public class ProjectAnalysisStatement {
                     .setIsInProjectCount(1)
                     .setOrdNumOfDomain(value.getOrdNumOfDomain())
                     .setOrdNumOfRange(value.getOrdNumOfRange())
-                    .setObjectInfoValue(mapObject(value.getStatement().getObject()))
+                    .setObjectInfoValue(mapObject(value.getStatement().getObject()).toString())
                     .build();
 
             return KeyValue.pair(k, v);
