@@ -55,13 +55,15 @@ public class ProjectAnalysisStatement {
 
         var mapped = merged.map((key, value) -> {
             var object = mapObject(value.getStatement().getObject());
+            var k = AnalysisStatementKey.newBuilder()
+                    .setPkEntity(key.getStatementId())
+                    .setProject(key.getProjectId())
+                    .build();
+
+            if (value.getDeleted$1()) return KeyValue.pair(k, null);
             try {
                 var objectJsonString = mapper.writeValueAsString(object);
 
-                var k = AnalysisStatementKey.newBuilder()
-                        .setPkEntity(key.getStatementId())
-                        .setProject(key.getProjectId())
-                        .build();
                 var v = AnalysisStatementValue.newBuilder()
                         .setPkEntity(key.getStatementId())
                         .setProject(key.getProjectId())
@@ -227,7 +229,6 @@ public class ProjectAnalysisStatement {
         TOPICS;
         public final String project_analysis_statement = Utils.tsPrefixed("project_analysis_statement");
     }
-
 
 
 }
