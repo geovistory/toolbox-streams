@@ -30,7 +30,7 @@ public class TimeUtils {
         julianCalendar.setGregorianChange(new Date(Long.MAX_VALUE));
 
         var year = julianCalendar.get(Calendar.YEAR);
-        var month = julianCalendar.get(Calendar.MONTH);
+        var month = julianCalendar.get(Calendar.MONTH) + 1;
         var day = julianCalendar.get(Calendar.DAY_OF_MONTH);
 
         return new YearMonthDay(year, month, day);
@@ -45,7 +45,7 @@ public class TimeUtils {
 
     public static String getIso8601String(int julianDay) {
         var localDate = LocalDate.MIN.with(JulianFields.JULIAN_DAY, julianDay);
-        return localDate.toString();
+        return localDate.toString() + "T00:00:00Z";
     }
 
 
@@ -79,7 +79,7 @@ public class TimeUtils {
     public record YearMonthDay(int year, int month, int day) {
         @Override
         public String toString() {
-            return String.format("%04d", year) + "-" + String.format("%02d", month) + String.format("%02d", day);
+            return String.format("%04d", year) + "-" + String.format("%02d", month) + "-" + String.format("%02d", day);
         }
 
     }

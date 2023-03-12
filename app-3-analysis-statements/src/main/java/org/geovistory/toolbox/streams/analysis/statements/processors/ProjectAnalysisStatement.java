@@ -1,5 +1,7 @@
 package org.geovistory.toolbox.streams.analysis.statements.processors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -13,6 +15,7 @@ import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
+import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.TimeUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -43,31 +46,39 @@ public class ProjectAnalysisStatement {
     ) {
 
         var avroSerdes = new AnalysisConfluentAvroSerdes();
-
+        ObjectMapper mapper = JsonStringifier.getMapperIgnoringNulls();
 
         /* STREAM PROCESSORS */
         // 2)
         var merged = projectStatementWithLiteral.merge(projectStatementWithEntity);
 
-        var mapped = merged.map((key, value) -> {
-            var k = AnalysisStatementKey.newBuilder()
-                    .setPkEntity(key.getStatementId())
-                    .setProject(key.getProjectId())
-                    .build();
-            var v = AnalysisStatementValue.newBuilder()
-                    .setPkEntity(key.getStatementId())
-                    .setProject(key.getProjectId())
-                    .setFkProject(key.getProjectId())
-                    .setFkSubjectInfo(Utils.parseStringId(value.getStatement().getSubjectId()))
-                    .setFkProperty(value.getStatement().getPropertyId())
-                    .setFkObjectInfo(Utils.parseStringId(value.getStatement().getObjectId()))
-                    .setIsInProjectCount(1)
-                    .setOrdNumOfDomain(value.getOrdNumOfDomain())
-                    .setOrdNumOfRange(value.getOrdNumOfRange())
-                    .setObjectInfoValue(mapObject(value.getStatement().getObject()).toString())
-                    .build();
 
-            return KeyValue.pair(k, v);
+        var mapped = merged.map((key, value) -> {
+            var object = mapObject(value.getStatement().getObject());
+            try {
+                var objectJsonString = mapper.writeValueAsString(object);
+
+                var k = AnalysisStatementKey.newBuilder()
+                        .setPkEntity(key.getStatementId())
+                        .setProject(key.getProjectId())
+                        .build();
+                var v = AnalysisStatementValue.newBuilder()
+                        .setPkEntity(key.getStatementId())
+                        .setProject(key.getProjectId())
+                        .setFkProject(key.getProjectId())
+                        .setFkSubjectInfo(Utils.parseStringId(value.getStatement().getSubjectId()))
+                        .setFkProperty(value.getStatement().getPropertyId())
+                        .setFkObjectInfo(Utils.parseStringId(value.getStatement().getObjectId()))
+                        .setIsInProjectCount(1)
+                        .setOrdNumOfDomain(value.getOrdNumOfDomain())
+                        .setOrdNumOfRange(value.getOrdNumOfRange())
+                        .setObjectInfoValue(objectJsonString)
+                        .build();
+
+                return KeyValue.pair(k, v);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         });
         /* SINK PROCESSORS */
 
@@ -90,7 +101,7 @@ public class ProjectAnalysisStatement {
             // Appellation
 
             var a = object.getAppellation();
-            return v.setString(AnalysisString.newBuilder()
+            v.setString(AnalysisString.newBuilder()
                     .setPkEntity(a.getPkEntity())
                     .setFkClass(a.getFkClass())
                     .setString(a.getString())
@@ -216,5 +227,7 @@ public class ProjectAnalysisStatement {
         TOPICS;
         public final String project_analysis_statement = Utils.tsPrefixed("project_analysis_statement");
     }
+
+
 
 }

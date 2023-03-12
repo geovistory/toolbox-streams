@@ -138,9 +138,9 @@ class ProjectAnalysisStatementTest {
                                                 TimePrimitive.newBuilder()
                                                         .setFkClass(0)
                                                         .setPkEntity(0)
-                                                        .setJulianDay(2362729)
-                                                        .setDuration("1 day")
-                                                        .setCalendar("gregorian")
+                                                        .setJulianDay(2290483)
+                                                        .setDuration("1 year")
+                                                        .setCalendar("julian")
                                                         .build()
                                         ).build()).build()
                 )
@@ -158,7 +158,27 @@ class ProjectAnalysisStatementTest {
         var record = outRecords.get(expectedKey);
         var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
 
-        assertThat(objectInfoValue.getTimePrimitive().getJulianDay()).isEqualTo(2362729);
+        assertThat(objectInfoValue.getTimePrimitive().getJulianDay()).isEqualTo(2290483);
+
+        assertThat(objectInfoValue.getTimePrimitive().getLabel()).isEqualTo("1559-01-01 (1 year)");
+
+        assertThat(objectInfoValue.getTimePrimitive().getFrom().getCalJulian()).isEqualTo("1559-01-01");
+        assertThat(objectInfoValue.getTimePrimitive().getFrom().getJulianDay()).isEqualTo(2290483);
+        assertThat(objectInfoValue.getTimePrimitive().getFrom().getCalGregorian()).isEqualTo("1559-01-11");
+        assertThat(objectInfoValue.getTimePrimitive().getFrom().getJulianSecond()).isEqualTo(197897731200L);
+        assertThat(objectInfoValue.getTimePrimitive().getFrom().getCalGregorianIso8601()).isEqualTo("1559-01-11T00:00:00Z");
+
+        assertThat(objectInfoValue.getTimePrimitive().getTo().getCalJulian()).isEqualTo("1560-01-01");
+        assertThat(objectInfoValue.getTimePrimitive().getTo().getJulianDay()).isEqualTo(2290848);
+        assertThat(objectInfoValue.getTimePrimitive().getTo().getCalGregorian()).isEqualTo("1560-01-11");
+        assertThat(objectInfoValue.getTimePrimitive().getTo().getJulianSecond()).isEqualTo(197929267200L);
+        assertThat(objectInfoValue.getTimePrimitive().getTo().getCalGregorianIso8601()).isEqualTo("1560-01-11T00:00:00Z");
+
+        assertThat(record.getObjectInfoValue().contains("cell")).isEqualTo(false);
+        assertThat(record.getObjectInfoValue().contains("dimension")).isEqualTo(false);
+        assertThat(record.getObjectInfoValue().contains("geometry")).isEqualTo(false);
+        assertThat(record.getObjectInfoValue().contains("langString")).isEqualTo(false);
+        assertThat(record.getObjectInfoValue().contains("string")).isEqualTo(false);
 
     }
 
