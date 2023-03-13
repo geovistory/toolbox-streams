@@ -117,6 +117,21 @@ public class Utils {
         }
     }
 
+    /**
+     * parse an integer from a string like "i123123" or "d232"
+     *
+     * @param value1 input string
+     * @return parsed integer or, in case of exception, 0
+     */
+    public static int parseStringId(String value1) {
+        try {
+            return Integer.parseInt(value1.substring(1));
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     private static Map<String, Integer> languageMap() {
         Map<String, Integer> map = new HashMap<>();
         map.put("aa", 17082);

@@ -1,6 +1,7 @@
 package org.geovistory.toolbox.streams.entity.lib;
 
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.lib.TimeUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -8,7 +9,6 @@ import java.time.temporal.JulianFields;
 
 public class TimeSpanFactory {
     public static String[] keys = new String[]{"71_out", "72_out", "150_out", "151_out", "152_out", "153_out"};
-    private static final int secondsPerDay = 86400; // 24*60*60
 
 
     /**
@@ -58,6 +58,7 @@ public class TimeSpanFactory {
             }
             return getTimeSpanValue();
         }
+
         public TimeSpanValue getTimeSpan(CommunityEntityTopStatementsValue value) {
             for (var key : keys) {
                 var temporalStatements = value.getMap().get(key);
@@ -129,8 +130,6 @@ public class TimeSpanFactory {
     }
 
 
-
-
     public static NewTimePrimitive createNewTimePrimitive(TimePrimitive value) {
         return NewTimePrimitive.newBuilder()
                 .setCalendar(value.getCalendar())
@@ -151,7 +150,7 @@ public class TimeSpanFactory {
     }
 
     public static long createFirstSecond(TimePrimitive value) {
-        return (long) value.getJulianDay() * secondsPerDay;
+        return TimeUtils.getJulianSecond(value.getJulianDay());
     }
 
     public static long createLastSecond(TimePrimitive value) {
@@ -175,6 +174,6 @@ public class TimeSpanFactory {
 
         long newJulianDay = date.getLong(JulianFields.JULIAN_DAY);
 
-        return newJulianDay * secondsPerDay - 1;
+        return TimeUtils.getJulianSecond(newJulianDay) - 1;
     }
 }

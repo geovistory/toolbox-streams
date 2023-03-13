@@ -1,0 +1,64 @@
+{
+  "type": "record",
+  "name": "ObjectInfoValue",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store ObjectInfoValue",
+  "fields": [
+    {
+      "name": "string",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisString"
+      ],
+      "default": null
+    },
+    {
+      "name": "geometry",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisGeometry"
+      ],
+      "default": null
+    },
+    {
+      "name": "language",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisLanguage"
+      ],
+      "default": null
+    },
+    {
+      "name": "timePrimitive",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisTimePrimitive"
+      ],
+      "default": null
+    },
+    {
+      "name": "langString",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisLangString"
+      ],
+      "default": null
+    },
+    {
+      "name": "dimension",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisDimension"
+      ],
+      "default": null
+    },
+    {
+      "name": "cell",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisCell"
+      ],
+      "default": null
+    }
+  ]
+}

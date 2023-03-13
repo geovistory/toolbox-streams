@@ -379,6 +379,7 @@ public class StatementEnriched {
     private static Cell tranformCell(dev.tables.cell.Value tabCell) {
         return Cell.newBuilder()
                 .setPkCell(tabCell.getPkCell())
+                .setFkClass(tabCell.getFkClass())
                 .setFkColumn(tabCell.getFkColumn())
                 .setFkRow(tabCell.getFkColumn())
                 .setFkDigital(tabCell.getFkDigital())
@@ -436,6 +437,9 @@ public class StatementEnriched {
                 .setPkEntity(infLanguage.getPkEntity())
                 .setFkClass(infLanguage.getFkClass())
                 .setNotes(infLanguage.getNotes())
+                .setSetIso6391(infLanguage.getIso6391())
+                .setSetIso6392b(infLanguage.getIso6392b())
+                .setSetIso6392t(infLanguage.getIso6392t())
                 .setPkLanguage(infLanguage.getPkLanguage())
                 .build();
     }

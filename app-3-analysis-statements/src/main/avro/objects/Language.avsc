@@ -1,0 +1,48 @@
+{
+  "type": "record",
+  "name": "AnalysisLanguage",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store AnalysisLanguage",
+  "fields": [
+    {
+      "name": "fkClass",
+      "type": "int"
+    },
+    {
+      "name": "pkEntity",
+      "type": "int"
+    },
+    {
+      "name": "label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "iso6391",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "iso6392b",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "iso6392t",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}
