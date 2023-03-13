@@ -17,6 +17,7 @@ on:
           - toolbox-streams-entity-label
           - toolbox-streams-entity-preview
           - toolbox-streams-statement-enriched
+          - toolbox-streams-rdf
       version:
         description: "Version"
         required: true
