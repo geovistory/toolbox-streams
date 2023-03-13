@@ -1,0 +1,38 @@
+{
+  "type": "record",
+  "name": "AnalysisCell",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store AnalysisCell",
+  "fields": [
+    {
+      "name": "fkClass",
+      "type": "int"
+    },
+    {
+      "name": "pkCell",
+      "type": "long"
+    },
+    {
+      "name": "fkRow",
+      "type": "long"
+    },
+    {
+      "name": "fkColumn",
+      "type": "int"
+    },
+    {
+      "name": "numericValue",
+      "type": [
+        "null",
+        "double"
+      ]
+    },
+    {
+      "name": "stringValue",
+      "type": [
+        "null",
+        "string"
+      ]
+    }
+  ]
+}

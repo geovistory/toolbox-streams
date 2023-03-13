@@ -38,6 +38,14 @@
         "string"
       ],
       "default": null
+    },
+    {
+      "name": "fk_class",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
     }
   ]
 }

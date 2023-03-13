@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "AnalysisLangString",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store AnalysisLangString",
+  "fields": [
+    {
+      "name": "fkClass",
+      "type": "int"
+    },
+    {
+      "name": "pkEntity",
+      "type": "int"
+    },
+    {
+      "name": "string",
+      "type": "string"
+    },
+    {
+      "name": "fkLanguage",
+      "type": "int"
+    }
+  ]
+}

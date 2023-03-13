@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "AnalysisTimePrimitiveBoundary",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store AnalysisTimePrimitiveBoundary",
+  "fields": [
+    {
+      "name": "calJulian",
+      "type": "string"
+    },
+    {
+      "name": "julianDay",
+      "type": "int"
+    },
+    {
+      "name": "calGregorian",
+      "type": "string"
+    },
+    {
+      "name": "julianSecond",
+      "type": "long"
+    },
+    {
+      "name": "calGregorianIso8601",
+      "type": "string"
+    }
+  ]
+}
