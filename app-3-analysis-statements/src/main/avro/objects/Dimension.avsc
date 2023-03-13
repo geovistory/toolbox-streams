@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "AnalysisDimension",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
+  "doc": "Model to store AnalysisDimension",
+  "fields": [
+    {
+      "name": "fkClass",
+      "type": "int"
+    },
+    {
+      "name": "pkEntity",
+      "type": "int"
+    },
+    {
+      "name": "fkMeasurementUnit",
+      "type": "int"
+    },
+    {
+      "name": "numericValue",
+      "type": "double"
+    }
+  ]
+}
