@@ -4,15 +4,15 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KeyValueMapper;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
 
-import java.util.LinkedList;
-import java.util.List;
+import static org.geovistory.toolbox.streams.lib.CommonUrls.*;
+import static org.geovistory.toolbox.streams.lib.Utils.getLanguageFromId;
 
 
 public class ProjectStatementToLiteral {
@@ -35,7 +35,7 @@ public class ProjectStatementToLiteral {
 
     public static ProjectRdfReturnValue addProcessors(
             StreamsBuilder builder,
-            KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteralStream
+            KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityStream
     ) {
 
         var avroSerdes = new ConfluentAvroSerdes();
@@ -43,7 +43,7 @@ public class ProjectStatementToLiteral {
         /* STREAM PROCESSORS */
         // 2)
 
-        var s = projectStatementWithLiteralStream.map(
+        var s = projectStatementWithEntityStream.map(
                 (key, value) -> {
 
                     //value of operation
@@ -54,29 +54,55 @@ public class ProjectStatementToLiteral {
 
                     //get subject, object and property ids
                     var subjectId = value.getStatement().getSubjectId();
-                    var objectId = value.getStatement().getObjectId();
                     var propertyId = value.getStatement().getPropertyId();
+                    var language = value.getStatement().getObject().getLanguage();
+                    var appellation = value.getStatement().getObject().getAppellation();
+                    var langString = value.getStatement().getObject().getLangString();
+                    var place = value.getStatement().getObject().getPlace();
+                    var timePrimitive = value.getStatement().getObject().getTimePrimitive();
+                    var dimension = value.getStatement().getObject().getDimension();
+                    var cell = value.getStatement().getObject().getCell();
+                    var digital = value.getStatement().getObject().getDigital();
+                    var turtle = "";
 
-                    // add the normal triple
+                    // add the language triple
+                    if (language != null) {
+                        var lng = "";
+                        if(language.getNotes() != null) {
+                            lng = language.getNotes();
+                        }
+                        else lng = language.getPkLanguage();
+                        //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1112> "Italian"^^<http://www.w3.org/2001/XMLSchema#string> .
+                        turtle = "<"+ GEOVISTORY_RESOURCE.getUrl() +subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> \""+lng+"\"^^<"+ XSD_STRING.getUrl() +"> .";
+                    }
+                    else if (appellation != null) {
+                        //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "Foo"^^<http://www.w3.org/2001/XMLSchema#string> .
+                        turtle = "<"+ GEOVISTORY_RESOURCE.getUrl() +subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> \""+appellation.getString()+"\"^^<"+ XSD_STRING.getUrl() +"> .";
+                    }
+                    else if (langString != null) {
+                        var lng = "";
+                        lng = getLanguageFromId(langString.getFkLanguage());
+                        if (lng == null) lng = ""+langString.getFkLanguage();
+                        //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "Bar"@it .
+                        turtle = "<"+GEOVISTORY_RESOURCE.getUrl()+subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> \""+langString.getString()+"\"@"+lng+" .";
+                    }
+                    else if (place != null) {
+                        var wkb = place.getGeoPoint().getWkb();
+                        var result = GeoUtils.bytesToPoint(java.util.Base64.getDecoder().decode(wkb));
+
+                        //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "<http://www.opengis.net/def/crs/EPSG/0/4326>POINT(2.348611 48.853333)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+                        turtle = "<"+GEOVISTORY_RESOURCE.getUrl()+subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> \"<"+EPSG_4326.getUrl()+"\">POINT("+ result.getX() +" "+ result.getY() +")^^<"+ OPENGIS_WKT.getUrl() +"> .";
+                    }
+                    else if (timePrimitive != null) { //TODO write code according to awaited specs from Jonas
+
+                    }
                     var k = ProjectRdfKey.newBuilder()
                             .setProjectId(value.getProjectId())
-                            .setTurtle("<http://geovistory.org/resource/"+subjectId+"> <https://ontome.net/ontology/p"+propertyId+"> <http://geovistory.org/resource/"+objectId+">")
+                            .setTurtle(turtle)
                             .build();
 
                     // create a stream of key-value pairs
                     return KeyValue.pair(k, v);
-                }
-        ).flatMapValues(
-                (v) -> {
-                    List<ProjectRdfValue> result = new LinkedList<>();
-
-                    // add the inverse triple
-                    var v_i = ProjectRdfValue.newBuilder()
-                            .setOperation(v.getOperation() == Operation.delete ? Operation.delete : Operation.insert)
-                            .build();
-                    result.add(v_i);
-
-                    return result;
                 }
         );
 
@@ -89,7 +115,6 @@ public class ProjectStatementToLiteral {
         return new ProjectRdfReturnValue(builder, s);
 
     }
-
 
     public enum output {
         TOPICS;
