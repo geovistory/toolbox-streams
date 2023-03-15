@@ -16,12 +16,13 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ProjectRdfTest {
+class ProjectStatementToUriTest {
 
-    private static final String SCHEMA_REGISTRY_SCOPE = ProjectRdfTest.class.getName();
+    private static final String SCHEMA_REGISTRY_SCOPE = ProjectStatementToUriTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
     private TestInputTopic<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityTopic;
+    private TestInputTopic<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteralTopic;
     private TestOutputTopic<ProjectRdfKey, ProjectRdfValue> outputTopic;
 
     @BeforeEach
@@ -239,5 +240,4 @@ class ProjectRdfTest {
 
         assertThat(expectedList.equals(outRecordsList)).isTrue();
     }
-
 }

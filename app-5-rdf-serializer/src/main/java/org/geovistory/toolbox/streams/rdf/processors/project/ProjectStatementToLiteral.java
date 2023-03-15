@@ -8,8 +8,11 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
+import org.geovistory.toolbox.streams.lib.TimeUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
+
+import java.util.Collection;
 
 import static org.geovistory.toolbox.streams.lib.CommonUrls.*;
 import static org.geovistory.toolbox.streams.lib.Utils.getLanguageFromId;
@@ -55,6 +58,7 @@ public class ProjectStatementToLiteral {
                     //get subject, object and property ids
                     var subjectId = value.getStatement().getSubjectId();
                     var propertyId = value.getStatement().getPropertyId();
+                    var objectId = value.getStatement().getObjectId();
                     var language = value.getStatement().getObject().getLanguage();
                     var appellation = value.getStatement().getObject().getAppellation();
                     var langString = value.getStatement().getObject().getLangString();
@@ -64,6 +68,11 @@ public class ProjectStatementToLiteral {
                     var cell = value.getStatement().getObject().getCell();
                     var digital = value.getStatement().getObject().getDigital();
                     var turtle = "";
+                    String[] tsTurtle = new String[9] ;
+                    var julianUri = "<https://d-nb.info/gnd/4318310-4>";
+                    var gregorianUri = "<http://www.opengis.net/def/uom/ISO-8601/0/Gregorian>";
+                    var calendarSystemUri = "";
+                    var julianDay = timePrimitive.getJulianDay();
 
                     // add the language triple
                     if (language != null) {
@@ -93,7 +102,30 @@ public class ProjectStatementToLiteral {
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "<http://www.opengis.net/def/crs/EPSG/0/4326>POINT(2.348611 48.853333)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
                         turtle = "<"+GEOVISTORY_RESOURCE.getUrl()+subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> \"<"+EPSG_4326.getUrl()+"\">POINT("+ result.getX() +" "+ result.getY() +")^^<"+ OPENGIS_WKT.getUrl() +"> .";
                     }
-                    else if (timePrimitive != null) { //TODO write code according to awaited specs from Jonas
+                    else if (timePrimitive != null) {
+                        var julianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.julian);
+                        var gregorianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.gregorian);
+                        var y = "";
+                        var m = "";
+                        var d = "";
+
+                        if (timePrimitive.getCalendar() == "julian") {
+                            calendarSystemUri = julianUri;
+                            y =  ""; //todo extract year, month and day
+                        }
+                        else calendarSystemUri = gregorianUri;
+
+
+                        tsTurtle[0] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
+                        tsTurtle[1] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"i> <"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts>";
+                        tsTurtle[2] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> a <http://www.w3.org/2006/time#DateTimeDescription>";
+
+                        tsTurtle[3] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#hasTRS> <"+ calendarSystemUri +">";
+                        tsTurtle[4] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#day> \"---01\"^^<http://www.w3.org/2006/time#generalDay>";
+                        tsTurtle[5] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#month> \"--01\"^^<http://www.w3.org/2006/time#generalMonth>";
+                        tsTurtle[6] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#year> \"-1559\"^^<http://www.w3.org/2006/time#generalYear>";
+                        tsTurtle[7] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
+                        tsTurtle[8] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
 
                     }
                     var k = ProjectRdfKey.newBuilder()
