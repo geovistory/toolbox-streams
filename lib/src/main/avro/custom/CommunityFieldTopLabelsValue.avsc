@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "CommunityFieldTopLabelsValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "target_labels",
+      "type": {
+        "type": "array",
+        "items": "string"
+      }
+    },
+    {
+      "name": "property_label_id",
+      "type": "org.geovistory.toolbox.streams.avro.CommunityPropertyLabelKey"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "TopTimePrimitives",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "time_primitives",
+      "type": {
+        "type": "array",
+        "items": "org.geovistory.toolbox.streams.avro.TimePrimitive"
+      },
+      "default": []
+    }
+  ]
+}

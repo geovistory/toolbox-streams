@@ -8,6 +8,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 
@@ -70,7 +71,14 @@ public class CommunityClassLabel {
                         .withValueSerde(avroSerdes.CommunityClassLabelValue())
         );
 
-        var communityClassLabelStream = communityClassLabelTable.toStream(Named.as("ktable-to-stream-community_class_label"));
+        var communityClassLabelStream = communityClassLabelTable
+                .toStream(Named.as("ktable-to-stream-community_class_label"))
+                .transform(new IdenticalRecordsFilterSupplier<>(
+                        "community_class_label_identical_records_filter",
+                        avroSerdes.OntomeClassLabelKey(),
+                        avroSerdes.CommunityClassLabelValue()
+                ));
+
         communityClassLabelStream.to(
                 output.TOPICS.community_class_label,
                 Produced.with(avroSerdes.OntomeClassLabelKey(), avroSerdes.CommunityClassLabelValue())

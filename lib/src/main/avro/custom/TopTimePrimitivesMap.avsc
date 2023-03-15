@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "TopTimePrimitivesMap",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values": "org.geovistory.toolbox.streams.avro.TopTimePrimitives"
+      },
+      "default": {}
+    }
+  ]
+}

@@ -135,7 +135,8 @@ public class ProjectClass {
                         },
                         Named.as(inner.TOPICS.project_classes_flat));
 
-        projectClassFlat.to(output.TOPICS.project_class,
+        projectClassFlat
+                .to(output.TOPICS.project_class,
                 Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
                         .withName(output.TOPICS.project_class + "-producer")
         );

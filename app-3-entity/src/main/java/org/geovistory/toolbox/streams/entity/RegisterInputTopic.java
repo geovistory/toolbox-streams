@@ -1,6 +1,7 @@
 package org.geovistory.toolbox.streams.entity;
 
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
@@ -36,16 +37,6 @@ public class RegisterInputTopic extends InputTopicHelper {
 
 
 
-
-    public KTable<ProjectClassKey, ProjectEntityLabelConfigValue> projectEntityLabelConfigTable() {
-        return getTable(
-                Env.INSTANCE.TOPIC_PROJECT_ENTITY_LABEL_CONFIG,
-                avroSerdes.ProjectClassKey(),
-                avroSerdes.ProjectEntityLabelConfigValue()
-        );
-    }
-
-
     public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
         return getTable(
                 Env.INSTANCE.TOPIC_PROJECT_ENTITY,
@@ -62,39 +53,19 @@ public class RegisterInputTopic extends InputTopicHelper {
         );
     }
 
-    public KTable<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelTable() {
-        return getTable(
-                Env.INSTANCE.TOPIC_PROJECT_CLASS_LABEL,
-                avroSerdes.ProjectClassLabelKey(),
-                avroSerdes.ProjectClassLabelValue()
-        );
-    }
-
-    public KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopStatementsTable() {
-        return getTable(
-                Env.INSTANCE.TOPIC_PROJECT_TOP_STATEMENTS,
+    public KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsStream() {
+        return getStream(
+                Env.INSTANCE.TOPIC_PROJECT_TOP_OUTGOING_STATEMENTS,
                 avroSerdes.ProjectTopStatementsKey(),
                 avroSerdes.ProjectTopStatementsValue()
         );
     }
 
-    public KTable<ProjectFieldLabelKey, ProjectFieldLabelValue> projectPropertyLabelTable() {
+    public KTable<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelTable() {
         return getTable(
-                Env.INSTANCE.TOPIC_PROJECT_PROPERTY_LABEL,
-                avroSerdes.ProjectPropertyLabelKey(),
-                avroSerdes.ProjectPropertyLabelValue()
-        );
-    }
-
-
-
-
-
-    public KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable() {
-        return getTable(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG,
-                avroSerdes.CommunityEntityLabelConfigKey(),
-                avroSerdes.CommunityEntityLabelConfigValue()
+                Env.INSTANCE.TOPIC_PROJECT_CLASS_LABEL,
+                avroSerdes.ProjectClassLabelKey(),
+                avroSerdes.ProjectClassLabelValue()
         );
     }
 
@@ -114,6 +85,13 @@ public class RegisterInputTopic extends InputTopicHelper {
                 avroSerdes.CommunityTopStatementsValue()
         );
     }
+    public KStream<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsStream() {
+        return getStream(
+                Env.INSTANCE.TOPIC_COMMUNITY_TOP_OUTGOING_STATEMENTS,
+                avroSerdes.CommunityTopStatementsKey(),
+                avroSerdes.CommunityTopStatementsValue()
+        );
+    }
 
 
     public KTable<OntomeClassLabelKey, CommunityClassLabelValue> communityClassLabelTable() {
@@ -124,23 +102,6 @@ public class RegisterInputTopic extends InputTopicHelper {
         );
     }
 
-    public KTable<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopStatementsTable() {
-        return getTable(
-                Env.INSTANCE.TOPIC_COMMUNITY_TOP_STATEMENTS,
-                avroSerdes.CommunityTopStatementsKey(),
-                avroSerdes.CommunityTopStatementsValue()
-        );
-    }
-
-
-
-    public KTable<CommunityPropertyLabelKey, CommunityPropertyLabelValue> communityPropertyLabelTable() {
-        return getTable(
-                Env.INSTANCE.TOPIC_COMMUNITY_PROPERTY_LABEL,
-                avroSerdes.CommunityPropertyLabelKey(),
-                avroSerdes.CommunityPropertyLabelValue()
-        );
-    }
 
 
 }

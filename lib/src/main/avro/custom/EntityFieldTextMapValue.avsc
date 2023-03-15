@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "EntityFieldTextMapValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "fields",
+      "type": {
+        "type": "map",
+        "values" : "org.geovistory.toolbox.streams.avro.FieldLabelWithTopLabelsValue",
+        "default": {}
+      },
+      "default": {}
+    }
+  ]
+}
