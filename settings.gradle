@@ -18,6 +18,7 @@ include(
         'app-3-entity',
         'app-3-fulltext',
         'app-4-entity-preview',
+        'app-5-rdf-serializer',
         'lib',
         'utilities'
 )

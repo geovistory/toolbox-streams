@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "ProjectRdfValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of project rdf",
+  "fields": [
+    {
+      "name": "operation",
+      "type": {
+        "type": "enum",
+        "name": "Operation",
+        "symbols": [
+          "insert",
+          "delete"
+        ]
+      }
+    }
+  ]
+}
