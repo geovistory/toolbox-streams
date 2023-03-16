@@ -57,15 +57,21 @@ public class CommunityEntityFulltext {
                             l.add(s.getSubjectLabel());
                         }
                     }
-                    return CommunityFieldTopLabelsValue.newBuilder()
+
+                    var res = CommunityFieldTopLabelsValue.newBuilder()
                             .setTargetLabels(l)
-                            .setPropertyLabelId(CommunityPropertyLabelKey.newBuilder()
-                                    .setClassId(value.getClassId())
-                                    .setPropertyId(value.getPropertyId())
-                                    .setIsOutgoing(value.getIsOutgoing())
-                                    .setLanguageId(I.EN.get())
-                                    .build())
                             .build();
+
+                    if (value.getClassId() != null) {
+                        res.setPropertyLabelId(CommunityPropertyLabelKey.newBuilder()
+                                .setClassId(value.getClassId())
+                                .setPropertyId(value.getPropertyId())
+                                .setIsOutgoing(value.getIsOutgoing())
+                                .setLanguageId(I.EN.get())
+                                .build());
+                    }
+
+                    return res;
                 },
                 Materialized.<CommunityTopStatementsKey, CommunityFieldTopLabelsValue, KeyValueStore<Bytes, byte[]>>as(n2)
                         .withKeySerde(avroSerdes.CommunityTopStatementsKey())

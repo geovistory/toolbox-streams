@@ -54,15 +54,20 @@ public class ProjectEntityFulltext {
                             l.add(s.getSubjectLabel());
                         }
                     }
-                    return ProjectFieldTopLabelsValue.newBuilder()
+                    var res = ProjectFieldTopLabelsValue.newBuilder()
                             .setTargetLabels(l)
-                            .setPropertyLabelId(ProjectFieldLabelKey.newBuilder()
-                                    .setProjectId(value.getProjectId())
-                                    .setClassId(value.getClassId())
-                                    .setPropertyId(value.getPropertyId())
-                                    .setIsOutgoing(value.getIsOutgoing())
-                                    .build())
                             .build();
+
+                    if (value.getClassId() != null) {
+                        res.setPropertyLabelId(ProjectFieldLabelKey.newBuilder()
+                                .setProjectId(value.getProjectId())
+                                .setClassId(value.getClassId())
+                                .setPropertyId(value.getPropertyId())
+                                .setIsOutgoing(value.getIsOutgoing())
+                                .build());
+                    }
+
+                    return res;
                 },
                 Materialized.<ProjectTopStatementsKey, ProjectFieldTopLabelsValue, KeyValueStore<Bytes, byte[]>>as("project_field_top_labels_store")
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
@@ -142,7 +147,6 @@ public class ProjectEntityFulltext {
 
 
     }
-
 
 
     public enum output {

@@ -12,7 +12,11 @@
     },
     {
       "name": "property_label_id",
-      "type": "org.geovistory.toolbox.streams.avro.CommunityPropertyLabelKey"
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.CommunityPropertyLabelKey"
+      ],
+      "default": null
     }
   ]
 }
