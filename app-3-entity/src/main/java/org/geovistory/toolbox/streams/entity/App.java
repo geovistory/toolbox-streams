@@ -6,6 +6,7 @@ package org.geovistory.toolbox.streams.entity;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Named;
 import org.geovistory.toolbox.streams.avro.HasTypePropertyKey;
 import org.geovistory.toolbox.streams.avro.HasTypePropertyValue;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
@@ -101,11 +102,10 @@ class App {
 
         // register input topics as KStreams
         var projectClassLabelTable = inputTopic.projectClassLabelTable();
-        var projectTopOutgoingStatementsStream = inputTopic.projectTopOutgoingStatementsStream();
 
         // add sub-topology ProjectEntityTimeSpan
         ProjectEntityTimeSpan.addProcessors(builder,
-                projectTopOutgoingStatementsStream
+                projectTopOutgoingStatementsTable.toStream(Named.as("project_top_outgoing_statements_table_to_stream"))
         );
 
         // add sub-topology ProjectEntityType
@@ -142,12 +142,11 @@ class App {
 
         // register input topics as KStreams
         var communityClassLabelTable = inputTopic.communityClassLabelTable();
-        var communityTopOutgoingStatementsStream = inputTopic.communityTopOutgoingStatementsStream();
 
 
         // add sub-topology CommunityEntityTimeSpan
         CommunityEntityTimeSpan.addProcessors(builder,
-                communityTopOutgoingStatementsStream,
+                communityTopOutgoingStatementsTable.toStream(Named.as("community_top_outgoing_statements_table_to_stream")),
                 nameSupplement
         );
 

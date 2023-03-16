@@ -4,6 +4,9 @@ package org.geovistory.toolbox.streams.fulltext;/*
 
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.geovistory.toolbox.streams.fulltext.processors.community.CommunityEntityFulltext;
+import org.geovistory.toolbox.streams.fulltext.processors.project.ProjectEntityFulltext;
+import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
 import static org.geovistory.toolbox.streams.fulltext.BuildProperties.getDockerImageTag;
@@ -17,7 +20,7 @@ class App {
         StreamsBuilder builder = new StreamsBuilder();
 
         // add processors of sub-topologies
-        //addSubTopologies(builder);
+        addSubTopologies(builder);
 
         // build the topology
         var topology = builder.build();
@@ -25,7 +28,7 @@ class App {
         System.out.println(topology.describe());
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-        // createTopics();
+        createTopics();
 
         // print configuration information
         System.out.println("Starting Toolbox Streams Fulltext org.geovistory.toolbox.streams.fulltext.App " + getDockerImageTag() + ":" + getDockerTagSuffix());
@@ -43,19 +46,13 @@ class App {
         streams.start();
     }
 
-/*
+
     private static void addSubTopologies(StreamsBuilder builder) {
         var inputTopic = new org.geovistory.toolbox.streams.fulltext.RegisterInputTopic(builder);
 
-        addProjectView(
-                builder,
-                inputTopic
-        );
-        addCommunityToolboxView(
-                builder,
-                inputTopic,
-                "toolbox"
-        );
+        addProjectView(inputTopic);
+
+        addCommunityToolboxView(inputTopic, "toolbox");
 
     }
 
@@ -71,38 +68,36 @@ class App {
     }
 
     private static void addProjectView(
-            StreamsBuilder builder,
             org.geovistory.toolbox.streams.fulltext.RegisterInputTopic inputTopic) {
         // register input topics as KTables
-        var projectEntityLabelConfigTable = inputTopic.projectEntityLabelConfigTable();
-        var projectTopOutgoingStatementsTable = inputTopic.projectTopOutgoingStatementsTable();
+        var projectEntityWithLabelConfigTable = inputTopic.projectEntityWithLabelConfigTable();
+        var projectTopStatementsTable = inputTopic.projectTopStatementsTable();
         var projectPropertyLabelTable = inputTopic.projectPropertyLabelTable();
 
 
         // add sub-topology ProjectEntityFulltext
-        ProjectEntityFulltext.addProcessors(builder,
-                projectTopOutgoingStatementsTable,
-                projectEntityLabelConfigTable,
+        ProjectEntityFulltext.addProcessors(
+                projectEntityWithLabelConfigTable,
+                projectTopStatementsTable,
                 projectPropertyLabelTable
         );
 
     }
 
     private static void addCommunityToolboxView(
-            StreamsBuilder builder,
             org.geovistory.toolbox.streams.fulltext.RegisterInputTopic inputTopic,
             String nameSupplement
     ) {
         // register input topics as KTables
-        var communityEntityLabelConfigTable = inputTopic.communityEntityLabelConfigTable();
-        var communityTopOutgoingStatementsTable = inputTopic.communityTopOutgoingStatementsTable();
+        var communityEntityWithLabelConfigTable = inputTopic.communityEntityWithLabelConfigTable();
+        var communityTopStatementsTable = inputTopic.communityTopStatementsTable();
         var communityPropertyLabelTable = inputTopic.communityPropertyLabelTable();
 
 
         // add sub-topology CommunityEntityFulltext
-        CommunityEntityFulltext.addProcessors(builder,
-                communityTopOutgoingStatementsTable,
-                communityEntityLabelConfigTable,
+        CommunityEntityFulltext.addProcessors(
+                communityEntityWithLabelConfigTable,
+                communityTopStatementsTable,
                 communityPropertyLabelTable,
                 nameSupplement
         );
@@ -128,7 +123,6 @@ class App {
                 CommunityEntityFulltext.getOutputTopicName(nameSupplement)
         }, outputTopicPartitions, outputTopicReplicationFactor);
     }
-*/
 
 
 }
