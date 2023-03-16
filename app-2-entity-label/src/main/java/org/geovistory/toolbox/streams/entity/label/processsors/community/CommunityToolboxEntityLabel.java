@@ -194,10 +194,12 @@ public class CommunityToolboxEntityLabel {
                         .withName(output.TOPICS.community_toolbox_entity_label + "-producer")
         );
 
-        communityEntityWithConfigStream.to(output.TOPICS.community_toolbox_entity_with_label_config,
-                Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityWithConfigValue())
-                        .withName(output.TOPICS.community_toolbox_entity_with_label_config + "-producer")
-        );
+        communityEntityWithConfigStream
+                .mapValues((readOnlyKey, value) -> value.getLabelConfig())
+                .to(output.TOPICS.community_toolbox_entity_with_label_config,
+                        Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityLabelConfigValue())
+                                .withName(output.TOPICS.community_toolbox_entity_with_label_config + "-producer")
+                );
 
         return new CommunityEntityLabelReturnValue(builder, aggregatedStream);
 

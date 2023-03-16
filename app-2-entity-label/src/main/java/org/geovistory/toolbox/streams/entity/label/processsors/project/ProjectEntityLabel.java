@@ -199,10 +199,12 @@ public class ProjectEntityLabel {
                         .withName(output.TOPICS.project_entity_label + "-producer")
         );
 
-        projectEntityWithConfigStream.to(output.TOPICS.project_entity_with_label_config,
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityWithConfigValue())
-                        .withName(output.TOPICS.project_entity_with_label_config + "-producer")
-        );
+        projectEntityWithConfigStream
+                .mapValues((readOnlyKey, value) -> value.getLabelConfig())
+                .to(output.TOPICS.project_entity_with_label_config,
+                        Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelConfigValue())
+                                .withName(output.TOPICS.project_entity_with_label_config + "-producer")
+                );
 
         return new ProjectEntityLabelReturnValue(builder, aggregatedStream);
 
