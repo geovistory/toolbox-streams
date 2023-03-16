@@ -7,6 +7,7 @@ import org.geovistory.toolbox.streams.avro.FieldLabelWithTopLabelsValue;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.TreeMap;
 
 public class FullTextFactory {
     /**
@@ -19,7 +20,7 @@ public class FullTextFactory {
         var strings = new ArrayList<String>();
 
         var labelConfig = v.getLabelConfig();
-        var fieldsMap = v.getFields();
+        var fieldsMap = new TreeMap<>(v.getFields());
 
         // first process fields from label config
         if (labelConfig != null) {

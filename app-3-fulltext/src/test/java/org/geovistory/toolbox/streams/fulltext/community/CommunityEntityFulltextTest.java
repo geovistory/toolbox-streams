@@ -296,7 +296,7 @@ class CommunityEntityFulltextTest {
                 .setLanguageId(I.EN.get())
                 .build();
         var vL2 = CommunityPropertyLabelValue.newBuilder()
-                .setIsOutgoing(false)
+                .setIsOutgoing(true)
                 .setPropertyId(propIdSecondPart)
                 .setLabel("participates in")
                 .build();
@@ -339,14 +339,13 @@ class CommunityEntityFulltextTest {
                 .setLanguageId(I.EN.get())
                 .build();
         vL1 = CommunityPropertyLabelValue.newBuilder()
-                .setIsOutgoing(false)
+                .setIsOutgoing(true)
                 .setPropertyId(9876543)
                 .setLabel("has fun with")
                 .build();
         communityPropertyLabelTopic.pipeInput(kL1, vL1);
 
         var k3 = CommunityTopStatementsKey.newBuilder()
-
                 .setEntityId(entityId)
                 .setIsOutgoing(true)
                 .setPropertyId(propIdSecondPart)
