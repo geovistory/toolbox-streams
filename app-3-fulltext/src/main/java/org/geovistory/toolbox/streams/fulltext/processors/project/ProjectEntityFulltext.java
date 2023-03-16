@@ -48,9 +48,9 @@ public class ProjectEntityFulltext {
                     var l = new LinkedList<String>();
                     for (var i : value.getStatements()) {
                         var s = i.getStatement();
-                        if (readOnlyKey.getIsOutgoing()) {
+                        if (readOnlyKey.getIsOutgoing() && s.getObjectLabel() != null) {
                             l.add(s.getObjectLabel());
-                        } else {
+                        } else if (s.getSubjectLabel() != null) {
                             l.add(s.getSubjectLabel());
                         }
                     }
