@@ -79,10 +79,10 @@ public class ProjectEntityFulltext {
                 projectPropertyLabelTable,
                 ProjectFieldTopLabelsValue::getPropertyLabelId,
                 (value1, value2) -> FieldLabelWithTopLabelsValue.newBuilder()
-                        .setPropertyId(value2.getPropertyId())
-                        .setIsOutgoing(value2.getIsOutgoing())
-                        .setPropertyLabel(value2.getLabel())
+                        .setPropertyId(value1.getPropertyLabelId().getPropertyId())
+                        .setIsOutgoing(value1.getPropertyLabelId().getIsOutgoing())
                         .setTargetLabels(value1.getTargetLabels())
+                        .setPropertyLabel(value2 != null ? value2.getLabel() != null ? value2.getLabel() : "" : "")
                         .build(),
                 TableJoined.as("project_entity_fulltext_join_prop_label" + "-fk-left-join"),
                 Materialized.<ProjectTopStatementsKey, FieldLabelWithTopLabelsValue, KeyValueStore<Bytes, byte[]>>as("project_entity_fulltext_join_prop_label")
