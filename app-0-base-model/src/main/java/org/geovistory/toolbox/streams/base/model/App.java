@@ -15,8 +15,11 @@ class App {
 
         StreamsBuilder builder = new StreamsBuilder();
 
+        var ontomeClass = new OntomeClassProjected(builder);
+        var ontomeProperty = new OntomePropertyProjected(builder);
+
         // add processors of sub-topologies
-        addSubTopologies(builder);
+        addSubTopologies(builder, ontomeClass, ontomeProperty);
 
         // build the topology
         var topology = builder.build();
@@ -24,7 +27,7 @@ class App {
         System.out.println(topology.describe());
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-        createTopics();
+        createTopics(ontomeClass, ontomeProperty);
 
         // print configuration information
         System.out.println("Starting Toolbox Streams App v" + BuildProperties.getDockerTagSuffix());
@@ -42,11 +45,14 @@ class App {
         streams.start();
     }
 
-    private static void addSubTopologies(StreamsBuilder builder) {
+    private static void addSubTopologies(
+            StreamsBuilder builder,
+            OntomeClassProjected ontomeClass,
+            OntomePropertyProjected ontomeProperty) {
 
-        // register input topics as KTables
-        var ontomeClass = new OntomeClassProjected(builder);
-        var ontomeProperty =   new OntomePropertyProjected(builder);
+        ontomeClass.addSink();
+        ontomeProperty.addSink();
+
 
         // add sub-topology OntomeClassMetadata
         OntomeClassMetadata.addProcessors(builder,
@@ -66,7 +72,10 @@ class App {
         );
     }
 
-    private static void createTopics() {
+    private static void createTopics(
+            OntomeClassProjected ontomeClass,
+            OntomePropertyProjected ontomeProperty
+    ) {
         var admin = new Admin();
 
         var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
@@ -77,7 +86,10 @@ class App {
                 OntomeClassLabel.output.TOPICS.ontome_class_label,
                 OntomePropertyLabel.output.TOPICS.ontome_property_label,
                 OntomeClassMetadata.output.TOPICS.ontome_class_metadata,
-                HasTypeProperty.output.TOPICS.has_type_property
+                HasTypeProperty.output.TOPICS.has_type_property,
+                ontomeClass.outputTopicName,
+                ontomeProperty.outputTopicName
+
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
