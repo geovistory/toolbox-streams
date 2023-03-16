@@ -69,10 +69,11 @@ public class ProjectEntityLabel {
         );
 
         // 3
-        var projectEntityLabelSlots = projectEntityWithConfigTable
+        var projectEntityWithConfigStream = projectEntityWithConfigTable
                 .toStream(
                         Named.as(inner.TOPICS.project_entity_with_label_config + "-to-stream")
-                )
+                );
+        var projectEntityLabelSlots = projectEntityWithConfigStream
                 .flatMap(
                         (key, value) -> {
                             List<KeyValue<ProjectEntityLabelPartKey, ProjectEntityLabelPartValue>> result = new LinkedList<>();
@@ -198,6 +199,11 @@ public class ProjectEntityLabel {
                         .withName(output.TOPICS.project_entity_label + "-producer")
         );
 
+        projectEntityWithConfigStream.to(output.TOPICS.project_entity_with_label_config,
+                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityWithConfigValue())
+                        .withName(output.TOPICS.project_entity_with_label_config + "-producer")
+        );
+
         return new ProjectEntityLabelReturnValue(builder, aggregatedStream);
 
     }
@@ -223,6 +229,7 @@ public class ProjectEntityLabel {
     public enum output {
         TOPICS;
         public final String project_entity_label = Utils.tsPrefixed("project_entity_label");
+        public final String project_entity_with_label_config = Utils.tsPrefixed("project_entity_with_label_config");
     }
 
     public static class EntityLabelsAggregatorSupplier implements TransformerSupplier<
