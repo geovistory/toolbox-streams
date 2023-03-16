@@ -2,9 +2,9 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.base.config.I;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.base.config.I;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,9 +13,9 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ProjecPropertyLabelTest {
+class ProjectPropertyLabelTest {
 
-    private static final String SCHEMA_REGISTRY_SCOPE = ProjecPropertyLabelTest.class.getName();
+    private static final String SCHEMA_REGISTRY_SCOPE = ProjectPropertyLabelTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
 

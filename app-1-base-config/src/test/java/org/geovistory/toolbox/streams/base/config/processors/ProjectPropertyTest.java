@@ -101,6 +101,55 @@ class ProjectPropertyTest {
         assertThat(outRecords.get(projectPropertyKey).getDeleted$1()).isFalse();
     }
 
+    @Test
+    void testTwoProjectsProfilesAndTwoApiPropertySize() {
+        // add first project profile rel
+        var pKey = ProjectProfileKey.newBuilder()
+                .setProjectId(1)
+                .setProfileId(97)
+                .build();
+        var pVal = ProjectProfileValue.newBuilder()
+                .setProjectId(1)
+                .setProfileId(97)
+                .setDeleted$1(false)
+                .build();
+        projectProfilesTopic.pipeInput(pKey, pVal);
+
+        // add second project profile rel
+        pKey.setProfileId(98);
+        pVal.setProfileId(98);
+        projectProfilesTopic.pipeInput(pKey, pVal);
+
+        // add first property in profile 97
+        var apKey = new OntomePropertyKey(44);
+        var apVal = OntomePropertyValue.newBuilder()
+                .setDfhAncestorProperties(new ArrayList<>())
+                .setDfhParentProperties(new ArrayList<>())
+                .setDfhFkProfile(97)
+                .setDfhPropertyDomain(33)
+                .setDfhPkProperty(44)
+                .setDfhPropertyRange(55)
+                .build();
+        ontomePropertyTopic.pipeInput(apKey, apVal);
+
+        // add first property in profile 98
+        apVal.setDfhFkProfile(98);
+        ontomePropertyTopic.pipeInput(apKey, apVal);
+
+        // add second property
+        apKey.setPropertyId(45);
+        apVal.setDfhPkProperty(45);
+        ontomePropertyTopic.pipeInput(apKey, apVal);
+        // add third property
+        apKey.setPropertyId(46);
+        apVal.setDfhFkProfile(98);
+        apVal.setDfhPkProperty(46);
+        ontomePropertyTopic.pipeInput(apKey, apVal);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readRecordsToList();
+        assertThat(outRecords).hasSize(3);
+    }
 
     @Test
     void testTwoProjectsProfilesAndTwoApiProperty() {
