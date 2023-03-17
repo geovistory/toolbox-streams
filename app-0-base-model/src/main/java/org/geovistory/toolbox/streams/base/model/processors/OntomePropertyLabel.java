@@ -12,6 +12,7 @@ import org.geovistory.toolbox.streams.avro.OntomePropertyLabelValue;
 import org.geovistory.toolbox.streams.avro.OntomePropertyValue;
 import org.geovistory.toolbox.streams.base.model.DbTopicNames;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.util.LinkedList;
@@ -62,7 +63,12 @@ public class OntomePropertyLabel {
                             return result;
                         },
                         Named.as("kstream-flatmap-ontome-property-to-ontome-property-label")
-                );
+                )
+                .transform(new IdenticalRecordsFilterSupplier<>(
+                                "ontome_property_label_suppress_duplicates",
+                                avroSerdes.OntomePropertyLabelKey(),
+                                avroSerdes.OntomePropertyLabelValue()),
+                        Named.as("ontome_property_label_suppress_duplicates"));
 
         /* SINK PROCESSORS */
         ontomePropertyLabel

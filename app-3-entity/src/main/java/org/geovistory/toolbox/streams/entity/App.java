@@ -6,12 +6,19 @@ package org.geovistory.toolbox.streams.entity;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Named;
 import org.geovistory.toolbox.streams.avro.HasTypePropertyKey;
 import org.geovistory.toolbox.streams.avro.HasTypePropertyValue;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassMetadataValue;
-import org.geovistory.toolbox.streams.entity.processors.community.*;
-import org.geovistory.toolbox.streams.entity.processors.project.*;
+import org.geovistory.toolbox.streams.entity.processors.community.CommunityEntityClassLabel;
+import org.geovistory.toolbox.streams.entity.processors.community.CommunityEntityClassMetadata;
+import org.geovistory.toolbox.streams.entity.processors.community.CommunityEntityTimeSpan;
+import org.geovistory.toolbox.streams.entity.processors.community.CommunityEntityType;
+import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityClassLabel;
+import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityClassMetadata;
+import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityTimeSpan;
+import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityType;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
@@ -90,31 +97,15 @@ class App {
             KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
     ) {
         // register input topics as KTables
-        var projectEntityLabelConfigTable = inputTopic.projectEntityLabelConfigTable();
         var projectEntityTable = inputTopic.projectEntityTable();
         var projectTopOutgoingStatementsTable = inputTopic.projectTopOutgoingStatementsTable();
 
         // register input topics as KStreams
         var projectClassLabelTable = inputTopic.projectClassLabelTable();
-        var projectTopStatementsTable = inputTopic.projectTopStatementsTable();
-        var projectPropertyLabelTable = inputTopic.projectPropertyLabelTable();
-
-        // add sub-topology ProjectEntityTopStatements
-        var projectEntityTopStatements = ProjectEntityTopStatements.addProcessors(builder,
-                projectEntityTable,
-                projectTopStatementsTable,
-                projectPropertyLabelTable
-        );
-
-        // add sub-topology ProjectEntityFulltext
-        ProjectEntityFulltext.addProcessors(builder,
-                projectEntityTopStatements.projectEntityTopStatementTable(),
-                projectEntityLabelConfigTable
-        );
 
         // add sub-topology ProjectEntityTimeSpan
         ProjectEntityTimeSpan.addProcessors(builder,
-                projectEntityTopStatements.projectEntityTopStatementStream()
+                projectTopOutgoingStatementsTable.toStream(Named.as("project_top_outgoing_statements_table_to_stream"))
         );
 
         // add sub-topology ProjectEntityType
@@ -145,35 +136,17 @@ class App {
             KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
     ) {
         // register input topics as KTables
-        var communityEntityLabelConfigTable = inputTopic.communityEntityLabelConfigTable();
         var communityEntityTable = inputTopic.communityEntityTable();
         var communityTopOutgoingStatementsTable = inputTopic.communityTopOutgoingStatementsTable();
 
 
         // register input topics as KStreams
         var communityClassLabelTable = inputTopic.communityClassLabelTable();
-        var communityTopStatementsTable = inputTopic.communityTopStatementsTable();
-        var communityPropertyLabelTable = inputTopic.communityPropertyLabelTable();
 
-
-        // add sub-topology CommunityEntityTopStatements
-        var communityEntityTopStatements = CommunityEntityTopStatements.addProcessors(builder,
-                communityEntityTable,
-                communityTopStatementsTable,
-                communityPropertyLabelTable,
-                nameSupplement
-        );
-
-        // add sub-topology CommunityEntityFulltext
-        CommunityEntityFulltext.addProcessors(builder,
-                communityEntityTopStatements.communityEntityTopStatementTable(),
-                communityEntityLabelConfigTable,
-                nameSupplement
-        );
 
         // add sub-topology CommunityEntityTimeSpan
         CommunityEntityTimeSpan.addProcessors(builder,
-                communityEntityTopStatements.communityEntityTopStatementStream(),
+                communityTopOutgoingStatementsTable.toStream(Named.as("community_top_outgoing_statements_table_to_stream")),
                 nameSupplement
         );
 
@@ -205,11 +178,9 @@ class App {
         // create output topics (with number of partitions and delete.policy=compact)
         admin.createOrConfigureTopics(new String[]{
                 ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
-                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext,
                 ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
                 ProjectEntityClassMetadata.output.TOPICS.project_entity_class_metadata,
                 ProjectEntityType.output.TOPICS.project_entity_type,
-                ProjectEntityTopStatements.output.TOPICS.project_entity_top_statements,
         }, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
@@ -222,11 +193,9 @@ class App {
         // create output topics (with number of partitions and delete.policy=compact)
         admin.createOrConfigureTopics(new String[]{
                 CommunityEntityClassLabel.getOutputTopicName(nameSupplement),
-                CommunityEntityFulltext.getOutputTopicName(nameSupplement),
                 CommunityEntityTimeSpan.getOutputTopicName(nameSupplement),
                 CommunityEntityClassMetadata.getOutputTopicName(nameSupplement),
                 CommunityEntityType.getOutputTopicName(nameSupplement),
-                CommunityEntityTopStatements.getOutputTopicName(nameSupplement),
         }, outputTopicPartitions, outputTopicReplicationFactor);
     }
 

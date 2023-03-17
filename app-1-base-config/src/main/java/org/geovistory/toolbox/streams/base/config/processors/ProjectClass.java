@@ -12,6 +12,7 @@ import org.geovistory.toolbox.streams.base.config.Env;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.util.LinkedList;
@@ -133,12 +134,19 @@ public class ProjectClass {
                                 return new LinkedList<>();
                             }
                         },
-                        Named.as(inner.TOPICS.project_classes_flat));
+                        Named.as(inner.TOPICS.project_classes_flat))
+                .transform(new IdenticalRecordsFilterSupplier<>(
+                                "project_class_suppress_duplicates",
+                                avroSerdes.ProjectClassKey(),
+                                avroSerdes.ProjectClassValue()
+                        ),
+                        Named.as("project_class_suppress_duplicates"));
 
-        projectClassFlat.to(output.TOPICS.project_class,
-                Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
-                        .withName(output.TOPICS.project_class + "-producer")
-        );
+        projectClassFlat
+                .to(output.TOPICS.project_class,
+                        Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
+                                .withName(output.TOPICS.project_class + "-producer")
+                );
 
         return new ProjectClassReturnValue(builder, projectClassFlat);
 

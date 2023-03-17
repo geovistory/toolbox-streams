@@ -90,6 +90,12 @@ public class ProjectTopIncomingStatements {
                     aggValue.setPropertyId(aggKey.getPropertyId());
                     List<ProjectStatementValue> statements = aggValue.getStatements();
                     var newStatements = TopStatementAdder.addStatement(statements, newValue, false);
+                    // extract class id of entity from new statements, if there are, or from old, if there are
+                    var stmts = newStatements.size() > 0 ? newStatements : aggValue.getStatements();
+                    if (stmts.size() > 0) {
+                        var firstStatement = newStatements.get(0).getStatement();
+                        aggValue.setClassId(firstStatement.getObjectClassId());
+                    }
                     aggValue.setStatements(newStatements);
                     return aggValue;
                 },
@@ -100,8 +106,8 @@ public class ProjectTopIncomingStatements {
 
 
         var aggregatedStream = aggregatedTable.toStream(
-                        Named.as(inner.TOPICS.project_top_incoming_statements_aggregate + "-to-stream")
-                );
+                Named.as(inner.TOPICS.project_top_incoming_statements_aggregate + "-to-stream")
+        );
 
         /* SINK PROCESSORS */
 

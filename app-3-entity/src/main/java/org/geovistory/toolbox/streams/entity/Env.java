@@ -21,16 +21,6 @@ public enum Env {
             "TS_TOPIC_HAS_TYPE_PROPERTY",
             "TS_TOPIC_HAS_TYPE_PROPERTY");
 
-    // Name of topic PROJECT_ENTITY_LABEL_CONFIG
-    public final String TOPIC_PROJECT_ENTITY_LABEL_CONFIG = parseEnv(
-            "TS_TOPIC_PROJECT_ENTITY_LABEL_CONFIG",
-            "TS_TOPIC_PROJECT_ENTITY_LABEL_CONFIG");
-
-    // Name of topic PROJECT_TOP_STATEMENTS
-    public final String TOPIC_PROJECT_TOP_STATEMENTS = parseEnv(
-            "TS_TOPIC_PROJECT_TOP_STATEMENTS",
-            "TS_TOPIC_PROJECT_TOP_STATEMENTS");
-
     // Name of topic PROJECT_ENTITY_TABLE
     public final String TOPIC_PROJECT_ENTITY = parseEnv(
             "TS_TOPIC_PROJECT_ENTITY",
@@ -46,24 +36,6 @@ public enum Env {
             "TS_TOPIC_PROJECT_CLASS_LABEL",
             "TS_TOPIC_PROJECT_CLASS_LABEL");
 
-    // Name of topic project_property_label
-    public final String TOPIC_PROJECT_PROPERTY_LABEL = parseEnv(
-            "TS_TOPIC_PROJECT_PROPERTY_LABEL",
-            "TS_TOPIC_PROJECT_PROPERTY_LABEL");
-
-
-
-
-
-    // Name of topic COMMUNITY_ENTITY_LABEL_CONFIG
-    public final String TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG = parseEnv(
-            "TS_TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG",
-            "TS_TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG");
-
-    // Name of topic COMMUNITY_TOP_STATEMENTS
-    public final String TOPIC_COMMUNITY_TOP_STATEMENTS = parseEnv(
-            "TS_TOPIC_COMMUNITY_TOP_STATEMENTS",
-            "TS_TOPIC_COMMUNITY_TOP_STATEMENTS");
 
     // Name of topic COMMUNITY_ENTITY_TABLE
     public final String TOPIC_COMMUNITY_ENTITY = parseEnv(
@@ -79,11 +51,6 @@ public enum Env {
     public final String TOPIC_COMMUNITY_CLASS_LABEL = parseEnv(
             "TS_TOPIC_COMMUNITY_CLASS_LABEL",
             "TS_TOPIC_COMMUNITY_CLASS_LABEL");
-
-    // Name of topic COMMUNITY_PROPERTY_LABEL
-    public final String TOPIC_COMMUNITY_PROPERTY_LABEL = parseEnv(
-            "TS_TOPIC_COMMUNITY_PROPERTY_LABEL",
-            "TS_TOPIC_COMMUNITY_PROPERTY_LABEL");
 
 
     private String parseEnv(String envVar, String defaultVal) {

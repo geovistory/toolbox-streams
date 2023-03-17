@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "EntityFieldTextMapWithConfigValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "fields",
+      "type": {
+        "type": "map",
+        "values" : "org.geovistory.toolbox.streams.avro.FieldLabelWithTopLabelsValue",
+        "default": {}
+      },
+      "default": {}
+    },
+    {
+      "name": "label_config",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityLabelConfig"
+      ],
+      "default": null
+    }
+  ]
+}

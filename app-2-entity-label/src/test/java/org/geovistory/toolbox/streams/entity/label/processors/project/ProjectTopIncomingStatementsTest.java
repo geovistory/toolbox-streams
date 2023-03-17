@@ -86,9 +86,11 @@ class ProjectTopIncomingStatementsTest {
                 .setStatementId(3)
                 .setStatement(
                         StatementEnrichedValue.newBuilder()
-                                .setSubjectId(subjectId)
+                                .setSubjectClassId(7)
                                 .setPropertyId(propertyId)
                                 .setObjectId(objectId)
+                                .setObjectClassId(8)
+                                .setSubjectId(subjectId)
                                 .build()
                 )
                 .setOrdNumOfDomain(3)
@@ -120,6 +122,7 @@ class ProjectTopIncomingStatementsTest {
         var record = outRecords.get(resultKey);
         assertThat(record.getStatements().size()).isEqualTo(4);
         assertThat(record.getStatements().get(2).getOrdNumOfDomain()).isEqualTo(2);
+        assertThat(record.getClassId()).isEqualTo(8);
     }
 
 
