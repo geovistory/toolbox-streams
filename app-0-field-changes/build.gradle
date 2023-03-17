@@ -10,6 +10,8 @@ plugins {
 
     // Used to containerize the project
     id 'com.google.cloud.tools.jib' version '3.3.0'
+
+    id 'io.quarkus'
 }
 
 

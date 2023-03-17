@@ -18,9 +18,6 @@ dependencies {
     // Confluent Avro Serdes
     implementation group: 'io.confluent', name: 'kafka-streams-avro-serde', version: '7.3.0'
 
-    // Apicurio Avro Serdes
-    implementation group: 'io.apicurio', name: 'apicurio-registry-serdes-avro-serde', version: '2.3.1.Final'
-
     // Apache Commons CLI
     implementation 'commons-cli:commons-cli:1.5.0'
 

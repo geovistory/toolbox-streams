@@ -3,23 +3,33 @@
  */
 package org.geovistory.toolbox.streams.field.changes;
 
-import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
 import org.geovistory.toolbox.streams.field.changes.processors.ProjectFieldChange;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+
 import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerTagSuffix;
 
+@ApplicationScoped
 class App {
-    public static void main(String[] args) {
+
+    //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
+    @Produces
+    public Topology buildTopology() {
 
 
         StreamsBuilder builder = new StreamsBuilder();
 
         // add processors of sub-topologies
         addSubTopologies(builder);
+
+        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
+        createTopics();
 
         // get config
         var config = AppConfig.getConfig();
@@ -33,22 +43,10 @@ class App {
         // print topology
         System.out.println(topology.describe());
 
-        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-        createTopics();
 
-        // print configuration information
         System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
-        System.out.println("With config:");
 
-        // create the streams app
-        // noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, config);
-
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-
-        // start streaming!
-        streams.start();
+        return topology;
     }
 
     private static void addSubTopologies(StreamsBuilder builder) {

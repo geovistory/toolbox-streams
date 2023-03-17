@@ -2,8 +2,6 @@ package org.geovistory.toolbox.streams.utilities.consume;
 
 import dev.projects.project.Key;
 import dev.projects.project.Value;
-import io.apicurio.registry.serde.SerdeConfig;
-import io.apicurio.registry.serde.avro.AvroKafkaDeserializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,9 +28,6 @@ public class ConsumeAvroTopic {
         //Properties props = KafkaSeederConfig.getConsumerConfig(topicName);
         Properties config = new Properties();
 
-        // Configure the client with the URL of Apicurio Registry
-        config.putIfAbsent(SerdeConfig.REGISTRY_URL, AppConfig.INSTANCE.getApicurioRegistryUrl());
-
         // Configure Kafka settings
         config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, AppConfig.INSTANCE.getKafkaBootstrapServers());
         config.putIfAbsent(ConsumerConfig.GROUP_ID_CONFIG, "Consumer-7-" + topicName);
@@ -45,9 +40,6 @@ public class ConsumeAvroTopic {
 //                AvroKafkaDeserializer.class.getName());
                 Serdes.Integer().deserializer().getClass().getName());
 
-
-        config.putIfAbsent(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                AvroKafkaDeserializer.class.getName());
 
         try (KafkaConsumer<Key, Value> consumer = new KafkaConsumer
                 <>(config)) {
