@@ -103,17 +103,25 @@ public class ProjectStatementToLiteral {
                         turtle = "<"+GEOVISTORY_RESOURCE.getUrl()+subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> \"<"+EPSG_4326.getUrl()+"\">POINT("+ result.getX() +" "+ result.getY() +")^^<"+ OPENGIS_WKT.getUrl() +"> .";
                     }
                     else if (timePrimitive != null) {
-                        var julianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.julian);
-                        var gregorianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.gregorian);
+                        var julianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.julian).toString();
+                        var gregorianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.gregorian).toString();
+                        var ymd = "";
                         var y = "";
                         var m = "";
                         var d = "";
 
-                        if (timePrimitive.getCalendar() == "julian") {
+                        if (timePrimitive.getCalendar().equals("julian")) {
                             calendarSystemUri = julianUri;
-                            y =  ""; //todo extract year, month and day
+                            ymd = julianYMD;
                         }
-                        else calendarSystemUri = gregorianUri;
+                        else{
+                            calendarSystemUri = gregorianUri;
+                            ymd = gregorianYMD;
+                        }
+
+                        y =  ymd.substring(0, 4);
+                        m =  ymd.substring(4, 6);
+                        d =  ymd.substring(6, 8);
 
 
                         tsTurtle[0] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
@@ -121,9 +129,9 @@ public class ProjectStatementToLiteral {
                         tsTurtle[2] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> a <http://www.w3.org/2006/time#DateTimeDescription>";
 
                         tsTurtle[3] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#hasTRS> <"+ calendarSystemUri +">";
-                        tsTurtle[4] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#day> \"---01\"^^<http://www.w3.org/2006/time#generalDay>";
-                        tsTurtle[5] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#month> \"--01\"^^<http://www.w3.org/2006/time#generalMonth>";
-                        tsTurtle[6] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#year> \"-1559\"^^<http://www.w3.org/2006/time#generalYear>";
+                        tsTurtle[4] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#day> \"---"+ d +"\"^^<http://www.w3.org/2006/time#generalDay>";
+                        tsTurtle[5] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#month> \"--"+ m +"\"^^<http://www.w3.org/2006/time#generalMonth>";
+                        tsTurtle[6] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#year> \""+ y +"\"^^<http://www.w3.org/2006/time#generalYear>";
                         tsTurtle[7] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
                         tsTurtle[8] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
 
