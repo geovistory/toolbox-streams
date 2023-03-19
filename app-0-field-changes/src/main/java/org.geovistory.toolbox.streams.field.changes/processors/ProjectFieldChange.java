@@ -1,44 +1,53 @@
 package org.geovistory.toolbox.streams.field.changes.processors;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.FieldChangeJoin;
 import org.geovistory.toolbox.streams.avro.FieldChangeKey;
 import org.geovistory.toolbox.streams.avro.FieldChangeValue;
+import org.geovistory.toolbox.streams.field.changes.AvroSerdes;
 import org.geovistory.toolbox.streams.field.changes.DbTopicNames;
 import org.geovistory.toolbox.streams.field.changes.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.time.Instant;
 
-
+@ApplicationScoped
 public class ProjectFieldChange {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    String inPrefix;
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    public String outPrefix;
+
+    public ProjectFieldChange(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
+        addProcessors(
                 registerInputTopic.infStatementTable(),
                 registerInputTopic.proInfoProjRelTable()
-        ).builder().build();
+        );
+
     }
 
-    public static ProjectFieldChangeReturnValue addProcessors(
-            StreamsBuilder builder,
+    public void addProcessors(
             KTable<dev.information.statement.Key, dev.information.statement.Value> statementTable,
             KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2)
@@ -134,22 +143,22 @@ public class ProjectFieldChange {
 
         /* SINK PROCESSORS */
 
-        projectFieldChangeStream.to(output.TOPICS.project_field_change,
+        projectFieldChangeStream.to(outputTopicProjectFieldChange(),
                 Produced.with(avroSerdes.FieldChangeKey(), avroSerdes.FieldChangeValue())
-                        .withName(output.TOPICS.project_field_change + "-producer")
+                        .withName(outputTopicProjectFieldChange() + "-producer")
         );
 
-        return new ProjectFieldChangeReturnValue(builder, projectFieldChangeStream);
 
     }
 
 
-    public enum input {
-        TOPICS;
-        public final String pro_info_proj_rel = DbTopicNames.pro_info_proj_rel.getName();
-        public final String inf_statement = DbTopicNames.inf_statement.getName();
+    public String inputTopicProInfoProjRel() {
+        return Utils.prefixedIn(inPrefix, DbTopicNames.pro_info_proj_rel.getValue());
     }
 
+    public String inputTopicInfStatement() {
+        return Utils.prefixedIn(inPrefix, DbTopicNames.inf_statement.getValue());
+    }
 
     public enum inner {
         TOPICS;
@@ -157,9 +166,8 @@ public class ProjectFieldChange {
 
     }
 
-    public enum output {
-        TOPICS;
-        public final String project_field_change = Utils.tsPrefixed("project_field_change");
+    public String outputTopicProjectFieldChange() {
+        return Utils.prefixedOut(outPrefix, "project_field_change");
     }
 
 }

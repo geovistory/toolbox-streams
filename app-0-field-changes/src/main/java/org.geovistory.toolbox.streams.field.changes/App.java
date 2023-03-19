@@ -3,79 +3,70 @@
  */
 package org.geovistory.toolbox.streams.field.changes;
 
-import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.field.changes.processors.ProjectFieldChange;
-import org.geovistory.toolbox.streams.lib.Admin;
-import org.geovistory.toolbox.streams.lib.AppConfig;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
-
-import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerTagSuffix;
+import javax.inject.Inject;
 
 @ApplicationScoped
-class App {
+public class App {
+
+    @ConfigProperty(name = "ts.output.topic.partitions")
+    int outputTopicPartitions;
+    @ConfigProperty(name = "ts.output.topic.replication.factor")
+    short outputTopicReplicationFactor;
+
+    @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
+    String bootstrapServers;
+
+    @Inject
+    ProjectFieldChange projectFieldChange;
+
+    @Inject
+    BuilderSingleton builderSingleton;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
 
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
     @Produces
     public Topology buildTopology() {
 
 
-        StreamsBuilder builder = new StreamsBuilder();
-
         // add processors of sub-topologies
-        addSubTopologies(builder);
+        addSubTopologies();
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();
 
-        // get config
-        var config = AppConfig.getConfig();
-
-        // print config
-        AppConfig.INSTANCE.printConfigs();
-
         // build the topology
-        var topology = builder.build(config);
-
-        // print topology
-        System.out.println(topology.describe());
-
-
-        System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
-
-        return topology;
+        return builderSingleton.builder.build();
     }
 
-    private static void addSubTopologies(StreamsBuilder builder) {
-        var inputTopics = new RegisterInputTopic(builder);
+    private void addSubTopologies() {
 
         // register input topics as KTables
-        var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
-        var infStatementTable = inputTopics.infStatementTable();
+        var proInfoProjRelTable = registerInputTopic.proInfoProjRelTable();
+        var infStatementTable = registerInputTopic.infStatementTable();
 
         // add sub-topology ProjectFieldChange
-        ProjectFieldChange.addProcessors(builder,
+        projectFieldChange.addProcessors(
                 infStatementTable,
                 proInfoProjRelTable
         );
 
     }
 
-    private static void createTopics() {
-        var admin = new Admin();
-
-        var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
-        var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
-
+    private void createTopics() {
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectFieldChange.output.TOPICS.project_field_change
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        new Admin(bootstrapServers)
+                .createOrConfigureTopics(new String[]{
+                        projectFieldChange.outputTopicProjectFieldChange()
+                }, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
-
 
 }

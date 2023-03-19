@@ -23,6 +23,7 @@ dependencies {
 
     // Use JUnit Jupiter for testing.
     testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.quarkus:quarkus-junit5-mockito'
 
     // Use assertj for testing.
     testImplementation 'org.assertj:assertj-core:3.15.0'
@@ -37,6 +38,8 @@ dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
     implementation 'io.quarkus:quarkus-kafka-streams'
     implementation 'io.quarkus:quarkus-container-image-jib'
+    implementation 'io.quarkus:quarkus-arc'
+
 
     // see https://quarkus.io/guides/kafka-schema-registry-avro#confluent
     implementation 'io.quarkus:quarkus-confluent-registry-avro'
@@ -51,4 +54,8 @@ dependencies {
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+test {
+    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
 }
