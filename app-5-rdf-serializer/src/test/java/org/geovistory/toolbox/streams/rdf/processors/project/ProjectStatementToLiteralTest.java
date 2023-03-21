@@ -6,16 +6,13 @@ import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.rdf.Env;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,7 +63,6 @@ class ProjectStatementToLiteralTest {
      */
     @Test
     void testLanguageOutputIsNotEmpty() {
-
         var projectId = 567;
         var statementId = 345;
         var subjectId = "i1761647";
@@ -74,12 +70,6 @@ class ProjectStatementToLiteralTest {
         var propertyId = 1112;
         var languageNotes = "italian";
         var pkLanguage = "it";
-        var appellationString = "foo";
-        var langStringString = "Bar";
-        var langStringFkLanguage = 19703;
-        var placeWkb = "AQEAACDmEAAA9DRgkPTJAkB9zAcEOm1IQA==";
-        var placeSrid = 4326;
-
 
         var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
         var v = ProjectStatementValue.newBuilder()
@@ -111,20 +101,12 @@ class ProjectStatementToLiteralTest {
      */
     @Test
     void testAppellationOutputIsNotEmpty() {
-
         var projectId = 567;
         var statementId = 345;
         var subjectId = "i1761647";
         var objectId = "i2255949";
         var propertyId = 1112;
-        var languageNotes = "italian";
-        var pkLanguage = "it";
         var appellationString = "foo";
-        var langStringString = "Bar";
-        var langStringFkLanguage = 19703;
-        var placeWkb = "AQEAACDmEAAA9DRgkPTJAkB9zAcEOm1IQA==";
-        var placeSrid = 4326;
-
 
         var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
         var v = ProjectStatementValue.newBuilder()
@@ -156,20 +138,13 @@ class ProjectStatementToLiteralTest {
      */
     @Test
     void testLangStringOutputIsNotEmpty() {
-
         var projectId = 567;
         var statementId = 345;
         var subjectId = "i1761647";
         var objectId = "i2255949";
         var propertyId = 1112;
-        var languageNotes = "italian";
-        var pkLanguage = "it";
-        var appellationString = "foo";
         var langStringString = "Bar";
         var langStringFkLanguage = 19703;
-        var placeWkb = "AQEAACDmEAAA9DRgkPTJAkB9zAcEOm1IQA==";
-        var placeSrid = 4326;
-
 
         var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
         var v = ProjectStatementValue.newBuilder()
@@ -201,18 +176,12 @@ class ProjectStatementToLiteralTest {
      * The goal of this test is to check if the output is not empty for the place
      */
     @Test
-    void testPlaceOutputIsNotEmpty() throws UnsupportedEncodingException {
-
+    void testPlaceOutputIsNotEmpty() {
         var projectId = 567;
         var statementId = 345;
         var subjectId = "i1761647";
         var objectId = "i2255949";
         var propertyId = 1112;
-        var languageNotes = "italian";
-        var pkLanguage = "it";
-        var appellationString = "foo";
-        var langStringString = "Bar";
-        var langStringFkLanguage = 19703;
         var placeWkb = "AQEAACDmEAAA9DRgkPTJAkB9zAcEOm1IQA==";
         var placeSrid = 4326;
 
@@ -231,8 +200,8 @@ class ProjectStatementToLiteralTest {
                                         .setPlace(Place.newBuilder()
                                                 .setFkClass(2)
                                                 .setGeoPoint(Geography.newBuilder()
-                                                        .setWkb(ByteBuffer.wrap(placeWkb.getBytes("UTF-8")))
-                                                        .setSrid(4326)
+                                                        .setWkb(ByteBuffer.wrap(placeWkb.getBytes(StandardCharsets.UTF_8)))
+                                                        .setSrid(placeSrid)
                                                         .build())
                                                 .build()
                                         ).build()
@@ -245,4 +214,473 @@ class ProjectStatementToLiteralTest {
         assertThat(outputTopic.isEmpty()).isFalse();
     }
 
+    /**
+     * The goal of this test is to check if the output is not empty for the timePrimitive
+     */
+    @Test
+    void testTimePrimitiveOutputIsNotEmpty() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 71;
+        var duration = "1 year";
+        var julianDay = 2290483;
+        var calendarType = "julian";
+
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setTimePrimitive(TimePrimitive.newBuilder()
+                                            .setFkClass(0)
+                                            .setPkEntity(0)
+                                            .setJulianDay(julianDay)
+                                            .setDuration(duration)
+                                            .setCalendar(calendarType)
+                                            .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+    }
+
+    /**
+     * The goal of this test is to check if the output is not empty for the dimension
+     */
+    @Test
+    void testDimensionOutputIsNotEmpty() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 40;
+        var dimFkMeasurementUnit = 880899;
+        var dimNumericValue = 10;
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setDimension(Dimension.newBuilder()
+                                                .setFkClass(0)
+                                                .setPkEntity(0)
+                                                .setNumericValue(dimNumericValue)
+                                                .setFkMeasurementUnit(dimFkMeasurementUnit)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+    }
+
+    /**
+     * The goal of this test is to check if the language output has the correct size (should be equals to 1)
+     */
+    @Test
+    void testSizeOfLanguageOutput() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 1112;
+        var languageNotes = "italian";
+        var pkLanguage = "it";
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setLanguage(Language.newBuilder()
+                                                .setNotes(languageNotes)
+                                                .setPkLanguage(pkLanguage)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+    }
+
+    /**
+     * The goal of this test is to check if the appellation output has the correct size (should be equals to 1)
+     */
+    @Test
+    void testSizeOfAppellationOutput() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 1112;
+        var appellationString = "foo";
+
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setAppellation(Appellation.newBuilder()
+                                                .setFkClass(0)
+                                                .setString(appellationString)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+    }
+
+    /**
+     * The goal of this test is to check if the langString output has the correct size (should be equals to 1)
+     */
+    @Test
+    void testSizeOfLangStringOutput() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 1112;
+        var langStringString = "Bar";
+        var langStringFkLanguage = 19703;
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setLangString(LangString.newBuilder()
+                                                .setFkClass(0)
+                                                .setString(langStringString)
+                                                .setFkLanguage(langStringFkLanguage)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+    }
+
+    /**
+     * The goal of this test is to check if the place output has the correct size (should be equals to 1)
+     */
+    @Test
+    void testSizeOfPlaceOutput() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 1112;
+        var placeWkb = "AQEAACDmEAAA9DRgkPTJAkB9zAcEOm1IQA==";
+        var placeSrid = 4326;
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setPlace(Place.newBuilder()
+                                                .setFkClass(2)
+                                                .setGeoPoint(Geography.newBuilder()
+                                                        .setWkb(ByteBuffer.wrap(placeWkb.getBytes(StandardCharsets.UTF_8)))
+                                                        .setSrid(placeSrid)
+                                                        .build())
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+    }
+
+    /**
+     * The goal of this test is to check if the timePrimitive output has the correct size (should be equals to 9)
+     */
+    @Test
+    void testSizeOfTimePrimitiveOutput() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 71;
+        var duration = "1 year";
+        var julianDay = 2290483;
+        var calendarType = "julian";
+
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setTimePrimitive(TimePrimitive.newBuilder()
+                                                .setFkClass(0)
+                                                .setPkEntity(0)
+                                                .setJulianDay(julianDay)
+                                                .setDuration(duration)
+                                                .setCalendar(calendarType)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(9);
+    }
+
+    /**
+     * The goal of this test is to check if the dimension output has the correct size (should be equals to 5)
+     */
+    @Test
+    void testSizeOfDimensionOutput() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 40;
+        var dimFkMeasurementUnit = 880899;
+        var dimNumericValue = 10;
+
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setDimension(Dimension.newBuilder()
+                                                .setFkClass(0)
+                                                .setPkEntity(0)
+                                                .setNumericValue(dimNumericValue)
+                                                .setFkMeasurementUnit(dimFkMeasurementUnit)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(5);
+    }
+
+    /**
+     * The goal of this test is to check if the operation value (insert or delete) is correctly set in the output topic
+     */
+    @Test
+    void testLanguageOperationValue() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 1112;
+        var languageNotes = "Italian";
+        var pkLanguage = "it";
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setLanguage(Language.newBuilder()
+                                                .setNotes(languageNotes)
+                                                .setPkLanguage(pkLanguage)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
+
+        var expectedKey = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1112> \"Italian\"^^<http://www.w3.org/2001/XMLSchema#string> .")
+                .build();
+
+        var record = outRecords.get(expectedKey);
+        assertThat(record.getOperation()).isEqualTo(Operation.insert);
+
+        var v2 = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setLanguage(Language.newBuilder()
+                                                .setNotes(languageNotes)
+                                                .setPkLanguage(pkLanguage)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(true)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v2);
+        outRecords = outputTopic.readKeyValuesToMap();
+
+        record = outRecords.get(expectedKey);
+        assertThat(record.getOperation()).isEqualTo(Operation.delete);
+    }
+
+    /**
+     * The goal of this test is to check if the operation value (insert or delete) is correctly set in the output topic
+     */
+    @Test
+    void testAppellationOperationValue() {
+        var projectId = 567;
+        var statementId = 345;
+        var subjectId = "i1761647";
+        var objectId = "i2255949";
+        var propertyId = 1113;
+        var appellationString = "Foo";
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setAppellation(Appellation.newBuilder()
+                                                .setFkClass(0)
+                                                .setString(appellationString)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        var outRecords = outputTopic.readKeyValuesToMap();
+
+        var expectedKey = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> \"Foo\"^^<http://www.w3.org/2001/XMLSchema#string> .")
+                .build();
+
+        var record = outRecords.get(expectedKey);
+        assertThat(record.getOperation()).isEqualTo(Operation.insert);
+
+        var v2 = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .setAppellation(Appellation.newBuilder()
+                                                .setFkClass(0)
+                                                .setString(appellationString)
+                                                .build()
+                                        ).build()
+                                ).build()
+                )
+                .setDeleted$1(true)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v2);
+        outRecords = outputTopic.readKeyValuesToMap();
+
+        record = outRecords.get(expectedKey);
+        assertThat(record.getOperation()).isEqualTo(Operation.delete);
+    }
 }

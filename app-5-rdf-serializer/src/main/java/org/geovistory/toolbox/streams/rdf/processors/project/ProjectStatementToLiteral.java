@@ -12,7 +12,7 @@ import org.geovistory.toolbox.streams.lib.TimeUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
 
-import java.util.Collection;
+import java.util.*;
 
 import static org.geovistory.toolbox.streams.lib.CommonUrls.*;
 import static org.geovistory.toolbox.streams.lib.Utils.getLanguageFromId;
@@ -46,8 +46,9 @@ public class ProjectStatementToLiteral {
         /* STREAM PROCESSORS */
         // 2)
 
-        var s = projectStatementWithEntityStream.map(
+        var s = projectStatementWithEntityStream.flatMap(
                 (key, value) -> {
+                    List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
 
                     //value of operation
                     var v = ProjectRdfValue.newBuilder()
@@ -68,11 +69,11 @@ public class ProjectStatementToLiteral {
                     var cell = value.getStatement().getObject().getCell();
                     var digital = value.getStatement().getObject().getDigital();
                     var turtle = "";
-                    String[] tsTurtle = new String[9] ;
+                    ArrayList<String> timePrimitiveTurtle = new ArrayList<>();
+                    ArrayList<String> dimensionTurtle = new ArrayList<>();
                     var julianUri = "<https://d-nb.info/gnd/4318310-4>";
                     var gregorianUri = "<http://www.opengis.net/def/uom/ISO-8601/0/Gregorian>";
                     var calendarSystemUri = "";
-                    var julianDay = timePrimitive.getJulianDay();
 
                     // add the language triple
                     if (language != null) {
@@ -97,52 +98,105 @@ public class ProjectStatementToLiteral {
                     }
                     else if (place != null) {
                         var wkb = place.getGeoPoint().getWkb();
-                        var result = GeoUtils.bytesToPoint(java.util.Base64.getDecoder().decode(wkb));
+                        var point = GeoUtils.bytesToPoint(java.util.Base64.getDecoder().decode(wkb));
 
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "<http://www.opengis.net/def/crs/EPSG/0/4326>POINT(2.348611 48.853333)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
-                        turtle = "<"+GEOVISTORY_RESOURCE.getUrl()+subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> \"<"+EPSG_4326.getUrl()+"\">POINT("+ result.getX() +" "+ result.getY() +")^^<"+ OPENGIS_WKT.getUrl() +"> .";
+                        turtle = "<"+GEOVISTORY_RESOURCE.getUrl()+subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> \"<"+EPSG_4326.getUrl()+"\">POINT("+ point.getX() +" "+ point.getY() +")^^<"+ OPENGIS_WKT.getUrl() +"> .";
                     }
                     else if (timePrimitive != null) {
-                        var julianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.julian).toString();
-                        var gregorianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.gregorian).toString();
-                        var ymd = "";
-                        var y = "";
-                        var m = "";
-                        var d = "";
+                        var durationUnit = timePrimitive.getDuration();
+                        var julianDay = timePrimitive.getJulianDay();
+                        if (julianDay != null && durationUnit != null) {
+                            var julianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.julian).toString();
+                            var gregorianYMD = TimeUtils.getYearMonthDay(julianDay, TimeUtils.CalendarType.gregorian).toString();
+                            var ymd = "";
+                            var y = "";
+                            var m = "";
+                            var d = "";
 
-                        if (timePrimitive.getCalendar().equals("julian")) {
-                            calendarSystemUri = julianUri;
-                            ymd = julianYMD;
+                            var label = "";
+
+                            if (timePrimitive.getCalendar().equals("julian")) {
+                                calendarSystemUri = julianUri;
+                                ymd = julianYMD;
+                            } else {
+                                calendarSystemUri = gregorianUri;
+                                ymd = gregorianYMD;
+                            }
+
+                            y = ymd.substring(0, 4);
+                            m = ymd.substring(4, 6);
+                            d = ymd.substring(6, 8);
+
+                            switch (durationUnit) {
+                                case "1 year" -> {
+                                    durationUnit = "unitYear";
+                                    label = y;
+                                }
+                                case "1 month" -> {
+                                    durationUnit = "unitMonth";
+                                    label = y + "-" + m;
+                                }
+                                case "1 day" -> {
+                                    durationUnit = "unitDay";
+                                    label = y + "-" + m + "-" + d;
+                                }
+                            }
+
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "ts> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> <" + GEOVISTORY_RESOURCE.getUrl() + objectId + ">");
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "i> <" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "ts>");
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> a <http://www.w3.org/2006/time#DateTimeDescription>");
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <http://www.w3.org/2006/time#hasTRS> <" + calendarSystemUri + ">");
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <http://www.w3.org/2006/time#day> \"---" + d + "\"^^<http://www.w3.org/2006/time#generalDay>");
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <http://www.w3.org/2006/time#month> \"--" + m + "\"^^<http://www.w3.org/2006/time#generalMonth>");
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <http://www.w3.org/2006/time#year> \"-" + y + "\"^^<http://www.w3.org/2006/time#generalYear>");
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <http://www.w3.org/2006/time#hasTRS>> <http://www.w3.org/2006/time#" + durationUnit + ">");
+                            timePrimitiveTurtle.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <http://www.w3.org/2006/time#year> \"" + label + "\"^^<http://www.w3.org/2001/XMLSchema#string>");
                         }
-                        else{
-                            calendarSystemUri = gregorianUri;
-                            ymd = gregorianYMD;
-                        }
+                    }
 
-                        y =  ymd.substring(0, 4);
-                        m =  ymd.substring(4, 6);
-                        d =  ymd.substring(6, 8);
+                    else if (dimension != null) {
+                        var numericValue = dimension.getNumericValue();
+                        var fkMeasurementUnit = dimension.getFkMeasurementUnit();
 
-
-                        tsTurtle[0] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
-                        tsTurtle[1] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"i> <"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts>";
-                        tsTurtle[2] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> a <http://www.w3.org/2006/time#DateTimeDescription>";
-
-                        tsTurtle[3] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#hasTRS> <"+ calendarSystemUri +">";
-                        tsTurtle[4] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#day> \"---"+ d +"\"^^<http://www.w3.org/2006/time#generalDay>";
-                        tsTurtle[5] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#month> \"--"+ m +"\"^^<http://www.w3.org/2006/time#generalMonth>";
-                        tsTurtle[6] = "<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <http://www.w3.org/2006/time#year> \""+ y +"\"^^<http://www.w3.org/2006/time#generalYear>";
-                        tsTurtle[7] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
-                        tsTurtle[8] = "<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"ts> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">";
+                        dimensionTurtle.add("<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId +">");
+                        dimensionTurtle.add("<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"i> <"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +">");
+                        dimensionTurtle.add("<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <"+ ONTOME_PROPERTY.getUrl() +"78> \""+ numericValue +"\"^^<http://www.w3.org/2001/XMLSchema#decimal>");
+                        dimensionTurtle.add("<"+ GEOVISTORY_RESOURCE.getUrl()+objectId +"> <"+ ONTOME_PROPERTY.getUrl() +"79> <"+ GEOVISTORY_RESOURCE.getUrl()+fkMeasurementUnit +">");
+                        dimensionTurtle.add("<"+ GEOVISTORY_RESOURCE.getUrl()+fkMeasurementUnit +"> <"+ ONTOME_PROPERTY.getUrl() +"79i> <"+ GEOVISTORY_RESOURCE.getUrl()+subjectId +">");
 
                     }
-                    var k = ProjectRdfKey.newBuilder()
-                            .setProjectId(value.getProjectId())
-                            .setTurtle(turtle)
-                            .build();
+
+                    ProjectRdfKey k;
+                    if (timePrimitiveTurtle.size() != 0) {
+                        for (String item : timePrimitiveTurtle) {
+                            k = ProjectRdfKey.newBuilder()
+                                    .setProjectId(value.getProjectId())
+                                    .setTurtle(item)
+                                    .build();
+                            result.add(KeyValue.pair(k, v));
+                        }
+                    }
+                    else if (dimensionTurtle.size() != 0) {
+                        for (String item : dimensionTurtle) {
+                            k = ProjectRdfKey.newBuilder()
+                                    .setProjectId(value.getProjectId())
+                                    .setTurtle(item)
+                                    .build();
+                            result.add(KeyValue.pair(k, v));
+                        }
+                    }
+                    else {
+                        k = ProjectRdfKey.newBuilder()
+                                .setProjectId(value.getProjectId())
+                                .setTurtle(turtle)
+                                .build();
+                        result.add(KeyValue.pair(k, v));
+                    }
 
                     // create a stream of key-value pairs
-                    return KeyValue.pair(k, v);
+
+                    return result;
                 }
         );
 
