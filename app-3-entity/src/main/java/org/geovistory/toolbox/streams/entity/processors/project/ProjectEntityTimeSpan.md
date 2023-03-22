@@ -4,22 +4,30 @@ This topology aggregates entity time span.
 
 ```mermaid 
 flowchart TD  
-    1a-->2a-->2b  
+    1a-->2a-->3a-->4a-->4b  
     subgraph 1  
-        1a[project_entity_top_statements]  
+        1a[project_outgoing_top_statements]  
     end  
     subgraph __2  
-        2a([flatMapValues])  
-        2b[project_entity_time_span]  
+        2a([FlatMap])  
+    end  
+    subgraph __3  
+        3a([GroupBy])  
+    end  
+    subgraph __4  
+        4a([Aggregate])  
+        4b[project_entity_time_span]  
     end  
 
 ```
 
-| Step |                                     |
-|------|-------------------------------------|
-| 1    | input topic                         |
-| 2    | flatMap                             |
-|      | To topic `project_entity_time_span` |
+| Step |                                                                                 |
+|------|---------------------------------------------------------------------------------|
+| 1    | input topic                                                                     |
+| 2    | FlatMap: Map statements of time properties to time primitives, suppress others. |
+| 3    | GroupBy: Entity                                                                 |
+| 4    | Aggregate: To Time Span Value                                                   |
+|      | To topic `project_entity_time_span`                                             |
 
 ## Input Topics
 

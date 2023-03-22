@@ -1,0 +1,22 @@
+{
+  "type": "record",
+  "name": "ProjectFieldTopLabelsValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "target_labels",
+      "type": {
+        "type": "array",
+        "items": "string"
+      }
+    },
+    {
+      "name": "property_label_id",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.ProjectFieldLabelKey"
+      ],
+      "default": null
+    }
+  ]
+}

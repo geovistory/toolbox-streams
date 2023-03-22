@@ -245,8 +245,10 @@ class ProjectTopOutgoingStatementsTest {
                 .setStatement(
                         StatementEnrichedValue.newBuilder()
                                 .setSubjectId(subjectId)
+                                .setSubjectClassId(7)
                                 .setPropertyId(propertyId)
                                 .setObjectId(objectId)
+                                .setObjectClassId(8)
                                 .build()
                 )
                 .setOrdNumOfRange(3)
@@ -278,6 +280,7 @@ class ProjectTopOutgoingStatementsTest {
         var record = outRecords.get(resultKey);
         assertThat(record.getStatements().size()).isEqualTo(4);
         assertThat(record.getStatements().get(2).getOrdNumOfRange()).isEqualTo(2);
+        assertThat(record.getClassId()).isEqualTo(7);
     }
 
 

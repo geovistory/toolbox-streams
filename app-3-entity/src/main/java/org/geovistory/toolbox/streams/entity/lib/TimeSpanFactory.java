@@ -8,34 +8,20 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.JulianFields;
 
 public class TimeSpanFactory {
-    public static String[] keys = new String[]{"71_out", "72_out", "150_out", "151_out", "152_out", "153_out"};
-
 
     /**
      * creates TimeSpanValue for an entity
      *
-     * @param value, the ProjectEntityTopStatementsValue of the entity
+     * @param value, the TopTimePrimitivesMap of the entity
      * @return TimeSpanValue:
      * - firstSecond: Earliest julianDay found in all timePrimitives, multiplied by 12 * 60 * 60
      * - lastSecond: Latest second calculated for all TimePrimitives by adding the duration to the julianDay and multiplied by 12 * 60 * 60
      * - timeSpan: An aggregation of six properties: begin of begin, end of begin, begin of end, end of end, at some time within, ongoing throughout
      */
-    public static TimeSpanValue createTimeSpan(ProjectEntityTopStatementsValue value) {
+    public static TimeSpanValue createTimeSpan(TopTimePrimitivesMap value) {
         return new Parser().getTimeSpan(value);
     }
 
-    /**
-     * creates TimeSpanValue for an entity
-     *
-     * @param value, the CommunityEntityTopStatementsValue of the entity
-     * @return TimeSpanValue:
-     * - firstSecond: Earliest julianDay found in all timePrimitives, multiplied by 12 * 60 * 60
-     * - lastSecond: Latest second calculated for all TimePrimitives by adding the duration to the julianDay and multiplied by 12 * 60 * 60
-     * - timeSpan: An aggregation of six properties: begin of begin, end of begin, begin of end, end of end, at some time within, ongoing throughout
-     */
-    public static TimeSpanValue createTimeSpan(CommunityEntityTopStatementsValue value) {
-        return new Parser().getTimeSpan(value);
-    }
 
     private static class Parser {
         TimeSpan.Builder timeSpan = TimeSpan.newBuilder();
@@ -43,57 +29,17 @@ public class TimeSpanFactory {
         long lastSecond = Long.MIN_VALUE;
         boolean isEmpty = true;
 
-        public TimeSpanValue getTimeSpan(ProjectEntityTopStatementsValue value) {
-            for (var key : keys) {
-                var temporalStatements = value.getMap().get(key);
-                if (temporalStatements != null) {
-                    var statements = temporalStatements.getStatements();
-                    if (statements != null && statements.size() > 0) {
-                        for (var s : statements) {
-                            var tp = extractTimePrimitive(s);
-                            processTimePrimitive(key, tp);
-                        }
-                    }
+        public TimeSpanValue getTimeSpan(TopTimePrimitivesMap value) {
+            for (var record : value.getMap().entrySet()) {
+                var f = record.getValue();
+                for (var tp : f.getTimePrimitives()) {
+                    processTimePrimitive(f.getPropertyId(), tp);
                 }
+
             }
             return getTimeSpanValue();
         }
 
-        public TimeSpanValue getTimeSpan(CommunityEntityTopStatementsValue value) {
-            for (var key : keys) {
-                var temporalStatements = value.getMap().get(key);
-                if (temporalStatements != null) {
-                    var statements = temporalStatements.getStatements();
-                    if (statements != null && statements.size() > 0) {
-                        for (var s : statements) {
-                            var tp = extractTimePrimitive(s);
-                            processTimePrimitive(key, tp);
-                        }
-                    }
-                }
-            }
-            return getTimeSpanValue();
-        }
-
-        public static TimePrimitive extractTimePrimitive(CommunityStatementValue value) {
-            var a = value.getStatement();
-            if (a == null) return null;
-
-            var b = a.getObject();
-            if (b == null) return null;
-
-            return b.getTimePrimitive();
-        }
-
-        public static TimePrimitive extractTimePrimitive(ProjectStatementValue value) {
-            var a = value.getStatement();
-            if (a == null) return null;
-
-            var b = a.getObject();
-            if (b == null) return null;
-
-            return b.getTimePrimitive();
-        }
 
         private TimeSpanValue getTimeSpanValue() {
             if (isEmpty) return null;
@@ -105,7 +51,7 @@ public class TimeSpanFactory {
                     .build();
         }
 
-        private void processTimePrimitive(String key, TimePrimitive tp) {
+        private void processTimePrimitive(int key, TimePrimitive tp) {
             if (tp != null) {
                 isEmpty = false;
                 // create NewTimePrimitive
@@ -138,14 +84,14 @@ public class TimeSpanFactory {
                 .build();
     }
 
-    public static void setTimePrimitiveInTimeSpan(TimeSpan.Builder timeSpanBuilder, String key, NewTimePrimitive ntp) {
+    public static void setTimePrimitiveInTimeSpan(TimeSpan.Builder timeSpanBuilder, int key, NewTimePrimitive ntp) {
         switch (key) {
-            case "71_out" -> timeSpanBuilder.setP81(ntp);
-            case "72_out" -> timeSpanBuilder.setP82(ntp);
-            case "150_out" -> timeSpanBuilder.setP81a(ntp);
-            case "151_out" -> timeSpanBuilder.setP81b(ntp);
-            case "152_out" -> timeSpanBuilder.setP82a(ntp);
-            case "153_out" -> timeSpanBuilder.setP82b(ntp);
+            case 71 -> timeSpanBuilder.setP81(ntp);
+            case 72 -> timeSpanBuilder.setP82(ntp);
+            case 150 -> timeSpanBuilder.setP81a(ntp);
+            case 151 -> timeSpanBuilder.setP81b(ntp);
+            case 152 -> timeSpanBuilder.setP82a(ntp);
+            case 153 -> timeSpanBuilder.setP82b(ntp);
         }
     }
 
@@ -175,5 +121,9 @@ public class TimeSpanFactory {
         long newJulianDay = date.getLong(JulianFields.JULIAN_DAY);
 
         return TimeUtils.getJulianSecond(newJulianDay) - 1;
+    }
+
+    public static boolean isTimeProperty(int p) {
+        return p == 71 || p == 72 || p == 150 || p == 151 || p == 152 || p == 153;
     }
 }

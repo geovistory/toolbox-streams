@@ -28,26 +28,13 @@ class ProjectProfilesTest {
     @BeforeEach
     void setup() {
 
-      /*  String address = APICURIO_CONTAINER.getHost();
-        Integer port = APICURIO_CONTAINER.getFirstMappedPort();
-        String apicurioRegistryUrl = "http://" + address + ":" + port + "/apis/registry/v2";
-        AppConfig.INSTANCE.setApicurioRegistryUrl(apicurioRegistryUrl);
-        System.out.println("apicurioRegistryUrl " + apicurioRegistryUrl);
-*/
+
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
         AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-
-/*
-        // URL for Apicurio Registry connection (including basic auth parameters)
-        props.put(SerdeConfig.REGISTRY_URL, apicurioRegistryUrl);
-
-        // Specify using specific (generated) Avro schema classes
-        props.put(AvroKafkaSerdeConfig.USE_SPECIFIC_AVRO_READER, "true");
-*/
 
         Topology topology = ProjectProfiles.buildStandalone(new StreamsBuilder());
 

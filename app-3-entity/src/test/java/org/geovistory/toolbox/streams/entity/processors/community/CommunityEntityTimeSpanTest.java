@@ -3,13 +3,13 @@ package org.geovistory.toolbox.streams.entity.processors.community;
 
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.Env;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -20,7 +20,7 @@ class CommunityEntityTimeSpanTest {
     private static final String SCHEMA_REGISTRY_SCOPE = CommunityEntityTimeSpanTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<CommunityEntityKey, CommunityEntityTopStatementsValue> communityEntityTopStatementsTopic;
+    private TestInputTopic<CommunityTopStatementsKey,CommunityTopStatementsValue> communityTopOutgoingStatementsTopic;
 
     private TestOutputTopic<CommunityEntityKey, TimeSpanValue> outputTopic;
 
@@ -43,10 +43,10 @@ class CommunityEntityTimeSpanTest {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
-        communityEntityTopStatementsTopic = testDriver.createInputTopic(
-                CommunityEntityTopStatements.getOutputTopicName(nameSupplement),
-                avroSerdes.CommunityEntityKey().serializer(),
-                avroSerdes.CommunityEntityTopStatementsValue().serializer());
+        communityTopOutgoingStatementsTopic = testDriver.createInputTopic(
+                Env.INSTANCE.TOPIC_COMMUNITY_TOP_OUTGOING_STATEMENTS,
+                avroSerdes.CommunityTopStatementsKey().serializer(),
+                avroSerdes.CommunityTopStatementsValue().serializer());
 
 
         outputTopic = testDriver.createOutputTopic(
@@ -67,12 +67,17 @@ class CommunityEntityTimeSpanTest {
         long expectedFirstSec = 204139785600L;
         long expectedLastSec = 204139871999L;
 
-        var map = new HashMap<String, CommunityTopStatementsWithPropLabelValue>();
+
 
         int ongoingThroughout = 71;
-        var ongoingThroughoutStatements = CommunityTopStatementsWithPropLabelValue.newBuilder()
+        var k = CommunityTopStatementsKey.newBuilder()
+                .setEntityId(entityId)
+                .setPropertyId(ongoingThroughout)
+                .setIsOutgoing(true)
+                .build();
+        var v = CommunityTopStatementsValue.newBuilder()
                 .setClassId(classId).setPropertyId(ongoingThroughout)
-                .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("ongoingThroughout").setStatements(List.of(
+                .setEntityId(entityId).setIsOutgoing(true).setStatements(List.of(
                         CommunityStatementValue.newBuilder().setStatementId(1)
                                 .setAvgOrdNumOfDomain(1f)
                                 .setStatement(StatementEnrichedValue.newBuilder()
@@ -92,20 +97,14 @@ class CommunityEntityTimeSpanTest {
                 )).build();
 
 
-        map.put(ongoingThroughout + "_out", ongoingThroughoutStatements);
-
-        var entityTopStatements = CommunityEntityTopStatementsValue.newBuilder()
-                .setEntityId(entityId).setProjectCount(1).setClassId(classId).setMap(map).build();
-
-
-        var k = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
-        communityEntityTopStatementsTopic.pipeInput(k, entityTopStatements);
+        communityTopOutgoingStatementsTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
 
-        var record = outRecords.get(k);
+        var entityKey = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
+        var record = outRecords.get(entityKey);
 
         assertThat(record.getTimeSpan().getP81().getDuration()).isEqualTo("1 day");
         assertThat(record.getFirstSecond()).isEqualTo(expectedFirstSec);
@@ -118,11 +117,15 @@ class CommunityEntityTimeSpanTest {
         var entityId = "foo";
         var nonTemporalProperty = 1;
 
-        var map = new HashMap<String, CommunityTopStatementsWithPropLabelValue>();
+        var k = CommunityTopStatementsKey.newBuilder()
+                .setEntityId(entityId)
+                .setPropertyId(nonTemporalProperty)
+                .setIsOutgoing(true)
+                .build();
 
-        var nonTemporalStatements = CommunityTopStatementsWithPropLabelValue.newBuilder()
+        var v = CommunityTopStatementsValue.newBuilder()
                 .setClassId(classId).setPropertyId(nonTemporalProperty)
-                .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("nonTemporalProperty").setStatements(List.of(
+                .setEntityId(entityId).setIsOutgoing(true).setStatements(List.of(
                         CommunityStatementValue.newBuilder().setStatementId(1)
                                 .setAvgOrdNumOfDomain(1f)
                                 .setStatement(StatementEnrichedValue.newBuilder()
@@ -142,14 +145,7 @@ class CommunityEntityTimeSpanTest {
                 )).build();
 
 
-        map.put(nonTemporalProperty + "_out", nonTemporalStatements);
-
-        var entityTopStatements = CommunityEntityTopStatementsValue.newBuilder()
-                .setEntityId(entityId).setProjectCount(1).setClassId(classId).setMap(map).build();
-
-
-        var k = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
-        communityEntityTopStatementsTopic.pipeInput(k, entityTopStatements);
+        communityTopOutgoingStatementsTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isTrue();
     }

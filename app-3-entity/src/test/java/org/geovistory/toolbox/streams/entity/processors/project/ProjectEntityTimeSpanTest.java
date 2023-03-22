@@ -3,13 +3,13 @@ package org.geovistory.toolbox.streams.entity.processors.project;
 
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.Env;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -20,7 +20,7 @@ class ProjectEntityTimeSpanTest {
     private static final String SCHEMA_REGISTRY_SCOPE = ProjectEntityTimeSpanTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<ProjectEntityKey, ProjectEntityTopStatementsValue> projectEntityTopStatementsTopic;
+    private TestInputTopic<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsTopic;
 
     private TestOutputTopic<ProjectEntityKey, TimeSpanValue> outputTopic;
 
@@ -42,10 +42,10 @@ class ProjectEntityTimeSpanTest {
 
         var avroSerdes = new ConfluentAvroSerdes();
 
-        projectEntityTopStatementsTopic = testDriver.createInputTopic(
-                ProjectEntityTimeSpan.input.TOPICS.project_entity_top_statements,
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityTopStatementsValue().serializer());
+        projectTopOutgoingStatementsTopic = testDriver.createInputTopic(
+                Env.INSTANCE.TOPIC_PROJECT_TOP_OUTGOING_STATEMENTS,
+                avroSerdes.ProjectTopStatementsKey().serializer(),
+                avroSerdes.ProjectTopStatementsValue().serializer());
 
 
         outputTopic = testDriver.createOutputTopic(
@@ -67,12 +67,17 @@ class ProjectEntityTimeSpanTest {
         long expectedFirstSec = 204139785600L;
         long expectedLastSec = 204139871999L;
 
-        var map = new HashMap<String, ProjectTopStatementsWithPropLabelValue>();
 
         int ongoingThroughout = 71;
-        var ongoingThroughoutStatements = ProjectTopStatementsWithPropLabelValue.newBuilder()
+        var k = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId)
+                .setEntityId(entityId)
+                .setPropertyId(ongoingThroughout)
+                .setIsOutgoing(true)
+                .build();
+        var v = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(ongoingThroughout)
-                .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("ongoingThroughout").setStatements(List.of(
+                .setEntityId(entityId).setIsOutgoing(true).setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
                                 .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
@@ -92,20 +97,14 @@ class ProjectEntityTimeSpanTest {
                 )).build();
 
 
-        map.put(ongoingThroughout + "_out", ongoingThroughoutStatements);
-
-        var entityTopStatements = ProjectEntityTopStatementsValue.newBuilder()
-                .setEntityId(entityId).setProjectId(projectId).setClassId(classId).setMap(map).build();
-
-
-        var k = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
-        projectEntityTopStatementsTopic.pipeInput(k, entityTopStatements);
+        projectTopOutgoingStatementsTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
 
-        var record = outRecords.get(k);
+        var entityKey = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
+        var record = outRecords.get(entityKey);
 
         assertThat(record.getTimeSpan().getP81().getDuration()).isEqualTo("1 day");
         assertThat(record.getFirstSecond()).isEqualTo(expectedFirstSec);
@@ -119,11 +118,16 @@ class ProjectEntityTimeSpanTest {
         var entityId = "foo";
         var nonTemporalProperty = 1;
 
-        var map = new HashMap<String, ProjectTopStatementsWithPropLabelValue>();
+        var k = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId)
+                .setEntityId(entityId)
+                .setPropertyId(nonTemporalProperty)
+                .setIsOutgoing(true)
+                .build();
 
-        var nonTemporalStatements = ProjectTopStatementsWithPropLabelValue.newBuilder()
+        var v = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(nonTemporalProperty)
-                .setEntityId(entityId).setIsOutgoing(true).setPropertyLabel("nonTemporalProperty").setStatements(List.of(
+                .setEntityId(entityId).setIsOutgoing(true).setStatements(List.of(
                         ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
                                 .setOrdNumOfDomain(1)
                                 .setStatement(StatementEnrichedValue.newBuilder()
@@ -143,14 +147,7 @@ class ProjectEntityTimeSpanTest {
                 )).build();
 
 
-        map.put(nonTemporalProperty + "_out", nonTemporalStatements);
-
-        var entityTopStatements = ProjectEntityTopStatementsValue.newBuilder()
-                .setEntityId(entityId).setProjectId(projectId).setClassId(classId).setMap(map).build();
-
-
-        var k = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
-        projectEntityTopStatementsTopic.pipeInput(k, entityTopStatements);
+        projectTopOutgoingStatementsTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isTrue();
     }

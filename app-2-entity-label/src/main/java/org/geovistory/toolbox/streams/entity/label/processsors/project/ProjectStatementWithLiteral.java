@@ -5,7 +5,6 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.geovistory.toolbox.streams.avro.ProjectStatementFlatValue;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
@@ -86,17 +85,6 @@ public class ProjectStatementWithLiteral {
                         Named.as("kstream-select-key-project-statement-with-literal")
                 );
 
-        // TODO delete
-        projectStatementStream.mapValues((readOnlyKey, value) -> ProjectStatementFlatValue.newBuilder()
-                .setProjectId(value.getProjectId())
-                .setStatementId(value.getStatementId())
-                .setObjectId(value.getStatement().getObjectId())
-                .setSubjectId(value.getStatement().getSubjectId())
-                .build()
-        ).to(Utils.tsPrefixed("test_project_statement_w_l_join"),
-                Produced.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementFlatValue())
-                        .withName(Utils.tsPrefixed("test_project_statement_w_l_join" + "-producer")
-                        ));
 
         /* SINK PROCESSORS */
 

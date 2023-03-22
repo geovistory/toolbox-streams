@@ -78,7 +78,7 @@ class OntomePropertyProjectedTest {
     @Test
     void shouldOmitDuplicates() {
 
-        // add class 1
+        // add property 1
         var apKey = new dev.data_for_history.api_property.Key(1);
         var apVal = dev.data_for_history.api_property.Value.newBuilder()
                 .setDfhAncestorProperties(new ArrayList<>())
@@ -90,16 +90,16 @@ class OntomePropertyProjectedTest {
                 .build();
         dfhApiPropertyTopic.pipeInput(apKey, apVal);
 
-        // add class 2
+        // add property 2
         apKey.setPkEntity(2);
         apVal.setDfhPkProperty(43);
         apVal.setDfhPropertyLabel("Property 2");
         dfhApiPropertyTopic.pipeInput(apKey, apVal);
 
-        // re-add class 2
+        // re-add property 2
         dfhApiPropertyTopic.pipeInput(apKey, apVal);
 
-        // update class 1
+        // update property 1
         apVal.setDfhPkProperty(44);
         dfhApiPropertyTopic.pipeInput(apKey, apVal);
 
