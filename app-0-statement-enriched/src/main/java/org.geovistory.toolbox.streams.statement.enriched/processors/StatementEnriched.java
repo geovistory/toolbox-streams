@@ -11,6 +11,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility;
 import org.geovistory.toolbox.streams.statement.enriched.DbTopicNames;
@@ -225,16 +226,17 @@ public class StatementEnriched {
                         .setId(getSubjectStringId(value))
                         .build(),
                 (statement, subject) -> {
-                    if (subject == null) return null;
-                    return StatementEnrichedValue.newBuilder()
+                    var v = StatementEnrichedValue.newBuilder()
                             .setSubjectId(getSubjectStringId(statement))
                             .setPropertyId(statement.getFkProperty())
                             .setObjectId(getObjectStringId(statement))
-                            .setSubjectLabel(subject.getLabel())
-                            .setSubject(subject)
-                            .setSubjectClassId(subject.getClassId())
-                            .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()))
-                            .build();
+                            .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()));
+                    if (subject != null) {
+                        v.setSubjectLabel(subject.getLabel())
+                                .setSubject(subject)
+                                .setSubjectClassId(subject.getClassId());
+                    }
+                    return v.build();
                 },
                 TableJoined.as(inner.TOPICS.statement_joined_with_subject + "-fk-join"),
                 Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_subject)
@@ -249,10 +251,11 @@ public class StatementEnriched {
                         .setId(value.getObjectId())
                         .build(),
                 (statementEnrichedValue, object) -> {
-                    if (object == null) return null;
-                    statementEnrichedValue.setObjectLabel(object.getLabel());
-                    statementEnrichedValue.setObject(object);
-                    statementEnrichedValue.setObjectClassId(object.getClassId());
+                    if (object != null) {
+                        statementEnrichedValue.setObjectLabel(object.getLabel());
+                        statementEnrichedValue.setObject(object);
+                        statementEnrichedValue.setObjectClassId(object.getClassId());
+                    }
                     return statementEnrichedValue;
                 },
                 TableJoined.as(inner.TOPICS.statement_joined_with_object + "-fk-join"),
@@ -262,8 +265,13 @@ public class StatementEnriched {
         );
 
         var stream = statementJoinedWithObjectTable.toStream(
-                Named.as(inner.TOPICS.statement_joined_with_object + "-to-stream")
-        );
+                        Named.as(inner.TOPICS.statement_joined_with_object + "-to-stream")
+                )
+                .filter((key, value) -> value.getObject() != null && value.getSubject() != null)
+                .transform(new IdenticalRecordsFilterSupplier<>("statement_enriched_suppress_duplicates",
+                        avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()
+                ));
+
         Map<String, KStream<dev.information.statement.Key, StatementEnrichedValue>> branches =
                 stream.split(Named.as("Branch-"))
                         .branch((key, value) -> value != null && value.getObject().getEntity() != null,  /* first predicate  */
