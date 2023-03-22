@@ -9,6 +9,18 @@
       "type": "string"
     },
     {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "is_outgoing",
+      "type": {
+        "type": "boolean"
+      }
+    },
+    {
       "name": "__deleted",
       "type": [
         "null",

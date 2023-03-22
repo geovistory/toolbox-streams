@@ -9,6 +9,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.model.DbTopicNames;
 import org.geovistory.toolbox.streams.base.model.Prop;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.util.LinkedList;
@@ -103,7 +104,12 @@ public class HasTypeProperty {
                                     .build();
                         },
                         Named.as("kstream-mapvalues-mark-has-type-property-as-deleted")
-                );
+                )
+                .transform(new IdenticalRecordsFilterSupplier<>(
+                                "has_type_property_suppress_duplicates",
+                                avroSerdes.HasTypePropertyKey(),
+                                avroSerdes.HasTypePropertyValue()),
+                        Named.as("has_type_property_suppress_duplicates"));
 
         /* SINK PROCESSORS */
         hasTypePropertyStream

@@ -1,0 +1,26 @@
+{
+  "type": "record",
+  "name": "FieldLabelWithTopLabelsValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "is_outgoing",
+      "type": "boolean"
+    },
+    {
+      "name": "property_label",
+      "type": "string"
+    },
+    {
+      "name": "target_labels",
+      "type": {
+        "type": "array",
+        "items": "string"
+      }
+    }
+  ]
+}

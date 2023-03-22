@@ -92,6 +92,8 @@ class CommunityToolboxTopIncomingStatementsTest {
         var v = CommunityStatementValue.newBuilder()
                 .setStatementId(3)
                 .setStatement(StatementEnrichedValue.newBuilder().setPropertyId(propertyId)
+                        .setSubjectClassId(7)
+                        .setObjectClassId(8)
                         .setSubjectId(subjectId).setSubject(subject)
                         .setObjectId(objectId).setObject(object).build())
                 .setAvgOrdNumOfDomain(3f)
@@ -123,6 +125,7 @@ class CommunityToolboxTopIncomingStatementsTest {
         var record = outRecords.get(resultKey);
         assertThat(record.getStatements().size()).isEqualTo(4);
         assertThat(record.getStatements().get(2).getAvgOrdNumOfDomain()).isEqualTo(2);
+        assertThat(record.getClassId()).isEqualTo(8);
     }
 
 

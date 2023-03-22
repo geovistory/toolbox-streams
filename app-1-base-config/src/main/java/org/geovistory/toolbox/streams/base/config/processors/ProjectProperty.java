@@ -8,11 +8,12 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.base.config.Env;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
+import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.util.LinkedList;
 import java.util.Objects;
@@ -78,10 +79,10 @@ public class ProjectProperty {
         // 4)
         var projectProfileTable = projectProfileStream
                 .toTable(
-                        Named.as(inner.TOPICS.profile_with_properties + "-to-table"),
+                        Named.as(inner.TOPICS.project_profile + "-to-table"),
                         Materialized
                                 .<ProjectProfileKey, ProjectProfileValue, KeyValueStore<Bytes, byte[]>>
-                                        as(inner.TOPICS.profile_with_properties + "-store")
+                                        as(inner.TOPICS.project_profile + "-store")
                                 .withKeySerde(avroSerdes.ProjectProfileKey())
                                 .withValueSerde(avroSerdes.ProjectProfileValue())
                 );
@@ -110,7 +111,7 @@ public class ProjectProperty {
                             });
                     return projectPropertyMap;
                 },
-                TableJoined.as("project_properties_per_profile"+ "-fk-join")
+                TableJoined.as("project_properties_per_profile" + "-fk-join")
         );
 
 // 3)
@@ -135,7 +136,9 @@ public class ProjectProperty {
                             }
                             return list;
                         },
-                        Named.as(inner.TOPICS.project_properties_flat));
+                        Named.as(inner.TOPICS.project_properties_flat))
+                .transform(new IdenticalRecordsFilterSupplier<>("project_property_suppress_duplicates", avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue()),
+                        Named.as("project_property_suppress_duplicates"));
 
         projectPropertyStream.to(output.TOPICS.project_property,
                 Produced.with(avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue())
@@ -159,6 +162,7 @@ public class ProjectProperty {
         public final String profile_with_properties = "profile_with_properties";
         public final String project_properties_stream = "project_properties_stream";
         public final String project_properties_flat = "project_properties_flat";
+        public final String project_profile = "project_profile";
     }
 
     public enum output {

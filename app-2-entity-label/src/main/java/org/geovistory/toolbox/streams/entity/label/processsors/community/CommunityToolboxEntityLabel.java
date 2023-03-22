@@ -68,10 +68,11 @@ public class CommunityToolboxEntityLabel {
         );
 
         // 3
-        var communityEntityLabelSlots = communityEntityWithConfigTable
+        var communityEntityWithConfigStream = communityEntityWithConfigTable
                 .toStream(
                         Named.as(inner.TOPICS.community_toolbox_entity_with_label_config + "-to-stream")
-                )
+                );
+        var communityEntityLabelSlots = communityEntityWithConfigStream
                 .flatMap(
                         (key, value) -> {
                             List<KeyValue<CommunityEntityLabelPartKey, CommunityEntityLabelPartValue>> result = new LinkedList<>();
@@ -193,6 +194,13 @@ public class CommunityToolboxEntityLabel {
                         .withName(output.TOPICS.community_toolbox_entity_label + "-producer")
         );
 
+        communityEntityWithConfigStream
+                .mapValues((readOnlyKey, value) -> value.getLabelConfig())
+                .to(output.TOPICS.community_toolbox_entity_with_label_config,
+                        Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityLabelConfigValue())
+                                .withName(output.TOPICS.community_toolbox_entity_with_label_config + "-producer")
+                );
+
         return new CommunityEntityLabelReturnValue(builder, aggregatedStream);
 
     }
@@ -218,6 +226,7 @@ public class CommunityToolboxEntityLabel {
     public enum output {
         TOPICS;
         public final String community_toolbox_entity_label = Utils.tsPrefixed("community_toolbox_entity_label");
+        public final String community_toolbox_entity_with_label_config = Utils.tsPrefixed("community_toolbox_entity_with_label_config");
     }
 
     public static class EntityLabelsAggregatorSupplier implements TransformerSupplier<

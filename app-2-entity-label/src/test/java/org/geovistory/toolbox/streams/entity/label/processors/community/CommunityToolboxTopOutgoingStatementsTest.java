@@ -85,6 +85,8 @@ class CommunityToolboxTopOutgoingStatementsTest {
                 .setProjectCount(1)
                 .setStatementId(3)
                 .setStatement(StatementEnrichedValue.newBuilder().setPropertyId(propertyId)
+                        .setSubjectClassId(7)
+                        .setObjectClassId(8)
                         .setSubjectId(subjectId).setSubject(subject)
                         .setObjectId(objectId).setObject(object).build())
                 .setAvgOrdNumOfRange(3f)
@@ -115,6 +117,8 @@ class CommunityToolboxTopOutgoingStatementsTest {
         var record = outRecords.get(resultKey);
         assertThat(record.getStatements().size()).isEqualTo(4);
         assertThat(record.getStatements().get(2).getAvgOrdNumOfRange()).isEqualTo(2);
+        assertThat(record.getClassId()).isEqualTo(7);
+
     }
 
 

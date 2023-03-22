@@ -90,6 +90,12 @@ public class CommunityToolboxTopOutgoingStatements {
                     aggValue.setPropertyId(aggKey.getPropertyId());
                     List<CommunityStatementValue> statements = aggValue.getStatements();
                     var newStatements = CommunityTopStatementAdder.addStatement(statements, newValue, true);
+                    // extract class id of entity from new statements, if there are, or from old, if there are
+                    var stmts = newStatements.size() > 0 ? newStatements : aggValue.getStatements();
+                    if (stmts.size() > 0) {
+                        var firstStatement = newStatements.get(0).getStatement();
+                        aggValue.setClassId(firstStatement.getSubjectClassId());
+                    }
                     aggValue.setStatements(newStatements);
                     return aggValue;
                 },

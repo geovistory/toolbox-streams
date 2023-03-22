@@ -9,6 +9,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.util.LinkedList;
@@ -377,9 +378,13 @@ public class ProjectPropertyLabel {
                 },
                 Named.as("ktable-mapvalues-project-property-label")
         );
-        var projectPropertyLabelStream = projectPropertyLabelTable.toStream(
-                Named.as("project_property_label_table" + "-to-stream")
-        );
+        var projectPropertyLabelStream = projectPropertyLabelTable
+                .toStream(Named.as("project_property_label_table" + "-to-stream"))
+                .transform(new IdenticalRecordsFilterSupplier<>(
+                        "project_property_label_identical_records_filter",
+                        avroSerdes.ProjectPropertyLabelKey(),
+                        avroSerdes.ProjectPropertyLabelValue()
+                ));
 
         /* SINK PROCESSORS */
 

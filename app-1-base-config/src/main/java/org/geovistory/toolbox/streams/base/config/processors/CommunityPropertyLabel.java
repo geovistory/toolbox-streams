@@ -12,6 +12,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.util.LinkedList;
@@ -56,6 +57,8 @@ public class CommunityPropertyLabel {
                                     .build(),
                             CommunityPropertyLabelValue.newBuilder()
                                     .setLabel(value.getDfhPropertyLabel() != null ? value.getDfhPropertyLabel() : "")
+                                    .setPropertyId(value.getDfhPkProperty())
+                                    .setIsOutgoing(true)
                                     .setDeleted$1(Utils.stringIsEqualTrue(value.getDeleted$1()))
                                     .build()
                     ));
@@ -68,6 +71,8 @@ public class CommunityPropertyLabel {
                                     .build(),
                             CommunityPropertyLabelValue.newBuilder()
                                     .setLabel(value.getDfhPropertyInverseLabel() != null ? value.getDfhPropertyInverseLabel() : "")
+                                    .setPropertyId(value.getDfhPkProperty())
+                                    .setIsOutgoing(false)
                                     .setDeleted$1(Utils.stringIsEqualTrue(value.getDeleted$1()))
                                     .build()
                     ));
@@ -110,6 +115,8 @@ public class CommunityPropertyLabel {
                 (value1, value2) -> CommunityPropertyLabelValue.newBuilder()
                         .setLabel((value1 != null && value1.getLabel() != null) ? value1.getLabel() :
                                 value2 != null ? value2.getLabel() : "")
+                        .setPropertyId((value1 != null ? value1.getPropertyId() : value2 != null ? value2.getPropertyId() : 0))
+                        .setIsOutgoing(value1 != null ? value1.getIsOutgoing() : value2 == null || value2.getIsOutgoing())
                         .setDeleted$1(
                                 (value1 != null && Utils.booleanIsEqualTrue(value1.getDeleted$1()))
                                         && (value2 != null && Utils.booleanIsEqualTrue(value2.getDeleted$1())))
@@ -120,7 +127,14 @@ public class CommunityPropertyLabel {
                         .withValueSerde(avroSerdes.CommunityPropertyLabelValue())
         );
 
-        var communityPropertyLabelStream = communityPropertyLabelTable.toStream(Named.as("ktable-to-stream-community_property_label"));
+        var communityPropertyLabelStream = communityPropertyLabelTable
+                .toStream(Named.as("ktable-to-stream-community_property_label"))
+                .transform(new IdenticalRecordsFilterSupplier<>(
+                        "community_community_property_label_label_identical_records_filter",
+                        avroSerdes.CommunityPropertyLabelKey(),
+                        avroSerdes.CommunityPropertyLabelValue()
+                ));
+
         communityPropertyLabelStream.to(
                 output.TOPICS.community_property_label,
                 Produced.with(avroSerdes.CommunityPropertyLabelKey(), avroSerdes.CommunityPropertyLabelValue())

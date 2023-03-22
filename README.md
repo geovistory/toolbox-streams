@@ -89,7 +89,7 @@ make sure you properly configured .env and have access to the remote servers.
 
 ## Deploy
 
-### App ID
+### org.geovistory.toolbox.streams.fulltext.App ID
 
 
 ### Base image used by jib
