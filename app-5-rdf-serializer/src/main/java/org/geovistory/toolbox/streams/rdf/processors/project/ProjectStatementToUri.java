@@ -13,6 +13,8 @@ import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.geovistory.toolbox.streams.lib.UrlPrefixes.*;
+
 
 public class ProjectStatementToUri {
 
@@ -61,13 +63,13 @@ public class ProjectStatementToUri {
                 // add the normal triple
                 var k = ProjectRdfKey.newBuilder()
                         .setProjectId(value.getProjectId())
-                        .setTurtle("<http://geovistory.org/resource/"+subjectId+"> <https://ontome.net/ontology/p"+propertyId+"> <http://geovistory.org/resource/"+objectId+">")
+                        .setTurtle("<"+ GEOVISTORY_RESOURCE.getUrl()+subjectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"> <"+ GEOVISTORY_RESOURCE.getUrl()+objectId+">")
                         .build();
                 result.add(KeyValue.pair(k, v));
 
                 var ki = ProjectRdfKey.newBuilder()
                         .setProjectId(value.getProjectId())
-                        .setTurtle("<http://geovistory.org/resource/"+objectId+"> <https://ontome.net/ontology/p"+propertyId+"i> <http://geovistory.org/resource/"+subjectId+">")
+                        .setTurtle("<"+ GEOVISTORY_RESOURCE.getUrl()+objectId+"> <"+ ONTOME_PROPERTY.getUrl() +propertyId+"i> <"+ GEOVISTORY_RESOURCE.getUrl()+subjectId+">")
                         .build();
                 result.add(KeyValue.pair(ki, v));
 
