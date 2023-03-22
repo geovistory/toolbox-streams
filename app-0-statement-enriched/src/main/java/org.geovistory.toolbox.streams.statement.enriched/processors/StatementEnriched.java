@@ -1,6 +1,5 @@
 package org.geovistory.toolbox.streams.statement.enriched.processors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.information.statement.Value;
 import org.apache.kafka.common.utils.Bytes;
@@ -346,7 +345,7 @@ public class StatementEnriched {
             if (communitVisibility.toolbox) communityCanSeeInToolbox = true;
             if (communitVisibility.dataApi) communityCanSeeInDataApi = true;
             if (communitVisibility.website) communityCanSeeInWebsite = true;
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             System.out.println("ERROR parsing the community visibility: ");
             e.printStackTrace();
         }
