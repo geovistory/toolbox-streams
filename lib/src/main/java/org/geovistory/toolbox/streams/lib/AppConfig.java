@@ -155,21 +155,15 @@ public enum AppConfig {
 
     private final String streamsConsumerIsolationLevelConfig = parseEnv(
             "STREAMS_CONSUMER_ISOLATION_LEVEL_CONFIG",
-            "read_uncommitted"
+            "read_committed"
     );
 
 
     AppConfig() {
-
-
     }
 
     public AppConfig getInstance() {
         return INSTANCE;
-    }
-
-    public String getStateDir() {
-        return stateDir;
     }
 
     public String getApicurioRegistryUrl() {
@@ -262,6 +256,8 @@ public enum AppConfig {
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, INSTANCE.getKafkaBootstrapServers());
         props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
         props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, INSTANCE.streamsProcessingGuaranteeConfig);
+
+        props.put(StreamsConfig.STATE_DIR_CONFIG, INSTANCE.stateDir);
 
 
         props.put(StreamsConfig.topicPrefix(TopicConfig.CLEANUP_POLICY_CONFIG), TopicConfig.CLEANUP_POLICY_COMPACT);
