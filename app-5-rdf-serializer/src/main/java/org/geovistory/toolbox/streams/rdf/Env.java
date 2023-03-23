@@ -16,6 +16,11 @@ public enum Env {
             "TS_TOPIC_PROJECT_STATEMENT_WITH_ENTITY",
             "TS_TOPIC_PROJECT_STATEMENT_WITH_ENTITY");
 
+    // Name of topic PROJECT_STATEMENT_WITH_LITERAL
+    public final String TOPIC_PROJECT_STATEMENT_WITH_LITERAL = parseEnv(
+            "TS_TOPIC_PROJECT_STATEMENT_WITH_LITERAL",
+            "TS_TOPIC_PROJECT_STATEMENT_WITH_LITERAL");
+
     private String parseEnv(String envVar, String defaultVal) {
         return Utils.coalesce(
                 System.getProperty(envVar),

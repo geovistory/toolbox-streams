@@ -30,4 +30,12 @@ public class RegisterInputTopic extends InputTopicHelper {
         );
     }
 
+    public KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteralStream() {
+        return getStream(
+                Env.INSTANCE.TOPIC_PROJECT_STATEMENT_WITH_LITERAL,
+                avroSerdes.ProjectStatementKey(),
+                avroSerdes.ProjectStatementValue()
+        );
+    }
+
 }
