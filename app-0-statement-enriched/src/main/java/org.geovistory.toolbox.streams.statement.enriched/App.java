@@ -86,6 +86,9 @@ class App {
                 StatementEnriched.output.TOPICS.statement_with_entity,
                 StatementEnriched.output.TOPICS.statement_with_literal,
                 StatementEnriched.output.TOPICS.statement_other,
+                StatementEnriched.inner.TOPICS.nodes,
+                StatementEnriched.inner.TOPICS.nodes2,
+                StatementEnriched.inner.TOPICS.statement_joined_with_subject
         }, outputTopicPartitions, outputTopicReplicationFactor);
 
 
