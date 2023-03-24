@@ -52,7 +52,9 @@ public class StatementEnriched {
     public static StatementEnrichedReturnValue addProcessors(
             StreamsBuilder builder,
             KTable<dev.information.statement.Key, Value> infStatementTable,
+
             KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
+
             KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream,
             KStream<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationStream,
             KStream<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringStream,
@@ -211,17 +213,25 @@ public class StatementEnriched {
                 );
 
 
-        var literalTable = nodes.toTable(
-                Named.as(inner.TOPICS.nodes),
+        nodes.to(
+                inner.TOPICS.nodes,
+                Produced.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
+                        .withName(inner.TOPICS.nodes + "-producer")
+        );
 
-                Materialized.<NodeKey, NodeValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.nodes)
-                        .withKeySerde(avroSerdes.NodeKey())
-                        .withValueSerde(avroSerdes.NodeValue())
+        nodes.to(
+                inner.TOPICS.nodes2,
+                Produced.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
+                        .withName(inner.TOPICS.nodes2 + "-producer")
+        );
+        var literalTable1 = builder.table(inner.TOPICS.nodes,
+                Consumed.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
+                        .withName(inner.TOPICS.nodes + "-consumer-1")
         );
 
         // join subject
         var statementJoinedWithSubjectTable = infStatementTable.join(
-                literalTable,
+                literalTable1,
                 value -> NodeKey.newBuilder()
                         .setId(getSubjectStringId(value))
                         .build(),
@@ -244,9 +254,27 @@ public class StatementEnriched {
                         .withValueSerde(avroSerdes.StatementEnrichedValue())
         );
 
+        statementJoinedWithSubjectTable
+                .toStream(Named.as(inner.TOPICS.statement_joined_with_subject))
+                .to(inner.TOPICS.statement_joined_with_subject,
+                        Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
+                                .withName(inner.TOPICS.statement_joined_with_subject + "-producer")
+                );
+
+        var literalTable2 = builder.table(inner.TOPICS.nodes2,
+                Consumed.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
+                        .withName(inner.TOPICS.nodes2 + "-consumer-2")
+        );
+
+        var statementJoinedTable = builder.table(inner.TOPICS.statement_joined_with_subject,
+                Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
+                        .withName(inner.TOPICS.statement_joined_with_subject + "-consumer")
+        );
+
+
         // join object
-        var statementJoinedWithObjectTable = statementJoinedWithSubjectTable.join(
-                literalTable,
+        var statementJoinedWithObjectTable = statementJoinedTable.join(
+                literalTable2,
                 value -> NodeKey.newBuilder()
                         .setId(value.getObjectId())
                         .build(),
@@ -496,6 +524,8 @@ public class StatementEnriched {
     public enum inner {
         TOPICS;
         public final String nodes = "nodes";
+        public final String nodes2 = "nodes2";
+
         public final String statement_joined_with_subject = "statement_joined_with_subject";
         public final String statement_joined_with_object = "statement_joined_with_object";
     }
