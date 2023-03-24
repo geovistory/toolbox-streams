@@ -214,19 +214,19 @@ public class StatementEnriched {
 
 
         nodes.to(
-                inner.TOPICS.nodes,
+                output.TOPICS.nodes,
                 Produced.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                        .withName(inner.TOPICS.nodes + "-producer")
+                        .withName(output.TOPICS.nodes + "-producer")
         );
 
         nodes.to(
-                inner.TOPICS.nodes2,
+                output.TOPICS.nodes2,
                 Produced.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                        .withName(inner.TOPICS.nodes2 + "-producer")
+                        .withName(output.TOPICS.nodes2 + "-producer")
         );
-        var literalTable1 = builder.table(inner.TOPICS.nodes,
+        var literalTable1 = builder.table(output.TOPICS.nodes,
                 Consumed.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                        .withName(inner.TOPICS.nodes + "-consumer-1")
+                        .withName(output.TOPICS.nodes + "-consumer-1")
         );
 
         // join subject
@@ -256,19 +256,19 @@ public class StatementEnriched {
 
         statementJoinedWithSubjectTable
                 .toStream(Named.as(inner.TOPICS.statement_joined_with_subject))
-                .to(inner.TOPICS.statement_joined_with_subject,
+                .to(output.TOPICS.statement_joined_with_subject,
                         Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                                .withName(inner.TOPICS.statement_joined_with_subject + "-producer")
+                                .withName(output.TOPICS.statement_joined_with_subject + "-producer")
                 );
 
-        var literalTable2 = builder.table(inner.TOPICS.nodes2,
+        var literalTable2 = builder.table(output.TOPICS.nodes2,
                 Consumed.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                        .withName(inner.TOPICS.nodes2 + "-consumer-2")
+                        .withName(output.TOPICS.nodes2 + "-consumer-2")
         );
 
-        var statementJoinedTable = builder.table(inner.TOPICS.statement_joined_with_subject,
+        var statementJoinedTable = builder.table(output.TOPICS.statement_joined_with_subject,
                 Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(inner.TOPICS.statement_joined_with_subject + "-consumer")
+                        .withName(output.TOPICS.statement_joined_with_subject + "-consumer")
         );
 
 
@@ -382,8 +382,7 @@ public class StatementEnriched {
             if (communitVisibility.dataApi) communityCanSeeInDataApi = true;
             if (communitVisibility.website) communityCanSeeInWebsite = true;
         } catch (Exception e) {
-            System.out.println("ERROR parsing the community visibility: ");
-            e.printStackTrace();
+
         }
         return Entity.newBuilder()
                 .setPkEntity(infEntity.getPkEntity())
@@ -523,15 +522,18 @@ public class StatementEnriched {
 
     public enum inner {
         TOPICS;
+        public final String statement_joined_with_object = "statement_joined_with_object";
         public final String nodes = "nodes";
         public final String nodes2 = "nodes2";
-
         public final String statement_joined_with_subject = "statement_joined_with_subject";
-        public final String statement_joined_with_object = "statement_joined_with_object";
     }
 
     public enum output {
         TOPICS;
+        public final String nodes =  Utils.tsPrefixed("nodes");
+        public final String nodes2 =  Utils.tsPrefixed("nodes2");
+        public final String statement_joined_with_subject =  Utils.tsPrefixed("statement_joined_with_subject");
+
         public final String statement_with_entity = Utils.tsPrefixed("statement_with_entity");
         public final String statement_with_literal = Utils.tsPrefixed("statement_with_literal");
         public final String statement_other = Utils.tsPrefixed("statement_other");
