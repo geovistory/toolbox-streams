@@ -14,12 +14,13 @@ plugins {
 
 
 dependencies {
-
+    // for .env
+    implementation 'io.github.cdimascio:dotenv-java:2.2.4'
 }
 
 application {
     // Define the main class for the application.
-    mainClassName= 'org.geovistory.toolbox.streams.statement.enriched.App'
+    mainClassName= 'org.geovistory.toolbox.streams.statement.object.App'
 }
 
 jar {
@@ -54,7 +55,7 @@ String getDockerTagSuffix() {
  * @return for example "ghcr.io/geovistory/toolbox-streams:0.1.0"
  */
 String getDockerImageTag() {
-    return 'ghcr.io/geovistory/toolbox-streams-statement-enriched:' + getDockerTagSuffix()
+    return 'ghcr.io/geovistory/toolbox-streams-statement-object:' + getDockerTagSuffix()
 }
 
 task("printDockerImageTag") {
@@ -74,9 +75,9 @@ task generateJava {
     ext.outputDir = "$buildDir/generated/java"
     outputs.dir outputDir
     doLast {
-        mkdir "$outputDir/org/geovistory/toolbox/streams/statement-enriched"
-        file("$outputDir/org/geovistory/toolbox/streams/statement-enriched/BuildProperties.java").text =
-                """|package org.geovistory.toolbox.streams.statement.enriched;
+        mkdir "$outputDir/org/geovistory/toolbox/streams/statement-object"
+        file("$outputDir/org/geovistory/toolbox/streams/statement-object/BuildProperties.java").text =
+                """|package org.geovistory.toolbox.streams.statement.object;
                |public class BuildProperties {
                |    public static String getDockerTagSuffix() { return "${getDockerTagSuffix()}"; }
                |    public static String getDockerImageTag() { return "${getDockerImageTag()}"; }
