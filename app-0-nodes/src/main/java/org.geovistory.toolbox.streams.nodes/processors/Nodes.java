@@ -1,26 +1,22 @@
-package org.geovistory.toolbox.streams.statement.enriched.processors;
+package org.geovistory.toolbox.streams.nodes.processors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.information.statement.Value;
-import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.*;
-import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Named;
+import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.Repartitioned;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
-import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility;
-import org.geovistory.toolbox.streams.statement.enriched.DbTopicNames;
-import org.geovistory.toolbox.streams.statement.enriched.RegisterInputTopic;
+import org.geovistory.toolbox.streams.nodes.DbTopicNames;
+import org.geovistory.toolbox.streams.nodes.RegisterInputTopic;
 
-import java.util.Map;
-
-
-public class StatementEnriched {
+public class Nodes {
 
     public static final int MAX_STRING_LENGTH = 100;
 
@@ -34,9 +30,7 @@ public class StatementEnriched {
     public static Topology buildStandalone(StreamsBuilder builder) {
         var registerInputTopic = new RegisterInputTopic(builder);
 
-        return addProcessors(
-                builder,
-                registerInputTopic.infStatementTable(),
+        addProcessors(
                 registerInputTopic.infResourceStream(),
                 registerInputTopic.infLanguageStream(),
                 registerInputTopic.infAppellationStream(),
@@ -46,12 +40,11 @@ public class StatementEnriched {
                 registerInputTopic.infDimensionStream(),
                 registerInputTopic.datDigitalStream(),
                 registerInputTopic.tabCellStream()
-        ).builder().build();
+        );
+        return builder.build();
     }
 
-    public static StatementEnrichedReturnValue addProcessors(
-            StreamsBuilder builder,
-            KTable<dev.information.statement.Key, Value> infStatementTable,
+    public static void addProcessors(
 
             KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
 
@@ -207,7 +200,7 @@ public class StatementEnriched {
 
                 // repartition
                 .repartition(
-                        Repartitioned.<NodeKey, NodeValue>as(inner.TOPICS.nodes + "-repartitioned")
+                        Repartitioned.<NodeKey, NodeValue>as("nodes-repartitioned")
                                 .withKeySerde(avroSerdes.NodeKey())
                                 .withValueSerde(avroSerdes.NodeValue())
                 );
@@ -219,154 +212,9 @@ public class StatementEnriched {
                         .withName(output.TOPICS.nodes + "-producer")
         );
 
-        nodes.to(
-                output.TOPICS.nodes2,
-                Produced.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                        .withName(output.TOPICS.nodes2 + "-producer")
-        );
-        var literalTable1 = builder.table(output.TOPICS.nodes,
-                Consumed.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                        .withName(output.TOPICS.nodes + "-consumer-1")
-        );
-
-        // join subject
-        var statementJoinedWithSubjectTable = infStatementTable.join(
-                literalTable1,
-                value -> NodeKey.newBuilder()
-                        .setId(getSubjectStringId(value))
-                        .build(),
-                (statement, subject) -> {
-                    var v = StatementEnrichedValue.newBuilder()
-                            .setSubjectId(getSubjectStringId(statement))
-                            .setPropertyId(statement.getFkProperty())
-                            .setObjectId(getObjectStringId(statement))
-                            .setDeleted$1(Utils.stringIsEqualTrue(statement.getDeleted$1()));
-                    if (subject != null) {
-                        v.setSubjectLabel(subject.getLabel())
-                                .setSubject(subject)
-                                .setSubjectClassId(subject.getClassId());
-                    }
-                    return v.build();
-                },
-                TableJoined.as(inner.TOPICS.statement_joined_with_subject + "-fk-join"),
-                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_subject)
-                        .withKeySerde(avroSerdes.InfStatementKey())
-                        .withValueSerde(avroSerdes.StatementEnrichedValue())
-        );
-
-        statementJoinedWithSubjectTable
-                .toStream(Named.as(inner.TOPICS.statement_joined_with_subject))
-                .to(output.TOPICS.statement_joined_with_subject,
-                        Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                                .withName(output.TOPICS.statement_joined_with_subject + "-producer")
-                );
-
-        var literalTable2 = builder.table(output.TOPICS.nodes2,
-                Consumed.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                        .withName(output.TOPICS.nodes2 + "-consumer-2")
-        );
-
-        var statementJoinedTable = builder.table(output.TOPICS.statement_joined_with_subject,
-                Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(output.TOPICS.statement_joined_with_subject + "-consumer")
-        );
-
-
-        // join object
-        var statementJoinedWithObjectTable = statementJoinedTable.join(
-                literalTable2,
-                value -> NodeKey.newBuilder()
-                        .setId(value.getObjectId())
-                        .build(),
-                (statementEnrichedValue, object) -> {
-                    if (object != null) {
-                        statementEnrichedValue.setObjectLabel(object.getLabel());
-                        statementEnrichedValue.setObject(object);
-                        statementEnrichedValue.setObjectClassId(object.getClassId());
-                    }
-                    return statementEnrichedValue;
-                },
-                TableJoined.as(inner.TOPICS.statement_joined_with_object + "-fk-join"),
-                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.statement_joined_with_object)
-                        .withKeySerde(avroSerdes.InfStatementKey())
-                        .withValueSerde(avroSerdes.StatementEnrichedValue())
-        );
-
-        var stream = statementJoinedWithObjectTable.toStream(
-                        Named.as(inner.TOPICS.statement_joined_with_object + "-to-stream")
-                )
-                .filter((key, value) -> value.getObject() != null && value.getSubject() != null)
-                .transform(new IdenticalRecordsFilterSupplier<>("statement_enriched_suppress_duplicates",
-                        avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()
-                ));
-
-        Map<String, KStream<dev.information.statement.Key, StatementEnrichedValue>> branches =
-                stream.split(Named.as("Branch-"))
-                        .branch((key, value) -> value != null && value.getObject().getEntity() != null,  /* first predicate  */
-                                Branched.as("Entity"))
-                        .branch((key, value) -> value != null && value.getObject().getEntity() == null,  /* second predicate */
-                                Branched.as("Literal"))
-                        .defaultBranch(Branched.as("Other"));          /* default branch */
-
-        var e = branches.get("Branch-Entity"); // contains all records whose objects are entities
-        var l = branches.get("Branch-Literal"); // contains all records whose objects are literals
-        var o = branches.get("Branch-Other"); // contains all other records
-
-        e.to(
-                output.TOPICS.statement_with_entity,
-                Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(output.TOPICS.statement_with_entity + "-producer")
-        );
-        l.to(
-                output.TOPICS.statement_with_literal,
-                Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(output.TOPICS.statement_with_literal + "-producer")
-        );
-        o.to(
-                output.TOPICS.statement_other,
-                Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(output.TOPICS.statement_other + "-producer")
-        );
-
-        return new StatementEnrichedReturnValue(builder, stream);
 
     }
 
-    /**
-     * Returns a string object id for statement prefixed
-     * with one letter for the postgres schema name:
-     * - "i" for information
-     * - "d" for data
-     * - "t" for table
-     *
-     * @param value statement
-     * @return e.g. "i2134123" or "t232342"
-     */
-    private static String getObjectStringId(Value value) {
-        String id = "";
-        if (value.getFkObjectInfo() > 0) id = "i" + value.getFkObjectInfo();
-        else if (value.getFkObjectTablesCell() > 0) id = "t" + value.getFkObjectTablesCell();
-        else if (value.getFkObjectData() > 0) id = "d" + value.getFkObjectData();
-        return id;
-    }
-
-    /**
-     * Returns a string object id for statement prefixed
-     * with one letter for the postgres schema name:
-     * - "i" for information
-     * - "d" for data
-     * - "t" for table
-     *
-     * @param value statement
-     * @return e.g. "i2134123" or "t232342"
-     */
-    private static String getSubjectStringId(Value value) {
-        String id = "";
-        if (value.getFkSubjectInfo() > 0) id = "i" + value.getFkSubjectInfo();
-        else if (value.getFkSubjectTablesCell() > 0) id = "t" + value.getFkSubjectTablesCell();
-        else if (value.getFkSubjectData() > 0) id = "d" + value.getFkSubjectData();
-        return id;
-    }
 
     /**
      * @param infEntity the value from the database
@@ -376,13 +224,16 @@ public class StatementEnriched {
         var communityCanSeeInToolbox = false;
         var communityCanSeeInDataApi = false;
         var communityCanSeeInWebsite = false;
-        try {
-            var communitVisibility = mapper.readValue(infEntity.getCommunityVisibility(), CommunityVisibility.class);
-            if (communitVisibility.toolbox) communityCanSeeInToolbox = true;
-            if (communitVisibility.dataApi) communityCanSeeInDataApi = true;
-            if (communitVisibility.website) communityCanSeeInWebsite = true;
-        } catch (Exception e) {
+        if (infEntity.getCommunityVisibility() != null) {
 
+            try {
+                var communitVisibility = mapper.readValue(infEntity.getCommunityVisibility(), CommunityVisibility.class);
+                if (communitVisibility.toolbox) communityCanSeeInToolbox = true;
+                if (communitVisibility.dataApi) communityCanSeeInDataApi = true;
+                if (communitVisibility.website) communityCanSeeInWebsite = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return Entity.newBuilder()
                 .setPkEntity(infEntity.getPkEntity())
@@ -507,7 +358,6 @@ public class StatementEnriched {
 
     public enum input {
         TOPICS;
-        public final String inf_statement = DbTopicNames.inf_statement.getName();
         public final String inf_resource = DbTopicNames.inf_resource.getName();
         public final String inf_language = DbTopicNames.inf_language.getName();
         public final String inf_appellation = DbTopicNames.inf_appellation.getName();
@@ -520,23 +370,9 @@ public class StatementEnriched {
     }
 
 
-    public enum inner {
-        TOPICS;
-        public final String statement_joined_with_object = "statement_joined_with_object";
-        public final String nodes = "nodes";
-        public final String nodes2 = "nodes2";
-        public final String statement_joined_with_subject = "statement_joined_with_subject";
-    }
-
     public enum output {
         TOPICS;
-        public final String nodes =  Utils.tsPrefixed("nodes");
-        public final String nodes2 =  Utils.tsPrefixed("nodes2");
-        public final String statement_joined_with_subject =  Utils.tsPrefixed("statement_joined_with_subject");
-
-        public final String statement_with_entity = Utils.tsPrefixed("statement_with_entity");
-        public final String statement_with_literal = Utils.tsPrefixed("statement_with_literal");
-        public final String statement_other = Utils.tsPrefixed("statement_other");
+        public final String nodes = Utils.tsPrefixed("nodes");
     }
 
 }
