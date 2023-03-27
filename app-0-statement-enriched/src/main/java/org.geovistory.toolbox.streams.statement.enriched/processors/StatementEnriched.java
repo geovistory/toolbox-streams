@@ -383,7 +383,7 @@ public class StatementEnriched {
                 if (communitVisibility.dataApi) communityCanSeeInDataApi = true;
                 if (communitVisibility.website) communityCanSeeInWebsite = true;
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
         }
         return Entity.newBuilder()
