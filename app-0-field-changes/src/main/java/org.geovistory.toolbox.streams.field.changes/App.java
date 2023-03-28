@@ -9,6 +9,8 @@ import org.geovistory.toolbox.streams.field.changes.processors.ProjectFieldChang
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerTagSuffix;
 
@@ -73,9 +75,9 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectFieldChange.output.TOPICS.project_field_change
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(ProjectFieldChange.output.TOPICS.project_field_change);
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
 

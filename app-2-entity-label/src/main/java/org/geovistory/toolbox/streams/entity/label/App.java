@@ -11,6 +11,8 @@ import org.geovistory.toolbox.streams.entity.label.processsors.project.*;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.entity.label.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.entity.label.BuildProperties.getDockerTagSuffix;
 
@@ -167,27 +169,26 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectEntityVisibility.output.TOPICS.project_entity_visibility,
+        var topics = new ArrayList<String>();
+        topics.add(ProjectEntityVisibility.output.TOPICS.project_entity_visibility);
+        topics.add(ProjectEntity.output.TOPICS.project_entity);
+        topics.add(ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity);
+        topics.add(ProjectStatementWithLiteral.output.TOPICS.project_statement_with_literal);
+        topics.add(ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements);
+        topics.add(ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements);
+        topics.add(ProjectTopStatements.output.TOPICS.project_top_statements);
+        topics.add(ProjectEntityLabel.output.TOPICS.project_entity_label);
+        topics.add(ProjectEntityLabel.output.TOPICS.project_entity_with_label_config);
+        topics.add(CommunityToolboxEntity.output.TOPICS.community_toolbox_entity);
+        topics.add(CommunityToolboxStatementWithEntity.output.TOPICS.community_toolbox_statement_with_entity);
+        topics.add(CommunityToolboxStatementWithLiteral.output.TOPICS.community_toolbox_statement_with_literal);
+        topics.add(CommunityToolboxTopIncomingStatements.output.TOPICS.community_toolbox_top_incoming_statements);
+        topics.add(CommunityToolboxTopOutgoingStatements.output.TOPICS.community_toolbox_top_outgoing_statements);
+        topics.add(CommunityToolboxTopStatements.output.TOPICS.community_toolbox_top_statements);
+        topics.add(CommunityToolboxEntityLabel.output.TOPICS.community_toolbox_entity_label);
+        topics.add(CommunityToolboxEntityLabel.output.TOPICS.community_toolbox_entity_with_label_config);
 
-                ProjectEntity.output.TOPICS.project_entity,
-                ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity,
-                ProjectStatementWithLiteral.output.TOPICS.project_statement_with_literal,
-                ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements,
-                ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements,
-                ProjectTopStatements.output.TOPICS.project_top_statements,
-                ProjectEntityLabel.output.TOPICS.project_entity_label,
-                ProjectEntityLabel.output.TOPICS.project_entity_with_label_config,
-
-                CommunityToolboxEntity.output.TOPICS.community_toolbox_entity,
-                CommunityToolboxStatementWithEntity.output.TOPICS.community_toolbox_statement_with_entity,
-                CommunityToolboxStatementWithLiteral.output.TOPICS.community_toolbox_statement_with_literal,
-                CommunityToolboxTopIncomingStatements.output.TOPICS.community_toolbox_top_incoming_statements,
-                CommunityToolboxTopOutgoingStatements.output.TOPICS.community_toolbox_top_outgoing_statements,
-                CommunityToolboxTopStatements.output.TOPICS.community_toolbox_top_statements,
-                CommunityToolboxEntityLabel.output.TOPICS.community_toolbox_entity_label,
-                CommunityToolboxEntityLabel.output.TOPICS.community_toolbox_entity_with_label_config
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
 

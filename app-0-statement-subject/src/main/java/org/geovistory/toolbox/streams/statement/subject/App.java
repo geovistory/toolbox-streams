@@ -9,6 +9,8 @@ import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.statement.subject.processors.StatementSubject;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.statement.subject.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.statement.subject.BuildProperties.getDockerTagSuffix;
 
@@ -67,10 +69,9 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                StatementSubject.output.TOPICS.statement_with_subject,
-        }, outputTopicPartitions, outputTopicReplicationFactor);
-
+        var topics = new ArrayList<String>();
+        topics.add(StatementSubject.output.TOPICS.statement_with_subject);
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
 

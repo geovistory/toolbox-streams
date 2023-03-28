@@ -9,6 +9,9 @@ import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.statement.object.processors.StatementObject;
 
+import java.util.ArrayList;
+import java.util.Objects;
+
 import static org.geovistory.toolbox.streams.statement.object.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.statement.object.BuildProperties.getDockerTagSuffix;
 
@@ -66,13 +69,15 @@ class App {
         var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
+        var topics = new ArrayList<String>();
+        topics.add(StatementObject.output.TOPICS.statement_with_entity);
+        topics.add(StatementObject.output.TOPICS.statement_with_literal);
+        topics.add(StatementObject.output.TOPICS.statement_other);
+        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
+            topics.add(StatementObject.output.TOPICS.statement_enriched_flat);
+        }
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                StatementObject.output.TOPICS.statement_with_entity,
-                StatementObject.output.TOPICS.statement_with_literal,
-                StatementObject.output.TOPICS.statement_other,
-        }, outputTopicPartitions, outputTopicReplicationFactor);
-
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
 

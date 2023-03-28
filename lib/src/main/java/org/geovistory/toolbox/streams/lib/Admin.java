@@ -10,14 +10,14 @@ import java.util.concurrent.ExecutionException;
 
 public class Admin {
 
-    public void createOrConfigureTopics(String[] topicNames, Integer numPartitions, short replicationFactor) {
+    public void createOrConfigureTopics(ArrayList<String> topicNames, Integer numPartitions, short replicationFactor) {
 
 
         try (AdminClient adminClient = AdminClient.create(getAdminConfig())) {
 
             var config = getTopicConfig();
 
-            Arrays.stream(topicNames).forEach(topicName -> {
+            topicNames.forEach(topicName -> {
                 var n = new NewTopic(topicName, numPartitions, replicationFactor);
                 n.configs(config);
 
