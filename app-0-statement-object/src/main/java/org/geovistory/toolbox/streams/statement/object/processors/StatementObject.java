@@ -1,5 +1,6 @@
 package org.geovistory.toolbox.streams.statement.object.processors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -8,13 +9,16 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.NodeKey;
 import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
+import org.geovistory.toolbox.streams.avro.TextValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
+import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.statement.object.Env;
 import org.geovistory.toolbox.streams.statement.object.RegisterInputTopic;
 
 import java.util.Map;
+import java.util.Objects;
 
 
 public class StatementObject {
@@ -100,6 +104,25 @@ public class StatementObject {
                         .withName(output.TOPICS.statement_other + "-producer")
         );
 
+        // if "true" the app creates a topic "statement_enriched_flat" that can be sinked to postgres
+        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
+            var mapper =  JsonStringifier.getMapperIgnoringNulls();
+            stream.mapValues((readOnlyKey, value) -> {
+                        try {
+                            return TextValue.newBuilder().setText(
+                                            mapper.writeValueAsString(value)
+                                    ).build();
+                        } catch (JsonProcessingException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    })
+                    .to(
+                            output.TOPICS.statement_enriched_flat,
+                            Produced.with(avroSerdes.InfStatementKey(), avroSerdes.TextValue())
+                                    .withName(output.TOPICS.statement_enriched_flat + "-producer")
+                    );
+        }
+
 
     }
 
@@ -115,6 +138,9 @@ public class StatementObject {
         public final String statement_with_entity = Utils.tsPrefixed("statement_with_entity");
         public final String statement_with_literal = Utils.tsPrefixed("statement_with_literal");
         public final String statement_other = Utils.tsPrefixed("statement_other");
+
+        public final String statement_enriched_flat = Utils.tsPrefixed("statement_enriched_flat");
+
     }
 
 }

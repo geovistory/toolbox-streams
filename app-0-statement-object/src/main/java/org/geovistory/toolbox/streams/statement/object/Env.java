@@ -13,6 +13,10 @@ public enum Env {
     // Name of topic STATEMENT_WITH_SUBJECT
     public final String TOPIC_STATEMENT_WITH_SUBJECT;
 
+    // CREATE_OUTPUT_FOR_POSTGRES if "true" the app creates
+    // a topic "statement_enriched_flat" that can be sinked to postgres
+    public final String CREATE_OUTPUT_FOR_POSTGRES;
+
 
     Env() {
         // load .env for local development
@@ -32,6 +36,13 @@ public enum Env {
                 System.getenv("TS_TOPIC_STATEMENT_WITH_SUBJECT"),
                 dotenv.get("TS_TOPIC_STATEMENT_WITH_SUBJECT"),
                 "TS_TOPIC_STATEMENT_WITH_SUBJECT"
+        );
+
+        this.CREATE_OUTPUT_FOR_POSTGRES = Utils.coalesce(
+                System.getProperty("CREATE_OUTPUT_FOR_POSTGRES"),
+                System.getenv("CREATE_OUTPUT_FOR_POSTGRES"),
+                dotenv.get("CREATE_OUTPUT_FOR_POSTGRES"),
+                "false"
         );
     }
 }
