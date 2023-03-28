@@ -86,6 +86,8 @@ private static void refactorDirectory(String directoryPath, String prefix) {
                     var oldPackageName = packageName
                     var newPackageName = packageName.replace("dev", prefix)
                     var newText = "package " + newPackageName + ";\n" +
+                            "import io.quarkus.runtime.annotations.RegisterForReflection;\n" +
+                            "@RegisterForReflection\n" +
                             "public class " + className + " extends " + oldPackageName + "." + className +
                             " implements org.apache.avro.specific.SpecificRecord { }"
                     myFile.write(newText)
