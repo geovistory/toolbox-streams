@@ -1,20 +1,22 @@
 package org.geovistory.toolbox.streams.nodes.processors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Named;
-import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.Repartitioned;
+import org.apache.kafka.streams.kstream.*;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
+import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility;
 import org.geovistory.toolbox.streams.nodes.DbTopicNames;
+import org.geovistory.toolbox.streams.nodes.Env;
 import org.geovistory.toolbox.streams.nodes.RegisterInputTopic;
+
+import java.util.Objects;
 
 public class Nodes {
 
@@ -31,6 +33,7 @@ public class Nodes {
         var registerInputTopic = new RegisterInputTopic(builder);
 
         addProcessors(
+                builder,
                 registerInputTopic.infResourceStream(),
                 registerInputTopic.infLanguageStream(),
                 registerInputTopic.infAppellationStream(),
@@ -45,7 +48,7 @@ public class Nodes {
     }
 
     public static void addProcessors(
-
+            StreamsBuilder builder,
             KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
 
             KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream,
@@ -212,6 +215,29 @@ public class Nodes {
                         .withName(output.TOPICS.nodes + "-producer")
         );
 
+        // if "true" the app creates a topic "statement_enriched_flat" that can be sinked to postgres
+        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
+            var mapper = JsonStringifier.getMapperIgnoringNulls();
+            builder.stream(
+                            output.TOPICS.nodes,
+                            Consumed.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
+                                    .withName(output.TOPICS.nodes + "-consumer")
+                    )
+                    .mapValues((readOnlyKey, value) -> {
+                        try {
+                            return TextValue.newBuilder().setText(
+                                    mapper.writeValueAsString(value)
+                            ).build();
+                        } catch (JsonProcessingException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    })
+                    .to(
+                            output.TOPICS.nodes_flat,
+                            Produced.with(avroSerdes.NodeKey(), avroSerdes.TextValue())
+                                    .withName(output.TOPICS.nodes_flat + "-producer")
+                    );
+        }
 
     }
 
@@ -373,6 +399,7 @@ public class Nodes {
     public enum output {
         TOPICS;
         public final String nodes = Utils.tsPrefixed("nodes");
+        public final String nodes_flat = Utils.tsPrefixed("nodes_flat");
     }
 
 }

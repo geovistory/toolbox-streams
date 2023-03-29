@@ -14,12 +14,13 @@ plugins {
 
 
 dependencies {
-
+// for .env
+    implementation 'io.github.cdimascio:dotenv-java:2.2.4'
 }
 
 application {
     // Define the main class for the application.
-    mainClassName= 'org.geovistory.toolbox.streams.nodes.App'
+    mainClassName = 'org.geovistory.toolbox.streams.nodes.App'
 }
 
 jar {

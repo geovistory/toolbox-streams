@@ -10,6 +10,7 @@ import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.nodes.processors.Nodes;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import static org.geovistory.toolbox.streams.nodes.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.nodes.BuildProperties.getDockerTagSuffix;
@@ -63,6 +64,7 @@ class App {
 
         // add sub-topology StatementEnriched
         Nodes.addProcessors(
+                builder,
                 infResourceStream,
                 infLanguageStream,
                 infAppellationStream,
@@ -84,6 +86,9 @@ class App {
         // create output topics (with number of partitions and delete.policy=compact)
         var topics = new ArrayList<String>();
         topics.add(Nodes.output.TOPICS.nodes);
+        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
+            topics.add(Nodes.output.TOPICS.nodes_flat);
+        }
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
 
