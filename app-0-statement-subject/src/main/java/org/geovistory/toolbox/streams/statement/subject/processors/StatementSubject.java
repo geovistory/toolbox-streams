@@ -92,7 +92,7 @@ public class StatementSubject {
             builder.stream(
                             output.TOPICS.statement_with_subject,
                             Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                                    .withName(output.TOPICS.statement_with_subject + "-producer")
+                                    .withName(output.TOPICS.statement_with_subject + "-consumer")
                     )
                     .mapValues((readOnlyKey, value) -> {
                         try {
