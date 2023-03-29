@@ -1,5 +1,6 @@
 package org.geovistory.toolbox.streams.statement.subject.processors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.information.statement.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -9,11 +10,15 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.NodeKey;
 import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
+import org.geovistory.toolbox.streams.avro.TextValue;
 import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.statement.subject.DbTopicNames;
 import org.geovistory.toolbox.streams.statement.subject.Env;
 import org.geovistory.toolbox.streams.statement.subject.RegisterInputTopic;
+
+import java.util.Objects;
 
 
 public class StatementSubject {
@@ -27,6 +32,7 @@ public class StatementSubject {
         var registerInputTopic = new RegisterInputTopic(builder);
 
         addProcessors(
+                builder,
                 registerInputTopic.infStatementTable(),
                 registerInputTopic.nodeTable()
         );
@@ -35,6 +41,7 @@ public class StatementSubject {
     }
 
     public static void addProcessors(
+            StreamsBuilder builder,
             KTable<dev.information.statement.Key, Value> infStatementTable,
             KTable<NodeKey, NodeValue> nodeTable
     ) {
@@ -78,6 +85,30 @@ public class StatementSubject {
                 Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
                         .withName(output.TOPICS.statement_with_subject + "-producer")
         );
+
+        // if "true" the app creates a topic "statement_enriched_flat" that can be sinked to postgres
+        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
+            var mapper = JsonStringifier.getMapperIgnoringNulls();
+            builder.stream(
+                            output.TOPICS.statement_with_subject,
+                            Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
+                                    .withName(output.TOPICS.statement_with_subject + "-producer")
+                    )
+                    .mapValues((readOnlyKey, value) -> {
+                        try {
+                            return TextValue.newBuilder().setText(
+                                    mapper.writeValueAsString(value)
+                            ).build();
+                        } catch (JsonProcessingException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    })
+                    .to(
+                            output.TOPICS.statement_with_subject_flat,
+                            Produced.with(avroSerdes.InfStatementKey(), avroSerdes.TextValue())
+                                    .withName(output.TOPICS.statement_with_subject_flat + "-producer")
+                    );
+        }
     }
 
     /**
@@ -128,6 +159,7 @@ public class StatementSubject {
         TOPICS;
         public final String statement_with_subject = Utils.tsPrefixed("statement_with_subject");
 
+        public final String statement_with_subject_flat = Utils.tsPrefixed("statement_with_subject_flat");
     }
 
 }

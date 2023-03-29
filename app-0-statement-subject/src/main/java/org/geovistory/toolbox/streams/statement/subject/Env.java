@@ -10,6 +10,10 @@ public enum Env {
     // Name of topic NODES
     public final String TOPIC_NODES;
 
+    // CREATE_OUTPUT_FOR_POSTGRES if "true" the app creates
+    // a topic "statement_enriched_flat" that can be sinked to postgres
+    public final String CREATE_OUTPUT_FOR_POSTGRES;
+
 
     Env() {
         // load .env for local development
@@ -22,6 +26,13 @@ public enum Env {
                 System.getenv("TS_TOPIC_NODES"),
                 dotenv.get("TS_TOPIC_NODES"),
                 "TS_TOPIC_NODES"
+        );
+
+        this.CREATE_OUTPUT_FOR_POSTGRES = Utils.coalesce(
+                System.getProperty("CREATE_OUTPUT_FOR_POSTGRES"),
+                System.getenv("CREATE_OUTPUT_FOR_POSTGRES"),
+                dotenv.get("CREATE_OUTPUT_FOR_POSTGRES"),
+                "false"
         );
     }
 }
