@@ -13,7 +13,7 @@ flowchart TD
     1h-->2h-->3f-->3g 
     1i-->2i-->3g-->3h
     1j-->2j-->3h-->4c-->4d
-    4c-->4e
+
     subgraph 1
         1b[language]
         1c[appellation]
@@ -49,8 +49,7 @@ flowchart TD
     end  
     subgraph __4
         4c([To])
-        4d[nodes_1]
-        4e[nodes_2]
+        4d[nodes]
     end  
     
 ```
