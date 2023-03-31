@@ -38,9 +38,9 @@ generateAvroJava {
     dependsOn('debeziumDevLight')
     dependsOn('debeziumStag')
     dependsOn('debeziumProd')
-    String dir = "generated-main-avro-java/dev"
-    System.out.println("Add Reflection in " + dir)
     doLast {
+        String dir = "generated-main-avro-java/dev"
+        System.out.println("Add Reflection in " + dir)
         String path = project.projectDir.toString() + "/build/" + dir
         addReflection(path)
     }
