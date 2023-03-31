@@ -16,8 +16,9 @@ dependencies {
     implementation "org.apache.avro:avro:1.11.0"
 
     // Confluent Avro Serdes
-    implementation group: 'io.confluent', name: 'kafka-streams-avro-serde', version: '7.3.0'
-
+    implementation(group: 'io.confluent', name: 'kafka-streams-avro-serde', version: '7.3.2') {
+        exclude group: 'org.apache.kafka', module: 'kafka-clients'
+    }
     // Apicurio Avro Serdes
     implementation group: 'io.apicurio', name: 'apicurio-registry-serdes-avro-serde', version: '2.3.1.Final'
 

@@ -95,8 +95,8 @@ public enum AppConfig {
     // streams config commit.interval.ms
     private final String streamsCommitIntervalMs = parseEnv(
             "STREAMS_COMMIT_INTERVAL_MS",
-            "30000"
-    ); // 30000 => 30 seconds
+            "100"
+    ); // 100 with exactly_once, 30000 with at_least_once
 
     // streams config buffer.memory
     private final String streamsBufferMemory = parseEnv(
