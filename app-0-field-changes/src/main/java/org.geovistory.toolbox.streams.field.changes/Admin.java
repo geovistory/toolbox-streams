@@ -16,14 +16,14 @@ public class Admin {
         this.bootstrapServers = bootstrapServers;
     }
 
-    public void createOrConfigureTopics(String[] topicNames, Integer numPartitions, short replicationFactor) {
+    public void createOrConfigureTopics(List<String> topicNames, Integer numPartitions, short replicationFactor) {
 
 
         try (AdminClient adminClient = AdminClient.create(getAdminConfig())) {
 
             var config = getTopicConfig();
 
-            Arrays.stream(topicNames).forEach(topicName -> {
+            topicNames.forEach(topicName -> {
                 var n = new NewTopic(topicName, numPartitions, replicationFactor);
                 n.configs(config);
 
