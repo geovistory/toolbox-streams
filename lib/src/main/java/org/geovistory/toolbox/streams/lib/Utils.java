@@ -92,6 +92,22 @@ public class Utils {
     }
 
     /**
+     * Returns the language iso code for the given Geovistory Language Id
+     *
+     * @param id for example 19008
+     * @return language iso code, for example 'fr' or null if no matching result
+     */
+    public static String getLanguageFromId(int id) {
+        for (Map.Entry<String, Integer> entry : languageMap().entrySet()) {
+            if (entry.getValue() == id) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+
+    /**
      * Shorten a string to a maximum length
      *
      * @param inputString string to shorten

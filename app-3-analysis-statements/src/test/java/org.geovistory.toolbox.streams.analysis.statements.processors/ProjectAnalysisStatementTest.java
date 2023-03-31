@@ -230,12 +230,9 @@ class ProjectAnalysisStatementTest {
 
     @Test
     void testLangString() throws IOException {
-
-
         var projectId = 1;
         var statementId = 2;
 
-        // add a class label
         var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
         var v = ProjectStatementValue.newBuilder()
                 .setProjectId(projectId)
@@ -260,7 +257,6 @@ class ProjectAnalysisStatementTest {
                 .build();
         projectStatementWithLiteralTopic.pipeInput(k, v);
 
-
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
@@ -269,7 +265,45 @@ class ProjectAnalysisStatementTest {
         var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
 
         assertThat(objectInfoValue.getLangString().getString()).isEqualTo("Foo");
+    }
 
+    @Test
+    void testLangStringWithNullString() throws IOException {
+        var projectId = 1;
+        var statementId = 2;
+
+        var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId("i8")
+                                .setPropertyId(2)
+                                .setObjectId("i9")
+                                .setObject(NodeValue.newBuilder().setLabel("Name 2").setId("i2").setClassId(1)
+                                        .setLangString(LangString.newBuilder()
+                                                .setFkClass(2)
+                                                .setPkEntity(2)
+                                                .setString(null)
+                                                .setFkLanguage(123)
+                                                .build()
+                                        ).build()).build()
+                )
+                .setOrdNumOfDomain(1)
+                .setOrdNumOfRange(2)
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(k, v);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var expectedKey = AnalysisStatementKey.newBuilder().setProject(projectId).setPkEntity(statementId).build();
+        var record = outRecords.get(expectedKey);
+        var objectInfoValue = objectMapper.readValue(record.getObjectInfoValue(), ObjectInfoValue.class);
+
+        assertThat(objectInfoValue.getLangString().getString()).isEqualTo("");
     }
 
 

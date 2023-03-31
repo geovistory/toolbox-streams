@@ -169,10 +169,11 @@ public class ProjectAnalysisStatement {
             // LangString
 
             var o = object.getLangString();
+            var string = o.getString() == null ? "" : o.getString();
             v.setLangString(AnalysisLangString.newBuilder()
                     .setPkEntity(o.getPkEntity())
                     .setFkClass(o.getFkClass())
-                    .setString(o.getString())
+                    .setString(string)
                     .setFkLanguage(o.getFkLanguage())
                     .build()
             ).build();

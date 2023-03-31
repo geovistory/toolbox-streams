@@ -9,6 +9,8 @@ import org.geovistory.toolbox.streams.fulltext.processors.project.ProjectEntityF
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.fulltext.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.fulltext.BuildProperties.getDockerTagSuffix;
 
@@ -107,9 +109,9 @@ class App {
 
     private static void createTopicsForProjectView(Admin admin, int outputTopicPartitions, short outputTopicReplicationFactor) {
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectEntityFulltext.output.TOPICS.project_entity_fulltext
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(ProjectEntityFulltext.output.TOPICS.project_entity_fulltext);
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
 
@@ -119,9 +121,10 @@ class App {
             short outputTopicReplicationFactor,
             String nameSupplement) {
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                CommunityEntityFulltext.getOutputTopicName(nameSupplement)
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(CommunityEntityFulltext.getOutputTopicName(nameSupplement));
+
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
 

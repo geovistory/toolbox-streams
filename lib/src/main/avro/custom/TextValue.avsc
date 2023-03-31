@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "TextValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value with a text (string) field",
+  "fields": [
+    {
+      "name": "text",
+      "type": ["null","string"],
+      "default": null
+    }
+  ]
+}

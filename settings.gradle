@@ -20,7 +20,9 @@ rootProject.name = 'toolbox-streams'
 include(
         'app-0-base-model',
         'app-0-field-changes',
-        'app-0-statement-enriched',
+        'app-0-nodes',
+        'app-0-statement-subject',
+        'app-0-statement-object',
         'app-1-base-config',
         'app-2-entity-label',
         'app-3-analysis-statements',

@@ -95,8 +95,8 @@ public enum AppConfig {
     // streams config commit.interval.ms
     private final String streamsCommitIntervalMs = parseEnv(
             "STREAMS_COMMIT_INTERVAL_MS",
-            "30000"
-    ); // 30000 => 30 seconds
+            "100"
+    ); // 100 with exactly_once, 30000 with at_least_once
 
     // streams config buffer.memory
     private final String streamsBufferMemory = parseEnv(
@@ -155,21 +155,25 @@ public enum AppConfig {
 
     private final String streamsConsumerIsolationLevelConfig = parseEnv(
             "STREAMS_CONSUMER_ISOLATION_LEVEL_CONFIG",
-            "read_uncommitted"
+            "read_committed"
+    );
+
+    private final String maxTaskIdleMs = parseEnv(
+            "STREAMS_MAX_TASK_IDLE_MS",
+            "0"
+    );
+
+    private final String maxInFlightRequestsPerConnection = parseEnv(
+            "STREAMS_MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION",
+            "5"
     );
 
 
     AppConfig() {
-
-
     }
 
     public AppConfig getInstance() {
         return INSTANCE;
-    }
-
-    public String getStateDir() {
-        return stateDir;
     }
 
     public String getApicurioRegistryUrl() {
@@ -263,12 +267,16 @@ public enum AppConfig {
         props.put(StreamsConfig.TOPOLOGY_OPTIMIZATION_CONFIG, StreamsConfig.OPTIMIZE);
         props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, INSTANCE.streamsProcessingGuaranteeConfig);
 
+        props.put(StreamsConfig.STATE_DIR_CONFIG, INSTANCE.stateDir);
+        props.put(StreamsConfig.MAX_TASK_IDLE_MS_CONFIG, INSTANCE.maxTaskIdleMs);
+
 
         props.put(StreamsConfig.topicPrefix(TopicConfig.CLEANUP_POLICY_CONFIG), TopicConfig.CLEANUP_POLICY_COMPACT);
 
         // See this for producer configs:
         // https://docs.confluent.io/platform/current/streams/developer-guide/config-streams.html#ak-consumers-producer-and-admin-client-configuration-parameters
         props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_REQUEST_SIZE_CONFIG), "20971760");
+        props.put(StreamsConfig.producerPrefix(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION), INSTANCE.maxInFlightRequestsPerConnection);
 
         // consumer config
         props.put(StreamsConfig.consumerPrefix(ConsumerConfig.ISOLATION_LEVEL_CONFIG), INSTANCE.streamsConsumerIsolationLevelConfig);

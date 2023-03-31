@@ -11,6 +11,8 @@ import org.geovistory.toolbox.streams.entity.preview.processors.project.ProjectE
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.entity.preview.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.entity.preview.BuildProperties.getDockerTagSuffix;
 
@@ -120,11 +122,12 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectEntityPreview.output.TOPICS.project_entity_preview,
-                CommunityEntityPreview.getOutputTopicName("toolbox"),
-                EntityPreview.output.TOPICS.entity_preview
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(ProjectEntityPreview.output.TOPICS.project_entity_preview);
+        topics.add(CommunityEntityPreview.getOutputTopicName("toolbox"));
+        topics.add(EntityPreview.output.TOPICS.entity_preview);
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
+
     }
 
 }

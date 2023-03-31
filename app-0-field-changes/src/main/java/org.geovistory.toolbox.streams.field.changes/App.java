@@ -11,6 +11,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 
+import java.util.ArrayList;
+
+import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerImageTag;
+import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerTagSuffix;
+
 @ApplicationScoped
 public class App {
 
@@ -62,10 +67,10 @@ public class App {
 
     private void createTopics() {
         // create output topics (with number of partitions and delete.policy=compact)
+        var topics = new ArrayList<String>();
+        topics.add(projectFieldChange.outputTopicProjectFieldChange());
         new Admin(bootstrapServers)
-                .createOrConfigureTopics(new String[]{
-                        projectFieldChange.outputTopicProjectFieldChange()
-                }, outputTopicPartitions, outputTopicReplicationFactor);
+                .createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
 

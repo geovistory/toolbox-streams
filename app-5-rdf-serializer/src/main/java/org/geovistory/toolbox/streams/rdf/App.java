@@ -9,6 +9,8 @@ import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 import org.geovistory.toolbox.streams.rdf.processors.project.ProjectStatementToUri;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.rdf.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.rdf.BuildProperties.getDockerTagSuffix;
 
@@ -70,10 +72,11 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectStatementToUri.output.TOPICS.project_rdf,
-                //CommunityEntityPreview.getOutputTopicName("toolbox") TODO do not forget to add community output topic when available
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(ProjectStatementToUri.output.TOPICS.project_rdf);
+        // topics.add(CommunityEntityPreview.getOutputTopicName("toolbox")); TODO do not forget to add community output topic when available
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
+
     }
 
 }

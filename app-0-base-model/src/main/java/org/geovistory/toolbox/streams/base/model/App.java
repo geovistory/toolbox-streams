@@ -9,6 +9,8 @@ import org.geovistory.toolbox.streams.base.model.processors.*;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import java.util.ArrayList;
+
 class App {
     public static void main(String[] args) {
 
@@ -82,15 +84,14 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                OntomeClassLabel.output.TOPICS.ontome_class_label,
-                OntomePropertyLabel.output.TOPICS.ontome_property_label,
-                OntomeClassMetadata.output.TOPICS.ontome_class_metadata,
-                HasTypeProperty.output.TOPICS.has_type_property,
-                ontomeClass.outputTopicName,
-                ontomeProperty.outputTopicName
-
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(OntomeClassLabel.output.TOPICS.ontome_class_label);
+        topics.add(OntomePropertyLabel.output.TOPICS.ontome_property_label);
+        topics.add(OntomeClassMetadata.output.TOPICS.ontome_class_metadata);
+        topics.add(HasTypeProperty.output.TOPICS.has_type_property);
+        topics.add(ontomeClass.outputTopicName);
+        topics.add(ontomeProperty.outputTopicName);
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
 
