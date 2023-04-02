@@ -22,3 +22,7 @@ build
 
 # temporary files
 tmp
+
+# generated files
+lib/src/main/avro/debezium-stag
+lib/src/main/avro/debezium-prod
