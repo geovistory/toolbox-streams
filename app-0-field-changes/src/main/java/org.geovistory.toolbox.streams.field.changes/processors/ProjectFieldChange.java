@@ -8,8 +8,8 @@ import org.geovistory.toolbox.streams.avro.FieldChangeJoin;
 import org.geovistory.toolbox.streams.avro.FieldChangeKey;
 import org.geovistory.toolbox.streams.avro.FieldChangeValue;
 import org.geovistory.toolbox.streams.field.changes.AvroSerdes;
-import org.geovistory.toolbox.streams.field.changes.DbTopicNames;
 import org.geovistory.toolbox.streams.field.changes.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -153,11 +153,11 @@ public class ProjectFieldChange {
 
 
     public String inputTopicProInfoProjRel() {
-        return Utils.prefixedIn(inPrefix, DbTopicNames.pro_info_proj_rel.getValue());
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.pro_info_proj_rel.getValue());
     }
 
     public String inputTopicInfStatement() {
-        return Utils.prefixedIn(inPrefix, DbTopicNames.inf_statement.getValue());
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_statement.getValue());
     }
 
     public enum inner {

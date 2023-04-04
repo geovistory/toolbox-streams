@@ -29,20 +29,6 @@ jar {
     manifest.attributes('Main-Class': application.mainClassName)
 }
 
-jib {
-    from {
-        image = "ghcr.io/geovistory/kafka-streams-base:0.2"
-    }
-    to {
-        image = getDockerImageTag()
-    }
-    container {
-        jvmFlags = []
-        mainClass = application.mainClassName
-        format = 'OCI'
-    }
-}
-
 
 /**
  * Get docker tag suffix from semanti version and pull request metadata.
@@ -152,7 +138,7 @@ task generateReflectionConfiguration {
     }
 }
 compileJava {
-    dependsOn(generateReflectionConfiguration)
+    //   dependsOn(generateReflectionConfiguration)
     dependsOn(generateJava)
 }
 sourceSets.main.java.srcDir generateReflectionConfiguration.outputDir

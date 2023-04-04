@@ -1,12 +1,12 @@
-package org.geovistory.toolbox.streams.field.changes;
+package org.geovistory.toolbox.streams.lib;
 
-public enum DbTopicNames {
+public enum TopicNameEnum {
     inf_statement("information.statement"),
     pro_info_proj_rel("projects.info_proj_rel");
 
     private final String value;
 
-    DbTopicNames(String value) {
+    TopicNameEnum(String value) {
         this.value = value;
     }
 

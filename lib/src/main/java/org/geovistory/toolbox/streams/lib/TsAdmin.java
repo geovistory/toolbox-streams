@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.field.changes;
+package org.geovistory.toolbox.streams.lib;
 
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.config.ConfigResource;
@@ -8,11 +8,11 @@ import org.apache.kafka.common.errors.TopicExistsException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-public class Admin {
+public class TsAdmin {
 
     String bootstrapServers;
 
-    public Admin(String bootstrapServers) {
+    public TsAdmin(String bootstrapServers) {
         this.bootstrapServers = bootstrapServers;
     }
 

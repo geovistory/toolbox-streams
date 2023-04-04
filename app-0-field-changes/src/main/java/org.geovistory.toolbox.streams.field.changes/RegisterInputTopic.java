@@ -8,6 +8,7 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -36,7 +37,7 @@ public class RegisterInputTopic {
 
     public KTable<Key, Value> proInfoProjRelTable() {
         return getRepartitionedTable(
-                prefixedIn(prefix, DbTopicNames.pro_info_proj_rel.getValue()),
+                prefixedIn(prefix, TopicNameEnum.pro_info_proj_rel.getValue()),
                 avroSerdes.ProInfoProjRelKey(),
                 avroSerdes.ProInfoProjRelValue()
         );
@@ -44,7 +45,7 @@ public class RegisterInputTopic {
 
     public KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable() {
         return getRepartitionedTable(
-                prefixedIn(prefix, DbTopicNames.inf_statement.getValue()),
+                prefixedIn(prefix, TopicNameEnum.inf_statement.getValue()),
                 avroSerdes.InfStatementKey(),
                 avroSerdes.InfStatementValue()
         );

@@ -3,21 +3,23 @@
  */
 package org.geovistory.toolbox.streams.field.changes;
 
+
+import io.quarkus.runtime.ShutdownEvent;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.field.changes.processors.ProjectFieldChange;
+import org.geovistory.toolbox.streams.lib.TsAdmin;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-
 import java.util.ArrayList;
-
-import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerTagSuffix;
 
 @ApplicationScoped
 public class App {
+    private static final Logger LOGGER = Logger.getLogger("ListenerBean");
 
     @ConfigProperty(name = "ts.output.topic.partitions")
     int outputTopicPartitions;
@@ -69,9 +71,17 @@ public class App {
         // create output topics (with number of partitions and delete.policy=compact)
         var topics = new ArrayList<String>();
         topics.add(projectFieldChange.outputTopicProjectFieldChange());
-        new Admin(bootstrapServers)
+        new TsAdmin(bootstrapServers)
                 .createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
 
+
+    // Called when the application is terminating
+    public void onStop(@Observes ShutdownEvent ev) {
+        LOGGER.info("The application is stopping...");
+
+        // Terminate the container
+        System.exit(0);
+    }
 }
