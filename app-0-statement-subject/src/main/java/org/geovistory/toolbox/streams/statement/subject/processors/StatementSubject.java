@@ -3,51 +3,62 @@ package org.geovistory.toolbox.streams.statement.subject.processors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.information.statement.Value;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.NodeKey;
 import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.avro.TextValue;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.JsonStringifier;
+import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
-import org.geovistory.toolbox.streams.statement.subject.DbTopicNames;
-import org.geovistory.toolbox.streams.statement.subject.Env;
+import org.geovistory.toolbox.streams.statement.subject.AvroSerdes;
+import org.geovistory.toolbox.streams.statement.subject.BuilderSingleton;
 import org.geovistory.toolbox.streams.statement.subject.RegisterInputTopic;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Objects;
 
-
+@ApplicationScoped
 public class StatementSubject {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    public BuilderSingleton builderSingleton;
+
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    String inPrefix;
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    public String outPrefix;
+    @ConfigProperty(name = "create.output.for.postgres", defaultValue = "false")
+    public String createOutputForPostgres;
+
+    public StatementSubject(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
     }
 
-
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
 
         addProcessors(
-                builder,
                 registerInputTopic.infStatementTable(),
                 registerInputTopic.nodeTable()
         );
 
-        return builder.build();
     }
 
-    public static void addProcessors(
-            StreamsBuilder builder,
+    public void addProcessors(
             KTable<dev.information.statement.Key, Value> infStatementTable,
             KTable<NodeKey, NodeValue> nodeTable
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         // join subject
         var statementJoinedWithSubjectTable = infStatementTable.join(
@@ -68,31 +79,31 @@ public class StatementSubject {
                     }
                     return v.build();
                 },
-                TableJoined.as(output.TOPICS.statement_with_subject + "-fk-join"),
-                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(output.TOPICS.statement_with_subject)
+                TableJoined.as(outStatementWithSubject() + "-fk-join"),
+                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(outStatementWithSubject())
                         .withKeySerde(avroSerdes.InfStatementKey())
                         .withValueSerde(avroSerdes.StatementEnrichedValue())
         );
 
 
         var stream = statementJoinedWithSubjectTable.toStream(
-                Named.as(output.TOPICS.statement_with_subject + "-to-stream")
+                Named.as(outStatementWithSubject() + "-to-stream")
         );
 
 
         stream.to(
-                output.TOPICS.statement_with_subject,
+                outStatementWithSubject(),
                 Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(output.TOPICS.statement_with_subject + "-producer")
+                        .withName(outStatementWithSubject() + "-producer")
         );
 
         // if "true" the app creates a topic "statement_enriched_flat" that can be sinked to postgres
-        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
+        if (Objects.equals(createOutputForPostgres, "true")) {
             var mapper = JsonStringifier.getMapperIgnoringNulls();
-            builder.stream(
-                            output.TOPICS.statement_with_subject,
+            builderSingleton.builder.stream(
+                            outStatementWithSubject(),
                             Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                                    .withName(output.TOPICS.statement_with_subject + "-consumer")
+                                    .withName(outStatementWithSubject() + "-consumer")
                     )
                     .mapValues((readOnlyKey, value) -> {
                         try {
@@ -104,9 +115,9 @@ public class StatementSubject {
                         }
                     })
                     .to(
-                            output.TOPICS.statement_with_subject_flat,
+                            outStatementWithSubjectFlat(),
                             Produced.with(avroSerdes.InfStatementKey(), avroSerdes.TextValue())
-                                    .withName(output.TOPICS.statement_with_subject_flat + "-producer")
+                                    .withName(outStatementWithSubjectFlat() + "-producer")
                     );
         }
     }
@@ -147,19 +158,22 @@ public class StatementSubject {
         return id;
     }
 
-    public enum input {
-        TOPICS;
-        public final String inf_statement = DbTopicNames.inf_statement.getName();
-        public final String nodes = Env.INSTANCE.TOPIC_NODES;
 
+    public String inInfStatement() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_statement.getValue());
     }
 
-
-    public enum output {
-        TOPICS;
-        public final String statement_with_subject = Utils.tsPrefixed("statement_with_subject");
-
-        public final String statement_with_subject_flat = Utils.tsPrefixed("statement_with_subject_flat");
+    public String inNodes() {
+        return registerInputTopic.tsTopicNodes;
     }
+
+    public String outStatementWithSubject() {
+        return Utils.prefixedOut(outPrefix, "statement_with_subject");
+    }
+
+    public String outStatementWithSubjectFlat() {
+        return Utils.prefixedOut(outPrefix, "statement_with_subject_flat");
+    }
+
 
 }

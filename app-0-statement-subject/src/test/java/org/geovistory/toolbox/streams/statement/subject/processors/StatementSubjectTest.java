@@ -1,13 +1,17 @@
 package org.geovistory.toolbox.streams.statement.subject.processors;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.Entity;
 import org.geovistory.toolbox.streams.avro.NodeKey;
 import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.statement.subject.AvroSerdes;
+import org.geovistory.toolbox.streams.statement.subject.BuilderSingleton;
+import org.geovistory.toolbox.streams.statement.subject.RegisterInputTopic;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,26 +39,28 @@ class StatementSubjectTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = StatementSubject.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton);
+        var statementSubject = new StatementSubject(avroSerdes, registerInputTopic);
+        statementSubject.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         infStatementTopic = testDriver.createInputTopic(
-                StatementSubject.input.TOPICS.inf_statement,
+                statementSubject.inInfStatement(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.InfStatementValue().serializer()
         );
         nodeTopic = testDriver.createInputTopic(
-                StatementSubject.input.TOPICS.nodes,
+                statementSubject.inNodes(),
                 avroSerdes.NodeKey().serializer(),
                 avroSerdes.NodeValue().serializer()
         );
         statementWithSubjectTopic = testDriver.createOutputTopic(
-                StatementSubject.output.TOPICS.statement_with_subject,
+                statementSubject.outStatementWithSubject(),
                 avroSerdes.InfStatementKey().deserializer(),
                 avroSerdes.StatementEnrichedValue().deserializer());
 

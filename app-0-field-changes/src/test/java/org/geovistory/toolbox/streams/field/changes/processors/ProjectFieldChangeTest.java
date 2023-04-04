@@ -44,8 +44,6 @@ class ProjectFieldChangeTest {
         var projectFieldChange = new ProjectFieldChange(avroSerdes, registerInputTopic);
         projectFieldChange.addProcessorsStandalone();
         var topology = builderSingleton.builder.build();
-        // projectFieldChange.addProcessorsStandalone();
-        // Topology topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
         infStatementTopic = testDriver.createInputTopic(
