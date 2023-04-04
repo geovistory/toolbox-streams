@@ -92,10 +92,12 @@ task generateReflectionConfiguration {
     ext.outputDir = "$buildDir/generated/java"
     outputs.dir outputDir
     doFirst {
-        var path = project.projectDir.toString() + "/src/main/java/org.geovistory.toolbox.streams.field.changes/AvroSerdes.java"
+        var basePathSrc = project.projectDir.toString() + "/src/main/java/org.geovistory.toolbox.streams.field.changes"
+        var path = basePathSrc + "/AvroSerdes.java"
         var p = Pattern.compile("public Serde<(.*)>", Pattern.DOTALL)
         var classNames = new ArrayList<String>()
 
+        var basePathBuild = "$outputDir"
         try {
             var myObj = new File(path)
             Scanner myReader = new Scanner(myObj)
@@ -103,11 +105,28 @@ task generateReflectionConfiguration {
                 String line = myReader.nextLine()
                 var x = (line =~ p)
                 if (x.size() > 0) {
-                    var className = (line =~ p)[0][1].toString() + ".class"
-                    classNames.add(className)
-                    if (className.startsWith("dev.")) {
-                        classNames.add(className.replace("dev.", "stag."))
-                        classNames.add(className.replace("dev.", "prod."))
+                    var fullClassName = (line =~ p)[0][1].toString()
+                    classNames.add(fullClassName + ".class")
+                    if (fullClassName.startsWith("dev.")) {
+                        var newFullName = fullClassName.replace("dev.", "stag.")
+                        var parts = fullClassName.split("\\.")
+                        var className = parts[parts.size() - 1]
+                        var newPackageName = newFullName.replace("." + className, "")
+                        var filePath = basePathBuild + "/" + newPackageName.replace(".", "/")
+                        mkdir filePath
+                        var file = filePath + "/" + className + ".java"
+                        createExtendingAvroClass(file, newPackageName, className, fullClassName)
+                        classNames.add(newFullName + ".class")
+
+                        newFullName = fullClassName.replace("dev.", "prod.")
+                        parts = fullClassName.split("\\.")
+                        className = parts[parts.size() - 1]
+                        newPackageName = newFullName.replace("." + className, "")
+                        filePath = basePathBuild + "/" + newPackageName.replace(".", "/")
+                        mkdir filePath
+                        file = filePath + "/" + className + ".java"
+                        createExtendingAvroClass(file, newPackageName, className, fullClassName)
+                        classNames.add(newFullName + ".class")
                     }
                 }
             }
@@ -140,4 +159,14 @@ sourceSets.main.java.srcDir generateReflectionConfiguration.outputDir
 sourceSets.main.java.srcDir generateJava.outputDir
 
 
+private static void createExtendingAvroClass(String filePath, String newPackageName, String className, String oldFullName) {
 
+    var myFile = new File(filePath)
+    myFile.createNewFile()
+    var newText = "package " + newPackageName + ";\n" +
+            "import io.quarkus.runtime.annotations.RegisterForReflection;\n" +
+            "@RegisterForReflection\n" +
+            "public class " + className + " extends " + oldFullName +
+            " implements org.apache.avro.specific.SpecificRecord { }"
+    myFile.write(newText)
+}

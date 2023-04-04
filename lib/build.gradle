@@ -34,8 +34,8 @@ dependencies {
 }
 
 generateAvroJava {
-    dependsOn('stag')
-    dependsOn('prod')
+    // dependsOn('stag')
+    // dependsOn('prod')
     // dependsOn('debeziumStag')
     // dependsOn('debeziumProd')
     // doLast {
@@ -73,7 +73,6 @@ tasks.register('prod', Copy) {
 }
 
 
-
 private static void refactorAvroNamespaces(String directoryPath, String prefix) {
     try (var filePaths = Files.walk(Paths.get(directoryPath))) {
         filePaths
@@ -83,7 +82,7 @@ private static void refactorAvroNamespaces(String directoryPath, String prefix) 
                     def fileText = myFile.text
 
                     var newText = fileText.replace("\"namespace\": \"dev.", "\"namespace\": \"" + prefix + ".")
-                     newText = newText.replace("\"connect.name\": \"dev.", "\"connect.name\": \"" + prefix + ".")
+                    newText = newText.replace("\"connect.name\": \"dev.", "\"connect.name\": \"" + prefix + ".")
 
                     myFile.write(newText)
                 })
