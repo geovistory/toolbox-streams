@@ -22,5 +22,10 @@ dependencies {
     implementation project(':lib')
     // PostGis to handle Geometries
     implementation 'org.postgis:postgis-jdbc:1.3.3'
+
+    // Quarkus
+    implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
+    implementation 'io.quarkus:quarkus-smallrye-health'
+    implementation 'io.quarkus:quarkus-kubernetes'
 }
 

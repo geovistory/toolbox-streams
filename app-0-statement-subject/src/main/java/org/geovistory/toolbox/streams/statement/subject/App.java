@@ -41,10 +41,11 @@ public class App {
     @Inject
     StatementSubject statementSubject;
 
+    Boolean initialized = false;
+
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
     @Produces
     public Topology buildTopology() {
-
 
         // add processors of sub-topologies
         addSubTopologies();
@@ -59,15 +60,19 @@ public class App {
 
     private void addSubTopologies() {
 
-        // register input topics as KTables
-        var infStatementTable = registerInputTopic.infStatementTable();
-        var nodeTable = registerInputTopic.nodeTable();
 
-        // add sub-topology StatementSubject
-        statementSubject.addProcessors(
-                infStatementTable,
-                nodeTable
-        );
+        if (!initialized) {
+            // register input topics as KTables
+            var infStatementTable = registerInputTopic.infStatementTable();
+            var nodeTable = registerInputTopic.nodeTable();
+
+            // add sub-topology StatementSubject
+            statementSubject.addProcessors(
+                    infStatementTable,
+                    nodeTable
+            );
+            initialized = true;
+        }
     }
 
     private void createTopics() {
@@ -89,6 +94,6 @@ public class App {
         LOGGER.info("The application is stopping...");
 
         // Terminate the container
-        System.exit(0);
+        // System.exit(0);
     }
 }
