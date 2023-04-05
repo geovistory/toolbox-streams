@@ -86,6 +86,7 @@ task generateReflectionConfiguration {
         var classNames = new ArrayList<String>()
 
 
+        classNames.add("Appellation.class")
         classNames.add("Entity.class")
         classNames.add("Language.class")
         classNames.add("TimePrimitive.class")
