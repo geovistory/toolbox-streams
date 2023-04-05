@@ -24,7 +24,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName= 'org.geovistory.toolbox.streams.statement.subject.App'
+    mainClassName = 'org.geovistory.toolbox.streams.statement.subject.App'
 }
 
 jar {
@@ -85,6 +85,16 @@ task generateReflectionConfiguration {
         var p = Pattern.compile("public Serde<(.*)>", Pattern.DOTALL)
         var classNames = new ArrayList<String>()
 
+
+        classNames.add("Entity.class")
+        classNames.add("Language.class")
+        classNames.add("TimePrimitive.class")
+        classNames.add("Dimension.class")
+        classNames.add("Cell.class")
+        classNames.add("Digital.class")
+        classNames.add("NodeKey.class")
+        classNames.add("NodeValue.class")
+
         var basePathBuild = "$outputDir"
         try {
             var myObj = new File(path)
@@ -133,7 +143,7 @@ task generateReflectionConfiguration {
                 |
                 |@RegisterForReflection(targets = {
                 |   """.stripMargin() +
-                        classNames.toArray().join(",\n|   ").stripMargin() +
+                        classNames.toArray().toUnique().join(",\n|   ").stripMargin() +
                         """|})
                 |public class ReflectionConfig {
                 |}""".stripMargin()
