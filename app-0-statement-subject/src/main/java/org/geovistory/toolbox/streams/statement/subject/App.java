@@ -60,7 +60,6 @@ public class App {
 
     private void addSubTopologies() {
 
-
         if (!initialized) {
             // register input topics as KTables
             var infStatementTable = registerInputTopic.infStatementTable();
@@ -91,7 +90,7 @@ public class App {
 
     // Called when the application is terminating
     public void onStop(@Observes ShutdownEvent ev) {
-        LOGGER.info("The application is stopping...");
+        LOGGER.info("The application is stopping ...");
 
         // Terminate the container
         // System.exit(0);
