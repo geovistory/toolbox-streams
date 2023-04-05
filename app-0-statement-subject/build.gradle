@@ -86,6 +86,7 @@ task generateReflectionConfiguration {
         var classNames = new ArrayList<String>()
 
 
+        classNames.add("io.debezium.data.geometry.Geography.class")
         classNames.add("Entity.class")
         classNames.add("Language.class")
         classNames.add("Appellation.class")
