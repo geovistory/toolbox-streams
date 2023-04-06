@@ -3,81 +3,85 @@
  */
 package org.geovistory.toolbox.streams.field.changes;
 
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
+
+import io.quarkus.runtime.ShutdownEvent;
+import org.apache.kafka.streams.Topology;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.field.changes.processors.ProjectFieldChange;
-import org.geovistory.toolbox.streams.lib.Admin;
-import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.lib.TsAdmin;
+import org.jboss.logging.Logger;
 
-import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.field.changes.BuildProperties.getDockerTagSuffix;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import java.util.ArrayList;
 
-class App {
-    public static void main(String[] args) {
+@ApplicationScoped
+public class App {
+    private static final Logger LOGGER = Logger.getLogger("ListenerBean");
 
+    @ConfigProperty(name = "ts.output.topic.partitions")
+    int outputTopicPartitions;
+    @ConfigProperty(name = "ts.output.topic.replication.factor")
+    short outputTopicReplicationFactor;
 
-        StreamsBuilder builder = new StreamsBuilder();
+    @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
+    String bootstrapServers;
+
+    @Inject
+    ProjectFieldChange projectFieldChange;
+
+    @Inject
+    BuilderSingleton builderSingleton;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
+    @Produces
+    public Topology buildTopology() {
+
 
         // add processors of sub-topologies
-        addSubTopologies(builder);
-
-        // get config
-        var config = AppConfig.getConfig();
-
-        // print config
-        AppConfig.INSTANCE.printConfigs();
-
-        // build the topology
-        var topology = builder.build(config);
-
-        // print topology
-        System.out.println(topology.describe());
+        addSubTopologies();
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();
 
-        // print configuration information
-        System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
-        System.out.println("With config:");
-
-        // create the streams app
-        // noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, config);
-
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-
-        // start streaming!
-        streams.start();
+        // build the topology
+        return builderSingleton.builder.build();
     }
 
-    private static void addSubTopologies(StreamsBuilder builder) {
-        var inputTopics = new RegisterInputTopic(builder);
+    private void addSubTopologies() {
 
         // register input topics as KTables
-        var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
-        var infStatementTable = inputTopics.infStatementTable();
+        var proInfoProjRelTable = registerInputTopic.proInfoProjRelTable();
+        var infStatementTable = registerInputTopic.infStatementTable();
 
         // add sub-topology ProjectFieldChange
-        ProjectFieldChange.addProcessors(builder,
+        projectFieldChange.addProcessors(
                 infStatementTable,
                 proInfoProjRelTable
         );
 
     }
 
-    private static void createTopics() {
-        var admin = new Admin();
-
-        var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
-        var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
-
+    private void createTopics() {
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectFieldChange.output.TOPICS.project_field_change
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(projectFieldChange.outputTopicProjectFieldChange());
+        new TsAdmin(bootstrapServers)
+                .createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
     }
 
 
+    // Called when the application is terminating
+    public void onStop(@Observes ShutdownEvent ev) {
+        LOGGER.info("The application is stopping...");
+
+        // Terminate the container
+        System.exit(0);
+    }
 }

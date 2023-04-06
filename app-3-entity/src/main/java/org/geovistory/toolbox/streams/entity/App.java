@@ -22,6 +22,8 @@ import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityTyp
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.entity.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.entity.BuildProperties.getDockerTagSuffix;
 
@@ -176,12 +178,12 @@ class App {
 
     private static void createTopicsForProjectView(Admin admin, int outputTopicPartitions, short outputTopicReplicationFactor) {
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectEntityClassLabel.output.TOPICS.project_entity_class_label,
-                ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span,
-                ProjectEntityClassMetadata.output.TOPICS.project_entity_class_metadata,
-                ProjectEntityType.output.TOPICS.project_entity_type,
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(ProjectEntityClassLabel.output.TOPICS.project_entity_class_label);
+        topics.add(ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span);
+        topics.add(ProjectEntityClassMetadata.output.TOPICS.project_entity_class_metadata);
+        topics.add(ProjectEntityType.output.TOPICS.project_entity_type);
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
 
@@ -191,12 +193,12 @@ class App {
             short outputTopicReplicationFactor,
             String nameSupplement) {
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                CommunityEntityClassLabel.getOutputTopicName(nameSupplement),
-                CommunityEntityTimeSpan.getOutputTopicName(nameSupplement),
-                CommunityEntityClassMetadata.getOutputTopicName(nameSupplement),
-                CommunityEntityType.getOutputTopicName(nameSupplement),
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(CommunityEntityClassLabel.getOutputTopicName(nameSupplement));
+        topics.add(CommunityEntityTimeSpan.getOutputTopicName(nameSupplement));
+        topics.add(CommunityEntityClassMetadata.getOutputTopicName(nameSupplement));
+        topics.add(CommunityEntityType.getOutputTopicName(nameSupplement));
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
 

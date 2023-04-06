@@ -1,11 +1,15 @@
 package org.geovistory.toolbox.streams.field.changes.processors;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.FieldChangeKey;
 import org.geovistory.toolbox.streams.avro.FieldChangeValue;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.field.changes.AvroSerdes;
+import org.geovistory.toolbox.streams.field.changes.BuilderSingleton;
+import org.geovistory.toolbox.streams.field.changes.RegisterInputTopic;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,35 +27,37 @@ class ProjectFieldChangeTest {
     private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
     private TestOutputTopic<FieldChangeKey, FieldChangeValue> outputTopic;
 
+
     @BeforeEach
     void setup() {
-
 
         Properties props = new Properties();
         var appId = "test";
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = ProjectFieldChange.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton);
+        var projectFieldChange = new ProjectFieldChange(avroSerdes, registerInputTopic);
+        projectFieldChange.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         infStatementTopic = testDriver.createInputTopic(
-                ProjectFieldChange.input.TOPICS.inf_statement,
+                projectFieldChange.inputTopicInfStatement(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.InfStatementValue().serializer());
 
         proInfoProjRelTopic = testDriver.createInputTopic(
-                ProjectFieldChange.input.TOPICS.pro_info_proj_rel,
+                projectFieldChange.inputTopicProInfoProjRel(),
                 avroSerdes.ProInfoProjRelKey().serializer(),
                 avroSerdes.ProInfoProjRelValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectFieldChange.output.TOPICS.project_field_change,
+                projectFieldChange.outputTopicProjectFieldChange(),
                 avroSerdes.FieldChangeKey().deserializer(),
                 avroSerdes.FieldChangeValue().deserializer());
     }

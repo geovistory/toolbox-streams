@@ -243,7 +243,7 @@ grown.
 
 In case the HashMap does not return a language code, use `fk_language`.
 This case is expected to be extremely rare. Future improvement would involve a join of lang_string with language
-in `org.geovistory.toolbox.streams.statement.enriched.processors.StatementEnriched` in order to retrieve a language
+in `org.geovistory.toolbox.streams.statement.enriched.processors.StatementSubject` in order to retrieve a language
 code.
 
 #### Out
@@ -312,7 +312,7 @@ Remarks on `geo_point`
 
 For writing tests, this might be helpful:
 
-- `org.geovistory.toolbox.streams.statement.enriched.processors.StatementEnrichedTest`
+- `org.geovistory.toolbox.streams.statement.subject.processors.StatementSubjectTest`
 
 #### Out
 

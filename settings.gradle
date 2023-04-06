@@ -6,12 +6,23 @@
  * Detailed information about configuring a multi-project build in Gradle can be found
  * in the user manual at https://docs.gradle.org/7.4/userguide/multi_project_builds.html
  */
-
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        mavenLocal()
+    }
+    plugins {
+        id "${quarkusPluginId}" version "${quarkusPluginVersion}"
+    }
+}
 rootProject.name = 'toolbox-streams'
 include(
         'app-0-base-model',
         'app-0-field-changes',
-        'app-0-statement-enriched',
+        'app-0-nodes',
+        'app-0-statement-subject',
+        'app-0-statement-object',
         'app-1-base-config',
         'app-2-entity-label',
         'app-3-analysis-statements',

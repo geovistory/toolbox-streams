@@ -20,6 +20,12 @@ public class Utils {
         return topicName.replace('.', '_');
     }
 
+    public static String prefixedOut(String prefix, String name) {
+        var topicName = prefix + "_" + name;
+        return topicName.replace('.', '_');
+    }
+
+
     /**
      * dbPrefixed
      *
@@ -28,6 +34,10 @@ public class Utils {
      */
     public static String dbPrefixed(String name) {
         return AppConfig.INSTANCE.getInputTopicPrefix() + "." + name;
+    }
+
+    public static String prefixedIn(String prefix, String name) {
+        return prefix + "." + name;
     }
 
     @SafeVarargs

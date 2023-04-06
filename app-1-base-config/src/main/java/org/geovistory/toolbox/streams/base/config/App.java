@@ -10,6 +10,8 @@ import org.geovistory.toolbox.streams.base.config.processors.*;
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.base.config.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.base.config.BuildProperties.getDockerTagSuffix;
 
@@ -143,19 +145,20 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                GeovClassLabel.output.TOPICS.geov_class_label,
-                ProjectClass.output.TOPICS.project_class,
-                ProjectProfiles.output.TOPICS.project_profile,
-                ProjectProperty.output.TOPICS.project_property,
-                ProjectClassLabel.output.TOPICS.project_class_label,
-                CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config,
-                CommunityClassLabel.output.TOPICS.community_class_label,
-                CommunityPropertyLabel.output.TOPICS.community_property_label,
-                GeovPropertyLabel.output.TOPICS.geov_property_label,
-                ProjectPropertyLabel.output.TOPICS.project_property_label,
-                ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config,
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(GeovClassLabel.output.TOPICS.geov_class_label);
+        topics.add(ProjectClass.output.TOPICS.project_class);
+        topics.add(ProjectProfiles.output.TOPICS.project_profile);
+        topics.add(ProjectProperty.output.TOPICS.project_property);
+        topics.add(ProjectClassLabel.output.TOPICS.project_class_label);
+        topics.add(CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config);
+        topics.add(CommunityClassLabel.output.TOPICS.community_class_label);
+        topics.add(CommunityPropertyLabel.output.TOPICS.community_property_label);
+        topics.add(GeovPropertyLabel.output.TOPICS.geov_property_label);
+        topics.add(ProjectPropertyLabel.output.TOPICS.project_property_label);
+        topics.add(ProjectEntityLabelConfig.output.TOPICS.project_entity_label_config);
+
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
 

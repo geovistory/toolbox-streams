@@ -9,6 +9,8 @@ import org.geovistory.toolbox.streams.analysis.statements.processors.ProjectAnal
 import org.geovistory.toolbox.streams.lib.Admin;
 import org.geovistory.toolbox.streams.lib.AppConfig;
 
+import java.util.ArrayList;
+
 import static org.geovistory.toolbox.streams.analysis.statements.BuildProperties.getDockerImageTag;
 import static org.geovistory.toolbox.streams.analysis.statements.BuildProperties.getDockerTagSuffix;
 
@@ -53,7 +55,7 @@ class App {
                 builder,
                 inputTopics.projectStatementWithLiteral(),
                 inputTopics.projectStatementWithEntity()
-                );
+        );
     }
 
     private static void createTopics() {
@@ -63,9 +65,9 @@ class App {
         var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
 
         // create output topics (with number of partitions and delete.policy=compact)
-        admin.createOrConfigureTopics(new String[]{
-                ProjectAnalysisStatement.output.TOPICS.project_analysis_statement,
-        }, outputTopicPartitions, outputTopicReplicationFactor);
+        var topics = new ArrayList<String>();
+        topics.add(ProjectAnalysisStatement.output.TOPICS.project_analysis_statement);
+        admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
 }
