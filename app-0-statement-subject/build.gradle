@@ -86,8 +86,8 @@ task generateReflectionConfiguration {
         var classNames = new ArrayList<String>()
 
 
-        classNames.add("org.apache.avro.Schema")
-        classNames.add("org.apache.avro.specific.SpecificData")
+        classNames.add("org.apache.avro.Schema.class")
+        classNames.add("org.apache.avro.specific.SpecificData.class")
         classNames.add("io.debezium.data.geometry.Geography.class")
         classNames.add("Entity.class")
         classNames.add("Language.class")
