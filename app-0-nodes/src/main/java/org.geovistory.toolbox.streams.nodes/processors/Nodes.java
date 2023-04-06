@@ -1,39 +1,52 @@
 package org.geovistory.toolbox.streams.nodes.processors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
-import org.geovistory.toolbox.streams.lib.JsonStringifier;
+import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility;
-import org.geovistory.toolbox.streams.nodes.DbTopicNames;
-import org.geovistory.toolbox.streams.nodes.Env;
+import org.geovistory.toolbox.streams.nodes.AvroSerdes;
+import org.geovistory.toolbox.streams.nodes.BuilderSingleton;
 import org.geovistory.toolbox.streams.nodes.RegisterInputTopic;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Objects;
 
+@ApplicationScoped
 public class Nodes {
 
     public static final int MAX_STRING_LENGTH = 100;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    public BuilderSingleton builderSingleton;
+
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    String inPrefix;
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    public String outPrefix;
+    @ConfigProperty(name = "create.output.for.postgres", defaultValue = "false")
+    public String createOutputForPostgres;
+
+    public Nodes(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
     }
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
 
         addProcessors(
-                builder,
                 registerInputTopic.infResourceStream(),
                 registerInputTopic.infLanguageStream(),
                 registerInputTopic.infAppellationStream(),
@@ -44,11 +57,9 @@ public class Nodes {
                 registerInputTopic.datDigitalStream(),
                 registerInputTopic.tabCellStream()
         );
-        return builder.build();
     }
 
-    public static void addProcessors(
-            StreamsBuilder builder,
+    public void addProcessors(
             KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
 
             KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream,
@@ -62,8 +73,6 @@ public class Nodes {
 
 
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         // Map entities to nodes
         var entityNodes = infResourceTable
@@ -210,33 +219,26 @@ public class Nodes {
 
 
         nodes.to(
-                output.TOPICS.nodes,
+                outNodes(),
                 Produced.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                        .withName(output.TOPICS.nodes + "-producer")
+                        .withName(outNodes() + "-producer")
         );
 
-        // if "true" the app creates a topic "statement_enriched_flat" that can be sinked to postgres
-        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
-            var mapper = JsonStringifier.getMapperIgnoringNulls();
-            builder.stream(
-                            output.TOPICS.nodes,
+        // if "true" the app creates a topic "nodes_flat" that can be sinked to postgres
+        if (Objects.equals(createOutputForPostgres, "true")) {
+            builderSingleton.builder.stream(
+                            outNodes(),
                             Consumed.with(avroSerdes.NodeKey(), avroSerdes.NodeValue())
-                                    .withName(output.TOPICS.nodes + "-consumer")
+                                    .withName(outNodes() + "-consumer")
                     )
-                    .mapValues((readOnlyKey, value) -> {
-                        try {
-                            return TextValue.newBuilder().setText(
-                                    mapper.writeValueAsString(value)
-                            ).build();
-                        } catch (JsonProcessingException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    })
+                    .mapValues((readOnlyKey, value) -> TextValue.newBuilder().setText(value.toString()).build())
                     .to(
-                            output.TOPICS.nodes_flat,
-                            Produced.with(avroSerdes.NodeKey(), avroSerdes.TextValue())
-                                    .withName(output.TOPICS.nodes_flat + "-producer")
+                            outNodesFlat(),
+                            Produced
+                                    .with(avroSerdes.NodeKey(), avroSerdes.TextValue())
+                                    .withName(outNodesFlat() + "-producer")
                     );
+
         }
 
     }
@@ -246,7 +248,7 @@ public class Nodes {
      * @param infEntity the value from the database
      * @return a projected, more lightweight, value
      */
-    private static Entity tranformEntity(dev.information.resource.Value infEntity) {
+    private Entity tranformEntity(dev.information.resource.Value infEntity) {
         var communityCanSeeInToolbox = false;
         var communityCanSeeInDataApi = false;
         var communityCanSeeInWebsite = false;
@@ -382,24 +384,51 @@ public class Nodes {
                 .build();
     }
 
-    public enum input {
-        TOPICS;
-        public final String inf_resource = DbTopicNames.inf_resource.getName();
-        public final String inf_language = DbTopicNames.inf_language.getName();
-        public final String inf_appellation = DbTopicNames.inf_appellation.getName();
-        public final String inf_lang_string = DbTopicNames.inf_lang_string.getName();
-        public final String inf_place = DbTopicNames.inf_place.getName();
-        public final String inf_time_primitive = DbTopicNames.inf_time_primitive.getName();
-        public final String inf_dimension = DbTopicNames.inf_dimension.getName();
-        public final String dat_digital = DbTopicNames.dat_digital.getName();
-        public final String tab_cell = DbTopicNames.tab_cell.getName();
+
+    public String inInfResource() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_resource.getValue());
+    }
+
+    public String inInfLanguage() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_language.getValue());
+    }
+
+    public String inInfAppellation() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_appellation.getValue());
+    }
+
+    public String inInfLangString() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_lang_string.getValue());
+    }
+
+    public String inInfPlace() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_place.getValue());
+    }
+
+    public String inInfTimePrimitive() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_time_primitive.getValue());
+    }
+
+    public String inInfDimension() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.inf_dimension.getValue());
+    }
+
+    public String inDatDigital() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.dat_digital.getValue());
+    }
+
+    public String inTabCell() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.tab_cell.getValue());
     }
 
 
-    public enum output {
-        TOPICS;
-        public final String nodes = Utils.tsPrefixed("nodes");
-        public final String nodes_flat = Utils.tsPrefixed("nodes_flat");
+    public String outNodes() {
+        return Utils.prefixedOut(outPrefix, "nodes");
     }
+
+    public String outNodesFlat() {
+        return Utils.prefixedOut(outPrefix, "nodes_flat");
+    }
+
 
 }
