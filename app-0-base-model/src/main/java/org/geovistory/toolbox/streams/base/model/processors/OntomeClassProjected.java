@@ -6,10 +6,8 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassValue;
-import org.geovistory.toolbox.streams.base.model.DbTopicNames;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.lib.ProjectedTableRegistrar;
-import org.geovistory.toolbox.streams.lib.Utils;
 
 public class OntomeClassProjected extends ProjectedTableRegistrar<
         Key,
@@ -17,17 +15,19 @@ public class OntomeClassProjected extends ProjectedTableRegistrar<
         OntomeClassKey,
         OntomeClassValue
         > {
-    public OntomeClassProjected(StreamsBuilder builder) {
+
+
+    public OntomeClassProjected(AvroSerdes avroSerdes, StreamsBuilder builder, String inputTopicName, String outputTopicName) {
         super(
                 builder,
                 // input topic name
-                DbTopicNames.dfh_api_class.getName(),
+                inputTopicName,
                 // input key serde
-                new ConfluentAvroSerdes().DfhApiClassKey(),
+                avroSerdes.DfhApiClassKey(),
                 // input value serde
-                new ConfluentAvroSerdes().DfhApiClassValue(),
+                avroSerdes.DfhApiClassValue(),
                 // prefix for outputs
-                Utils.tsPrefixed("ontome_class"),
+                outputTopicName,
                 (key, value) -> KeyValue.pair(
                         OntomeClassKey.newBuilder().setClassId(value.getDfhPkClass()).build(),
                         OntomeClassValue.newBuilder()
@@ -42,9 +42,9 @@ public class OntomeClassProjected extends ProjectedTableRegistrar<
                                 .build()
                 ),
                 // output key serde
-                new ConfluentAvroSerdes().OntomeClassKey(),
+                avroSerdes.OntomeClassKey(),
                 // output value serde
-                new ConfluentAvroSerdes().OntomeClassValue()
+                avroSerdes.OntomeClassValue()
         );
     }
 }

@@ -4,7 +4,8 @@ package org.geovistory.toolbox.streams.base.model.processors;
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassValue;
-import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.base.model.AvroSerdes;
+import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,15 @@ class OntomeClassProjectedTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
-        registrar = new OntomeClassProjected(new StreamsBuilder());
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        registrar = new OntomeClassProjected(
+                avroSerdes,
+                builderSingleton.builder,
+                "in_ontome_class",
+                "out_ontome_class"
+        );
         registrar.addSink();
 
         topology = registrar.builder.build();
@@ -66,8 +74,8 @@ class OntomeClassProjectedTest {
         var sOne = description.subtopologies().iterator().next();
         var sOneNodes = sOne.nodes().iterator();
         var sOneNodeOne = sOneNodes.next();
-         sOneNodes.next();
-         sOneNodes.next();
+        sOneNodes.next();
+        sOneNodes.next();
         var sOneNodeFour = sOneNodes.next();
 
         assertThat(sOneNodeOne.name()).isEqualTo(registrar.baseName + "-source");

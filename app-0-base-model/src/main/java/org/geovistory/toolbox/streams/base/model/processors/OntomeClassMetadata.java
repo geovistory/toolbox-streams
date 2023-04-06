@@ -1,41 +1,54 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassMetadataValue;
 import org.geovistory.toolbox.streams.avro.OntomeClassValue;
-import org.geovistory.toolbox.streams.base.model.DbTopicNames;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.model.AvroSerdes;
+import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.ArrayList;
 
 
+@ApplicationScoped
 public class OntomeClassMetadata {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    String inPrefix;
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    public String outPrefix;
+
+    @Inject
+    BuilderSingleton builderSingleton;
+
+    public OntomeClassMetadata(AvroSerdes avroSerdes, BuilderSingleton builderSingleton) {
+        this.avroSerdes = avroSerdes;
+        this.builderSingleton = builderSingleton;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-
-
-        var ontomeClassStream = new OntomeClassProjected(builder).kStream;
-
-        return addProcessors(builder, ontomeClassStream).builder().build();
-
+    public void addProcessorsStandalone() {
+        var o = new OntomeClassProjected(
+                avroSerdes,
+                builderSingleton.builder,
+                inApiClass(),
+                outOntomeClassMetadata()
+        );
+        addProcessors(o.kStream);
     }
 
-    public static OntomeClassMetadataReturnValue addProcessors(
-            StreamsBuilder builder,
+    public OntomeClassMetadataReturnValue addProcessors(
             KStream<OntomeClassKey, OntomeClassValue> ontomeClassStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         /* SOURCE PROCESSORS */
 
@@ -67,37 +80,34 @@ public class OntomeClassMetadata {
         /* SINK PROCESSORS */
         stream
                 .to(
-                        output.TOPICS.ontome_class_metadata,
+                        outOntomeClassMetadata(),
                         Produced.with(avroSerdes.OntomeClassKey(), avroSerdes.OntomeClassMetadataValue())
-                                .withName(output.TOPICS.ontome_class_metadata + "-producer")
+                                .withName(outOntomeClassMetadata() + "-producer")
                 );
 
 
-        return new OntomeClassMetadataReturnValue(builder, stream, table);
+        return new OntomeClassMetadataReturnValue(stream, table);
 
     }
 
 
-    public enum input {
-        TOPICS;
-        public final String api_class = DbTopicNames.dfh_api_class.getName();
 
-
-    }
 
     public enum inner {
         TOPICS;
         public final String ontome_class_metadata_grouped = "ontome_class_metadata_grouped";
         public final String ontome_class_metadata_aggregated = "ontome_class_metadata_aggregated";
 
+    }
 
+    public String inApiClass() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.dfh_api_class.getValue());
     }
 
 
-    public enum output {
-        TOPICS;
-        public final String ontome_class_metadata = Utils.tsPrefixed("ontome_class_metadata");
-
+    public String outOntomeClassMetadata() {
+        return Utils.prefixedOut(outPrefix, "ontome_class_metadata");
     }
+
 
 }
