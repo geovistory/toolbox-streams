@@ -1,53 +1,56 @@
 package org.geovistory.toolbox.streams.statement.object.processors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.NodeKey;
 import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.avro.TextValue;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.Utils;
-import org.geovistory.toolbox.streams.statement.object.Env;
+import org.geovistory.toolbox.streams.statement.object.AvroSerdes;
 import org.geovistory.toolbox.streams.statement.object.RegisterInputTopic;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Map;
 import java.util.Objects;
 
 
+@ApplicationScoped
 public class StatementObject {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    public String outPrefix;
+    @ConfigProperty(name = "create.output.for.postgres", defaultValue = "false")
+    public String createOutputForPostgres;
+
+    public StatementObject(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
     }
 
-
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
-
+    public void addProcessorsStandalone() {
         addProcessors(
                 registerInputTopic.statementWithSubjectTable(),
                 registerInputTopic.nodeTable()
         );
-
-        return builder.build();
     }
 
-    public static void addProcessors(
+    public void addProcessors(
             KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithSubject,
             KTable<NodeKey, NodeValue> nodeTable
-
-
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         // join object
         var statementJoinedWithObjectTable = statementWithSubject.join(
@@ -89,58 +92,61 @@ public class StatementObject {
         var o = branches.get("Branch-Other"); // contains all other records
 
         e.to(
-                output.TOPICS.statement_with_entity,
+                outStatementWithEntity(),
                 Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(output.TOPICS.statement_with_entity + "-producer")
+                        .withName(outStatementWithEntity() + "-producer")
         );
         l.to(
-                output.TOPICS.statement_with_literal,
+                outStatementWithLiteral(),
                 Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(output.TOPICS.statement_with_literal + "-producer")
+                        .withName(outStatementWithLiteral() + "-producer")
         );
         o.to(
-                output.TOPICS.statement_other,
+                outStatementOther(),
                 Produced.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                        .withName(output.TOPICS.statement_other + "-producer")
+                        .withName(outStatementOther() + "-producer")
         );
 
         // if "true" the app creates a topic "statement_enriched_flat" that can be sinked to postgres
-        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
-            var mapper =  JsonStringifier.getMapperIgnoringNulls();
-            stream.mapValues((readOnlyKey, value) -> {
-                        try {
-                            return TextValue.newBuilder().setText(
-                                            mapper.writeValueAsString(value)
-                                    ).build();
-                        } catch (JsonProcessingException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    })
+        if (Objects.equals(createOutputForPostgres, "true")) {
+            var mapper = JsonStringifier.getMapperIgnoringNulls();
+            stream.mapValues((readOnlyKey, value) -> TextValue.newBuilder().setText(
+                            value.toString()
+                    ).build())
                     .to(
-                            output.TOPICS.statement_enriched_flat,
+                            outStatementEnrichedFlat(),
                             Produced.with(avroSerdes.InfStatementKey(), avroSerdes.TextValue())
-                                    .withName(output.TOPICS.statement_enriched_flat + "-producer")
+                                    .withName(outStatementEnrichedFlat() + "-producer")
                     );
         }
 
 
     }
 
-    public enum input {
-        TOPICS;
-        public final String statement_with_subject = Env.INSTANCE.TOPIC_STATEMENT_WITH_SUBJECT;
-        public final String nodes = Env.INSTANCE.TOPIC_NODES;
+
+    public String inStatementWithSubject() {
+        return registerInputTopic.tsTopicStatementWithSubject;
     }
 
-
-    public enum output {
-        TOPICS;
-        public final String statement_with_entity = Utils.tsPrefixed("statement_with_entity");
-        public final String statement_with_literal = Utils.tsPrefixed("statement_with_literal");
-        public final String statement_other = Utils.tsPrefixed("statement_other");
-
-        public final String statement_enriched_flat = Utils.tsPrefixed("statement_enriched_flat");
-
+    public String inNodes() {
+        return registerInputTopic.tsTopicNodes;
     }
+
+    public String outStatementWithEntity() {
+        return Utils.prefixedOut(outPrefix, "statement_with_entity");
+    }
+
+    public String outStatementWithLiteral() {
+        return Utils.prefixedOut(outPrefix, "statement_with_literal");
+    }
+
+    public String outStatementOther() {
+        return Utils.prefixedOut(outPrefix, "statement_other");
+    }
+
+    public String outStatementEnrichedFlat() {
+        return Utils.prefixedOut(outPrefix, "statement_enriched_flat");
+    }
+
 
 }

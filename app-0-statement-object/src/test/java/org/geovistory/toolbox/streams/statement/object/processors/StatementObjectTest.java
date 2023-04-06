@@ -2,11 +2,16 @@ package org.geovistory.toolbox.streams.statement.object.processors;
 
 
 import io.debezium.data.geometry.Geography;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
+import org.geovistory.toolbox.streams.statement.object.AvroSerdes;
+import org.geovistory.toolbox.streams.statement.object.BuilderSingleton;
+import org.geovistory.toolbox.streams.statement.object.RegisterInputTopic;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,38 +42,41 @@ class StatementObjectTest {
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
         AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = StatementObject.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton);
+        var statementObject = new StatementObject(avroSerdes, registerInputTopic);
+        statementObject.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
 
         statementWithSubjectTopic = testDriver.createInputTopic(
-                StatementObject.input.TOPICS.statement_with_subject,
+                statementObject.inStatementWithSubject(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer()
         );
 
         nodeTopic = testDriver.createInputTopic(
-                StatementObject.input.TOPICS.nodes,
+                statementObject.inNodes(),
                 avroSerdes.NodeKey().serializer(),
                 avroSerdes.NodeValue().serializer()
         );
 
         statementWithEntityTopic = testDriver.createOutputTopic(
-                StatementObject.output.TOPICS.statement_with_entity,
+                statementObject.outStatementWithEntity(),
                 avroSerdes.InfStatementKey().deserializer(),
                 avroSerdes.StatementEnrichedValue().deserializer());
 
 
         statementWithLiteralTopic = testDriver.createOutputTopic(
-                StatementObject.output.TOPICS.statement_with_literal,
+                statementObject.outStatementWithLiteral(),
                 avroSerdes.InfStatementKey().deserializer(),
                 avroSerdes.StatementEnrichedValue().deserializer());
 
         statementOtherTopic = testDriver.createOutputTopic(
-                StatementObject.output.TOPICS.statement_with_literal,
+                statementObject.outStatementOther(),
                 avroSerdes.InfStatementKey().deserializer(),
                 avroSerdes.StatementEnrichedValue().deserializer());
     }

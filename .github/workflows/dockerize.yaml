@@ -400,7 +400,6 @@ jobs:
           color: 0x0000ff
           username: GitHub Actions
 
-
   dockerize-app-0-statement-object:
     needs: [ detect-changes, pull-request-number ]
     if: ${{ needs.detect-changes.outputs.app-0-statement-object == 'true' }}
@@ -436,22 +435,22 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
 
-      # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
-      # the workflow execution time. For more information see:
-      # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
-        with:
-          arguments: app-0-statement-object:build # "app-0-statement-object:" points to /app-0-statement-object
-
       # this will update metadata about PR for the docker tag in /build.gradle
       - name: Update pull request metadata in build.gradle
         id: version
         run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
 
-      # Create docker image
-      - name: Create docker image
-        run: ./gradlew app-0-statement-object:jibDockerBuild
+      # extract tag (e.g. 1.0.1-pr-32.0)
+      - name: Extract docker tag suffix
+        id: extract_docker_tag_suffix
+        run: |
+          echo ::set-output name=value::$(./gradlew -q app-0-statement-object:printDockerTagSuffix)
+
+      # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
+      # the workflow execution time. For more information see:
+      # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -461,15 +460,17 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # push docker image
-      - name: Push docker image
-        run: docker push $(./gradlew -q app-0-statement-object:printDockerImageTag)
-
-      # extract tag (e.g. 1.0.1-pr-32.0)
-      - name: Extract docker tag suffix
-        id: extract_docker_tag_suffix
+      # Create and push docker image
+      - name: Create docker and push image
         run: |
-          echo ::set-output name=value::$(./gradlew -q app-0-statement-object:printDockerTagSuffix)
+          ./gradlew app-0-statement-object:build \
+            -Dquarkus.package.type=native \
+            -Dquarkus.container-image.push=true \
+            -Dquarkus.container-image.registry="ghcr.io" \
+            -Dquarkus.container-image.group="geovistory" \
+            -Dquarkus.container-image.name="toolbox-streams-statement-object-quarkus" \
+            -Dquarkus.container-image.tag="${{steps.extract_docker_tag_suffix.outputs.value}}"
+
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1

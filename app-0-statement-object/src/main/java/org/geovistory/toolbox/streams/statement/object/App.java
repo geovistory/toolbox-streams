@@ -3,78 +3,81 @@
  */
 package org.geovistory.toolbox.streams.statement.object;
 
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.geovistory.toolbox.streams.lib.Admin;
-import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.apache.kafka.streams.Topology;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.geovistory.toolbox.streams.lib.TsAdmin;
 import org.geovistory.toolbox.streams.statement.object.processors.StatementObject;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import static org.geovistory.toolbox.streams.statement.object.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.statement.object.BuildProperties.getDockerTagSuffix;
 
+@ApplicationScoped
+public class App {
+    @ConfigProperty(name = "ts.output.topic.partitions")
+    int outputTopicPartitions;
+    @ConfigProperty(name = "ts.output.topic.replication.factor")
+    short outputTopicReplicationFactor;
 
-class App {
-    public static void main(String[] args) {
+    @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
+    String bootstrapServers;
+    @ConfigProperty(name = "create.output.for.postgres", defaultValue = "false")
+    public String createOutputForPostgres;
 
+    @Inject
+    BuilderSingleton builderSingleton;
 
-        StreamsBuilder builder = new StreamsBuilder();
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    StatementObject statementObject;
+
+    Boolean initialized = false;
+
+    //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
+    @Produces
+    public Topology buildTopology() {
 
         // add processors of sub-topologies
-        addSubTopologies(builder);
-
-        // build the topology
-        var topology = builder.build();
-
-        System.out.println(topology.describe());
+        addSubTopologies();
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();
 
-        // print configuration information
-        System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
-        System.out.println("With config:");
-        AppConfig.INSTANCE.printConfigs();
-
-        // create the streams app
-        // noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, AppConfig.getConfig());
-
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-
-        // start streaming!
-        streams.start();
+        // build the topology
+        return builderSingleton.builder.build();
     }
 
-    private static void addSubTopologies(StreamsBuilder builder) {
-        var inputTopics = new RegisterInputTopic(builder);
+    private void addSubTopologies() {
 
-        // register input topics as KTables
-        var statementWithSubjectTable = inputTopics.statementWithSubjectTable();
-        var nodeTable = inputTopics.nodeTable();
+        if (!initialized) {
 
-        // add sub-topology StatementEnriched
-        StatementObject.addProcessors(
-                statementWithSubjectTable,
-                nodeTable
-        );
+            // register input topics as KTables
+            var statementWithSubjectTable = registerInputTopic.statementWithSubjectTable();
+            var nodeTable = registerInputTopic.nodeTable();
+
+            // add sub-topology StatementEnriched
+            statementObject.addProcessors(
+                    statementWithSubjectTable,
+                    nodeTable
+            );
+            initialized = true;
+        }
     }
 
-    private static void createTopics() {
-        var admin = new Admin();
-
-        var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
-        var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
+    private void createTopics() {
+        var admin = new TsAdmin(bootstrapServers);
 
         var topics = new ArrayList<String>();
-        topics.add(StatementObject.output.TOPICS.statement_with_entity);
-        topics.add(StatementObject.output.TOPICS.statement_with_literal);
-        topics.add(StatementObject.output.TOPICS.statement_other);
-        if (Objects.equals(Env.INSTANCE.CREATE_OUTPUT_FOR_POSTGRES, "true")) {
-            topics.add(StatementObject.output.TOPICS.statement_enriched_flat);
+        topics.add(statementObject.outStatementWithEntity());
+        topics.add(statementObject.outStatementWithLiteral());
+        topics.add(statementObject.outStatementOther());
+        if (Objects.equals(createOutputForPostgres, "true")) {
+            topics.add(statementObject.outStatementEnrichedFlat());
         }
         // create output topics (with number of partitions and delete.policy=compact)
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
