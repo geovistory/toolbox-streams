@@ -1,6 +1,5 @@
 package org.geovistory.toolbox.streams.statement.subject.processors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.information.statement.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
@@ -106,13 +105,14 @@ public class StatementSubject {
                                     .withName(outStatementWithSubject() + "-consumer")
                     )
                     .mapValues((readOnlyKey, value) -> {
-                        try {
                             return TextValue.newBuilder().setText(
-                                    mapper.writeValueAsString(value)
+                                    value.toString()
+                                    //mapper.writeValueAsString(value)
                             ).build();
+                        /*try {
                         } catch (JsonProcessingException ex) {
                             throw new RuntimeException(ex);
-                        }
+                        }*/
                     })
                     .to(
                             outStatementWithSubjectFlat(),
