@@ -649,9 +649,9 @@ jobs:
           username: GitHub Actions
 
 
-  dockerize-app-0-analysis-statements:
+  dockerize-app-3-analysis-statements:
     needs: [ detect-changes, pull-request-number ]
-    if: ${{ needs.detect-changes.outputs.app-0-analysis-statements == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-3-analysis-statements == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -659,7 +659,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-0-analysis-statements'"
+          title: "Test and Dockerize 'app-3-analysis-statements'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -693,7 +693,7 @@ jobs:
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(./gradlew -q app-0-analysis-statements:printDockerTagSuffix)
+          echo ::set-output name=value::$(./gradlew -q app-3-analysis-statements:printDockerTagSuffix)
 
       # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
       # the workflow execution time. For more information see:
@@ -712,7 +712,7 @@ jobs:
       # Create and push docker image
       - name: Create docker and push image
         run: |
-          ./gradlew app-0-analysis-statements:build \
+          ./gradlew app-3-analysis-statements:build \
             -Dquarkus.package.type=native \
             -Dquarkus.container-image.push=true \
             -Dquarkus.container-image.registry="ghcr.io" \
@@ -726,7 +726,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-0-analysis-statements' > Done"
+          title: "Dockerize 'app-3-analysis-statements' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
