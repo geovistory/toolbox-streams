@@ -14,7 +14,12 @@ public enum TopicNameEnum {
     inf_time_primitive("information.time_primitive"),
     inf_dimension("information.dimension"),
     dat_digital("data.digital"),
-    tab_cell("tables.cell");
+    tab_cell("tables.cell"),
+    pro_projects("projects.project"),
+    pro_text_property("projects.text_property"),
+    pro_entity_label_config("projects.entity_label_config"),
+    pro_dfh_profile_proj_rel("projects.dfh_profile_proj_rel"),
+    sys_config("system.config");
 
     private final String value;
 

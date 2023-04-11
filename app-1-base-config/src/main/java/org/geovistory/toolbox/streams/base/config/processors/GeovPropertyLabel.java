@@ -3,46 +3,52 @@ package org.geovistory.toolbox.streams.base.config.processors;
 import dev.projects.text_property.Key;
 import dev.projects.text_property.Value;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.GeovPropertyLabelKey;
 import org.geovistory.toolbox.streams.avro.GeovPropertyLabelValue;
-import org.geovistory.toolbox.streams.base.config.DbTopicNames;
+import org.geovistory.toolbox.streams.base.config.AvroSerdes;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-
+@ApplicationScoped
 public class GeovPropertyLabel {
+    @Inject
+    AvroSerdes avroSerdes;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public GeovPropertyLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var register = new RegisterInputTopic(builder);
-
-        return addProcessors(
-                builder,
-                register.proTextPropertyStream()
-        ).builder().build();
+    public void addProcessorsStandalone() {
+        addProcessors(
+                registerInputTopic.proTextPropertyStream()
+        );
     }
 
-    public static GeovPropertyLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public GeovPropertyLabelReturnValue addProcessors(
             KStream<Key, Value> proTextPropertyStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
-        /* SOURCE PROCESSORS */
 
         /* STREAM PROCESSORS */
 
@@ -90,25 +96,13 @@ public class GeovPropertyLabel {
         /* SINK PROCESSORS */
         geovPropertyLabel
                 .to(
-                        output.TOPICS.geov_property_label,
+                        outputTopicNames.geovPropertyLabel(),
                         Produced.with(avroSerdes.GeovPropertyLabelKey(), avroSerdes.GeovPropertyLabelValue())
                 );
 
-        return new GeovPropertyLabelReturnValue(builder, geovPropertyLabel);
+        return new GeovPropertyLabelReturnValue(geovPropertyLabel);
 
     }
 
-
-    public enum input {
-        TOPICS;
-        public final String text_property = DbTopicNames.pro_text_property.getName();
-
-    }
-
-    public enum output {
-        TOPICS;
-        public final String geov_property_label = Utils.tsPrefixed("geov_property_label");
-
-    }
 
 }

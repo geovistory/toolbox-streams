@@ -5,46 +5,59 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.BooleanMap;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.config.AvroSerdes;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
+import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.ListSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
-import org.geovistory.toolbox.streams.base.config.DbTopicNames;
-import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+@ApplicationScoped
 public class ProjectProfiles {
+    @Inject
+    AvroSerdes avroSerdes;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectProfiles(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
         var proProjectTable = registerInputTopic.proProjectTable();
         var proProfileProjRelTable = registerInputTopic.proProfileProjRelTable();
         var sysConfigTable = registerInputTopic.sysConfigTable();
-        return addProcessors(
-                builder,
+        addProcessors(
                 proProjectTable,
                 proProfileProjRelTable,
                 sysConfigTable
-        ).builder().build();
+        );
     }
 
-    public static ProjectProfilesReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectProfilesReturnValue addProcessors(
             KTable<dev.projects.project.Key, dev.projects.project.Value> proProjects,
             KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> proDfhProfileProjRels,
             KTable<dev.system.config.Key, dev.system.config.Value> sysConfig
@@ -52,7 +65,6 @@ public class ProjectProfiles {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
         String REQUIRED_ONTOME_PROFILES = "REQUIRED_ONTOME_PROFILES";
-        var avroSerdes = new ConfluentAvroSerdes();
         var listSerdes = new ListSerdes();
 
 
@@ -224,20 +236,13 @@ public class ProjectProfiles {
                 );
 
         /* SINK PROCESSOR */
-        projectProfileStream.to(output.TOPICS.project_profile,
+        projectProfileStream.to(outputTopicNames.projectProfile(),
                 Produced.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
-                        .withName(output.TOPICS.project_profile + "-producer")
+                        .withName(outputTopicNames.projectProfile() + "-producer")
         );
 
-        return new ProjectProfilesReturnValue(builder, projectProfileStream);
+        return new ProjectProfilesReturnValue(projectProfileStream);
 
-    }
-
-    public enum input {
-        TOPICS;
-        public final String dfh_profile_proj_rel = DbTopicNames.pro_dfh_profile_proj_rel.getName();
-        public final String project = DbTopicNames.pro_projects.getName();
-        public final String config = DbTopicNames.sys_config.getName();
     }
 
 
@@ -250,11 +255,6 @@ public class ProjectProfiles {
         public final String required_profiles = Utils.tsPrefixed("required_profiles");
         public final String project_keys = Utils.tsPrefixed("project_keys");
 
-    }
-
-    public enum output {
-        TOPICS;
-        public final String project_profile = Utils.tsPrefixed("project_profile");
     }
 
 

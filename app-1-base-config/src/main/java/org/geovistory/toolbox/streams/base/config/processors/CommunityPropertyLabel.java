@@ -2,8 +2,6 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Named;
@@ -11,37 +9,46 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 
 
+@ApplicationScoped
 public class CommunityPropertyLabel {
+    @Inject
+    AvroSerdes avroSerdes;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public CommunityPropertyLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
-        var registerInnerTopic = new RegisterInnerTopic(builder);
-
-        return addProcessors(
-                builder,
+    public void addProcessorsStandalone() {
+        addProcessors(
                 registerInputTopic.ontomePropertyStream(),
                 registerInnerTopic.geovPropertyLabelStream()
-        ).builder().build();
+        );
     }
 
-    public static CommunityPropertyLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityPropertyLabelReturnValue addProcessors(
             KStream<OntomePropertyKey, OntomePropertyValue> ontomePropertyStream,
             KStream<GeovPropertyLabelKey, GeovPropertyLabelValue> geovPropertyLabelStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         // 2
         var langFieldsStream = ontomePropertyStream.flatMap(
@@ -136,22 +143,13 @@ public class CommunityPropertyLabel {
                 ));
 
         communityPropertyLabelStream.to(
-                output.TOPICS.community_property_label,
+                outputTopicNames.communityPropertyLabel(),
                 Produced.with(avroSerdes.CommunityPropertyLabelKey(), avroSerdes.CommunityPropertyLabelValue())
-                        .withName(output.TOPICS.community_property_label + "-producer")
+                        .withName(outputTopicNames.communityPropertyLabel() + "-producer")
         );
-        return new CommunityPropertyLabelReturnValue(builder, communityPropertyLabelTable, communityPropertyLabelStream);
+        return new CommunityPropertyLabelReturnValue(communityPropertyLabelTable, communityPropertyLabelStream);
 
     }
-
-    public enum input {
-        TOPICS;
-        public final String geov_property_label = GeovPropertyLabel.output.TOPICS.geov_property_label;
-        public final String ontome_property = Env.INSTANCE.TOPIC_ONTOME_PROPERTY;
-
-        public final String project = DbTopicNames.pro_projects.getName();
-    }
-
 
     public enum inner {
         TOPICS;
@@ -161,9 +159,5 @@ public class CommunityPropertyLabel {
         public final String ontome_property_by_lang_and_direction = "ontome_property_by_lang_and_direction";
     }
 
-    public enum output {
-        TOPICS;
-        public final String community_property_label = Utils.tsPrefixed("community_property_label");
-    }
 
 }

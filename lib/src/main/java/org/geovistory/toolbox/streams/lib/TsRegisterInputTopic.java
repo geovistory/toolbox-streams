@@ -46,4 +46,14 @@ abstract public class TsRegisterInputTopic {
     protected <K, V> KTable<K, V> getTable(StreamsBuilder builder, String topicName, Serde<K> kSerde, Serde<V> vSerde) {
         return builder.table(topicName, Consumed.with(kSerde, vSerde).withName(topicName + "-consumer"));
     }
+
+    protected <K, V> KStream<K, V> getRepartitionedStream(StreamsBuilder builder, String topicName, Serde<K> kSerde, Serde<V> vSerde) {
+        return getStream(builder, topicName, kSerde, vSerde)
+                .map(KeyValue::pair, Named.as(topicName + "-mark-for-repartition"))
+                .repartition(
+                        Repartitioned.<K, V>as(topicName + "-repartitioned")
+                                .withKeySerde(kSerde)
+                                .withValueSerde(vSerde)
+                );
+    }
 }

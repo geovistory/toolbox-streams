@@ -2,49 +2,55 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-
+@ApplicationScoped
 public class ProjectClassLabel {
+    @Inject
+    AvroSerdes avroSerdes;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectClassLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
-        var registerInnerTopic = new RegisterInnerTopic(builder);
-
-        return addProcessors(
-                builder,
+    public void addProcessorsStandalone() {
+        addProcessors(
                 registerInputTopic.proProjectTable(),
                 registerInputTopic.ontomeClassLabelStream(),
                 registerInnerTopic.geovClassLabelStream(),
                 registerInnerTopic.projectClassStream()
-        ).builder().build();
+        );
     }
 
-    public static ProjectClassLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectClassLabelReturnValue addProcessors(
             KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable,
             KStream<OntomeClassLabelKey, OntomeClassLabelValue> ontomeClassLabelStream,
             KStream<GeovClassLabelKey, GeovClassLabelValue> geovClassLabelStream,
             KStream<ProjectClassKey, ProjectClassValue> projectClassStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         /* SOURCE PROCESSORS */
         var projectClassTable = projectClassStream.toTable(
@@ -308,12 +314,12 @@ public class ProjectClassLabel {
         /* SINK PROCESSORS */
 
         // 8) to
-        projectClassLabelStream.to(output.TOPICS.project_class_label,
+        projectClassLabelStream.to(outputTopicNames.projectClassLabel(),
                 Produced.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue())
-                        .withName(output.TOPICS.project_class_label + "-producer")
+                        .withName(outputTopicNames.projectClassLabel() + "-producer")
         );
 
-        return new ProjectClassLabelReturnValue(builder, projectClassLabelTable, projectClassLabelStream);
+        return new ProjectClassLabelReturnValue(projectClassLabelTable, projectClassLabelStream);
 
     }
 
@@ -339,15 +345,6 @@ public class ProjectClassLabel {
         return null;
     }
 
-    public enum input {
-        TOPICS;
-        public final String ontome_class_label = Env.INSTANCE.TOPIC_ONTOME_CLASS_LABEL;
-        public final String geov_class_label = GeovClassLabel.output.TOPICS.geov_class_label;
-        public final String project_class = ProjectClass.output.TOPICS.project_class;
-
-        public final String project = DbTopicNames.pro_projects.getName();
-    }
-
 
     public enum inner {
         TOPICS;
@@ -355,11 +352,6 @@ public class ProjectClassLabel {
         public final String project_class_label_options_grouped = "project_class_label_options_grouped";
         public final String project_class_label_options_aggregated = "project_class_label_options_aggregated";
 
-    }
-
-    public enum output {
-        TOPICS;
-        public final String project_class_label = Utils.tsPrefixed("project_class_label");
     }
 
 }

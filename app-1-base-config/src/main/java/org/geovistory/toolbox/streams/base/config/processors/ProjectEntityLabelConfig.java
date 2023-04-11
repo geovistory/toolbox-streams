@@ -6,55 +6,64 @@ import dev.projects.entity_label_config.Key;
 import dev.projects.entity_label_config.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.config.DbTopicNames;
+import org.geovistory.toolbox.streams.base.config.AvroSerdes;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
 
 
+@ApplicationScoped
 public class ProjectEntityLabelConfig {
+    @Inject
+    AvroSerdes avroSerdes;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectEntityLabelConfig(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
-        var registerOutputTopic = new RegisterInnerTopic(builder);
-
-        return addProcessors(
-                builder,
-                registerOutputTopic.projectClassTable(),
+    public void addProcessorsStandalone() {
+        addProcessors(
+                registerInnerTopic.projectClassTable(),
                 registerInputTopic.proEntityLabelConfigStream(),
-                registerOutputTopic.communityEntityLabelConfigTable()
-        ).builder().build();
+                registerInnerTopic.communityEntityLabelConfigTable()
+        );
     }
 
 
-    public static ProjectEntityLabelConfigReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectEntityLabelConfigReturnValue addProcessors(
             KTable<ProjectClassKey, ProjectClassValue> projectClassTable,
             KStream<Key, Value> proEntityLabelConfigStream,
             KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable
     ) {
-        var avroSerdes = new ConfluentAvroSerdes();
         /* STREAM PROCESSORS */
         // 2)
 
         var configByProjectClassKey = proEntityLabelConfigStream
-                .transform(new TransformSupplier("handle_project_entity_label_config_deletes"))
+                .transform(new TransformSupplier("handle_project_entity_label_config_deletes", avroSerdes))
                 .repartition(
                         Repartitioned.<ProjectClassKey, ProjectEntityLabelConfigValue>as(inner.TOPICS.project_entity_label_config_by_project_class + "-repartition")
                                 .withKeySerde(avroSerdes.ProjectClassKey())
@@ -114,44 +123,33 @@ public class ProjectEntityLabelConfig {
                     }
                     return result.build();
                 },
-                TableJoined.as(output.TOPICS.project_entity_label_config + "-fk-left-join"),
-                Materialized.<ProjectClassKey, ProjectEntityLabelConfigValue, KeyValueStore<Bytes, byte[]>>as(output.TOPICS.project_entity_label_config)
+                TableJoined.as(outputTopicNames.projectEntityLabelConfig() + "-fk-left-join"),
+                Materialized.<ProjectClassKey, ProjectEntityLabelConfigValue, KeyValueStore<Bytes, byte[]>>as(outputTopicNames.projectEntityLabelConfig())
                         .withKeySerde(avroSerdes.ProjectClassKey())
                         .withValueSerde(avroSerdes.ProjectEntityLabelConfigValue())
         );
 
         projectEntityLabelConfigEnrichedTable.toStream(
-                Named.as(output.TOPICS.project_entity_label_config + "-to-stream")
+                Named.as(outputTopicNames.projectEntityLabelConfig() + "-to-stream")
         ).to(
-                output.TOPICS.project_entity_label_config,
+                outputTopicNames.projectEntityLabelConfig(),
                 Produced.with(
                                 avroSerdes.ProjectClassKey(),
                                 avroSerdes.ProjectEntityLabelConfigValue()
                         )
-                        .withName(output.TOPICS.project_entity_label_config + "-producer")
+                        .withName(outputTopicNames.projectEntityLabelConfig() + "-producer")
         );
 
 
-        return new ProjectEntityLabelConfigReturnValue(builder, projectEntityLabelConfigEnrichedTable);
+        return new ProjectEntityLabelConfigReturnValue(projectEntityLabelConfigEnrichedTable);
 
     }
 
-    public enum input {
-        TOPICS;
-        public final String pro_entity_label_config = DbTopicNames.pro_entity_label_config.getName();
-        public final String project_class = ProjectClass.output.TOPICS.project_class;
-        public final String community_entity_label_config = CommunityEntityLabelConfig.output.TOPICS.community_entity_label_config;
-    }
 
     public enum inner {
         TOPICS;
         public final String project_entity_label_config_by_project_class = Utils.tsPrefixed("project_entity_label_config_by_project_class");
         public final String project_class_with_project_label_config = Utils.tsPrefixed("project_class_with_project_label_config");
-    }
-
-    public enum output {
-        TOPICS;
-        public final String project_entity_label_config = Utils.tsPrefixed("project_entity_label_config");
     }
 
 
@@ -160,10 +158,11 @@ public class ProjectEntityLabelConfig {
             KeyValue<ProjectClassKey, ProjectEntityLabelConfigValue>> {
 
         private final String stateStoreName;
-        private final ConfluentAvroSerdes avroSerdes = new ConfluentAvroSerdes();
+        private final AvroSerdes avroSerdes;
 
-        TransformSupplier(String stateStoreName) {
+        public TransformSupplier(String stateStoreName, AvroSerdes avroSerdes) {
             this.stateStoreName = stateStoreName;
+            this.avroSerdes = avroSerdes;
         }
 
         @Override
