@@ -7,7 +7,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
 
 import java.util.Collections;
 import java.util.Set;
@@ -17,11 +17,11 @@ public abstract class CommunityStatementCounterSupplier implements TransformerSu
         KeyValue<CommunityStatementKey, CommunityStatementValue>> {
 
     protected final String stateStoreName;
-    private final ConfluentAvroSerdes avroSerdes = new ConfluentAvroSerdes();
+    private final AvroSerdes avroSerdes;
 
-
-    CommunityStatementCounterSupplier(String stateStoreName) {
+    public CommunityStatementCounterSupplier(String stateStoreName, AvroSerdes avroSerdes) {
         this.stateStoreName = stateStoreName;
+        this.avroSerdes = avroSerdes;
     }
 
     @Override

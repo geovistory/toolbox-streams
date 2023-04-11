@@ -1,8 +1,6 @@
 package org.geovistory.toolbox.streams.entity.label.processsors.community;
 
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.Transformer;
@@ -12,61 +10,64 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.entity.label.processsors.base.ProjectEntityVisibility;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
 
 
+@ApplicationScoped
 public class CommunityToolboxEntity {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public CommunityToolboxEntity(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var innerTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                innerTopic.projectEntityVisibilityStream()
-        ).builder().build();
+        addProcessors(
+                registerInnerTopic.projectEntityVisibilityStream()
+        );
     }
 
-    public static CommunityToolboxEntityReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityToolboxEntityReturnValue addProcessors(
             KStream<ProjectEntityKey, ProjectEntityVisibilityValue> projectEntityStream) {
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         var result = projectEntityStream
-                .transform(new CounterSupplier("community_entity_counter"));
-        result.to(output.TOPICS.community_toolbox_entity,
+                .transform(new CounterSupplier("community_entity_counter", avroSerdes));
+        result.to(outputTopicNames.communityToolboxEntity(),
                 Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityValue())
-                        .withName(output.TOPICS.community_toolbox_entity + "-producer")
+                        .withName(outputTopicNames.communityToolboxEntity() + "-producer")
         );
 
-        return new CommunityToolboxEntityReturnValue(builder, result);
+        return new CommunityToolboxEntityReturnValue(result);
 
-    }
-
-
-    public enum input {
-        TOPICS;
-        public final String project_entity_visibility = ProjectEntityVisibility.output.TOPICS.project_entity_visibility;
     }
 
 
     public enum inner {
         TOPICS
-    }
-
-    public enum output {
-        TOPICS;
-        public final String community_toolbox_entity = Utils.tsPrefixed("community_toolbox_entity");
     }
 
 
@@ -75,10 +76,11 @@ public class CommunityToolboxEntity {
             KeyValue<CommunityEntityKey, CommunityEntityValue>> {
 
         private final String stateStoreName;
-        private final ConfluentAvroSerdes avroSerdes = new ConfluentAvroSerdes();
+        private final AvroSerdes avroSerdes;
 
-        CounterSupplier(String stateStoreName) {
+        public CounterSupplier(String stateStoreName, AvroSerdes avroSerdes) {
             this.stateStoreName = stateStoreName;
+            this.avroSerdes = avroSerdes;
         }
 
         @Override

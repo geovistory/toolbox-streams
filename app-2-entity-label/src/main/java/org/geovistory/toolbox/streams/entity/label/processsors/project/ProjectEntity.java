@@ -2,58 +2,66 @@ package org.geovistory.toolbox.streams.entity.label.processsors.project;
 
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.ProjectEntityValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityVisibilityValue;
-import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.entity.label.processsors.base.ProjectEntityVisibility;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.lib.ProjectedTableRegistrar;
-import org.geovistory.toolbox.streams.lib.Utils;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 
+@ApplicationScoped
 public class ProjectEntity {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    @Inject
+    BuilderSingleton builderSingleton;
+
+    public ProjectEntity(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames, BuilderSingleton builderSingleton) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
+        this.builderSingleton = builderSingleton;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var innerTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                innerTopic.projectEntityVisibilityStream()
-        ).builder().build();
+        addProcessors(
+                registerInnerTopic.projectEntityVisibilityStream()
+        );
     }
 
-    public static ProjectEntityReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectEntityReturnValue addProcessors(
             KStream<ProjectEntityKey, ProjectEntityVisibilityValue> projectEntityVisibilityStream) {
 
-        var avroSerdes = new ConfluentAvroSerdes();
 
-        var projector = new ProjectEntityProjector(builder, projectEntityVisibilityStream, avroSerdes);
+        var projector = new ProjectEntityProjector(
+                builderSingleton.builder,
+                projectEntityVisibilityStream,
+                avroSerdes,
+                outputTopicNames.projectEntity()
+        );
 
         /* SINK PROCESSORS */
         projector.addSink();
 
-        return new ProjectEntityReturnValue(builder, projector.kStream);
+        return new ProjectEntityReturnValue(projector.kStream);
 
-    }
-
-
-    public enum input {
-        TOPICS;
-        public final String project_entity_visibility = ProjectEntityVisibility.output.TOPICS.project_entity_visibility;
-    }
-
-
-    public enum output {
-        TOPICS;
-        public final String project_entity = Utils.tsPrefixed("project_entity");
     }
 
 
@@ -66,13 +74,14 @@ public class ProjectEntity {
         public ProjectEntityProjector(
                 StreamsBuilder builder,
                 KStream<ProjectEntityKey, ProjectEntityVisibilityValue> inputStream,
-                ConfluentAvroSerdes avroSerdes
+                AvroSerdes avroSerdes,
+                String outputTopic
         ) {
             super(
                     builder,
                     inputStream,
                     // prefix for outputs
-                    output.TOPICS.project_entity,
+                    outputTopic,
                     (key, value) -> KeyValue.pair(
                             key,
                             ProjectEntityValue.newBuilder()

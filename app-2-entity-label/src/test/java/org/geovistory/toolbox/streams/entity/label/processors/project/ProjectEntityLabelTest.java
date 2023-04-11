@@ -1,11 +1,13 @@
 package org.geovistory.toolbox.streams.entity.label.processors.project;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.project.ProjectEntityLabel;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,31 +36,35 @@ class ProjectEntityLabelTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
-
-        Topology topology = ProjectEntityLabel.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var projectEntityLabel = new ProjectEntityLabel(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        projectEntityLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         projectEntityLabelConfigTopic = testDriver.createInputTopic(
-                ProjectEntityLabel.input.TOPICS.project_entity_label_config,
+                inputTopicNames.projectEntityLabelConfig,
                 avroSerdes.ProjectClassKey().serializer(),
                 avroSerdes.ProjectEntityLabelConfigValue().serializer());
 
         projectTopStatements = testDriver.createInputTopic(
-                ProjectEntityLabel.input.TOPICS.project_top_statements,
+                outputTopicNames.projectTopStatements(),
                 avroSerdes.ProjectTopStatementsKey().serializer(),
                 avroSerdes.ProjectTopStatementsValue().serializer());
 
         projectEntityTopic = testDriver.createInputTopic(
-                ProjectEntityLabel.input.TOPICS.project_entity,
+                outputTopicNames.projectEntity(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectEntityLabel.output.TOPICS.project_entity_label,
+                outputTopicNames.projectEntityLabel(),
                 avroSerdes.ProjectEntityKey().deserializer(),
                 avroSerdes.ProjectEntityLabelValue().deserializer());
     }
@@ -254,7 +260,6 @@ class ProjectEntityLabelTest {
         assertThat(record.getLabel()).isEqualTo(expected);
 
     }
-
 
 
 }

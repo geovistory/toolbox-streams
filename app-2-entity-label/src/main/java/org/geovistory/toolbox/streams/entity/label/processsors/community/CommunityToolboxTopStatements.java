@@ -1,8 +1,6 @@
 package org.geovistory.toolbox.streams.entity.label.processsors.community;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Named;
@@ -10,34 +8,49 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.CommunityTopStatementsKey;
 import org.geovistory.toolbox.streams.avro.CommunityTopStatementsValue;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 
+@ApplicationScoped
 public class CommunityToolboxTopStatements {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public CommunityToolboxTopStatements(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerOutputTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                registerOutputTopic.communityToolboxTopOutgoingStatementsStream(),
-                registerOutputTopic.communityToolboxTopIncomingStatementsStream()
-        ).builder().build();
+        addProcessors(
+                registerInnerTopic.communityToolboxTopOutgoingStatementsStream(),
+                registerInnerTopic.communityToolboxTopIncomingStatementsStream()
+        );
     }
 
-    public static CommunityTopStatementsReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityTopStatementsReturnValue addProcessors(
             KStream<CommunityTopStatementsKey, CommunityTopStatementsValue> outgoingTopStatementsStream,
             KStream<CommunityTopStatementsKey, CommunityTopStatementsValue> incomingTopStatementsStream
     ) {
 
-        var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
@@ -49,36 +62,24 @@ public class CommunityToolboxTopStatements {
 
         /* SINK PROCESSORS */
 
-        topStatementsStream.to(output.TOPICS.community_toolbox_top_statements,
+        topStatementsStream.to(outputTopicNames.communityToolboxTopStatements(),
                 Produced.with(avroSerdes.CommunityTopStatementsKey(), avroSerdes.CommunityTopStatementsValue())
-                        .withName(output.TOPICS.community_toolbox_top_statements + "-producer")
+                        .withName(outputTopicNames.communityToolboxTopStatements() + "-producer")
         );
 
         var topStatementsTable = topStatementsStream.toTable(
-                Named.as(output.TOPICS.community_toolbox_top_statements),
+                Named.as(outputTopicNames.communityToolboxTopStatements()),
                 Materialized
                         .<CommunityTopStatementsKey, CommunityTopStatementsValue, KeyValueStore<Bytes, byte[]>>
-                                as(output.TOPICS.community_toolbox_top_statements + "-store")
+                                as(outputTopicNames.communityToolboxTopStatements() + "-store")
                         .withKeySerde(avroSerdes.CommunityTopStatementsKey())
                         .withValueSerde(avroSerdes.CommunityTopStatementsValue())
         );
 
 
-        return new CommunityTopStatementsReturnValue(builder, topStatementsTable, topStatementsStream);
+        return new CommunityTopStatementsReturnValue(topStatementsTable, topStatementsStream);
 
     }
 
-
-    public enum input {
-        TOPICS;
-        public final String community_toolbox_top_outgoing_statements = CommunityToolboxTopOutgoingStatements.output.TOPICS.community_toolbox_top_outgoing_statements;
-        public final String community_toolbox_top_incoming_statements = CommunityToolboxTopIncomingStatements.output.TOPICS.community_toolbox_top_incoming_statements;
-    }
-
-
-    public enum output {
-        TOPICS;
-        public final String community_toolbox_top_statements = Utils.tsPrefixed("community_toolbox_top_statements");
-    }
 
 }

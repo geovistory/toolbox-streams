@@ -1,8 +1,6 @@
 package org.geovistory.toolbox.streams.entity.label.processsors.project;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Named;
@@ -10,35 +8,49 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.ProjectTopStatementsKey;
 import org.geovistory.toolbox.streams.avro.ProjectTopStatementsValue;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 
+@ApplicationScoped
 public class ProjectTopStatements {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectTopStatements(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerOutputTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                registerOutputTopic.projectTopOutgoingStatementsStream(),
-                registerOutputTopic.projectTopIncomingStatementsStream()
-        ).builder().build();
+
+        addProcessors(
+                registerInnerTopic.projectTopOutgoingStatementsStream(),
+                registerInnerTopic.projectTopIncomingStatementsStream()
+        );
     }
 
-    public static ProjectTopStatementsReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectTopStatementsReturnValue addProcessors(
             KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> outgoingTopStatementsStream,
             KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> incomingTopStatementsStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2)
@@ -49,36 +61,24 @@ public class ProjectTopStatements {
 
         /* SINK PROCESSORS */
 
-        topStatementsStream.to(output.TOPICS.project_top_statements,
+        topStatementsStream.to(outputTopicNames.projectTopStatements(),
                 Produced.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue())
-                        .withName(output.TOPICS.project_top_statements + "-producer")
+                        .withName(outputTopicNames.projectTopStatements() + "-producer")
         );
 
         var topStatementsTable = topStatementsStream.toTable(
-                Named.as(output.TOPICS.project_top_statements),
+                Named.as(outputTopicNames.projectTopStatements()),
                 Materialized
                         .<ProjectTopStatementsKey, ProjectTopStatementsValue, KeyValueStore<Bytes, byte[]>>
-                                as(output.TOPICS.project_top_statements + "-store")
+                                as(outputTopicNames.projectTopStatements() + "-store")
                         .withKeySerde(avroSerdes.ProjectTopStatementsKey())
                         .withValueSerde(avroSerdes.ProjectTopStatementsValue())
         );
 
 
-        return new ProjectTopStatementsReturnValue(builder, topStatementsTable, topStatementsStream);
+        return new ProjectTopStatementsReturnValue(topStatementsTable, topStatementsStream);
 
     }
 
-
-    public enum input {
-        TOPICS;
-        public final String project_top_outgoing_statements = ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements;
-        public final String project_top_incoming_statements = ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements;
-    }
-
-
-    public enum output {
-        TOPICS;
-        public final String project_top_statements = Utils.tsPrefixed("project_top_statements");
-    }
 
 }

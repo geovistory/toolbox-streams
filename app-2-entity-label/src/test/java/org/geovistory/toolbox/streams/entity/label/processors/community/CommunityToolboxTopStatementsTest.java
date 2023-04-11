@@ -1,12 +1,14 @@
 package org.geovistory.toolbox.streams.entity.label.processors.community;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.CommunityTopStatementsKey;
 import org.geovistory.toolbox.streams.avro.CommunityTopStatementsValue;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.community.CommunityToolboxTopStatements;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,28 +36,34 @@ class CommunityToolboxTopStatementsTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = CommunityToolboxTopStatements.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var communityToolboxTopStatements = new CommunityToolboxTopStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        communityToolboxTopStatements.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
 
         outgoingTopStatementsTopic = testDriver.createInputTopic(
-                CommunityToolboxTopStatements.input.TOPICS.community_toolbox_top_outgoing_statements,
+                outputTopicNames.communityToolboxTopOutgoingStatements(),
                 avroSerdes.CommunityTopStatementsKey().serializer(),
                 avroSerdes.CommunityTopStatementsValue().serializer());
 
 
         incomingTopStatementsTopic = testDriver.createInputTopic(
-                CommunityToolboxTopStatements.input.TOPICS.community_toolbox_top_incoming_statements,
+                outputTopicNames.communityToolboxTopIncomingStatements(),
                 avroSerdes.CommunityTopStatementsKey().serializer(),
                 avroSerdes.CommunityTopStatementsValue().serializer());
 
 
         outputTopic = testDriver.createOutputTopic(
-                CommunityToolboxTopStatements.output.TOPICS.community_toolbox_top_statements,
+                outputTopicNames.communityToolboxTopStatements(),
                 avroSerdes.CommunityTopStatementsKey().deserializer(),
                 avroSerdes.CommunityTopStatementsValue().deserializer());
     }

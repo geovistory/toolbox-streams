@@ -1,13 +1,15 @@
 package org.geovistory.toolbox.streams.entity.label.processors.project;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.project.ProjectStatementWithEntity;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,26 +36,31 @@ class ProjectStatementWithEntityTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = ProjectStatementWithEntity.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var projectStatementWithEntity = new ProjectStatementWithEntity(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        projectStatementWithEntity.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         infStatementTopic = testDriver.createInputTopic(
-                ProjectStatementWithEntity.input.TOPICS.statement_with_entity,
+                inputTopicNames.statementWithEntity,
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer());
 
         proInfoProjRelTopic = testDriver.createInputTopic(
-                ProjectStatementWithEntity.input.TOPICS.pro_info_proj_rel,
+                inputTopicNames.proInfoProjRel(),
                 avroSerdes.ProInfoProjRelKey().serializer(),
                 avroSerdes.ProInfoProjRelValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity,
+                outputTopicNames.projectStatementWithEntity(),
                 avroSerdes.ProjectStatementKey().deserializer(),
                 avroSerdes.ProjectStatementValue().deserializer());
     }
@@ -296,7 +303,6 @@ class ProjectStatementWithEntityTest {
                 .build();
         assertThat(outRecords.containsKey(resultingKeyTwo)).isTrue();
     }
-
 
 
 }

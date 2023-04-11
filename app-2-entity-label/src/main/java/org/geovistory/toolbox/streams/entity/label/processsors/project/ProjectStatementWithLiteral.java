@@ -1,42 +1,55 @@
 package org.geovistory.toolbox.streams.entity.label.processsors.project;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
-import org.geovistory.toolbox.streams.entity.label.DbTopicNames;
-import org.geovistory.toolbox.streams.entity.label.Env;
-import org.geovistory.toolbox.streams.entity.label.RegisterInputTopics;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
+import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+
+@ApplicationScoped
 public class ProjectStatementWithLiteral {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectStatementWithLiteral(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopics(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
+
+        addProcessors(
                 registerInputTopic.statementWithLiteralTable(),
                 registerInputTopic.proInfoProjRelTable()
-        ).builder().build();
+        );
     }
 
-    public static ProjectStatementReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectStatementReturnValue addProcessors(
             KTable<dev.information.statement.Key, StatementEnrichedValue> enrichedStatementTable,
             KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
@@ -88,32 +101,19 @@ public class ProjectStatementWithLiteral {
 
         /* SINK PROCESSORS */
 
-        projectStatementStream.to(output.TOPICS.project_statement_with_literal,
+        projectStatementStream.to(outputTopicNames.projectStatementWithLiteral(),
                 Produced.with(avroSerdes.ProjectStatementKey(), avroSerdes.ProjectStatementValue())
-                        .withName(output.TOPICS.project_statement_with_literal + "-producer")
+                        .withName(outputTopicNames.projectStatementWithLiteral() + "-producer")
         );
 
-        return new ProjectStatementReturnValue(builder, projectStatementStream);
+        return new ProjectStatementReturnValue(projectStatementStream);
 
     }
-
-
-    public enum input {
-        TOPICS;
-        public final String pro_info_proj_rel = DbTopicNames.pro_info_proj_rel.getName();
-        public final String statement_with_literal = Env.INSTANCE.TOPIC_STATEMENT_WITH_LITERAL;
-    }
-
 
     public enum inner {
         TOPICS;
         public final String project_statement_with_literal_join = "project_statement_with_literal_join";
 
-    }
-
-    public enum output {
-        TOPICS;
-        public final String project_statement_with_literal = Utils.tsPrefixed("project_statement_with_literal");
     }
 
 }

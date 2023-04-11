@@ -1,42 +1,54 @@
 package org.geovistory.toolbox.streams.entity.label.processsors.project;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
 
+@ApplicationScoped
 public class ProjectTopOutgoingStatements {
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectTopOutgoingStatements(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerOutputTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                registerOutputTopic.projectStatementWithLiteralStream(),
-                registerOutputTopic.projectStatementWithEntityTable(),
-                registerOutputTopic.projectEntityLabelTable()
-        ).builder().build();
+        addProcessors(
+                registerInnerTopic.projectStatementWithLiteralStream(),
+                registerInnerTopic.projectStatementWithEntityTable(),
+                registerInnerTopic.projectEntityLabelTable()
+        );
     }
 
-    public static ProjectTopStatementsReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectTopStatementsReturnValue addProcessors(
             KStream<ProjectStatementKey, ProjectStatementValue> projectStatementsWithLiteralStream,
             KTable<ProjectStatementKey, ProjectStatementValue> projectStatementsWithEntityTable,
             KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable) {
 
-        var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
@@ -119,34 +131,20 @@ public class ProjectTopOutgoingStatements {
 
         /* SINK PROCESSORS */
 
-        aggregatedStream.to(output.TOPICS.project_top_outgoing_statements,
+        aggregatedStream.to(outputTopicNames.projectTopOutgoingStatements(),
                 Produced.with(avroSerdes.ProjectTopStatementsKey(), avroSerdes.ProjectTopStatementsValue())
-                        .withName(output.TOPICS.project_top_outgoing_statements + "-producer")
+                        .withName(outputTopicNames.projectTopOutgoingStatements() + "-producer")
         );
 
-        return new ProjectTopStatementsReturnValue(builder, aggregatedTable, aggregatedStream);
+        return new ProjectTopStatementsReturnValue(aggregatedTable, aggregatedStream);
 
     }
-
-
-    public enum input {
-        TOPICS;
-        public final String project_statement = ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity;
-        public final String project_entity_label = ProjectEntityLabel.output.TOPICS.project_entity_label;
-
-    }
-
 
     public enum inner {
         TOPICS;
         public final String project_top_outgoing_statements_group_by = "project_top_outgoing_statements_group_by";
         public final String project_top_outgoing_statements_join_object_entity_label = "project_top_outgoing_statements_join_object_entity_label";
 
-    }
-
-    public enum output {
-        TOPICS;
-        public final String project_top_outgoing_statements = Utils.tsPrefixed("project_top_outgoing_statements");
     }
 
 }

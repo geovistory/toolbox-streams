@@ -3,190 +3,216 @@
  */
 package org.geovistory.toolbox.streams.entity.label;
 
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.entity.label.processsors.base.ProjectEntityVisibility;
 import org.geovistory.toolbox.streams.entity.label.processsors.community.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.project.*;
-import org.geovistory.toolbox.streams.lib.Admin;
-import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.lib.TsAdmin;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import java.util.ArrayList;
 
-import static org.geovistory.toolbox.streams.entity.label.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.entity.label.BuildProperties.getDockerTagSuffix;
-
+@ApplicationScoped
 class App {
-    public static void main(String[] args) {
 
+    @ConfigProperty(name = "ts.output.topic.partitions")
+    int outputTopicPartitions;
+    @ConfigProperty(name = "ts.output.topic.replication.factor")
+    short outputTopicReplicationFactor;
 
-        StreamsBuilder builder = new StreamsBuilder();
+    @Inject
+    ProjectStatementWithEntity projectStatementWithEntity;
+    @Inject
+    ProjectStatementWithLiteral projectStatementWithLiteral;
+    @Inject
+    ProjectTopIncomingStatements projectTopIncomingStatements;
+    @Inject
+    ProjectTopOutgoingStatements projectTopOutgoingStatements;
+    @Inject
+    ProjectTopStatements projectTopStatements;
+    @Inject
+    ProjectEntityVisibility projectEntityVisibility;
+    @Inject
+    ProjectEntity projectEntity;
+    @Inject
+    ProjectEntityLabel projectEntityLabel;
+    @Inject
+    CommunityToolboxStatementWithEntity communityToolboxStatementWithEntity;
+    @Inject
+    CommunityToolboxEntity communityToolboxEntity;
+    @Inject
+    CommunityToolboxStatementWithLiteral communityToolboxStatementWithLiteral;
+    @Inject
+    CommunityToolboxTopIncomingStatements communityToolboxTopIncomingStatements;
+    @Inject
+    CommunityToolboxTopOutgoingStatements communityToolboxTopOutgoingStatements;
+    @Inject
+    CommunityToolboxTopStatements communityToolboxTopStatements;
+    @Inject
+    CommunityToolboxEntityLabel communityToolboxEntityLabel;
+
+    @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
+    String bootstrapServers;
+    @Inject
+    BuilderSingleton builderSingleton;
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
+    @Produces
+    public Topology buildTopology() {
+
 
         // add processors of sub-topologies
-        addSubTopologies(builder);
-
-        // build the topology
-        var topology = builder.build();
-
-        System.out.println(topology.describe());
+        addSubTopologies();
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();
 
-        // print configuration information
-        System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
-        System.out.println("With config:");
-        AppConfig.INSTANCE.printConfigs();
-
-        // create the streams app
-        // noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, AppConfig.getConfig());
-
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-
-        // start streaming!
-        streams.start();
+        // build the topology
+        return builderSingleton.builder.build();
     }
 
-    private static void addSubTopologies(StreamsBuilder builder) {
+    private void addSubTopologies() {
 
         // register input topics as KTables
-        var inputTopics = new RegisterInputTopics(builder);
-        var proInfoProjRelTable = inputTopics.proInfoProjRelTable();
-        var infResourceTable = inputTopics.infResourceTable();
-        var statementWithEntityTable = inputTopics.statementWithEntityTable();
-        var statementWithLiteralTable = inputTopics.statementWithLiteralTable();
-        var projectEntityLabelConfigTable = inputTopics.projectEntityLabelConfigTable();
-        var communityEntityLabelConfigTable = inputTopics.communityEntityLabelConfigTable();
+        var proInfoProjRelTable = registerInputTopic.proInfoProjRelTable();
+        var infResourceTable = registerInputTopic.infResourceTable();
+        var statementWithEntityTable = registerInputTopic.statementWithEntityTable();
+        var statementWithLiteralTable = registerInputTopic.statementWithLiteralTable();
+        var projectEntityLabelConfigTable = registerInputTopic.projectEntityLabelConfigTable();
+        var communityEntityLabelConfigTable = registerInputTopic.communityEntityLabelConfigTable();
 
         // register inner topics as KTables
-        var innerTopics = new RegisterInnerTopic(builder);
-        var projectEntityLabelTable = innerTopics.projectEntityLabelTable();
-        var projectEntityTable = innerTopics.projectEntityTable();
-        var projectStatementWithEntityTable = innerTopics.projectStatementWithEntityTable();
-        var communityToolboxEntityLabelTable = innerTopics.communityToolboxEntityLabelTable();
-        var communityToolboxEntityTable = innerTopics.communityToolboxEntityTable();
-        var communityToolboxStatementWithEntityTable = innerTopics.communityToolboxStatementWithEntityTable();
+        var projectEntityLabelTable = registerInnerTopic.projectEntityLabelTable();
+        var projectEntityTable = registerInnerTopic.projectEntityTable();
+        var projectStatementWithEntityTable = registerInnerTopic.projectStatementWithEntityTable();
+        var communityToolboxEntityLabelTable = registerInnerTopic.communityToolboxEntityLabelTable();
+        var communityToolboxEntityTable = registerInnerTopic.communityToolboxEntityTable();
+        var communityToolboxStatementWithEntityTable = registerInnerTopic.communityToolboxStatementWithEntityTable();
 
         // add sub-topology ProjectStatementWithEntity
-        var projectStatementWithEntity = ProjectStatementWithEntity.addProcessors(builder,
+        var projectStatementWithEntityReturn = projectStatementWithEntity.addProcessors(
                 statementWithEntityTable,
                 proInfoProjRelTable
         );
 
         // add sub-topology ProjectStatementWithLiteral
-        var projectStatementWithLiteral = ProjectStatementWithLiteral.addProcessors(builder,
+        var projectStatementWithLiteralReturn = projectStatementWithLiteral.addProcessors(
                 statementWithLiteralTable,
                 proInfoProjRelTable
         );
         // add sub-topology ProjectTopIncomingStatements
-        var projectTopIncomingStatements = ProjectTopIncomingStatements.addProcessors(builder,
+        var projectTopIncomingStatementsReturn = projectTopIncomingStatements.addProcessors(
                 projectStatementWithEntityTable,
                 projectEntityLabelTable
         );
 
         // add sub-topology ProjectTopOutgoingStatements
-        var projectTopOutgoingStatements = ProjectTopOutgoingStatements.addProcessors(builder,
-                projectStatementWithLiteral.ProjectStatementStream(),
+        var projectTopOutgoingStatementsReturn = projectTopOutgoingStatements.addProcessors(
+                projectStatementWithLiteralReturn.ProjectStatementStream(),
                 projectStatementWithEntityTable,
                 projectEntityLabelTable
         );
 
         // add sub-topology ProjectTopStatements
-        var projectTopStatements = ProjectTopStatements.addProcessors(builder,
-                projectTopOutgoingStatements.projectTopStatementStream(),
-                projectTopIncomingStatements.projectTopStatementStream()
+        var projectTopStatementsReturn = projectTopStatements.addProcessors(
+                projectTopOutgoingStatementsReturn.projectTopStatementStream(),
+                projectTopIncomingStatementsReturn.projectTopStatementStream()
         );
 
 
         // add sub-topology ProjectEntityVisibility
-        var projectEntityVisibility = ProjectEntityVisibility.addProcessors(builder,
+        var projectEntityVisibilityReturn = projectEntityVisibility.addProcessors(
                 infResourceTable,
                 proInfoProjRelTable
         );
 
         // add sub-topology ProjectEntity
-        ProjectEntity.addProcessors(builder,
-                projectEntityVisibility.projectEntityVisibilityStream()
+        projectEntity.addProcessors(
+                projectEntityVisibilityReturn.projectEntityVisibilityStream()
         );
 
 
         // add sub-topology ProjectEntityLabel
-        ProjectEntityLabel.addProcessors(builder,
+        projectEntityLabel.addProcessors(
                 projectEntityTable,
                 projectEntityLabelConfigTable,
-                projectTopStatements.projectTopStatementTable()
+                projectTopStatementsReturn.projectTopStatementTable()
         );
 
 
         // add sub-topology CommunityToolboxStatementWithEntity
-        CommunityToolboxStatementWithEntity.addProcessors(builder,
-                projectStatementWithEntity.ProjectStatementStream()
+        communityToolboxStatementWithEntity.addProcessors(
+                projectStatementWithEntityReturn.ProjectStatementStream()
         );
 
         // add sub-topology CommunityToolboxEntity
-        CommunityToolboxEntity.addProcessors(builder,
-                projectEntityVisibility.projectEntityVisibilityStream()
+        communityToolboxEntity.addProcessors(
+                projectEntityVisibilityReturn.projectEntityVisibilityStream()
         );
 
         // add sub-topology CommunityToolboxStatementWithLiteral
-        var communityToolboxStatementWithLiteral = CommunityToolboxStatementWithLiteral.addProcessors(builder,
-                projectStatementWithLiteral.ProjectStatementStream()
+        var communityToolboxStatementWithLiteralReturn = communityToolboxStatementWithLiteral.addProcessors(
+                projectStatementWithLiteralReturn.ProjectStatementStream()
         );
         // add sub-topology CommunityToolboxTopIncomingStatements
-        var communityToolboxTopIncomingStatements = CommunityToolboxTopIncomingStatements.addProcessors(builder,
+        var communityToolboxTopIncomingStatementsReturn = communityToolboxTopIncomingStatements.addProcessors(
                 communityToolboxStatementWithEntityTable,
                 communityToolboxEntityLabelTable
         );
         // add sub-topology CommunityToolboxTopOutgoingStatements
-        var communityToolboxTopOutgoingStatements = CommunityToolboxTopOutgoingStatements.addProcessors(builder,
-                communityToolboxStatementWithLiteral.communityStatementStream(),
+        var communityToolboxTopOutgoingStatementsReturn = communityToolboxTopOutgoingStatements.addProcessors(
+                communityToolboxStatementWithLiteralReturn.communityStatementStream(),
                 communityToolboxStatementWithEntityTable,
                 communityToolboxEntityLabelTable
         );
 
         // add sub-topology CommunityToolboxTopStatements
-        var communityToolboxTopStatements = CommunityToolboxTopStatements.addProcessors(builder,
-                communityToolboxTopIncomingStatements.communityTopStatementStream(),
-                communityToolboxTopOutgoingStatements.communityTopStatementStream()
+        var communityToolboxTopStatementsReturn = communityToolboxTopStatements.addProcessors(
+                communityToolboxTopIncomingStatementsReturn.communityTopStatementStream(),
+                communityToolboxTopOutgoingStatementsReturn.communityTopStatementStream()
         );
 
         // add sub-topology CommunityToolboxEntityLabel
-        CommunityToolboxEntityLabel.addProcessors(builder,
+        communityToolboxEntityLabel.addProcessors(
                 communityToolboxEntityTable,
                 communityEntityLabelConfigTable,
-                communityToolboxTopStatements.communityTopStatementTable()
+                communityToolboxTopStatementsReturn.communityTopStatementTable()
         );
 
 
     }
 
-    private static void createTopics() {
-        var admin = new Admin();
-
-        var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
-        var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
-
+    private void createTopics() {
+        var admin = new TsAdmin(bootstrapServers);
         // create output topics (with number of partitions and delete.policy=compact)
         var topics = new ArrayList<String>();
-        topics.add(ProjectEntityVisibility.output.TOPICS.project_entity_visibility);
-        topics.add(ProjectEntity.output.TOPICS.project_entity);
-        topics.add(ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity);
-        topics.add(ProjectStatementWithLiteral.output.TOPICS.project_statement_with_literal);
-        topics.add(ProjectTopOutgoingStatements.output.TOPICS.project_top_outgoing_statements);
-        topics.add(ProjectTopIncomingStatements.output.TOPICS.project_top_incoming_statements);
-        topics.add(ProjectTopStatements.output.TOPICS.project_top_statements);
-        topics.add(ProjectEntityLabel.output.TOPICS.project_entity_label);
-        topics.add(ProjectEntityLabel.output.TOPICS.project_entity_with_label_config);
-        topics.add(CommunityToolboxEntity.output.TOPICS.community_toolbox_entity);
-        topics.add(CommunityToolboxStatementWithEntity.output.TOPICS.community_toolbox_statement_with_entity);
-        topics.add(CommunityToolboxStatementWithLiteral.output.TOPICS.community_toolbox_statement_with_literal);
-        topics.add(CommunityToolboxTopIncomingStatements.output.TOPICS.community_toolbox_top_incoming_statements);
-        topics.add(CommunityToolboxTopOutgoingStatements.output.TOPICS.community_toolbox_top_outgoing_statements);
-        topics.add(CommunityToolboxTopStatements.output.TOPICS.community_toolbox_top_statements);
-        topics.add(CommunityToolboxEntityLabel.output.TOPICS.community_toolbox_entity_label);
-        topics.add(CommunityToolboxEntityLabel.output.TOPICS.community_toolbox_entity_with_label_config);
+        topics.add(outputTopicNames.projectEntityVisibility());
+        topics.add(outputTopicNames.projectEntity());
+        topics.add(outputTopicNames.projectStatementWithEntity());
+        topics.add(outputTopicNames.projectStatementWithLiteral());
+        topics.add(outputTopicNames.projectTopOutgoingStatements());
+        topics.add(outputTopicNames.projectTopIncomingStatements());
+        topics.add(outputTopicNames.projectTopStatements());
+        topics.add(outputTopicNames.projectEntityLabel());
+        topics.add(outputTopicNames.projectEntityWithLabelConfig());
+        topics.add(outputTopicNames.communityToolboxEntity());
+        topics.add(outputTopicNames.communityToolboxStatementWithEntity());
+        topics.add(outputTopicNames.communityToolboxStatementWithLiteral());
+        topics.add(outputTopicNames.communityToolboxTopIncomingStatements());
+        topics.add(outputTopicNames.communityToolboxTopOutgoingStatements());
+        topics.add(outputTopicNames.communityToolboxTopStatements());
+        topics.add(outputTopicNames.communityToolboxEntityLabel());
+        topics.add(outputTopicNames.communityToolboxEntityWithLabelConfig());
 
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }

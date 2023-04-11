@@ -3,41 +3,53 @@ package org.geovistory.toolbox.streams.entity.label.processsors.base;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.ProjectEntityVisibilityValue;
-import org.geovistory.toolbox.streams.entity.label.DbTopicNames;
-import org.geovistory.toolbox.streams.entity.label.RegisterInputTopics;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
+import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+
+@ApplicationScoped
 public class ProjectEntityVisibility {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectEntityVisibility(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopics(builder);
-
-        return addProcessors(
-                builder,
+    public void addProcessorsStandalone() {
+        addProcessors(
                 registerInputTopic.infResourceTable(),
                 registerInputTopic.proInfoProjRelTable()
-        ).builder().build();
+        );
     }
 
-    public static ProjectEntityVisibilityReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectEntityVisibilityReturnValue addProcessors(
             KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
             KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         var mapper = new ObjectMapper();
 
@@ -98,31 +110,19 @@ public class ProjectEntityVisibility {
 
         /* SINK PROCESSORS */
 
-        projectEntityVisibilityStream.to(output.TOPICS.project_entity_visibility,
+        projectEntityVisibilityStream.to(outputTopicNames.projectEntityVisibility(),
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityVisibilityValue())
-                        .withName(output.TOPICS.project_entity_visibility + "-producer")
+                        .withName(outputTopicNames.projectEntityVisibility() + "-producer")
         );
 
-        return new ProjectEntityVisibilityReturnValue(builder, projectEntityVisibilityStream);
+        return new ProjectEntityVisibilityReturnValue(projectEntityVisibilityStream);
 
     }
-
-
-    public enum input {
-        TOPICS;
-        public final String pro_info_proj_rel = DbTopicNames.pro_info_proj_rel.getName();
-        public final String inf_resource = DbTopicNames.inf_resource.getName();
-    }
-
 
     public enum inner {
         TOPICS;
         public final String project_entity_visibilty_join = "project_entity_visibilty_join";
     }
 
-    public enum output {
-        TOPICS;
-        public final String project_entity_visibility = Utils.tsPrefixed("project_entity_visibility");
-    }
 
 }

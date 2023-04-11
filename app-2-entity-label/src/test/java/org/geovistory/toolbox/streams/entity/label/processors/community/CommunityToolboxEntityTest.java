@@ -1,14 +1,16 @@
 package org.geovistory.toolbox.streams.entity.label.processors.community;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.CommunityEntityKey;
 import org.geovistory.toolbox.streams.avro.CommunityEntityValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.ProjectEntityVisibilityValue;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.community.CommunityToolboxEntity;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +24,7 @@ class CommunityToolboxEntityTest {
     private static final String SCHEMA_REGISTRY_SCOPE = CommunityToolboxEntityTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<ProjectEntityKey,ProjectEntityVisibilityValue> projectEntityTopic;
+    private TestInputTopic<ProjectEntityKey, ProjectEntityVisibilityValue> projectEntityTopic;
     private TestOutputTopic<CommunityEntityKey, CommunityEntityValue> outputTopic;
 
     @BeforeEach
@@ -34,22 +36,27 @@ class CommunityToolboxEntityTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
-
-        Topology topology = CommunityToolboxEntity.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var communityToolboxEntity = new CommunityToolboxEntity(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        communityToolboxEntity.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
 
         projectEntityTopic = testDriver.createInputTopic(
-                CommunityToolboxEntity.input.TOPICS.project_entity_visibility,
+                outputTopicNames.projectEntityVisibility(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityVisibilityValue().serializer());
 
 
         outputTopic = testDriver.createOutputTopic(
-                CommunityToolboxEntity.output.TOPICS.community_toolbox_entity,
+                outputTopicNames.communityToolboxEntity(),
                 avroSerdes.CommunityEntityKey().deserializer(),
                 avroSerdes.CommunityEntityValue().deserializer());
     }
@@ -170,8 +177,6 @@ class CommunityToolboxEntityTest {
         assertThat(record.getProjectCount()).isEqualTo(0);
 
     }
-
-
 
 
 }

@@ -1,11 +1,13 @@
 package org.geovistory.toolbox.streams.entity.label.processors.community;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.community.CommunityToolboxTopOutgoingStatements;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,8 +22,8 @@ class CommunityToolboxTopOutgoingStatementsTest {
     private static final String SCHEMA_REGISTRY_SCOPE = CommunityToolboxTopOutgoingStatementsTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<CommunityStatementKey, CommunityStatementValue> projectStatementTopic;
-    private TestInputTopic<CommunityEntityKey, CommunityEntityLabelValue> projectEntityLabelTopic;
+    private TestInputTopic<CommunityStatementKey, CommunityStatementValue> communityStatementTopic;
+    private TestInputTopic<CommunityEntityKey, CommunityEntityLabelValue> communityEntityLabelTopic;
     private TestOutputTopic<CommunityTopStatementsKey, CommunityTopStatementsValue> outputTopic;
 
     @BeforeEach
@@ -33,26 +35,32 @@ class CommunityToolboxTopOutgoingStatementsTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = CommunityToolboxTopOutgoingStatements.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var communityClassLabel = new CommunityToolboxTopOutgoingStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        communityClassLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
 
-        projectStatementTopic = testDriver.createInputTopic(
-                CommunityToolboxTopOutgoingStatements.input.TOPICS.community_toolbox_statement,
+        communityStatementTopic = testDriver.createInputTopic(
+                outputTopicNames.communityToolboxStatementWithEntity(),
                 avroSerdes.CommunityStatementKey().serializer(),
                 avroSerdes.CommunityStatementValue().serializer());
 
-        projectEntityLabelTopic = testDriver.createInputTopic(
-                CommunityToolboxTopOutgoingStatements.input.TOPICS.community_toolbox_entity_label,
+        communityEntityLabelTopic = testDriver.createInputTopic(
+                outputTopicNames.communityToolboxEntityLabel(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityLabelValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                CommunityToolboxTopOutgoingStatements.output.TOPICS.community_toolbox_top_outgoing_statements,
+                outputTopicNames.communityToolboxTopOutgoingStatements(),
                 avroSerdes.CommunityTopStatementsKey().deserializer(),
                 avroSerdes.CommunityTopStatementsValue().deserializer());
     }
@@ -91,20 +99,20 @@ class CommunityToolboxTopOutgoingStatementsTest {
                         .setObjectId(objectId).setObject(object).build())
                 .setAvgOrdNumOfRange(3f)
                 .build();
-        projectStatementTopic.pipeInput(k, v);
+        communityStatementTopic.pipeInput(k, v);
 
         v.setStatementId(1);
         v.setAvgOrdNumOfRange(1f);
 
-        projectStatementTopic.pipeInput(k, v);
+        communityStatementTopic.pipeInput(k, v);
 
         v.setStatementId(2);
         v.setAvgOrdNumOfRange(2f);
-        projectStatementTopic.pipeInput(k, v);
+        communityStatementTopic.pipeInput(k, v);
 
         v.setStatementId(0);
         v.setAvgOrdNumOfRange(0f);
-        projectStatementTopic.pipeInput(k, v);
+        communityStatementTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
@@ -149,19 +157,19 @@ class CommunityToolboxTopOutgoingStatementsTest {
                         .setObjectId(objectId).setObject(object).build())
                 .setAvgOrdNumOfRange(3f)
                 .build();
-        projectStatementTopic.pipeInput(k, v);
+        communityStatementTopic.pipeInput(k, v);
 
         // add subject entity label
         var kSE = CommunityEntityKey.newBuilder().setEntityId(subjectId).build();
         var vSE = CommunityEntityLabelValue.newBuilder().setEntityId(subjectId)
                 .setLabelSlots(List.of("")).setLabel("Jack").build();
-        projectEntityLabelTopic.pipeInput(kSE, vSE);
+        communityEntityLabelTopic.pipeInput(kSE, vSE);
 
         // add object entity label
         var kOE = CommunityEntityKey.newBuilder().setEntityId(objectId).build();
         var vOE = CommunityEntityLabelValue.newBuilder().setEntityId(objectId)
                 .setLabelSlots(List.of("")).setLabel("Maria").build();
-        projectEntityLabelTopic.pipeInput(kOE, vOE);
+        communityEntityLabelTopic.pipeInput(kOE, vOE);
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
