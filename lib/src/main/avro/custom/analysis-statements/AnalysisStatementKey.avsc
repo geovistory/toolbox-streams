@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "AnalysisStatementKey",
-  "namespace": "org.geovistory.toolbox.streams.avro",
+  "namespace": "org.geovistory.toolbox.streams.analysis.statements.avro",
   "doc": "Model to store AnalysisStatementKey",
   "fields": [
     {

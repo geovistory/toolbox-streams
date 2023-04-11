@@ -3,70 +3,66 @@
  */
 package org.geovistory.toolbox.streams.analysis.statements;
 
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.analysis.statements.processors.ProjectAnalysisStatement;
-import org.geovistory.toolbox.streams.lib.Admin;
-import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.lib.TsAdmin;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import java.util.ArrayList;
 
-import static org.geovistory.toolbox.streams.analysis.statements.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.analysis.statements.BuildProperties.getDockerTagSuffix;
 
-
+@ApplicationScoped
 class App {
-    public static void main(String[] args) {
+    @ConfigProperty(name = "ts.output.topic.partitions")
+    int outputTopicPartitions;
+    @ConfigProperty(name = "ts.output.topic.replication.factor")
+    short outputTopicReplicationFactor;
 
+    @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
+    String bootstrapServers;
 
-        StreamsBuilder builder = new StreamsBuilder();
+   @Inject
+    ProjectAnalysisStatement projectAnalysisStatement;
+    @Inject
+    BuilderSingleton builderSingleton;
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
+    @Produces
+    public Topology buildTopology() {
+
 
         // add processors of sub-topologies
-        addSubTopologies(builder);
-
-        // build the topology
-        var topology = builder.build();
-
-        System.out.println(topology.describe());
+        addSubTopologies();
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();
 
-        // print configuration information
-        System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
-        System.out.println("With config:");
-        AppConfig.INSTANCE.printConfigs();
-
-        // create the streams app
-        // noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, AppConfig.getConfig());
-
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-
-        // start streaming!
-        streams.start();
+        // build the topology
+        return builderSingleton.builder.build();
     }
 
-    private static void addSubTopologies(StreamsBuilder builder) {
-        var inputTopics = new RegisterInputTopic(builder);
 
-        ProjectAnalysisStatement.addProcessors(
-                builder,
-                inputTopics.projectStatementWithLiteral(),
-                inputTopics.projectStatementWithEntity()
+    private void addSubTopologies() {
+
+        projectAnalysisStatement.addProcessors(
+                registerInputTopic.projectStatementWithLiteral(),
+                registerInputTopic.projectStatementWithEntity()
         );
     }
 
-    private static void createTopics() {
-        var admin = new Admin();
-
-        var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
-        var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
+    private  void createTopics() {
+        var admin = new TsAdmin(bootstrapServers);
 
         // create output topics (with number of partitions and delete.policy=compact)
         var topics = new ArrayList<String>();
-        topics.add(ProjectAnalysisStatement.output.TOPICS.project_analysis_statement);
+        topics.add(outputTopicNames.projectAnalysisStatement());
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 

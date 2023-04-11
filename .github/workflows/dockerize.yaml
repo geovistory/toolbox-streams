@@ -648,9 +648,10 @@ jobs:
           color: 0x0000ff
           username: GitHub Actions
 
-  dockerize-app-3-analysis-statements:
+
+  dockerize-app-0-analysis-statements:
     needs: [ detect-changes, pull-request-number ]
-    if: ${{ needs.detect-changes.outputs.app-3-analysis-statements == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-0-analysis-statements == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -658,7 +659,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-3-analysis-statements'"
+          title: "Test and Dockerize 'app-0-analysis-statements'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -683,22 +684,22 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
 
-      # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
-      # the workflow execution time. For more information see:
-      # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
-        with:
-          arguments: app-3-analysis-statements:build # "app-3-analysis-statements:" points to /app-3-analysis-statements
-
       # this will update metadata about PR for the docker tag in /build.gradle
       - name: Update pull request metadata in build.gradle
         id: version
         run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
 
-      # Create docker image
-      - name: Create docker image
-        run: ./gradlew app-3-analysis-statements:jibDockerBuild
+      # extract tag (e.g. 1.0.1-pr-32.0)
+      - name: Extract docker tag suffix
+        id: extract_docker_tag_suffix
+        run: |
+          echo ::set-output name=value::$(./gradlew -q app-0-analysis-statements:printDockerTagSuffix)
+
+      # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
+      # the workflow execution time. For more information see:
+      # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -708,25 +709,28 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # push docker image
-      - name: Push docker image
-        run: docker push $(./gradlew -q app-3-analysis-statements:printDockerImageTag)
-
-      # extract tag (e.g. 1.0.1-pr-32.0)
-      - name: Extract docker tag suffix
-        id: extract_docker_tag_suffix
+      # Create and push docker image
+      - name: Create docker and push image
         run: |
-          echo ::set-output name=value::$(./gradlew -q app-3-analysis-statements:printDockerTagSuffix)
+          ./gradlew app-0-analysis-statements:build \
+            -Dquarkus.package.type=native \
+            -Dquarkus.container-image.push=true \
+            -Dquarkus.container-image.registry="ghcr.io" \
+            -Dquarkus.container-image.group="geovistory" \
+            -Dquarkus.container-image.name="toolbox-streams-analysis-statements-quarkus" \
+            -Dquarkus.container-image.tag="${{steps.extract_docker_tag_suffix.outputs.value}}"
+
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-3-analysis-statements' > Done"
+          title: "Dockerize 'app-0-analysis-statements' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions
+
 
   dockerize-app-3-entity:
     needs: [ detect-changes, pull-request-number ]
