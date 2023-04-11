@@ -1,4 +1,4 @@
 ext {
     pullRequestNumber = 77
-    pullRequestPushCount = 1
+    pullRequestPushCount = 2
 }
