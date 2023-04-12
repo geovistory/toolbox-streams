@@ -8,11 +8,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 import org.geovistory.toolbox.streams.nodes.processors.Nodes;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Objects;
 
+@ApplicationScoped
 public class App {
 
     @ConfigProperty(name = "ts.output.topic.partitions")
@@ -42,10 +44,7 @@ public class App {
     public Topology buildTopology() {
 
         // add processors of sub-topologies
-        if (!initialized) {
-            initialized = true;
-            addSubTopologies();
-        }
+        addSubTopologies();
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();
@@ -55,31 +54,34 @@ public class App {
     }
 
 
-    private  void addSubTopologies() {
+    private void addSubTopologies() {
 
-        // register input topics as KTables
-        var infResourceStream = registerInputTopic.infResourceStream();
-        var infLanguageStream = registerInputTopic.infLanguageStream();
-        var infAppellationStream = registerInputTopic.infAppellationStream();
-        var infLangStringStream = registerInputTopic.infLangStringStream();
-        var infPlaceStream = registerInputTopic.infPlaceStream();
-        var infTimePrimitiveStream = registerInputTopic.infTimePrimitiveStream();
-        var infDimensionStream = registerInputTopic.infDimensionStream();
-        var datDigitalStream = registerInputTopic.datDigitalStream();
-        var tabCellStream = registerInputTopic.tabCellStream();
+        if (!initialized) {
+            initialized = true;
+            // register input topics as KTables
+            var infResourceStream = registerInputTopic.infResourceStream();
+            var infLanguageStream = registerInputTopic.infLanguageStream();
+            var infAppellationStream = registerInputTopic.infAppellationStream();
+            var infLangStringStream = registerInputTopic.infLangStringStream();
+            var infPlaceStream = registerInputTopic.infPlaceStream();
+            var infTimePrimitiveStream = registerInputTopic.infTimePrimitiveStream();
+            var infDimensionStream = registerInputTopic.infDimensionStream();
+            var datDigitalStream = registerInputTopic.datDigitalStream();
+            var tabCellStream = registerInputTopic.tabCellStream();
 
-        // add sub-topology StatementEnriched
-        nodes.addProcessors(
-                infResourceStream,
-                infLanguageStream,
-                infAppellationStream,
-                infLangStringStream,
-                infPlaceStream,
-                infTimePrimitiveStream,
-                infDimensionStream,
-                datDigitalStream,
-                tabCellStream
-        );
+            // add sub-topology StatementEnriched
+            nodes.addProcessors(
+                    infResourceStream,
+                    infLanguageStream,
+                    infAppellationStream,
+                    infLangStringStream,
+                    infPlaceStream,
+                    infTimePrimitiveStream,
+                    infDimensionStream,
+                    datDigitalStream,
+                    tabCellStream
+            );
+        }
     }
 
     private void createTopics() {

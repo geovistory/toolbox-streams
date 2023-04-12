@@ -81,7 +81,7 @@ task generateReflectionConfiguration {
     ext.outputDir = "$buildDir/generated/java"
     outputs.dir outputDir
     doFirst {
-        var basePathSrc = project.projectDir.toString() + "/src/main/java/org/geovistory/toolbox/streams/nodes"
+        var basePathSrc = project.projectDir.toString() + "/src/main/java/org.geovistory.toolbox.streams.nodes"
         var path = basePathSrc + "/AvroSerdes.java"
         var p = Pattern.compile("public Serde<(.*)>", Pattern.DOTALL)
         var classNames = new ArrayList<String>()
