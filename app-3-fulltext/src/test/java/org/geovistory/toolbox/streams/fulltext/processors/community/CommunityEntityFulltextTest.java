@@ -1,13 +1,12 @@
-package org.geovistory.toolbox.streams.fulltext.community;
+package org.geovistory.toolbox.streams.fulltext.processors.community;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.fulltext.Env;
-import org.geovistory.toolbox.streams.fulltext.I;
-import org.geovistory.toolbox.streams.fulltext.processors.community.CommunityEntityFulltext;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.fulltext.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,32 +35,35 @@ class CommunityEntityFulltextTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        var nameSupplement = "toolbox";
-        Topology topology = CommunityEntityFulltext.buildStandalone(new StreamsBuilder(), nameSupplement);
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var communityClassLabel = new CommunityEntityFulltext(avroSerdes, registerInputTopic, outputTopicNames);
+        communityClassLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         communityTopStatementsTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_TOP_STATEMENTS,
+                inputTopicNames.communityTopStatements,
                 avroSerdes.CommunityTopStatementsKey().serializer(),
                 avroSerdes.CommunityTopStatementsValue().serializer());
 
         communityEntityWithLabelConfigTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_WITH_LABEL_CONFIG,
+                inputTopicNames.communityEntityWithLabelConfig,
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityLabelConfigValue().serializer());
 
         communityPropertyLabelTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_PROPERTY_LABEL,
+                inputTopicNames.communityPropertyLabel,
                 avroSerdes.CommunityPropertyLabelKey().serializer(),
                 avroSerdes.CommunityPropertyLabelValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                CommunityEntityFulltext.getOutputTopicName(nameSupplement),
+                outputTopicNames.communityEntityFulltext(),
                 avroSerdes.CommunityEntityKey().deserializer(),
                 avroSerdes.CommunityEntityFulltextValue().deserializer());
     }
@@ -396,7 +398,7 @@ class CommunityEntityFulltextTest {
                 .setClassId(classId)
                 .setIsOutgoing(false)
                 .setPropertyId(propIdFirstPart)
-                                .setLanguageId(I.EN.get())
+                .setLanguageId(I.EN.get())
                 .build();
         var vL1 = CommunityPropertyLabelValue.newBuilder()
                 .setIsOutgoing(false)

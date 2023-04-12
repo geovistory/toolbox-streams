@@ -1,46 +1,53 @@
 package org.geovistory.toolbox.streams.fulltext.processors.project;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.fulltext.AvroSerdes;
+import org.geovistory.toolbox.streams.fulltext.OutputTopicNames;
 import org.geovistory.toolbox.streams.fulltext.RegisterInputTopic;
 import org.geovistory.toolbox.streams.fulltext.processors.FullTextFactory;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 
 
+@ApplicationScoped
 public class ProjectEntityFulltext {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectEntityFulltext(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var inputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
 
         addProcessors(
-                inputTopic.projectEntityWithLabelConfigTable(),
-                inputTopic.projectTopStatementsTable(),
-                inputTopic.projectPropertyLabelTable()
+                registerInputTopic.projectEntityWithLabelConfigTable(),
+                registerInputTopic.projectTopStatementsTable(),
+                registerInputTopic.projectPropertyLabelTable()
         );
 
-        return builder.build();
     }
 
-    public static void addProcessors(
+    public void addProcessors(
             KTable<ProjectEntityKey, ProjectEntityLabelConfigValue> projectEntityWithLabelConfigTable,
             KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopStatementsTable,
             KTable<ProjectFieldLabelKey, ProjectFieldLabelValue> projectPropertyLabelTable
-
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2
@@ -140,18 +147,9 @@ public class ProjectEntityFulltext {
 
         /* SINK PROCESSORS */
 
-        fulltextStream.to(output.TOPICS.project_entity_fulltext,
+        fulltextStream.to(outputTopicNames.projectEntityFulltext(),
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityFulltextValue())
-                        .withName(output.TOPICS.project_entity_fulltext + "-producer")
+                        .withName(outputTopicNames.projectEntityFulltext() + "-producer")
         );
-
-
     }
-
-
-    public enum output {
-        TOPICS;
-        public final String project_entity_fulltext = Utils.tsPrefixed("project_entity_fulltext");
-    }
-
 }
