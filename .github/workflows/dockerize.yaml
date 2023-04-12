@@ -980,6 +980,7 @@ jobs:
           color: 0x0000ff
           username: GitHub Actions
 
+
   dockerize-app-5-rdf-serializer:
     needs: [ detect-changes, pull-request-number ]
     if: ${{ needs.detect-changes.outputs.app-5-rdf-serializer == 'true' }}
@@ -1000,7 +1001,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
-      - name: Git Identity
+      - name: Git Idrdf-serializer
         run: |
           git config --global user.name 'geovbot'
           git config --global user.email 'github.bot@geovistory.org'
@@ -1015,22 +1016,22 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
 
-      # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
-      # the workflow execution time. For more information see:
-      # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
-        with:
-          arguments: app-5-rdf-serializer:build # "app-3-rdf-serializer:" points to /app-5-rdf-serializer
-
       # this will update metadata about PR for the docker tag in /build.gradle
       - name: Update pull request metadata in build.gradle
         id: version
         run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
 
-      # Create docker image
-      - name: Create docker image
-        run: ./gradlew app-5-rdf-serializer:jibDockerBuild
+      # extract tag (e.g. 1.0.1-pr-32.0)
+      - name: Extract docker tag suffix
+        id: extract_docker_tag_suffix
+        run: |
+          echo ::set-output name=value::$(./gradlew -q app-5-rdf-serializer:printDockerTagSuffix)
+
+      # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
+      # the workflow execution time. For more information see:
+      # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
 
       # login to ghcr.io
       - name: Login to GitHub Container Registry
@@ -1040,15 +1041,17 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # push docker image
-      - name: Push docker image
-        run: docker push $(./gradlew -q app-5-rdf-serializer:printDockerImageTag)
-
-      # extract tag (e.g. 1.0.1-pr-32.0)
-      - name: Extract docker tag suffix
-        id: extract_docker_tag_suffix
+      # Create and push docker image
+      - name: Create docker and push image
         run: |
-          echo ::set-output name=value::$(./gradlew -q app-5-rdf-serializer:printDockerTagSuffix)
+          ./gradlew app-5-rdf-serializer:build \
+            -Dquarkus.package.type=native \
+            -Dquarkus.container-image.push=true \
+            -Dquarkus.container-image.registry="ghcr.io" \
+            -Dquarkus.container-image.group="geovistory" \
+            -Dquarkus.container-image.name="toolbox-streams-rdf-serializer-quarkus" \
+            -Dquarkus.container-image.tag="${{steps.extract_docker_tag_suffix.outputs.value}}"
+
 
       - name: Send Discord Notification
         uses: sarisia/actions-status-discord@v1
