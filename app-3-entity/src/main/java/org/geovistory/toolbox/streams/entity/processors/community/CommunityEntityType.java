@@ -1,44 +1,59 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+
+@ApplicationScoped
 public class CommunityEntityType {
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder(), "toolbox").describe());
+
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    @ConfigProperty(name = "ts.community.slug", defaultValue = "")
+    private String communitySlug;
+
+
+    public CommunityEntityType(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder, String nameSupplement) {
-        var inputTopic = new RegisterInputTopic(builder);
-
-        return addProcessors(
-                builder,
-                inputTopic.communityEntityTable(),
-                inputTopic.hasTypePropertyTable(),
-                inputTopic.communityTopOutgoingStatementsTable(),
-                nameSupplement
-        ).builder().build();
+    public void addProcessorsStandalone() {
+        addProcessors(
+                registerInputTopic.communityEntityTable(),
+                registerInputTopic.hasTypePropertyTable(),
+                registerInputTopic.communityTopOutgoingStatementsTable()
+        );
     }
 
-    public static CommunityEntityTypeReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityEntityTypeReturnValue addProcessors(
             KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable,
             KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
-            KTable<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsTable,
-            String nameSupplement) {
+            KTable<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsTable
+            ) {
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
-        String communityEntityWithHasTypeProperty = "community_" + nameSupplement + "entity_with_has_type_property";
-        String communityEntityWithHasTypeStatement = "community_" + nameSupplement + "entity_with_has_type_statement";
+        String communityEntityWithHasTypeProperty = "community_" + communitySlug + "entity_with_has_type_property";
+        String communityEntityWithHasTypeStatement = "community_" + communitySlug + "entity_with_has_type_statement";
 
         /* STREAM PROCESSORS */
         // 2)
@@ -103,17 +118,14 @@ public class CommunityEntityType {
         );
         /* SINK PROCESSORS */
 
-        communityEntityTypeStream.to(getOutputTopicName(nameSupplement),
+        communityEntityTypeStream.to(outputTopicNames.communityEntityType(),
                 Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityTypeValue())
-                        .withName(getOutputTopicName(nameSupplement) + "-producer")
+                        .withName(outputTopicNames.communityEntityType() + "-producer")
         );
 
-        return new CommunityEntityTypeReturnValue(builder, communityEntityTypeTable, communityEntityTypeStream);
+        return new CommunityEntityTypeReturnValue( communityEntityTypeTable, communityEntityTypeStream);
 
     }
 
 
-    public static String getOutputTopicName(String nameSupplement) {
-        return Utils.tsPrefixed("community_" + nameSupplement + "_entity_type");
-    }
 }

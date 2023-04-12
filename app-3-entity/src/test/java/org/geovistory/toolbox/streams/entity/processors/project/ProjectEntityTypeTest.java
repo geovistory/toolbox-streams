@@ -1,10 +1,12 @@
 package org.geovistory.toolbox.streams.entity.processors.project;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,31 +35,35 @@ class ProjectEntityTypeTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = ProjectEntityType.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var communityClassLabel = new ProjectEntityType(avroSerdes, registerInputTopic, outputTopicNames);
+        communityClassLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         hasTypePropertyTopic = testDriver.createInputTopic(
-                ProjectEntityType.input.TOPICS.has_type_property,
+                inputTopicNames.hasTypeProperty,
                 avroSerdes.HasTypePropertyKey().serializer(),
                 avroSerdes.HasTypePropertyValue().serializer());
 
         projectTopOutgoingStatements = testDriver.createInputTopic(
-                ProjectEntityType.input.TOPICS.project_top_outgoing_statements,
+                inputTopicNames.projectTopOutgoingStatements,
                 avroSerdes.ProjectTopStatementsKey().serializer(),
                 avroSerdes.ProjectTopStatementsValue().serializer());
 
         projectEntityTopic = testDriver.createInputTopic(
-                ProjectEntityType.input.TOPICS.project_entity,
+                inputTopicNames.projectEntity,
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectEntityType.output.TOPICS.project_entity_type,
+                outputTopicNames.projectEntityType(),
                 avroSerdes.ProjectEntityKey().deserializer(),
                 avroSerdes.ProjectEntityTypeValue().deserializer());
     }

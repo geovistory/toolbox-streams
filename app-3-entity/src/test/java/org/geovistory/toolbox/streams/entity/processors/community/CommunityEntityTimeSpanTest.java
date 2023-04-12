@@ -1,11 +1,13 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.Env;
+import org.geovistory.toolbox.streams.entity.*;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +22,7 @@ class CommunityEntityTimeSpanTest {
     private static final String SCHEMA_REGISTRY_SCOPE = CommunityEntityTimeSpanTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<CommunityTopStatementsKey,CommunityTopStatementsValue> communityTopOutgoingStatementsTopic;
+    private TestInputTopic<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsTopic;
 
     private TestOutputTopic<CommunityEntityKey, TimeSpanValue> outputTopic;
 
@@ -36,21 +38,25 @@ class CommunityEntityTimeSpanTest {
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
         AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        var nameSupplement = "toolbox";
-        Topology topology = CommunityEntityTimeSpan.buildStandalone(new StreamsBuilder(), nameSupplement);
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var communityClassLabel = new CommunityEntityTimeSpan(avroSerdes, registerInputTopic, outputTopicNames);
+        communityClassLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         communityTopOutgoingStatementsTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_TOP_OUTGOING_STATEMENTS,
+                inputTopicNames.communityTopOutgoingStatements,
                 avroSerdes.CommunityTopStatementsKey().serializer(),
                 avroSerdes.CommunityTopStatementsValue().serializer());
 
 
         outputTopic = testDriver.createOutputTopic(
-                CommunityEntityTimeSpan.getOutputTopicName(nameSupplement),
+                outputTopicNames.communityEntityTimeSpan(),
                 avroSerdes.CommunityEntityKey().deserializer(),
                 avroSerdes.TimeSpanValue().deserializer());
     }
@@ -66,7 +72,6 @@ class CommunityEntityTimeSpanTest {
         var entityId = "foo";
         long expectedFirstSec = 204139785600L;
         long expectedLastSec = 204139871999L;
-
 
 
         int ongoingThroughout = 71;

@@ -1,50 +1,59 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
 import org.geovistory.toolbox.streams.entity.lib.TimeSpanFactory;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 
+@ApplicationScoped
 public class CommunityEntityTimeSpan {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder(), "toolbox").describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    @ConfigProperty(name = "ts.community.slug", defaultValue = "")
+    private String communitySlug;
+
+
+    public CommunityEntityTimeSpan(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder, String nameSupplement) {
-
-        var inputTopic = new RegisterInputTopic(builder);
-
-        var communityEntityTopStatementsValueStream = inputTopic.communityTopOutgoingStatementsStream();
-
-        return addProcessors(builder,
-                communityEntityTopStatementsValueStream,
-                nameSupplement
-        ).builder().build();
+    public void addProcessorsStandalone() {
+        addProcessors(
+                registerInputTopic.communityTopOutgoingStatementsStream()
+        );
     }
 
-    public static CommunityEntityTimeSpanReturnValue addProcessors(
-            StreamsBuilder builder,
-            KStream<CommunityTopStatementsKey, CommunityTopStatementsValue> communityOutgoingTopStatements,
-            String nameSupplement
+    public CommunityEntityTimeSpanReturnValue addProcessors(
+            KStream<CommunityTopStatementsKey, CommunityTopStatementsValue> communityOutgoingTopStatements
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         /* STREAM PROCESSORS */
         // 2)
 
-        var n2 = "kstream-flat-map-community-" + nameSupplement + "-top-time-primitives";
+        var n2 = "kstream-flat-map-community-" + communitySlug + "-top-time-primitives";
         var stream = communityOutgoingTopStatements.flatMapValues(
                 (key, value) -> {
                     var res = new LinkedList<TopTimePrimitives>();
@@ -71,7 +80,7 @@ public class CommunityEntityTimeSpan {
         );
 
         // 3
-        var n3 = "community-" + nameSupplement + "project_top_time_primitives_grouped";
+        var n3 = "community-" + communitySlug + "project_top_time_primitives_grouped";
         var grouped = stream.groupBy(
                 (key, value) -> CommunityEntityKey.newBuilder()
                         .setEntityId(key.getEntityId())
@@ -85,7 +94,7 @@ public class CommunityEntityTimeSpan {
 
 
         // 4
-        var n4 = "community-" + nameSupplement + "top_time_primitives_aggregated";
+        var n4 = "community-" + communitySlug + "top_time_primitives_aggregated";
         var aggregated = grouped.aggregate(
                 () -> TopTimePrimitivesMap.newBuilder().build(),
                 (key, value, aggregate) -> {
@@ -98,7 +107,7 @@ public class CommunityEntityTimeSpan {
         );
 
         // 5
-        var n5 = "community-" + nameSupplement + "top_time_primitives_aggregated";
+        var n5 = "community-" + communitySlug + "top_time_primitives_aggregated";
 
         var timeSpanStream = aggregated
                 .toStream(
@@ -108,19 +117,15 @@ public class CommunityEntityTimeSpan {
 
 
         /* SINK PROCESSORS */
-        timeSpanStream.to(getOutputTopicName(nameSupplement),
+        timeSpanStream.to(outputTopicNames.communityEntityTimeSpan(),
                 Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.TimeSpanValue())
-                        .withName(getOutputTopicName(nameSupplement) + "-producer")
+                        .withName(outputTopicNames.communityEntityTimeSpan() + "-producer")
         );
 
-        return new CommunityEntityTimeSpanReturnValue(builder, timeSpanStream);
+        return new CommunityEntityTimeSpanReturnValue(timeSpanStream);
 
     }
 
-
-    public static String getOutputTopicName(String nameSupplement) {
-        return Utils.tsPrefixed("community_" + nameSupplement + "_entity_time_span");
-    }
 
     public static TimePrimitive extractTimePrimitive(CommunityStatementValue value) {
         var a = value.getStatement();

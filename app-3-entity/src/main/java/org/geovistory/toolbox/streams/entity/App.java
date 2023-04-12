@@ -3,10 +3,10 @@
  */
 package org.geovistory.toolbox.streams.entity;
 
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Named;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.HasTypePropertyKey;
 import org.geovistory.toolbox.streams.avro.HasTypePropertyValue;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
@@ -19,185 +19,187 @@ import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityCla
 import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityClassMetadata;
 import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityTimeSpan;
 import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityType;
-import org.geovistory.toolbox.streams.lib.Admin;
-import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.lib.TsAdmin;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import java.util.ArrayList;
 
-import static org.geovistory.toolbox.streams.entity.BuildProperties.getDockerImageTag;
-import static org.geovistory.toolbox.streams.entity.BuildProperties.getDockerTagSuffix;
+
+@ApplicationScoped
+public class App {
+
+    @ConfigProperty(name = "ts.output.topic.partitions")
+    int outputTopicPartitions;
+    @ConfigProperty(name = "ts.output.topic.replication.factor")
+    short outputTopicReplicationFactor;
+
+    @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
+    String bootstrapServers;
+    @Inject
+    ProjectEntityTimeSpan projectEntityTimeSpan;
+    @Inject
+    ProjectEntityType projectEntityType;
+    @Inject
+    ProjectEntityClassLabel projectEntityClassLabel;
+    @Inject
+    ProjectEntityClassMetadata projectEntityClassMetadata;
+    @Inject
+    CommunityEntityTimeSpan communityEntityTimeSpan;
+    @Inject
+    CommunityEntityType communityEntityType;
+    @Inject
+    CommunityEntityClassLabel communityEntityClassLabel;
+    @Inject
+    CommunityEntityClassMetadata communityEntityClassMetadata;
+
+    @Inject
+    BuilderSingleton builderSingleton;
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    Boolean buildTopologyCalled = false;
 
 
-class App {
-    public static void main(String[] args) {
+    //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
+    @Produces
+    public Topology buildTopology() {
 
-
-        StreamsBuilder builder = new StreamsBuilder();
+        if (buildTopologyCalled) {
+            return null;
+        }
+        buildTopologyCalled = true;
 
         // add processors of sub-topologies
-        addSubTopologies(builder);
-
-        // build the topology
-        var topology = builder.build();
-
-        System.out.println(topology.describe());
+        addSubTopologies();
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();
 
-        // print configuration information
-        System.out.println("Starting Toolbox Streams App " + getDockerImageTag() + ":" + getDockerTagSuffix());
-        System.out.println("With config:");
-        AppConfig.INSTANCE.printConfigs();
-
-        // create the streams app
-        // noinspection resource
-        KafkaStreams streams = new KafkaStreams(topology, AppConfig.getConfig());
-
-        // close Kafka Streams when the JVM shuts down (e.g. SIGTERM)
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-
-        // start streaming!
-        streams.start();
+        // build the topology
+        return builderSingleton.builder.build();
     }
 
-    private static void addSubTopologies(StreamsBuilder builder) {
-        var inputTopic = new RegisterInputTopic(builder);
-        var hasTypePropertyTable = inputTopic.hasTypePropertyTable();
-        var ontomeClassMetadataTable = inputTopic.ontomeClassMetadataTable();
+
+    private void addSubTopologies() {
+
+        var hasTypePropertyTable = registerInputTopic.hasTypePropertyTable();
+        var ontomeClassMetadataTable = registerInputTopic.ontomeClassMetadataTable();
         addProjectView(
-                builder,
-                inputTopic,
                 hasTypePropertyTable,
                 ontomeClassMetadataTable
         );
         addCommunityToolboxView(
-                builder,
-                inputTopic,
-                "toolbox",
                 hasTypePropertyTable,
                 ontomeClassMetadataTable
         );
 
     }
 
-    private static void createTopics() {
-        var admin = new Admin();
+    private void createTopics() {
+        var admin = new TsAdmin(bootstrapServers);
 
-        var outputTopicPartitions = Integer.parseInt(AppConfig.INSTANCE.getOutputTopicPartitions());
-        var outputTopicReplicationFactor = Short.parseShort(AppConfig.INSTANCE.getOutputTopicReplicationFactor());
-
-        createTopicsForProjectView(admin, outputTopicPartitions, outputTopicReplicationFactor);
-        createTopicsForCommunityView(admin, outputTopicPartitions, outputTopicReplicationFactor, "toolbox");
+        createTopicsForProjectView(admin);
+        createTopicsForCommunityView(admin);
 
     }
 
-    private static void addProjectView(
-            StreamsBuilder builder,
-            RegisterInputTopic inputTopic,
+    private void addProjectView(
             KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
             KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
     ) {
         // register input topics as KTables
-        var projectEntityTable = inputTopic.projectEntityTable();
-        var projectTopOutgoingStatementsTable = inputTopic.projectTopOutgoingStatementsTable();
+        var projectEntityTable = registerInputTopic.projectEntityTable();
+        var projectTopOutgoingStatementsTable = registerInputTopic.projectTopOutgoingStatementsTable();
 
         // register input topics as KStreams
-        var projectClassLabelTable = inputTopic.projectClassLabelTable();
+        var projectClassLabelTable = registerInputTopic.projectClassLabelTable();
 
         // add sub-topology ProjectEntityTimeSpan
-        ProjectEntityTimeSpan.addProcessors(builder,
+        projectEntityTimeSpan.addProcessors(
                 projectTopOutgoingStatementsTable.toStream(Named.as("project_top_outgoing_statements_table_to_stream"))
         );
 
         // add sub-topology ProjectEntityType
-        ProjectEntityType.addProcessors(builder,
+        projectEntityType.addProcessors(
                 projectEntityTable,
                 hasTypePropertyTable,
                 projectTopOutgoingStatementsTable
         );
 
         // add sub-topology ProjectEntityClassLabel
-        ProjectEntityClassLabel.addProcessors(builder,
+        projectEntityClassLabel.addProcessors(
                 projectEntityTable,
                 projectClassLabelTable
         );
 
         // add sub-topology ProjectEntityClassMetadata
-        ProjectEntityClassMetadata.addProcessors(builder,
+        projectEntityClassMetadata.addProcessors(
                 projectEntityTable,
                 ontomeClassMetadataTable
         );
     }
 
-    private static void addCommunityToolboxView(
-            StreamsBuilder builder,
-            RegisterInputTopic inputTopic,
-            String nameSupplement,
+    private void addCommunityToolboxView(
             KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
             KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
     ) {
         // register input topics as KTables
-        var communityEntityTable = inputTopic.communityEntityTable();
-        var communityTopOutgoingStatementsTable = inputTopic.communityTopOutgoingStatementsTable();
+        var communityEntityTable = App.this.registerInputTopic.communityEntityTable();
+        var communityTopOutgoingStatementsTable = App.this.registerInputTopic.communityTopOutgoingStatementsTable();
 
 
         // register input topics as KStreams
-        var communityClassLabelTable = inputTopic.communityClassLabelTable();
+        var communityClassLabelTable = App.this.registerInputTopic.communityClassLabelTable();
 
 
         // add sub-topology CommunityEntityTimeSpan
-        CommunityEntityTimeSpan.addProcessors(builder,
-                communityTopOutgoingStatementsTable.toStream(Named.as("community_top_outgoing_statements_table_to_stream")),
-                nameSupplement
+        communityEntityTimeSpan.addProcessors(
+                communityTopOutgoingStatementsTable.toStream(Named.as("community_top_outgoing_statements_table_to_stream"))
         );
 
         // add sub-topology CommunityEntityType
-        CommunityEntityType.addProcessors(builder,
+        communityEntityType.addProcessors(
                 communityEntityTable,
                 hasTypePropertyTable,
-                communityTopOutgoingStatementsTable,
-                nameSupplement
+                communityTopOutgoingStatementsTable
         );
 
         // add sub-topology CommunityEntityClassLabel
-        CommunityEntityClassLabel.addProcessors(builder,
+        communityEntityClassLabel.addProcessors(
                 communityEntityTable,
-                communityClassLabelTable,
-                nameSupplement
+                communityClassLabelTable
         );
 
         // add sub-topology CommunityEntityClassMetadata
-        CommunityEntityClassMetadata.addProcessors(builder,
+        communityEntityClassMetadata.addProcessors(
                 communityEntityTable,
-                ontomeClassMetadataTable,
-                nameSupplement
+                ontomeClassMetadataTable
         );
     }
 
 
-    private static void createTopicsForProjectView(Admin admin, int outputTopicPartitions, short outputTopicReplicationFactor) {
+    private void createTopicsForProjectView(TsAdmin admin) {
         // create output topics (with number of partitions and delete.policy=compact)
         var topics = new ArrayList<String>();
-        topics.add(ProjectEntityClassLabel.output.TOPICS.project_entity_class_label);
-        topics.add(ProjectEntityTimeSpan.output.TOPICS.project_entity_time_span);
-        topics.add(ProjectEntityClassMetadata.output.TOPICS.project_entity_class_metadata);
-        topics.add(ProjectEntityType.output.TOPICS.project_entity_type);
+        topics.add(outputTopicNames.projectEntityClassLabel());
+        topics.add(outputTopicNames.projectEntityTimeSpan());
+        topics.add(outputTopicNames.projectEntityClassMetadata());
+        topics.add(outputTopicNames.projectEntityType());
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 
 
-    private static void createTopicsForCommunityView(
-            Admin admin,
-            int outputTopicPartitions,
-            short outputTopicReplicationFactor,
-            String nameSupplement) {
+    private void createTopicsForCommunityView(TsAdmin admin) {
         // create output topics (with number of partitions and delete.policy=compact)
         var topics = new ArrayList<String>();
-        topics.add(CommunityEntityClassLabel.getOutputTopicName(nameSupplement));
-        topics.add(CommunityEntityTimeSpan.getOutputTopicName(nameSupplement));
-        topics.add(CommunityEntityClassMetadata.getOutputTopicName(nameSupplement));
-        topics.add(CommunityEntityType.getOutputTopicName(nameSupplement));
+        topics.add(outputTopicNames.communityEntityClassLabel());
+        topics.add(outputTopicNames.communityEntityTimeSpan());
+        topics.add(outputTopicNames.communityEntityClassMetadata());
+        topics.add(outputTopicNames.communityEntityType());
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }
 

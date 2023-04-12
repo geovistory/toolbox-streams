@@ -1,40 +1,47 @@
 package org.geovistory.toolbox.streams.entity.processors.project;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.Env;
+import org.geovistory.toolbox.streams.entity.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+
+@ApplicationScoped
 public class ProjectEntityClassMetadata {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectEntityClassMetadata(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var inputTopic = new RegisterInputTopic(builder);
-
-        return addProcessors(
-                builder,
-                inputTopic.projectEntityTable(),
-                inputTopic.ontomeClassMetadataTable()
-        ).builder().build();
+    public void addProcessorsStandalone() {
+        addProcessors(
+                registerInputTopic.projectEntityTable(),
+                registerInputTopic.ontomeClassMetadataTable()
+        );
     }
 
-    public static ProjectEntityClassMetadataReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectEntityClassMetadataReturnValue addProcessors(
             KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,
             KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
@@ -50,7 +57,7 @@ public class ProjectEntityClassMetadata {
                         .setAncestorClasses(value2.getAncestorClasses())
                         .setDeleted$1(Utils.booleanIsEqualTrue(value1.getDeleted$1()))
                         .build(),
-                TableJoined.as(inner.TOPICS.project_entity_with_class_metadata+ "-fk-join"),
+                TableJoined.as(inner.TOPICS.project_entity_with_class_metadata + "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityClassMetadataValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_class_metadata)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityClassMetadataValue())
@@ -62,20 +69,13 @@ public class ProjectEntityClassMetadata {
         );
         /* SINK PROCESSORS */
 
-        projectEntityClassMetadataStream.to(output.TOPICS.project_entity_class_metadata,
+        projectEntityClassMetadataStream.to(outputTopicNames.projectEntityClassMetadata(),
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassMetadataValue())
-                        .withName(output.TOPICS.project_entity_class_metadata + "-producer")
+                        .withName(outputTopicNames.projectEntityClassMetadata() + "-producer")
         );
 
-        return new ProjectEntityClassMetadataReturnValue(builder, projectEntityClassMetadataTable, projectEntityClassMetadataStream);
+        return new ProjectEntityClassMetadataReturnValue(projectEntityClassMetadataTable, projectEntityClassMetadataStream);
 
-    }
-
-
-    public enum input {
-        TOPICS;
-        public final String project_entity = Env.INSTANCE.TOPIC_PROJECT_ENTITY;
-        public final String ontome_class_metadata = Env.INSTANCE.TOPIC_ONTOME_CLASS_METADATA;
     }
 
 
@@ -83,11 +83,6 @@ public class ProjectEntityClassMetadata {
         TOPICS;
         public final String project_entity_with_class_metadata = "project_entity_with_class_metadata";
 
-    }
-
-    public enum output {
-        TOPICS;
-        public final String project_entity_class_metadata = Utils.tsPrefixed("project_entity_class_metadata");
     }
 
 
