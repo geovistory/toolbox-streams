@@ -9,9 +9,9 @@ import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.avro.TextValue;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
-import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.statement.object.AvroSerdes;
+import org.geovistory.toolbox.streams.statement.object.BuilderSingleton;
 import org.geovistory.toolbox.streams.statement.object.RegisterInputTopic;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -29,7 +29,8 @@ public class StatementObject {
 
     @Inject
     RegisterInputTopic registerInputTopic;
-
+    @Inject
+    public BuilderSingleton builderSingleton;
     @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
     public String outPrefix;
     @ConfigProperty(name = "create.output.for.postgres", defaultValue = "false")
@@ -109,8 +110,13 @@ public class StatementObject {
 
         // if "true" the app creates a topic "statement_enriched_flat" that can be sinked to postgres
         if (Objects.equals(createOutputForPostgres, "true")) {
-            var mapper = JsonStringifier.getMapperIgnoringNulls();
-            stream.mapValues((readOnlyKey, value) -> TextValue.newBuilder().setText(
+
+            builderSingleton.builder.stream(
+                            outStatementEnrichedFlat(),
+                            Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
+                                    .withName(outStatementEnrichedFlat() + "-consumer")
+                    )
+                    .mapValues((readOnlyKey, value) -> TextValue.newBuilder().setText(
                             value.toString()
                     ).build())
                     .to(
