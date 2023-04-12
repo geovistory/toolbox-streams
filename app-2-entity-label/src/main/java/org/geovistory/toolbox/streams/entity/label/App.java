@@ -66,13 +66,17 @@ class App {
     @Inject
     OutputTopicNames outputTopicNames;
 
+    Boolean initialized = false;
+
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
     @Produces
     public Topology buildTopology() {
 
-
         // add processors of sub-topologies
-        addSubTopologies();
+        if (!initialized) {
+            initialized = true;
+            addSubTopologies();
+        }
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();

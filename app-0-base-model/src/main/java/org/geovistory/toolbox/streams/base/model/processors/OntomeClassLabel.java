@@ -11,6 +11,8 @@ import org.geovistory.toolbox.streams.avro.OntomeClassLabelValue;
 import org.geovistory.toolbox.streams.avro.OntomeClassValue;
 import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -30,21 +32,30 @@ public class OntomeClassLabel {
     public String outPrefix;
 
     @Inject
+    OntomeClassProjected ontomeClassProjected;
+    @Inject
     BuilderSingleton builderSingleton;
 
-    public OntomeClassLabel(AvroSerdes avroSerdes, BuilderSingleton builderSingleton) {
+    @Inject
+    InputTopicNames inputTopicNames;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public OntomeClassLabel(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
         this.avroSerdes = avroSerdes;
         this.builderSingleton = builderSingleton;
+        this.inputTopicNames = inputTopicNames;
+        this.outputTopicNames = outputTopicNames;
     }
 
+
     public void addProcessorsStandalone() {
-        var o = new OntomeClassProjected(
-                avroSerdes,
-                builderSingleton.builder,
-                inApiClass(),
-                outOntomeClassLabel()
+        addProcessors(
+                new OntomeClassProjected().getRegistrar(
+                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                ).kStream
         );
-        addProcessors(o.kStream);
     }
 
     public OntomeClassLabelReturnValue addProcessors(
@@ -88,8 +99,6 @@ public class OntomeClassLabel {
         return new OntomeClassLabelReturnValue(ontomeClassLabel);
 
     }
-
-
 
 
     public String inApiClass() {

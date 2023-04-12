@@ -11,6 +11,8 @@ import org.geovistory.toolbox.streams.avro.OntomePropertyLabelValue;
 import org.geovistory.toolbox.streams.avro.OntomePropertyValue;
 import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
@@ -28,25 +30,34 @@ public class OntomePropertyLabel {
     String inPrefix;
     @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
     public String outPrefix;
+    @Inject
+    OntomePropertyProjected ontomePropertyProjected;
 
     @Inject
     BuilderSingleton builderSingleton;
 
-    public OntomePropertyLabel(AvroSerdes avroSerdes, BuilderSingleton builderSingleton) {
+    @Inject
+    InputTopicNames inputTopicNames;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public OntomePropertyLabel(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
         this.avroSerdes = avroSerdes;
         this.builderSingleton = builderSingleton;
+        this.inputTopicNames = inputTopicNames;
+        this.outputTopicNames = outputTopicNames;
     }
+
 
     public void addProcessorsStandalone() {
-
-        var o = new OntomePropertyProjected(
-                avroSerdes,
-                builderSingleton.builder,
-                inDfhApiProperty(),
-                outOntomePropertyLabel()
+        addProcessors(
+                new OntomePropertyProjected().getRegistrar(
+                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                ).kStream
         );
-        addProcessors(o.kStream);
     }
+
 
     public OntomePropertyLabelReturnValue addProcessors(
             KStream<OntomePropertyKey, OntomePropertyValue> ontomePropertyStream

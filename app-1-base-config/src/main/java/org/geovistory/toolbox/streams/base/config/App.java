@@ -56,6 +56,7 @@ public class App {
 
     @Inject
     OutputTopicNames outputTopicNames;
+    Boolean initialized = false;
 
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
     @Produces
@@ -74,91 +75,93 @@ public class App {
 
 
     private void addSubTopologies() {
+        if (!initialized) {
+            initialized = true;
+            // register input topics as KTables
+            var proProjectTable = registerInputTopic.proProjectTable();
+            var proTextPropertyStream = registerInputTopic.proTextPropertyStream();
+            var proProfileProjRelTable = registerInputTopic.proProfileProjRelTable();
+            var sysConfigTable = registerInputTopic.sysConfigTable();
+            var ontomeClassLabelTable = registerInputTopic.ontomeClassLabelTable();
 
-        // register input topics as KTables
-        var proProjectTable = registerInputTopic.proProjectTable();
-        var proTextPropertyStream = registerInputTopic.proTextPropertyStream();
-        var proProfileProjRelTable = registerInputTopic.proProfileProjRelTable();
-        var sysConfigTable = registerInputTopic.sysConfigTable();
-        var ontomeClassLabelTable = registerInputTopic.ontomeClassLabelTable();
+            // register input topics as KStreams
+            var proEntityLabelConfigStream = registerInputTopic.proEntityLabelConfigStream();
+            var ontomePropertyStream = registerInputTopic.ontomePropertyStream();
+            var ontomeClassStream = registerInputTopic.ontomeClassStream();
+            var ontomePropertyLabelStream = registerInputTopic.ontomePropertyLabelStream();
 
-        // register input topics as KStreams
-        var proEntityLabelConfigStream = registerInputTopic.proEntityLabelConfigStream();
-        var ontomePropertyStream = registerInputTopic.ontomePropertyStream();
-        var ontomeClassStream = registerInputTopic.ontomeClassStream();
-        var ontomePropertyLabelStream = registerInputTopic.ontomePropertyLabelStream();
+            // add sub-topology ProjectProfiles
+            var projectProfilesReturn = projectProfiles.addProcessors(
+                    proProjectTable,
+                    proProfileProjRelTable,
+                    sysConfigTable);
 
-        // add sub-topology ProjectProfiles
-        var projectProfilesReturn = projectProfiles.addProcessors(
-                proProjectTable,
-                proProfileProjRelTable,
-                sysConfigTable);
+            // add sub-topology ProjectProperty
+            var projectPropertyReturn = projectProperty.addProcessors(
+                    ontomePropertyStream,
+                    projectProfilesReturn.projectProfileStream());
 
-        // add sub-topology ProjectProperty
-        var projectPropertyReturn = projectProperty.addProcessors(
-                ontomePropertyStream,
-                projectProfilesReturn.projectProfileStream());
-
-        // add sub-topology ProjectClass
-        var projectClassReturn = projectClass.addProcessors(
-                projectProfilesReturn.projectProfileStream(),
-                ontomeClassStream
-        );
-        var projectClassTable = registerInnerTopic.projectClassTable();
-
-
-        // add sub-topology GeovClassLabel
-        var geovClassLabelReturn = geovClassLabel.addProcessors(
-                proTextPropertyStream
-        );
-
-        // add sub-topology ProjectClassLabel
-        projectClassLabel.addProcessors(
-                proProjectTable,
-                ontomeClassLabelTable.toStream(Named.as("ktable-ontome-class-label-to-stream")),
-                geovClassLabelReturn.geovClassLabelStream(),
-                projectClassReturn.projectClassStream()
-        );
-
-        // add sub-topology CommunityEntityLabelConfig
-        communityEntityLabelConfig.addProcessors(
-                proEntityLabelConfigStream
-        );
-        var communityEntityLabelConfigTable = registerInnerTopic.communityEntityLabelConfigTable();
-
-        // add sub-topology ProjectEntityLabelConfig
-        projectEntityLabelConfig.addProcessors(
-                projectClassTable,
-                proEntityLabelConfigStream,
-                communityEntityLabelConfigTable
-        );
+            // add sub-topology ProjectClass
+            var projectClassReturn = projectClass.addProcessors(
+                    projectProfilesReturn.projectProfileStream(),
+                    ontomeClassStream
+            );
+            var projectClassTable = registerInnerTopic.projectClassTable();
 
 
-        // add sub-topology GeovPropertyLabel
-        var geovPropertyLabelReturn = geovPropertyLabel.addProcessors(
-                proTextPropertyStream
-        );
+            // add sub-topology GeovClassLabel
+            var geovClassLabelReturn = geovClassLabel.addProcessors(
+                    proTextPropertyStream
+            );
 
-        // add sub-topology ProjectPropertyLabel
-        projectPropertyLabel.addProcessors(
-                proProjectTable,
-                ontomePropertyLabelStream,
-                geovPropertyLabelReturn.geovPropertyLabelStream(),
-                projectPropertyReturn.projectPropertyStream()
-        );
+            // add sub-topology ProjectClassLabel
+            projectClassLabel.addProcessors(
+                    proProjectTable,
+                    ontomeClassLabelTable.toStream(Named.as("ktable-ontome-class-label-to-stream")),
+                    geovClassLabelReturn.geovClassLabelStream(),
+                    projectClassReturn.projectClassStream()
+            );
 
-        // add sub-topology CommunityPropertyLabel
-        communityPropertyLabel.addProcessors(
-                ontomePropertyStream,
-                geovPropertyLabelReturn.geovPropertyLabelStream()
-        );
+            // add sub-topology CommunityEntityLabelConfig
+            communityEntityLabelConfig.addProcessors(
+                    proEntityLabelConfigStream
+            );
+            var communityEntityLabelConfigTable = registerInnerTopic.communityEntityLabelConfigTable();
 
-        // add sub-topology CommunityClassLabel
-        communityClassLabel.addProcessors(
-                ontomeClassLabelTable,
-                geovClassLabelReturn.geovClassLabelStream()
-        );
+            // add sub-topology ProjectEntityLabelConfig
+            projectEntityLabelConfig.addProcessors(
+                    projectClassTable,
+                    proEntityLabelConfigStream,
+                    communityEntityLabelConfigTable
+            );
 
+
+            // add sub-topology GeovPropertyLabel
+            var geovPropertyLabelReturn = geovPropertyLabel.addProcessors(
+                    proTextPropertyStream
+            );
+
+            // add sub-topology ProjectPropertyLabel
+            projectPropertyLabel.addProcessors(
+                    proProjectTable,
+                    ontomePropertyLabelStream,
+                    geovPropertyLabelReturn.geovPropertyLabelStream(),
+                    projectPropertyReturn.projectPropertyStream()
+            );
+
+            // add sub-topology CommunityPropertyLabel
+            communityPropertyLabel.addProcessors(
+                    ontomePropertyStream,
+                    geovPropertyLabelReturn.geovPropertyLabelStream()
+            );
+
+            // add sub-topology CommunityClassLabel
+            communityClassLabel.addProcessors(
+                    ontomeClassLabelTable,
+                    geovClassLabelReturn.geovClassLabelStream()
+            );
+
+        }
     }
 
     private void createTopics() {

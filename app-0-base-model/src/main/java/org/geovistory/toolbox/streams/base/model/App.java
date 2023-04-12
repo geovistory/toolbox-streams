@@ -7,8 +7,6 @@ import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.base.model.processors.*;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
-import org.geovistory.toolbox.streams.lib.Utils;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -17,11 +15,7 @@ import java.util.ArrayList;
 
 @ApplicationScoped
 public class App {
-    private static final Logger LOGGER = Logger.getLogger("ListenerBean");
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
-    String inPrefix;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
-    public String outPrefix;
+
     @ConfigProperty(name = "ts.output.topic.partitions")
     int outputTopicPartitions;
     @ConfigProperty(name = "ts.output.topic.replication.factor")
@@ -37,29 +31,26 @@ public class App {
     BuilderSingleton builderSingleton;
 
     @Inject
+    OntomeClassProjected ontomeClassProjected;
+    @Inject
     OntomeClassMetadata ontomeClassMetadata;
     @Inject
     OntomeClassLabel ontomeClassLabel;
+    @Inject
+    OntomePropertyProjected ontomePropertyProjected;
     @Inject
     OntomePropertyLabel ontomePropertyLabel;
     @Inject
     HasTypeProperty hasTypeProperty;
 
+    @Inject
+    OutputTopicNames outputTopicNames;
     Boolean initialized = false;
-
-    String ontomePropertyTopicIn;
-    String ontomePropertyTopicOut;
-    String ontomeClassTopicIn;
-    String ontomeClassTopicOut;
 
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
     @Produces
     public Topology buildTopology() {
 
-        ontomePropertyTopicIn = Utils.prefixedIn(inPrefix, "ontome_property");
-        ontomePropertyTopicOut = Utils.prefixedOut(outPrefix, "ontome_property");
-        ontomeClassTopicIn = Utils.prefixedIn(inPrefix, "ontome_class");
-        ontomeClassTopicOut = Utils.prefixedOut(outPrefix, "ontome_class");
 
         // add processors of sub-topologies
         addSubTopologies();
@@ -75,37 +66,28 @@ public class App {
     private void addSubTopologies() {
 
         if (!initialized) {
-            var ontomeClass = new OntomeClassProjected(
-                    avroSerdes,
-                    builderSingleton.builder,
-                    ontomeClassTopicIn,
-                    ontomeClassTopicOut
-            );
-            var ontomeProperty = new OntomePropertyProjected(
-                    avroSerdes,
-                    builderSingleton.builder,
-                    ontomeClassTopicIn,
-                    ontomeClassTopicOut
-            );
+            initialized = true;
 
-            ontomeClass.addSink();
-            ontomeProperty.addSink();
+
+            var classProjectedRegistrar = ontomeClassProjected.getRegistrar();
+            classProjectedRegistrar.addSink();
+            var propertyProjectedRegistrar = ontomePropertyProjected.getRegistrar();
+            propertyProjectedRegistrar.addSink();
 
 
             // add sub-topology OntomeClassMetadata
-            ontomeClassMetadata.addProcessors(ontomeClass.kStream);
+            ontomeClassMetadata.addProcessors(classProjectedRegistrar.kStream);
             // add sub-topology OntomeClassLabel
-            ontomeClassLabel.addProcessors(ontomeClass.kStream);
+            ontomeClassLabel.addProcessors(classProjectedRegistrar.kStream);
             // add sub-topology OntomePropertyLabel
-            ontomePropertyLabel.addProcessors(ontomeProperty.kStream);
+            ontomePropertyLabel.addProcessors(propertyProjectedRegistrar.kStream);
             // add sub-topology HasTypeProperty
-            hasTypeProperty.addProcessors(ontomeProperty.kStream);
+            hasTypeProperty.addProcessors(propertyProjectedRegistrar.kStream);
 
-            initialized = true;
         }
     }
 
-    private  void createTopics(
+    private void createTopics(
     ) {
         var admin = new TsAdmin(bootstrapServers);
 
@@ -115,8 +97,8 @@ public class App {
         topics.add(ontomePropertyLabel.outOntomePropertyLabel());
         topics.add(ontomeClassMetadata.outOntomeClassMetadata());
         topics.add(hasTypeProperty.outHasTypeProperty());
-        topics.add(ontomeClassTopicOut);
-        topics.add(ontomePropertyTopicOut);
+        topics.add(outputTopicNames.ontomeClass());
+        topics.add(outputTopicNames.ontomeProperty());
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
 
     }

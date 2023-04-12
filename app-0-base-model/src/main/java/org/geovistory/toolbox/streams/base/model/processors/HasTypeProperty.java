@@ -5,9 +5,7 @@ import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.model.AvroSerdes;
-import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
-import org.geovistory.toolbox.streams.base.model.Prop;
+import org.geovistory.toolbox.streams.base.model.*;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
@@ -31,20 +29,28 @@ public class HasTypeProperty {
     @Inject
     BuilderSingleton builderSingleton;
 
-    public HasTypeProperty(AvroSerdes avroSerdes, BuilderSingleton builderSingleton) {
+    @Inject
+    InputTopicNames inputTopicNames;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public HasTypeProperty(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
         this.avroSerdes = avroSerdes;
         this.builderSingleton = builderSingleton;
+        this.inputTopicNames = inputTopicNames;
+        this.outputTopicNames = outputTopicNames;
     }
 
+
     public void addProcessorsStandalone() {
-        var o = new OntomePropertyProjected(
-                avroSerdes,
-                builderSingleton.builder,
-                inApiProperty(),
-                outHasTypeProperty()
+        addProcessors(
+                new OntomePropertyProjected().getRegistrar(
+                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                ).kStream
         );
-        addProcessors(o.kStream);
     }
+
 
     public HasTypePropertyReturnValue addProcessors(
             KStream<OntomePropertyKey, OntomePropertyValue> apiPropertyStream

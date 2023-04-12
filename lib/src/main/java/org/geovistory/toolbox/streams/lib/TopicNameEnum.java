@@ -3,8 +3,8 @@ package org.geovistory.toolbox.streams.lib;
 public enum TopicNameEnum {
 
     pro_info_proj_rel("projects.info_proj_rel"),
-    dfh_api_property("data_for_history.property"),
-    dfh_api_class("data_for_history.class"),
+    dfh_api_property("data_for_history.api_property"),
+    dfh_api_class("data_for_history.api_class"),
     inf_statement("information.statement"),
     inf_resource("information.resource"),
     inf_language("information.language"),

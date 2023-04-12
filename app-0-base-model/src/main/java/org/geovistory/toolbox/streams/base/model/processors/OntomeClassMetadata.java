@@ -9,6 +9,8 @@ import org.geovistory.toolbox.streams.avro.OntomeClassMetadataValue;
 import org.geovistory.toolbox.streams.avro.OntomeClassValue;
 import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -27,23 +29,28 @@ public class OntomeClassMetadata {
     String inPrefix;
     @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
     public String outPrefix;
-
     @Inject
     BuilderSingleton builderSingleton;
 
-    public OntomeClassMetadata(AvroSerdes avroSerdes, BuilderSingleton builderSingleton) {
+    @Inject
+    InputTopicNames inputTopicNames;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public OntomeClassMetadata(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
         this.avroSerdes = avroSerdes;
         this.builderSingleton = builderSingleton;
+        this.inputTopicNames = inputTopicNames;
+        this.outputTopicNames = outputTopicNames;
     }
 
     public void addProcessorsStandalone() {
-        var o = new OntomeClassProjected(
-                avroSerdes,
-                builderSingleton.builder,
-                inApiClass(),
-                outOntomeClassMetadata()
+        addProcessors(
+                new OntomeClassProjected().getRegistrar(
+                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                ).kStream
         );
-        addProcessors(o.kStream);
     }
 
     public OntomeClassMetadataReturnValue addProcessors(
@@ -89,8 +96,6 @@ public class OntomeClassMetadata {
         return new OntomeClassMetadataReturnValue(stream, table);
 
     }
-
-
 
 
     public enum inner {

@@ -18,7 +18,7 @@ import org.apache.kafka.streams.kstream.*;
  * - contains projected / (mapped) values,
  * - contains only updates of identical key-value records (records with the same key value is ignored)
  */
-abstract public class ProjectedTableRegistrar<InputKey, InputValue, OutputKey, OutputValue> {
+ public class ProjectedTableRegistrar<InputKey, InputValue, OutputKey, OutputValue> {
     public StreamsBuilder builder;
     public String inputTopicName;
     public Serde<InputKey> inputKeySerde;
