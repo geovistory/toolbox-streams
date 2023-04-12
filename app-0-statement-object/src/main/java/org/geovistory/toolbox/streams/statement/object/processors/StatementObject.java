@@ -112,9 +112,9 @@ public class StatementObject {
         if (Objects.equals(createOutputForPostgres, "true")) {
 
             builderSingleton.builder.stream(
-                            outStatementEnrichedFlat(),
+                            outStatementWithLiteral(),
                             Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
-                                    .withName(outStatementEnrichedFlat() + "-consumer")
+                                    .withName(outStatementWithLiteral() + "-consumer")
                     )
                     .mapValues((readOnlyKey, value) -> TextValue.newBuilder().setText(
                             value.toString()
@@ -122,7 +122,21 @@ public class StatementObject {
                     .to(
                             outStatementEnrichedFlat(),
                             Produced.with(avroSerdes.InfStatementKey(), avroSerdes.TextValue())
-                                    .withName(outStatementEnrichedFlat() + "-producer")
+                                    .withName(outStatementEnrichedFlat() + "-literal-producer")
+                    );
+
+            builderSingleton.builder.stream(
+                            outStatementWithEntity(),
+                            Consumed.with(avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue())
+                                    .withName(outStatementWithEntity() + "-consumer")
+                    )
+                    .mapValues((readOnlyKey, value) -> TextValue.newBuilder().setText(
+                            value.toString()
+                    ).build())
+                    .to(
+                            outStatementEnrichedFlat(),
+                            Produced.with(avroSerdes.InfStatementKey(), avroSerdes.TextValue())
+                                    .withName(outStatementEnrichedFlat() + "-entity-producer")
                     );
         }
 
