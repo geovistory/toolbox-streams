@@ -1,14 +1,18 @@
 package org.geovistory.toolbox.streams.entity.preview.processors;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.CommunityEntityKey;
 import org.geovistory.toolbox.streams.avro.EntityPreviewValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
-import org.geovistory.toolbox.streams.entity.preview.processors.community.CommunityEntityPreview;
-import org.geovistory.toolbox.streams.entity.preview.processors.project.ProjectEntityPreview;
+import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.preview.BuilderSingleton;
+import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
+import org.geovistory.toolbox.streams.entity.preview.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,24 +41,29 @@ class EntityPreviewTest {
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
         AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        var nameSupplement = "toolbox";
-        Topology topology = EntityPreview.buildStandalone(new StreamsBuilder(), nameSupplement);
 
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var outputTopicNames = new OutputTopicNames();
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var entityPreview = new EntityPreview(avroSerdes, registerInnerTopic, outputTopicNames);
+        entityPreview.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
         projectEntityPreviewTopic = testDriver.createInputTopic(
-                ProjectEntityPreview.output.TOPICS.project_entity_preview,
+                outputTopicNames.projectEntityPreview(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.EntityPreviewValue().serializer());
 
         communityEntityPreviewTopic = testDriver.createInputTopic(
-                CommunityEntityPreview.getOutputTopicName(nameSupplement),
+                outputTopicNames.communityEntityPreview(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.EntityPreviewValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                EntityPreview.output.TOPICS.entity_preview,
+                outputTopicNames.entityPreview(),
                 avroSerdes.ProjectEntityKey().deserializer(),
                 avroSerdes.EntityPreviewValue().deserializer());
     }

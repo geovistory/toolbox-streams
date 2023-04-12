@@ -1,45 +1,56 @@
 package org.geovistory.toolbox.streams.entity.preview.processors.project;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.preview.Env;
+import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
 import org.geovistory.toolbox.streams.entity.preview.Klass;
+import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+
+@ApplicationScoped
 public class ProjectEntityPreview {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+
+    public ProjectEntityPreview(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var inputTopic = new RegisterInputTopic(builder);
-
-        return addProcessors(
-                builder,
-                inputTopic.projectEntityTable(),
-                inputTopic.projectEntityLabelTable(),
-                inputTopic.projectEntityClassLabelTable(),
-                inputTopic.projectEntityTypeTable(),
-                inputTopic.projectEntityTimeSpanTable(),
-                inputTopic.projectEntityFulltextTable(),
-                inputTopic.projectEntityClassMetadataTable()
-
-        ).builder().build();
+    public void addProcessorsStandalone() {
+        addProcessors(
+                registerInputTopic.projectEntityTable(),
+                registerInputTopic.projectEntityLabelTable(),
+                registerInputTopic.projectEntityClassLabelTable(),
+                registerInputTopic.projectEntityTypeTable(),
+                registerInputTopic.projectEntityTimeSpanTable(),
+                registerInputTopic.projectEntityFulltextTable(),
+                registerInputTopic.projectEntityClassMetadataTable()
+        );
     }
 
-    public static ProjectEntityPreviewReturnValue addProcessors(
-            StreamsBuilder builder,
+    public  ProjectEntityPreviewReturnValue addProcessors(
             KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,
             KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable,
             KTable<ProjectEntityKey, ProjectEntityClassLabelValue> projectEntityClassLabelTable,
@@ -48,9 +59,6 @@ public class ProjectEntityPreview {
             KTable<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTable,
             KTable<ProjectEntityKey, ProjectEntityClassMetadataValue> projectEntityClassMetadataTable
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2)
@@ -74,7 +82,7 @@ public class ProjectEntityPreview {
 
                     return newVal;
                 },
-                Named.as(inner.TOPICS.project_entity_preview_label_join+ "-left-join"),
+                Named.as(inner.TOPICS.project_entity_preview_label_join + "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_label_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -89,7 +97,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
-                Named.as(inner.TOPICS.project_entity_preview_class_label_join+ "-left-join"),
+                Named.as(inner.TOPICS.project_entity_preview_class_label_join + "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_class_label_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -108,7 +116,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
-                Named.as(inner.TOPICS.project_entity_preview_type_join+ "-left-join"),
+                Named.as(inner.TOPICS.project_entity_preview_type_join + "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_type_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -124,7 +132,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
-                Named.as(inner.TOPICS.project_entity_preview_time_span_join+ "-left-join"),
+                Named.as(inner.TOPICS.project_entity_preview_time_span_join + "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_time_span_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -138,7 +146,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
-                Named.as(inner.TOPICS.project_entity_preview_fulltext_join+ "-left-join"),
+                Named.as(inner.TOPICS.project_entity_preview_fulltext_join + "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_fulltext_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -160,7 +168,7 @@ public class ProjectEntityPreview {
                     }
                     return value1;
                 },
-                Named.as(inner.TOPICS.project_entity_class_metadata_join+ "-left-join"),
+                Named.as(inner.TOPICS.project_entity_class_metadata_join + "-left-join"),
                 Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_class_metadata_join)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.EntityPreviewValue())
@@ -172,12 +180,12 @@ public class ProjectEntityPreview {
 
         /* SINK PROCESSORS */
 
-        projectEntityPreviewStream.to(output.TOPICS.project_entity_preview,
+        projectEntityPreviewStream.to(outputTopicNames. projectEntityPreview(),
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.EntityPreviewValue())
-                        .withName(output.TOPICS.project_entity_preview + "-producer")
+                        .withName(outputTopicNames.projectEntityPreview() + "-producer")
         );
 
-        return new ProjectEntityPreviewReturnValue(builder, projectEntityPreviewStream);
+        return new ProjectEntityPreviewReturnValue( projectEntityPreviewStream);
 
     }
 
@@ -191,17 +199,7 @@ public class ProjectEntityPreview {
     }
 
 
-    public enum input {
-        TOPICS;
-        public final String project_entity = Env.INSTANCE.TOPIC_PROJECT_ENTITY;
-        public final String project_entity_label =  Env.INSTANCE.TOPIC_PROJECT_ENTITY_LABEL;
-        public final String project_entity_class_label =  Env.INSTANCE.TOPIC_PROJECT_ENTITY_CLASS_LABEL;
-        public final String project_entity_type =  Env.INSTANCE.TOPIC_PROJECT_ENTITY_TYPE;
-        public final String project_entity_time_span =  Env.INSTANCE.TOPIC_PROJECT_ENTITY_TIME_SPAN;
-        public final String project_entity_fulltext =  Env.INSTANCE.TOPIC_PROJECT_ENTITY_FULLTEXT;
-        public final String project_entity_class_metadata =  Env.INSTANCE.TOPIC_PROJECT_ENTITY_CLASS_METADATA;
 
-    }
 
 
     public enum inner {
@@ -212,11 +210,6 @@ public class ProjectEntityPreview {
         public final String project_entity_preview_time_span_join = "project_entity_preview_time_span_join";
         public final String project_entity_preview_fulltext_join = "project_entity_preview_fulltext_join";
         public final String project_entity_class_metadata_join = "project_entity_class_metadata_join";
-    }
-
-    public enum output {
-        TOPICS;
-        public final String project_entity_preview = Utils.tsPrefixed("project_entity_preview");
     }
 
 }
