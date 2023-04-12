@@ -42,20 +42,20 @@ public class InputTopicNames {
     }
 
     public String ontomeClass() {
-        return Utils.prefixedIn(prefix, topicOntomeClass);
+        return topicOntomeClass;
     }
 
     public String ontomeProperty() {
-        return Utils.prefixedIn(prefix, topicOntomeProperty);
+        return topicOntomeProperty;
     }
 
     public String ontomeClassLabel() {
-        return Utils.prefixedIn(prefix, topicOntomeClassLabel);
+        return topicOntomeClassLabel;
     }
 
 
     public String ontomePropertyLabel() {
-        return Utils.prefixedIn(prefix, topicOntomePropertyLabel);
+        return topicOntomePropertyLabel;
     }
 
 }

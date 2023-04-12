@@ -90,6 +90,7 @@ public class App {
             var ontomeClassStream = registerInputTopic.ontomeClassStream();
             var ontomePropertyLabelStream = registerInputTopic.ontomePropertyLabelStream();
 
+
             // add sub-topology ProjectProfiles
             var projectProfilesReturn = projectProfiles.addProcessors(
                     proProjectTable,
