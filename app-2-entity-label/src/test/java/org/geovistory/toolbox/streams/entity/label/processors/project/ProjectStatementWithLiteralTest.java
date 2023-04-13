@@ -50,7 +50,7 @@ class ProjectStatementWithLiteralTest {
 
 
         infStatementTopic = testDriver.createInputTopic(
-                inputTopicNames.statementWithLiteral,
+                inputTopicNames.getStatementWithLiteral(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer());
 

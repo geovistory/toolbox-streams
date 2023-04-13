@@ -124,17 +124,17 @@ class ProjectEntityLabelRecursionTest {
 
 
         projectEntityLabelConfigTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityLabelConfig,
+                inputTopicNames.getProjectEntityLabelConfig(),
                 avroSerdes.ProjectClassKey().serializer(),
                 avroSerdes.ProjectEntityLabelConfigValue().serializer());
 
         statementWitEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.statementWithEntity,
+                inputTopicNames.getStatementWithEntity(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer());
 
         statementWithLiteralTopic = testDriver.createInputTopic(
-                inputTopicNames.statementWithLiteral,
+                inputTopicNames.getStatementWithLiteral(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer());
 

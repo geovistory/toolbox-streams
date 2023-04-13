@@ -50,7 +50,7 @@ class ProjectStatementWithEntityTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         infStatementTopic = testDriver.createInputTopic(
-                inputTopicNames.statementWithEntity,
+                inputTopicNames.getStatementWithEntity(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer());
 

@@ -49,7 +49,7 @@ class ProjectEntityLabelTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectEntityLabelConfigTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityLabelConfig,
+                inputTopicNames.getProjectEntityLabelConfig(),
                 avroSerdes.ProjectClassKey().serializer(),
                 avroSerdes.ProjectEntityLabelConfigValue().serializer());
 

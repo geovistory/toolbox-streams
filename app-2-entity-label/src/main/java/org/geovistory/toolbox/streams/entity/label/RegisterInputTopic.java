@@ -52,14 +52,14 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
-                inputTopicNames.statementWithLiteral,
+                inputTopicNames.getStatementWithLiteral(),
                 avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue());
     }
 
     public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithEntityTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
-                inputTopicNames.statementWithEntity,
+                inputTopicNames.getStatementWithEntity(),
                 avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue());
     }
 
@@ -67,14 +67,14 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectClassKey, ProjectEntityLabelConfigValue> projectEntityLabelConfigTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
-                inputTopicNames.projectEntityLabelConfig,
+                inputTopicNames.getProjectEntityLabelConfig(),
                 avroSerdes.ProjectClassKey(), avroSerdes.ProjectEntityLabelConfigValue());
     }
 
     public KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
-                inputTopicNames.communityEntityLabelConfig,
+                inputTopicNames.getCommunityEntityLabelConfig(),
                 avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue());
     }
 

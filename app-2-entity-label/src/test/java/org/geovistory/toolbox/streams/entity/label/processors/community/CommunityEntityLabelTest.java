@@ -49,7 +49,7 @@ class CommunityEntityLabelTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         communityEntityLabelConfigTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntityLabelConfig,
+                inputTopicNames.getCommunityEntityLabelConfig(),
                 avroSerdes.CommunityEntityLabelConfigKey().serializer(),
                 avroSerdes.CommunityEntityLabelConfigValue().serializer());
 
