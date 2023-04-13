@@ -24,7 +24,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName= 'org.geovistory.toolbox.streams.base.config.App'
+    mainClassName = 'org.geovistory.toolbox.streams.base.config.App'
 }
 
 
@@ -90,6 +90,11 @@ task generateReflectionConfiguration {
 
 
         classNames.add("org.geovistory.toolbox.streams.avro.ProfileProperty.class")
+        classNames.add("org.geovistory.toolbox.streams.avro.ProfileClass.class")
+        classNames.add("org.geovistory.toolbox.streams.avro.ProjectFieldLabelOption.class")
+        classNames.add("org.geovistory.toolbox.streams.avro.EntityLabelConfig.class")
+        classNames.add("org.geovistory.toolbox.streams.avro.ProjectClassValue.class")
+        classNames.add("org.geovistory.toolbox.streams.avro.ProjectClassLabelOption.class")
         classNames.add("org.geovistory.toolbox.streams.avro.BooleanMap.class")
         classNames.add("Entity.class")
         classNames.add("Language.class")
