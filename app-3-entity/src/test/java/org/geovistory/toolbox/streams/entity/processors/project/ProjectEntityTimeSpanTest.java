@@ -48,7 +48,7 @@ class ProjectEntityTimeSpanTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectTopOutgoingStatementsTopic = testDriver.createInputTopic(
-                inputTopicNames.projectTopOutgoingStatements,
+                inputTopicNames.getProjectTopOutgoingStatements(),
                 avroSerdes.ProjectTopStatementsKey().serializer(),
                 avroSerdes.ProjectTopStatementsValue().serializer());
 

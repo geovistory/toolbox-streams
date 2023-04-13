@@ -46,12 +46,12 @@ class CommunityEntityClassMetadataTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         communityEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntity,
+                inputTopicNames.getCommunityEntity(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityValue().serializer());
 
         ontomeClassMetadataTopic = testDriver.createInputTopic(
-                inputTopicNames.ontomeClassMetadata,
+                inputTopicNames.getOntomeClassMetadata(),
                 avroSerdes.OntomeClassKey().serializer(),
                 avroSerdes.OntomeClassMetadataValue().serializer());
 

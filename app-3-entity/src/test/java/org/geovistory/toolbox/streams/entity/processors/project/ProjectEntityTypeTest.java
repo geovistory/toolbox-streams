@@ -48,17 +48,17 @@ class ProjectEntityTypeTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         hasTypePropertyTopic = testDriver.createInputTopic(
-                inputTopicNames.hasTypeProperty,
+                inputTopicNames.getHasTypeProperty(),
                 avroSerdes.HasTypePropertyKey().serializer(),
                 avroSerdes.HasTypePropertyValue().serializer());
 
         projectTopOutgoingStatements = testDriver.createInputTopic(
-                inputTopicNames.projectTopOutgoingStatements,
+                inputTopicNames.getProjectTopOutgoingStatements(),
                 avroSerdes.ProjectTopStatementsKey().serializer(),
                 avroSerdes.ProjectTopStatementsValue().serializer());
 
         projectEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntity,
+                inputTopicNames.getProjectEntity(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityValue().serializer());
 

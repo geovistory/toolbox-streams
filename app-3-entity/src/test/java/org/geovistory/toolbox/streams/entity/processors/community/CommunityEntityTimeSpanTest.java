@@ -50,7 +50,7 @@ class CommunityEntityTimeSpanTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         communityTopOutgoingStatementsTopic = testDriver.createInputTopic(
-                inputTopicNames.communityTopOutgoingStatements,
+                inputTopicNames.getCommunityTopOutgoingStatements(),
                 avroSerdes.CommunityTopStatementsKey().serializer(),
                 avroSerdes.CommunityTopStatementsValue().serializer());
 

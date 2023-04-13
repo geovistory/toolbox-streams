@@ -37,7 +37,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteral() {
         return getStream(
                 builderSingleton.builder,
-                inputTopicNames.projectStatementWithLiteral,
+                inputTopicNames.getProjectStatementWithLiteral(),
                 avroSerdes.ProjectStatementKey(),
                 avroSerdes.ProjectStatementValue()
         );
@@ -46,7 +46,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntity() {
         return getStream(
                 builderSingleton.builder,
-                inputTopicNames.projectStatementWithEntity,
+                inputTopicNames.getProjectStatementWithEntity(),
                 avroSerdes.ProjectStatementKey(),
                 avroSerdes.ProjectStatementValue()
         );

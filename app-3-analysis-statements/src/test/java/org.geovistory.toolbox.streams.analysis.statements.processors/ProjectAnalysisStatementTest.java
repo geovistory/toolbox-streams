@@ -55,12 +55,12 @@ class ProjectAnalysisStatementTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectStatementWithLiteralTopic = testDriver.createInputTopic(
-                inputTopicNames.projectStatementWithLiteral,
+                inputTopicNames.getProjectStatementWithLiteral(),
                 avroSerdes.ProjectStatementKey().serializer(),
                 avroSerdes.ProjectStatementValue().serializer());
 
         projectStatementWithEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.projectStatementWithEntity,
+                inputTopicNames.getProjectStatementWithEntity(),
                 avroSerdes.ProjectStatementKey().serializer(),
                 avroSerdes.ProjectStatementValue().serializer());
 

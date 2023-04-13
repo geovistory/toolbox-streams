@@ -51,17 +51,17 @@ class CommunityEntityTypeTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         hasTypePropertyTopic = testDriver.createInputTopic(
-                inputTopicNames.hasTypeProperty,
+                inputTopicNames.getHasTypeProperty(),
                 avroSerdes.HasTypePropertyKey().serializer(),
                 avroSerdes.HasTypePropertyValue().serializer());
 
         communityTopOutgoingStatements = testDriver.createInputTopic(
-                inputTopicNames.communityTopOutgoingStatements,
+                inputTopicNames.getCommunityTopOutgoingStatements(),
                 avroSerdes.CommunityTopStatementsKey().serializer(),
                 avroSerdes.CommunityTopStatementsValue().serializer());
 
         communityEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntity,
+                inputTopicNames.getCommunityEntity(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityValue().serializer());
 

@@ -33,7 +33,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.ontomeClassMetadata,
+                inputTopicNames. getOntomeClassMetadata(),
                 avroSerdes.OntomeClassKey(),
                 avroSerdes.OntomeClassMetadataValue()
         );
@@ -42,7 +42,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.hasTypeProperty,
+                inputTopicNames. getHasTypeProperty(),
                 avroSerdes.HasTypePropertyKey(),
                 avroSerdes.HasTypePropertyValue()
         );
@@ -52,7 +52,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.projectEntity,
+                inputTopicNames. getProjectEntity(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityValue()
         );
@@ -61,7 +61,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.projectTopOutgoingStatements,
+                inputTopicNames. getProjectTopOutgoingStatements(),
                 avroSerdes.ProjectTopStatementsKey(),
                 avroSerdes.ProjectTopStatementsValue()
         );
@@ -70,7 +70,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsStream() {
         return getStream(
                 builderSingleton.builder,
-                inputTopicNames.projectTopOutgoingStatements,
+                inputTopicNames. getProjectTopOutgoingStatements(),
                 avroSerdes.ProjectTopStatementsKey(),
                 avroSerdes.ProjectTopStatementsValue()
         );
@@ -79,7 +79,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.projectClassLabel,
+                inputTopicNames. getProjectClassLabel(),
                 avroSerdes.ProjectClassLabelKey(),
                 avroSerdes.ProjectClassLabelValue()
         );
@@ -89,7 +89,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.communityEntity,
+                inputTopicNames. getCommunityEntity(),
                 avroSerdes.CommunityEntityKey(),
                 avroSerdes.CommunityEntityValue()
         );
@@ -98,7 +98,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.communityTopOutgoingStatements,
+                inputTopicNames. getCommunityTopOutgoingStatements(),
                 avroSerdes.CommunityTopStatementsKey(),
                 avroSerdes.CommunityTopStatementsValue()
         );
@@ -107,7 +107,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KStream<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsStream() {
         return getStream(
                 builderSingleton.builder,
-                inputTopicNames.communityTopOutgoingStatements,
+                inputTopicNames. getCommunityTopOutgoingStatements(),
                 avroSerdes.CommunityTopStatementsKey(),
                 avroSerdes.CommunityTopStatementsValue()
         );
@@ -117,7 +117,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<OntomeClassLabelKey, CommunityClassLabelValue> communityClassLabelTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.communityClassLabel,
+                inputTopicNames. getCommunityClassLabel(),
                 avroSerdes.OntomeClassLabelKey(),
                 avroSerdes.CommunityClassLabelValue()
         );

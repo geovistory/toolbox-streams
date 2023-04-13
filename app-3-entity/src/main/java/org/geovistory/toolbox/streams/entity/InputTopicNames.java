@@ -6,25 +6,54 @@ import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class InputTopicNames {
-    @ConfigProperty(name = "ts.topic.project.statement.with.literal", defaultValue = "")
-    public String projectStatementWithLiteral = "project.statement.with.literal";
-    @ConfigProperty(name = "ts.topic.project.statement.with.entity", defaultValue = "")
-    public String projectStatementWithEntity = "project.statement.with.entity";
+
     @ConfigProperty(name = "ts.topic.ontome.class.metadata", defaultValue = "")
-    public String ontomeClassMetadata = "ontome.class.metadata";
+    private final String ontomeClassMetadata = "ontome.class.metadata";
     @ConfigProperty(name = "ts.topic.has.type.property", defaultValue = "")
-    public String hasTypeProperty = "has.type.property";
+    private final String hasTypeProperty = "has.type.property";
     @ConfigProperty(name = "ts.topic.project.entity", defaultValue = "")
-    public String projectEntity = "project.entity";
+    private final String projectEntity = "project.entity";
     @ConfigProperty(name = "ts.topic.project.top.outgoing.statements", defaultValue = "")
-    public String projectTopOutgoingStatements = "project.top.outgoing.statements";
+    private final String projectTopOutgoingStatements = "project.top.outgoing.statements";
     @ConfigProperty(name = "ts.topic.project.class.label", defaultValue = "")
-    public String projectClassLabel = "project.class.label";
+    private final String projectClassLabel = "project.class.label";
     @ConfigProperty(name = "ts.topic.community.entity", defaultValue = "")
-    public String communityEntity = "community.entity";
+    private final String communityEntity = "community.entity";
     @ConfigProperty(name = "ts.topic.community.top.outgoing.statements", defaultValue = "")
-    public String communityTopOutgoingStatements = "community.top.outgoing.statements";
+    private final String communityTopOutgoingStatements = "community.top.outgoing.statements";
 
     @ConfigProperty(name = "ts.topic.community.class.label", defaultValue = "")
-    public String communityClassLabel = "community.class.label";
+    private final String communityClassLabel = "community.class.label";
+
+    public String getOntomeClassMetadata() {
+        return ontomeClassMetadata;
+    }
+
+    public String getHasTypeProperty() {
+        return hasTypeProperty;
+    }
+
+    public String getProjectEntity() {
+        return projectEntity;
+    }
+
+    public String getProjectTopOutgoingStatements() {
+        return projectTopOutgoingStatements;
+    }
+
+    public String getProjectClassLabel() {
+        return projectClassLabel;
+    }
+
+    public String getCommunityEntity() {
+        return communityEntity;
+    }
+
+    public String getCommunityTopOutgoingStatements() {
+        return communityTopOutgoingStatements;
+    }
+
+    public String getCommunityClassLabel() {
+        return communityClassLabel;
+    }
 }

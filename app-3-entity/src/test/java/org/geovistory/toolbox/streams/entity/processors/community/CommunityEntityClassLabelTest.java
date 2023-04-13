@@ -46,12 +46,12 @@ class CommunityEntityClassLabelTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         communityClassLabelTopic = testDriver.createInputTopic(
-                inputTopicNames.communityClassLabel,
+                inputTopicNames.getCommunityClassLabel(),
                 avroSerdes.OntomeClassLabelKey().serializer(),
                 avroSerdes.CommunityClassLabelValue().serializer());
 
         communityEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntity,
+                inputTopicNames.getCommunityEntity(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityValue().serializer());
 
