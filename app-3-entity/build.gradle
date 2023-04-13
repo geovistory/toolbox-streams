@@ -87,7 +87,11 @@ task generateReflectionConfiguration {
         var p = Pattern.compile("public Serde<(.*)>", Pattern.DOTALL)
         var classNames = new ArrayList<String>()
 
-
+        StatementEnrichedValue
+        ProjectStatementValue
+        TimeSpan
+        NewTimePrimitive
+        CommunityStatementValue
         classNames.add("io.debezium.data.geometry.Geography.class")
         classNames.add("Entity.class")
         classNames.add("Language.class")

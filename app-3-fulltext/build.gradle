@@ -23,7 +23,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName= 'org.geovistory.toolbox.streams.fulltext.App'
+    mainClassName = 'org.geovistory.toolbox.streams.fulltext.App'
 }
 
 
@@ -86,7 +86,15 @@ task generateReflectionConfiguration {
         var p = Pattern.compile("public Serde<(.*)>", Pattern.DOTALL)
         var classNames = new ArrayList<String>()
 
-
+        classNames.add("EntityLabelConfig.class")
+        classNames.add("EntityLabelConfigPart.class")
+        classNames.add("EntityLabelConfigPartField.class")
+        classNames.add("ProjectStatementValue.class")
+        classNames.add("StatementEnrichedValue.class")
+        classNames.add("CommunityStatementValue.class")
+        classNames.add("ProjectFieldLabelKey.class")
+        classNames.add("FieldLabelWithTopLabelsValue.class")
+        classNames.add("CommunityPropertyLabelKey.class")
         classNames.add("io.debezium.data.geometry.Geography.class")
         classNames.add("Entity.class")
         classNames.add("Language.class")

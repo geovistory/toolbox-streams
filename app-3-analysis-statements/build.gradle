@@ -92,6 +92,8 @@ task generateReflectionConfiguration {
         var classNames = new ArrayList<String>()
 
 
+
+        classNames.add("StatementEnrichedValue.class")
         classNames.add("io.debezium.data.geometry.Geography.class")
         classNames.add("Entity.class")
         classNames.add("Language.class")
