@@ -10,11 +10,13 @@ import org.geovistory.toolbox.streams.entity.preview.processors.community.Commun
 import org.geovistory.toolbox.streams.entity.preview.processors.project.ProjectEntityPreview;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import java.util.ArrayList;
 
 
+@ApplicationScoped
 public class App {
 
     @ConfigProperty(name = "ts.output.topic.partitions")
@@ -51,10 +53,10 @@ public class App {
         if (!initialized) {
             initialized = true;
             addSubTopologies();
-        }
 
-        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-        createTopics();
+            // create topics in advance to ensure correct configuration (partition, compaction, ect.)
+            createTopics();
+        }
 
         // build the topology
         return builderSingleton.builder.build();
