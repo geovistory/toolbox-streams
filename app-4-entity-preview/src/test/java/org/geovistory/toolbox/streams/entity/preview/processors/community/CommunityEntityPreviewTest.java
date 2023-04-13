@@ -51,37 +51,37 @@ class CommunityEntityPreviewTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         communityEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntity,
+                inputTopicNames.getCommunityEntity(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityValue().serializer());
 
         communityEntityLabelTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntityLabel,
+                inputTopicNames.getCommunityEntityLabel(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityLabelValue().serializer());
 
         communityEntityClassLabelTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntityClassLabel,
+                inputTopicNames.getCommunityEntityClassLabel(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityClassLabelValue().serializer());
 
         communityEntityTypeTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntityType,
+                inputTopicNames.getCommunityEntityType(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityTypeValue().serializer());
 
         communityEntityTimeSpanTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntityTimeSpan,
+                inputTopicNames.getCommunityEntityTimeSpan(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.TimeSpanValue().serializer());
 
         communityEntityFulltextTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntityFulltext,
+                inputTopicNames.getCommunityEntityFulltext(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityFulltextValue().serializer());
 
         communityEntityClassMetadataTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntityClassMetadata,
+                inputTopicNames.getCommunityEntityClassMetadata(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityClassMetadataValue().serializer());
 
