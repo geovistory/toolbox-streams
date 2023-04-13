@@ -48,17 +48,17 @@ class CommunityEntityFulltextTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         communityTopStatementsTopic = testDriver.createInputTopic(
-                inputTopicNames.communityTopStatements,
+                inputTopicNames.getCommunityTopStatements(),
                 avroSerdes.CommunityTopStatementsKey().serializer(),
                 avroSerdes.CommunityTopStatementsValue().serializer());
 
         communityEntityWithLabelConfigTopic = testDriver.createInputTopic(
-                inputTopicNames.communityEntityWithLabelConfig,
+                inputTopicNames.getCommunityEntityWithLabelConfig(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityLabelConfigValue().serializer());
 
         communityPropertyLabelTopic = testDriver.createInputTopic(
-                inputTopicNames.communityPropertyLabel,
+                inputTopicNames.getCommunityPropertyLabel(),
                 avroSerdes.CommunityPropertyLabelKey().serializer(),
                 avroSerdes.CommunityPropertyLabelValue().serializer());
 

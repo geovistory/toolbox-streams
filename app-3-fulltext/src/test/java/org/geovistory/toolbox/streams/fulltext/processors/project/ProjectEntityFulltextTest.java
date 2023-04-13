@@ -47,17 +47,17 @@ class ProjectEntityFulltextTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectTopStatementsTopic = testDriver.createInputTopic(
-                inputTopicNames.projectTopStatements,
+                inputTopicNames.getProjectTopStatements(),
                 avroSerdes.ProjectTopStatementsKey().serializer(),
                 avroSerdes.ProjectTopStatementsValue().serializer());
 
         projectEntityWithLabelConfigTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityWithLabelConfig,
+                inputTopicNames.getProjectEntityWithLabelConfig(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityLabelConfigValue().serializer());
 
         projectPropertyLabelTopic = testDriver.createInputTopic(
-                inputTopicNames.projectPropertyLabel,
+                inputTopicNames.getProjectPropertyLabel(),
                 avroSerdes.ProjectPropertyLabelKey().serializer(),
                 avroSerdes.ProjectPropertyLabelValue().serializer());
 

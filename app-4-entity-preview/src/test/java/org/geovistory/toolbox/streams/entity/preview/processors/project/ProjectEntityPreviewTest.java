@@ -51,37 +51,37 @@ class ProjectEntityPreviewTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntity,
+                inputTopicNames.getProjectEntity(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityValue().serializer());
 
         projectEntityLabelTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityLabel,
+                inputTopicNames.getProjectEntityLabel(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityLabelValue().serializer());
 
         projectEntityClassLabelTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityClassLabel,
+                inputTopicNames.getProjectEntityClassLabel(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityClassLabelValue().serializer());
 
         projectEntityTypeTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityType,
+                inputTopicNames.getProjectEntityType(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityTypeValue().serializer());
 
         projectEntityTimeSpanTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityTimeSpan,
+                inputTopicNames.getProjectEntityTimeSpan(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.TimeSpanValue().serializer());
 
         projectEntityFulltextTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityFulltext,
+                inputTopicNames.getProjectEntityFulltext(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityFulltextValue().serializer());
 
         projectEntityClassMetadataTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntityClassMetadata,
+                inputTopicNames.getProjectEntityClassMetadata(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityClassMetadataValue().serializer());
 

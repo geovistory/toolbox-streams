@@ -7,31 +7,87 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class InputTopicNames {
     @ConfigProperty(name = "ts.topic.project.entity", defaultValue = "")
-    public String projectEntity = "ts_topic_project_entity";
+    private final String projectEntity = "ts_topic_project_entity";
     @ConfigProperty(name = "ts.topic.project.entity.label", defaultValue = "")
-    public String projectEntityLabel = "ts_topic_project_entity_label";
+    private final String projectEntityLabel = "ts_topic_project_entity_label";
     @ConfigProperty(name = "ts.topic.project.entity.type", defaultValue = "")
-    public String projectEntityType = "ts_topic_project_entity_type";
+    private final String projectEntityType = "ts_topic_project_entity_type";
     @ConfigProperty(name = "ts.topic.project.entity.time.span", defaultValue = "")
-    public String projectEntityTimeSpan = "ts_topic_project_entity_time_span";
+    private final String projectEntityTimeSpan = "ts_topic_project_entity_time_span";
     @ConfigProperty(name = "ts.topic.project.entity.fulltext", defaultValue = "")
-    public String projectEntityFulltext = "ts_topic_project_entity_fulltext";
+    private final String projectEntityFulltext = "ts_topic_project_entity_fulltext";
     @ConfigProperty(name = "ts.topic.project.entity.class.label", defaultValue = "")
-    public String projectEntityClassLabel = "ts_topic_project_entity_class_label";
+    private final String projectEntityClassLabel = "ts_topic_project_entity_class_label";
     @ConfigProperty(name = "ts.topic.project.entity.class.metadata", defaultValue = "")
-    public String projectEntityClassMetadata = "ts_topic_project_entity_class_metadata";
+    private final String projectEntityClassMetadata = "ts_topic_project_entity_class_metadata";
     @ConfigProperty(name = "ts.topic.community.entity", defaultValue = "")
-    public String communityEntity = "ts_topic_community_entity";
+    private final String communityEntity = "ts_topic_community_entity";
     @ConfigProperty(name = "ts.topic.community.entity.label", defaultValue = "")
-    public String communityEntityLabel = "ts_topic_community_entity_label";
+    private final String communityEntityLabel = "ts_topic_community_entity_label";
     @ConfigProperty(name = "ts.topic.community.entity.type", defaultValue = "")
-    public String communityEntityType = "ts_topic_community_entity_type";
+    private final String communityEntityType = "ts_topic_community_entity_type";
     @ConfigProperty(name = "ts.topic.community.entity.time.span", defaultValue = "")
-    public String communityEntityTimeSpan = "ts_topic_community_entity_time_span";
+    private final String communityEntityTimeSpan = "ts_topic_community_entity_time_span";
     @ConfigProperty(name = "ts.topic.community.entity.fulltext", defaultValue = "")
-    public String communityEntityFulltext = "ts_topic_community_entity_fulltext";
+    private final String communityEntityFulltext = "ts_topic_community_entity_fulltext";
     @ConfigProperty(name = "ts.topic.community.entity.class.label", defaultValue = "")
-    public String communityEntityClassLabel = "ts_topic_community_entity_class_label";
+    private final String communityEntityClassLabel = "ts_topic_community_entity_class_label";
     @ConfigProperty(name = "ts.topic.community.entity.class.metadata", defaultValue = "")
-    public String communityEntityClassMetadata = "ts_topic_community_entity_class_metadata";
+    private final String communityEntityClassMetadata = "ts_topic_community_entity_class_metadata";
+
+    public String getProjectEntity() {
+        return projectEntity;
+    }
+
+    public String getProjectEntityLabel() {
+        return projectEntityLabel;
+    }
+
+    public String getProjectEntityType() {
+        return projectEntityType;
+    }
+
+    public String getProjectEntityTimeSpan() {
+        return projectEntityTimeSpan;
+    }
+
+    public String getProjectEntityFulltext() {
+        return projectEntityFulltext;
+    }
+
+    public String getProjectEntityClassLabel() {
+        return projectEntityClassLabel;
+    }
+
+    public String getProjectEntityClassMetadata() {
+        return projectEntityClassMetadata;
+    }
+
+    public String getCommunityEntity() {
+        return communityEntity;
+    }
+
+    public String getCommunityEntityLabel() {
+        return communityEntityLabel;
+    }
+
+    public String getCommunityEntityType() {
+        return communityEntityType;
+    }
+
+    public String getCommunityEntityTimeSpan() {
+        return communityEntityTimeSpan;
+    }
+
+    public String getCommunityEntityFulltext() {
+        return communityEntityFulltext;
+    }
+
+    public String getCommunityEntityClassLabel() {
+        return communityEntityClassLabel;
+    }
+
+    public String getCommunityEntityClassMetadata() {
+        return communityEntityClassMetadata;
+    }
 }

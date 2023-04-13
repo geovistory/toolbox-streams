@@ -34,7 +34,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. projectEntity,
+                inputTopicNames.getProjectEntity(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityValue()
         );
@@ -43,7 +43,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. projectEntityLabel,
+                inputTopicNames.getProjectEntityLabel(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityLabelValue()
         );
@@ -52,7 +52,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, ProjectEntityTypeValue> projectEntityTypeTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. projectEntityType,
+                inputTopicNames.getProjectEntityType(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityTypeValue()
         );
@@ -61,7 +61,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, TimeSpanValue> projectEntityTimeSpanTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. projectEntityTimeSpan,
+                inputTopicNames.getProjectEntityTimeSpan(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.TimeSpanValue()
         );
@@ -70,7 +70,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. projectEntityFulltext,
+                inputTopicNames.getProjectEntityFulltext(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityFulltextValue()
         );
@@ -79,7 +79,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, ProjectEntityClassLabelValue> projectEntityClassLabelTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. projectEntityClassLabel,
+                inputTopicNames.getProjectEntityClassLabel(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityClassLabelValue()
         );
@@ -88,22 +88,17 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, ProjectEntityClassMetadataValue> projectEntityClassMetadataTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. projectEntityClassMetadata,
+                inputTopicNames.getProjectEntityClassMetadata(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityClassMetadataValue()
         );
     }
 
 
-
-
-
-
-
     public KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. communityEntity,
+                inputTopicNames.getCommunityEntity(),
                 avroSerdes.CommunityEntityKey(),
                 avroSerdes.CommunityEntityValue()
         );
@@ -112,7 +107,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<CommunityEntityKey, CommunityEntityLabelValue> communityEntityLabelTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. communityEntityLabel,
+                inputTopicNames.getCommunityEntityLabel(),
                 avroSerdes.CommunityEntityKey(),
                 avroSerdes.CommunityEntityLabelValue()
         );
@@ -121,7 +116,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<CommunityEntityKey, CommunityEntityTypeValue> communityEntityTypeTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. communityEntityType,
+                inputTopicNames.getCommunityEntityType(),
                 avroSerdes.CommunityEntityKey(),
                 avroSerdes.CommunityEntityTypeValue()
         );
@@ -130,7 +125,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<CommunityEntityKey, TimeSpanValue> communityEntityTimeSpanTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. communityEntityTimeSpan,
+                inputTopicNames.getCommunityEntityTimeSpan(),
                 avroSerdes.CommunityEntityKey(),
                 avroSerdes.TimeSpanValue()
         );
@@ -139,7 +134,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<CommunityEntityKey, CommunityEntityFulltextValue> communityEntityFulltextTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. communityEntityFulltext,
+                inputTopicNames.getCommunityEntityFulltext(),
                 avroSerdes.CommunityEntityKey(),
                 avroSerdes.CommunityEntityFulltextValue()
         );
@@ -148,7 +143,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<CommunityEntityKey, CommunityEntityClassLabelValue> communityEntityClassLabelTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. communityEntityClassLabel,
+                inputTopicNames.getCommunityEntityClassLabel(),
                 avroSerdes.CommunityEntityKey(),
                 avroSerdes.CommunityEntityClassLabelValue()
         );
@@ -157,7 +152,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<CommunityEntityKey, CommunityEntityClassMetadataValue> communityEntityClassMetadataTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames.communityEntityClassMetadata,
+                inputTopicNames.getCommunityEntityClassMetadata(),
                 avroSerdes.CommunityEntityKey(),
                 avroSerdes.CommunityEntityClassMetadataValue()
         );

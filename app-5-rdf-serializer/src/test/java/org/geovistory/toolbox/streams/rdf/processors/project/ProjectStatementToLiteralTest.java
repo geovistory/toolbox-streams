@@ -47,7 +47,7 @@ class ProjectStatementToLiteralTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectStatementWithLiteralTopic = testDriver.createInputTopic(
-                inputTopicNames.projectStatementWithLiteral,
+                inputTopicNames. getProjectStatementWithLiteral(),
                 avroSerdes.ProjectStatementKey().serializer(),
                 avroSerdes.ProjectStatementValue().serializer());
 

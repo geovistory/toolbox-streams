@@ -47,12 +47,12 @@ class ProjectEntityClassMetadataTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.projectEntity,
+                inputTopicNames.getProjectEntity(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityValue().serializer());
 
         ontomeClassMetadataTopic = testDriver.createInputTopic(
-                inputTopicNames.ontomeClassMetadata,
+                inputTopicNames.getOntomeClassMetadata(),
                 avroSerdes.OntomeClassKey().serializer(),
                 avroSerdes.OntomeClassMetadataValue().serializer());
 

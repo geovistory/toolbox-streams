@@ -43,7 +43,7 @@ class ProjectStatementToUriTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectStatementWithEntityTopic = testDriver.createInputTopic(
-                inputTopicNames.projectStatementWithEntity,
+                inputTopicNames.getProjectStatementWithEntity(),
                 avroSerdes.ProjectStatementKey().serializer(),
                 avroSerdes.ProjectStatementValue().serializer());
 
