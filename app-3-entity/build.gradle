@@ -23,7 +23,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName= 'org.geovistory.toolbox.streams.entity.App'
+    mainClassName = 'org.geovistory.toolbox.streams.entity.App'
 }
 
 
@@ -87,11 +87,11 @@ task generateReflectionConfiguration {
         var p = Pattern.compile("public Serde<(.*)>", Pattern.DOTALL)
         var classNames = new ArrayList<String>()
 
-        StatementEnrichedValue
-        ProjectStatementValue
-        TimeSpan
-        NewTimePrimitive
-        CommunityStatementValue
+        classNames.add("StatementEnrichedValue")
+        classNames.add("ProjectStatementValue")
+        classNames.add("TimeSpan")
+        classNames.add("NewTimePrimitive")
+        classNames.add("CommunityStatementValue")
         classNames.add("io.debezium.data.geometry.Geography.class")
         classNames.add("Entity.class")
         classNames.add("Language.class")
