@@ -7,17 +7,17 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class InputTopicNames {
     @ConfigProperty(name = "ts.topic.project.entity.with.label.config", defaultValue = "")
-    private final String projectEntityWithLabelConfig = "project.entity.with.label.config";
+    public String projectEntityWithLabelConfig = "project.entity.with.label.config";
     @ConfigProperty(name = "ts.topic.project.top.statements", defaultValue = "")
-    private final String projectTopStatements = "project.top.statements";
+    public String projectTopStatements = "project.top.statements";
     @ConfigProperty(name = "ts.topic.project.property.label", defaultValue = "")
-    private final String projectPropertyLabel = "project.property.label";
+    public String projectPropertyLabel = "project.property.label";
     @ConfigProperty(name = "ts.topic.community.entity.with.label.config", defaultValue = "")
-    private final String communityEntityWithLabelConfig = "community.entity.with.label.config";
+    public String communityEntityWithLabelConfig = "community.entity.with.label.config";
     @ConfigProperty(name = "ts.topic.community.top.statements", defaultValue = "")
-    private final String communityTopStatements = "community.top.statements";
+    public String communityTopStatements = "community.top.statements";
     @ConfigProperty(name = "ts.topic.community.property.label", defaultValue = "")
-    private final String communityPropertyLabel = "community.property.label";
+    public String communityPropertyLabel = "community.property.label";
 
     public String getProjectEntityWithLabelConfig() {
         return projectEntityWithLabelConfig;

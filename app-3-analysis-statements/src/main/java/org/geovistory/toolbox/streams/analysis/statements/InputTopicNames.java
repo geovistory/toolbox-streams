@@ -11,9 +11,9 @@ public class InputTopicNames {
 
 
     @ConfigProperty(name = "ts.topic.project.statement.with.literal", defaultValue = "")
-    private final String projectStatementWithLiteral = "project.statement.with.literal";
+    public String projectStatementWithLiteral = "project.statement.with.literal";
     @ConfigProperty(name = "ts.topic.project.statement.with.entity", defaultValue = "")
-    private final String projectStatementWithEntity = "project.statement.with.entity";
+    public String projectStatementWithEntity = "project.statement.with.entity";
 
     public String getProjectStatementWithLiteral() {
         return projectStatementWithLiteral;
