@@ -328,5 +328,11 @@ public class AvroSerdes {
         return serdes;
     }
 
+    public Serde<IntegerList> IntegerList() {
+        Serde<IntegerList> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
 
 }
