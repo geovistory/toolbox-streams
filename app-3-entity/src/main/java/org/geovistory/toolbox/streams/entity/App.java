@@ -68,16 +68,15 @@ public class App {
     @Produces
     public Topology buildTopology() {
 
-        if (buildTopologyCalled) {
-            return null;
+        if (!buildTopologyCalled) {
+            buildTopologyCalled = true;
+
+            // add processors of sub-topologies
+            addSubTopologies();
+
+            // create topics in advance to ensure correct configuration (partition, compaction, ect.)
+            createTopics();
         }
-        buildTopologyCalled = true;
-
-        // add processors of sub-topologies
-        addSubTopologies();
-
-        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-        createTopics();
 
         // build the topology
         return builderSingleton.builder.build();
