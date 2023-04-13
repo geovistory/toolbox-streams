@@ -86,7 +86,7 @@ public class ProjectStatementToUri {
 
         s.to(outputTopicNames.projectRdf(),
                 Produced.with(avroSerdes.ProjectRdfKey(), avroSerdes.ProjectRdfValue())
-                        .withName(outputTopicNames.projectRdf() + "-producer")
+                        .withName(outputTopicNames.projectRdf() + "-entity-producer")
         );
 
 

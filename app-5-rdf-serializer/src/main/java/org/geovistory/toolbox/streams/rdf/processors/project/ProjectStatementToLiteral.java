@@ -102,8 +102,7 @@ public class ProjectStatementToLiteral {
                         turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + langString.getString() + "\"@" + lng + " .");
                     } else if (place != null) {
                         var wkb = place.getGeoPoint().getWkb();
-                        var point = GeoUtils.bytesToPoint(java.util.Base64.getDecoder().decode(wkb));
-
+                        var point = GeoUtils.bytesToPoint(wkb);
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "<http://www.opengis.net/def/crs/EPSG/0/4326>POINT(2.348611 48.853333)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
                         turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"<" + EPSG_4326.getUri() + ">POINT(" + point.getX() + " " + point.getY() + ")\"^^<" + OPENGIS_WKT.getUri() + "> .");
                     } else if (timePrimitive != null) {
@@ -186,7 +185,7 @@ public class ProjectStatementToLiteral {
         /* SINK PROCESSORS */
         s.to(outputTopicNames.projectRdf(),
                 Produced.with(avroSerdes.ProjectRdfKey(), avroSerdes.ProjectRdfValue())
-                        .withName(outputTopicNames.projectRdf() + "-producer")
+                        .withName(outputTopicNames.projectRdf() + "-literal-producer")
         );
 
         return new ProjectRdfReturnValue(s);

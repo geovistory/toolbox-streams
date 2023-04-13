@@ -7,13 +7,12 @@ import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.rdf.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -186,9 +185,6 @@ class ProjectStatementToLiteralTest {
         var subjectId = "i1761647";
         var objectId = "i2255949";
         var propertyId = 1112;
-        var placeWkb = "AQEAACDmEAAA9DRgkPTJAkB9zAcEOm1IQA==";
-        var placeSrid = 4326;
-
 
         var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
         var v = ProjectStatementValue.newBuilder()
@@ -204,8 +200,8 @@ class ProjectStatementToLiteralTest {
                                         .setPlace(Place.newBuilder()
                                                 .setFkClass(2)
                                                 .setGeoPoint(Geography.newBuilder()
-                                                        .setWkb(ByteBuffer.wrap(placeWkb.getBytes(StandardCharsets.UTF_8)))
-                                                        .setSrid(placeSrid)
+                                                        .setWkb(GeoUtils.pointToBytes(33, 44, 4326))
+                                                        .setSrid(4326)
                                                         .build())
                                                 .build()
                                         ).build()
@@ -429,8 +425,6 @@ class ProjectStatementToLiteralTest {
         var subjectId = "i1761647";
         var objectId = "i2255949";
         var propertyId = 1112;
-        var placeWkb = "AQEAACDmEAAA9DRgkPTJAkB9zAcEOm1IQA==";
-        var placeSrid = 4326;
 
         var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
         var v = ProjectStatementValue.newBuilder()
@@ -446,8 +440,8 @@ class ProjectStatementToLiteralTest {
                                         .setPlace(Place.newBuilder()
                                                 .setFkClass(2)
                                                 .setGeoPoint(Geography.newBuilder()
-                                                        .setWkb(ByteBuffer.wrap(placeWkb.getBytes(StandardCharsets.UTF_8)))
-                                                        .setSrid(placeSrid)
+                                                        .setWkb(GeoUtils.pointToBytes(33, 44, 4326))
+                                                        .setSrid(4326)
                                                         .build())
                                                 .build()
                                         ).build()
@@ -771,8 +765,6 @@ class ProjectStatementToLiteralTest {
         var subjectId = "i1761647";
         var objectId = "i2255949";
         var propertyId = 1113;
-        var placeWkb = "AQEAACDmEAAA9DRgkPTJAkB9zAcEOm1IQA==";
-        var placeSrid = 4326;
 
         var k = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
         var v = ProjectStatementValue.newBuilder()
@@ -788,8 +780,8 @@ class ProjectStatementToLiteralTest {
                                         .setPlace(Place.newBuilder()
                                                 .setFkClass(2)
                                                 .setGeoPoint(Geography.newBuilder()
-                                                        .setWkb(ByteBuffer.wrap(placeWkb.getBytes(StandardCharsets.UTF_8)))
-                                                        .setSrid(placeSrid)
+                                                        .setWkb(GeoUtils.pointToBytes(2.348611,  48.853333, 4326))
+                                                        .setSrid(4326)
                                                         .build())
                                                 .build()
                                         ).build()
@@ -822,8 +814,8 @@ class ProjectStatementToLiteralTest {
                                         .setPlace(Place.newBuilder()
                                                 .setFkClass(2)
                                                 .setGeoPoint(Geography.newBuilder()
-                                                        .setWkb(ByteBuffer.wrap(placeWkb.getBytes(StandardCharsets.UTF_8)))
-                                                        .setSrid(placeSrid)
+                                                        .setWkb(GeoUtils.pointToBytes(2.348611,  48.853333, 4326))
+                                                        .setSrid(4326)
                                                         .build())
                                                 .build()
                                         ).build()
