@@ -80,10 +80,10 @@ public class CLI {
 
             } else if (line.hasOption(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt())) {
                 Boolean confirmed = line.hasOption(OPT_CONFIRM.getLongOpt());
-                var strings = Arrays.stream(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt().split(",")).toList();
+                var strings = Arrays.stream(line.getOptionValue(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt()).split(",")).toList();
                 for (var s : strings) {
-                    deleteSchemas(line.getOptionValue(s.trim()), confirmed);
-                    deleteTopics(line.getOptionValue(s.trim()), confirmed);
+                    deleteSchemas(s.trim(), confirmed);
+                    deleteTopics(s.trim(), confirmed);
                 }
 
             } else if (line.hasOption(OPT_LIST_TOPIC_CONFIGS.getLongOpt())) {

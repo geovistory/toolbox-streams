@@ -88,7 +88,10 @@ task generateReflectionConfiguration {
         var p = Pattern.compile("public Serde<(.*)>", Pattern.DOTALL)
         var classNames = new ArrayList<String>()
 
-
+        classNames.add("org.geovistory.toolbox.streams.lib.SysConfigValue.class")
+        classNames.add("org.geovistory.toolbox.streams.lib.SysConfigOntomeProfiles.class")
+        classNames.add("EntityLabelConfigPart.class")
+        classNames.add("EntityLabelConfigPartField.class")
         classNames.add("org.geovistory.toolbox.streams.avro.ProfileProperty.class")
         classNames.add("org.geovistory.toolbox.streams.avro.ProfileClass.class")
         classNames.add("org.geovistory.toolbox.streams.avro.ProjectFieldLabelOption.class")
