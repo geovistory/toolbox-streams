@@ -86,7 +86,7 @@ task generateReflectionConfiguration {
         var p = Pattern.compile("public Serde<(.*)>", Pattern.DOTALL)
         var classNames = new ArrayList<String>()
 
-        classNames.add("org.geovistory.toolbox.streams.lib.jsonmodel.CommunityVisibility.class")
+        classNames.add("org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility.class")
         classNames.add("io.debezium.data.geometry.Geography.class")
         classNames.add("org.geovistory.toolbox.streams.avro.BooleanMap.class")
         classNames.add("Entity.class")
