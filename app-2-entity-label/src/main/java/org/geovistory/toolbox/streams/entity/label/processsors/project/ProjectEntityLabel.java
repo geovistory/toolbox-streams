@@ -2,51 +2,62 @@ package org.geovistory.toolbox.streams.entity.label.processsors.project;
 
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.label.Env;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.entity.label.RegisterInputTopics;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.*;
 
 
+@ApplicationScoped
 public class ProjectEntityLabel {
 
     public static final int NUMBER_OF_SLOTS = 10;
     public static final int MAX_STRING_LENGTH = 100;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectEntityLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopics(builder);
-        var registerInnerTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
+        addProcessors(
                 registerInnerTopic.projectEntityTable(),
                 registerInputTopic.projectEntityLabelConfigTable(),
                 registerInnerTopic.projectTopStatementsTable()
-        ).builder().build();
+        );
     }
 
-    public static ProjectEntityLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectEntityLabelReturnValue addProcessors(
             KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,
             KTable<ProjectClassKey, ProjectEntityLabelConfigValue> projectLabelConfigTable,
             KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopStatementsTable) {
 
-        var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
@@ -190,32 +201,24 @@ public class ProjectEntityLabel {
                                 .withValueSerde(avroSerdes.ProjectEntityLabelSlotWithStringValue())
                                 .withName(inner.TOPICS.project_entity_label_slots_with_strings_repart)
                 )
-                .transform(new EntityLabelsAggregatorSupplier("project_entity_labels_agg"));
+                .transform(new EntityLabelsAggregatorSupplier("project_entity_labels_agg", avroSerdes));
 
         /* SINK PROCESSORS */
 
-        aggregatedStream.to(output.TOPICS.project_entity_label,
+        aggregatedStream.to(outputTopicNames.projectEntityLabel(),
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelValue())
-                        .withName(output.TOPICS.project_entity_label + "-producer")
+                        .withName(outputTopicNames.projectEntityLabel() + "-producer")
         );
 
         projectEntityWithConfigStream
                 .mapValues((readOnlyKey, value) -> value.getLabelConfig())
-                .to(output.TOPICS.project_entity_with_label_config,
+                .to(outputTopicNames.projectEntityWithLabelConfig(),
                         Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelConfigValue())
-                                .withName(output.TOPICS.project_entity_with_label_config + "-producer")
+                                .withName(outputTopicNames.projectEntityWithLabelConfig() + "-producer")
                 );
 
-        return new ProjectEntityLabelReturnValue(builder, aggregatedStream);
+        return new ProjectEntityLabelReturnValue(aggregatedStream);
 
-    }
-
-
-    public enum input {
-        TOPICS;
-        public final String project_entity = ProjectEntity.output.TOPICS.project_entity;
-        public final String project_entity_label_config = Env.INSTANCE.TOPIC_PROJECT_ENTITY_LABEL_CONFIG;
-        public final String project_top_statements = ProjectTopStatements.output.TOPICS.project_top_statements;
     }
 
 
@@ -228,21 +231,16 @@ public class ProjectEntityLabel {
 
     }
 
-    public enum output {
-        TOPICS;
-        public final String project_entity_label = Utils.tsPrefixed("project_entity_label");
-        public final String project_entity_with_label_config = Utils.tsPrefixed("project_entity_with_label_config");
-    }
-
     public static class EntityLabelsAggregatorSupplier implements TransformerSupplier<
             ProjectEntityKey, EntityLabelSlotWithStringValue,
             KeyValue<ProjectEntityKey, ProjectEntityLabelValue>> {
 
         private final String stateStoreName;
-        private final ConfluentAvroSerdes avroSerdes = new ConfluentAvroSerdes();
+        private final AvroSerdes avroSerdes;
 
-        EntityLabelsAggregatorSupplier(String stateStoreName) {
+        public EntityLabelsAggregatorSupplier(String stateStoreName, AvroSerdes avroSerdes) {
             this.stateStoreName = stateStoreName;
+            this.avroSerdes = avroSerdes;
         }
 
         @Override

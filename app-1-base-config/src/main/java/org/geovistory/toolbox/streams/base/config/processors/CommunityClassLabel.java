@@ -1,41 +1,50 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+
+@ApplicationScoped
 public class CommunityClassLabel {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public CommunityClassLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
+    public void addProcessorsStandalone() {
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
-        var registerInnerTopic = new RegisterInnerTopic(builder);
-
-        return addProcessors(
-                builder,
+        addProcessors(
                 registerInputTopic.ontomeClassLabelTable(),
                 registerInnerTopic.geovClassLabelStream()
-        ).builder().build();
+        );
     }
 
-    public static CommunityClassLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityClassLabelReturnValue addProcessors(
             KTable<OntomeClassLabelKey, OntomeClassLabelValue> ontomeClassLabelTable,
             KStream<GeovClassLabelKey, GeovClassLabelValue> geovClassLabelStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         var rekeyedStream = geovClassLabelStream
                 .filter(
@@ -80,24 +89,13 @@ public class CommunityClassLabel {
                 ));
 
         communityClassLabelStream.to(
-                output.TOPICS.community_class_label,
+                outputTopicNames.communityClassLabel(),
                 Produced.with(avroSerdes.OntomeClassLabelKey(), avroSerdes.CommunityClassLabelValue())
-                        .withName(output.TOPICS.community_class_label + "-producer")
+                        .withName(outputTopicNames.communityClassLabel() + "-producer")
         );
-        return new CommunityClassLabelReturnValue(builder, communityClassLabelTable, communityClassLabelStream);
+        return new CommunityClassLabelReturnValue(communityClassLabelTable, communityClassLabelStream);
 
     }
-
-
-    public enum input {
-        TOPICS;
-        public final String ontome_class_label = Env.INSTANCE.TOPIC_ONTOME_CLASS_LABEL;
-        public final String geov_class_label = GeovClassLabel.output.TOPICS.geov_class_label;
-        public final String project_class = ProjectClass.output.TOPICS.project_class;
-
-        public final String project = DbTopicNames.pro_projects.getName();
-    }
-
 
     public enum inner {
         TOPICS;
@@ -106,9 +104,5 @@ public class CommunityClassLabel {
 
     }
 
-    public enum output {
-        TOPICS;
-        public final String community_class_label = Utils.tsPrefixed("community_class_label");
-    }
 
 }

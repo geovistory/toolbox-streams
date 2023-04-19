@@ -1,11 +1,12 @@
 package org.geovistory.toolbox.streams.entity.preview.processors.community;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.preview.Env;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.preview.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,51 +39,54 @@ class CommunityEntityPreviewTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
-
-        var nameSupplement = "toolbox";
-        Topology topology = CommunityEntityPreview.buildStandalone(new StreamsBuilder(), nameSupplement);
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var communityClassLabel = new CommunityEntityPreview(avroSerdes, registerInputTopic, outputTopicNames);
+        communityClassLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
         communityEntityTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY,
+                inputTopicNames.getCommunityEntity(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityValue().serializer());
 
         communityEntityLabelTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_LABEL,
+                inputTopicNames.getCommunityEntityLabel(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityLabelValue().serializer());
 
         communityEntityClassLabelTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_CLASS_LABEL,
+                inputTopicNames.getCommunityEntityClassLabel(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityClassLabelValue().serializer());
 
         communityEntityTypeTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_TYPE,
+                inputTopicNames.getCommunityEntityType(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityTypeValue().serializer());
 
         communityEntityTimeSpanTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_TIME_SPAN,
+                inputTopicNames.getCommunityEntityTimeSpan(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.TimeSpanValue().serializer());
 
         communityEntityFulltextTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_FULLTEXT,
+                inputTopicNames.getCommunityEntityFulltext(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityFulltextValue().serializer());
 
         communityEntityClassMetadataTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_CLASS_METADATA,
+                inputTopicNames.getCommunityEntityClassMetadata(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityClassMetadataValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                CommunityEntityPreview.getOutputTopicName(nameSupplement),
+                outputTopicNames.communityEntityPreview(),
                 avroSerdes.CommunityEntityKey().deserializer(),
                 avroSerdes.EntityPreviewValue().deserializer());
     }

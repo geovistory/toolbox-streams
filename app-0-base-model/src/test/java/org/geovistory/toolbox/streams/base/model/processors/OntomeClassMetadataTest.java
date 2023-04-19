@@ -1,11 +1,16 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassMetadataValue;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.model.AvroSerdes;
+import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,22 +40,23 @@ class OntomeClassMetadataTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
-
-        Topology topology = OntomeClassMetadata.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var ontomeClassMetadata = new OntomeClassMetadata(avroSerdes, builderSingleton, inputTopicNames, outputTopicNames);
+        ontomeClassMetadata.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         apiClassTopic = testDriver.createInputTopic(
-                OntomeClassMetadata.input.TOPICS.api_class,
+                ontomeClassMetadata.inApiClass(),
                 avroSerdes.DfhApiClassKey().serializer(),
                 avroSerdes.DfhApiClassValue().serializer());
 
-
         outputTopic = testDriver.createOutputTopic(
-                OntomeClassMetadata.output.TOPICS.ontome_class_metadata,
+                ontomeClassMetadata.outOntomeClassMetadata(),
                 avroSerdes.OntomeClassKey().deserializer(),
                 avroSerdes.OntomeClassMetadataValue().deserializer());
     }

@@ -1,52 +1,65 @@
 package org.geovistory.toolbox.streams.fulltext.processors.community;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.fulltext.AvroSerdes;
 import org.geovistory.toolbox.streams.fulltext.I;
+import org.geovistory.toolbox.streams.fulltext.OutputTopicNames;
 import org.geovistory.toolbox.streams.fulltext.RegisterInputTopic;
 import org.geovistory.toolbox.streams.fulltext.processors.FullTextFactory;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 
 
+@ApplicationScoped
 public class CommunityEntityFulltext {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder(), "toolbox").describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    @ConfigProperty(name = "ts.community.slug", defaultValue = "")
+    private String communitySlug;
+
+
+    public CommunityEntityFulltext(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder, String nameSupplement) {
-        var inputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
 
         addProcessors(
-                inputTopic.communityEntityWithLabelConfigTable(),
-                inputTopic.communityTopStatementsTable(),
-                inputTopic.communityPropertyLabelTable(),
-                nameSupplement
+                registerInputTopic.communityEntityWithLabelConfigTable(),
+                registerInputTopic.communityTopStatementsTable(),
+                registerInputTopic.communityPropertyLabelTable()
         );
 
-        return builder.build();
     }
 
-    public static void addProcessors(
+    public void addProcessors(
             KTable<CommunityEntityKey, CommunityEntityLabelConfigValue> communityEntityWithLabelConfigTable,
             KTable<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopStatementsTable,
-            KTable<CommunityPropertyLabelKey, CommunityPropertyLabelValue> communityPropertyLabelTable,
-            String nameSupplement
+            KTable<CommunityPropertyLabelKey, CommunityPropertyLabelValue> communityPropertyLabelTable
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2
-        var n2 = "community_" + nameSupplement + "field_top_labels_store";
+        var n2 = "community_" + communitySlug + "field_top_labels_store";
         var communityFieldTopLabelsTable = communityTopStatementsTable.mapValues((readOnlyKey, value) -> {
                     var l = new LinkedList<String>();
                     for (var i : value.getStatements()) {
@@ -79,7 +92,7 @@ public class CommunityEntityFulltext {
         );
 
         // 3
-        var n3 = "community_" + nameSupplement + "_entity_fulltext_join_prop_label";
+        var n3 = "community_" + communitySlug + "_entity_fulltext_join_prop_label";
         var t = communityFieldTopLabelsTable.leftJoin(
                 communityPropertyLabelTable,
                 CommunityFieldTopLabelsValue::getPropertyLabelId,
@@ -96,7 +109,7 @@ public class CommunityEntityFulltext {
         );
 
         // 4
-        var n4a = "community_" + nameSupplement + "_fulltext_fields_grouped_by_entity";
+        var n4a = "community_" + communitySlug + "_fulltext_fields_grouped_by_entity";
         var grouped = t
                 .toStream()
                 .groupBy((key, value) -> CommunityEntityKey.newBuilder()
@@ -107,7 +120,7 @@ public class CommunityEntityFulltext {
                         ).withName(n4a)
                 );
 
-        var n4b = "community_" + nameSupplement + "_fulltext_fields_aggregated_by_entity";
+        var n4b = "community_" + communitySlug + "_fulltext_fields_aggregated_by_entity";
         var aggregated = grouped.aggregate(() -> EntityFieldTextMapValue.newBuilder().build(),
                 (key, value, aggregate) -> {
                     var map = aggregate.getFields();
@@ -122,7 +135,7 @@ public class CommunityEntityFulltext {
         );
 
         // 5
-        var n5a = "community_" + nameSupplement + "_entity_fulltext_label_config";
+        var n5a = "community_" + communitySlug + "_entity_fulltext_label_config";
         var withConfig = aggregated.leftJoin(
                 communityEntityWithLabelConfigTable,
                 (value1, value2) -> EntityFieldTextMapWithConfigValue.newBuilder()
@@ -140,21 +153,14 @@ public class CommunityEntityFulltext {
                 .setEntityId(readOnlyKey.getEntityId())
                 .build());
 
-        var n5b = "ktable-to-stream-community-" + nameSupplement + "-fulltext";
+        var n5b = "ktable-to-stream-community-" + communitySlug + "-fulltext";
         var fulltextStream = fulltextTable.toStream(Named.as(n5b));
 
         /* SINK PROCESSORS */
 
-        fulltextStream.to(getOutputTopicName(nameSupplement),
+        fulltextStream.to(outputTopicNames.communityEntityFulltext(),
                 Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityFulltextValue())
-                        .withName(getOutputTopicName(nameSupplement) + "-producer")
+                        .withName(outputTopicNames.communityEntityFulltext() + "-producer")
         );
-
-
-    }
-
-
-    public static String getOutputTopicName(String nameSupplement) {
-        return Utils.tsPrefixed("community_" + nameSupplement + "_entity_fulltext");
     }
 }

@@ -1,11 +1,16 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.OntomePropertyLabelKey;
 import org.geovistory.toolbox.streams.avro.OntomePropertyLabelValue;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.model.AvroSerdes;
+import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,22 +39,24 @@ class OntomePropertyLabelTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
-
-        Topology topology = OntomePropertyLabel.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var ontomePropertyLabel = new OntomePropertyLabel(avroSerdes, builderSingleton, inputTopicNames, outputTopicNames);
+        ontomePropertyLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         apiPropertyTopic = testDriver.createInputTopic(
-                OntomePropertyLabel.input.TOPICS.api_property,
+                ontomePropertyLabel.inDfhApiProperty(),
                 avroSerdes.DfhApiPropertyKey().serializer(),
                 avroSerdes.DfhApiPropertyValue().serializer());
 
 
         ontomePropertyLabelTopic = testDriver.createOutputTopic(
-                OntomePropertyLabel.output.TOPICS.ontome_property_label,
+                ontomePropertyLabel.outOntomePropertyLabel(),
                 avroSerdes.OntomePropertyLabelKey().deserializer(),
                 avroSerdes.OntomePropertyLabelValue().deserializer());
     }

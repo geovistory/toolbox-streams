@@ -2,14 +2,15 @@ package org.geovistory.toolbox.streams.analysis.statements.processors;
 
 
 import io.debezium.data.geometry.Geography;
-import org.apache.kafka.streams.*;
-import org.geovistory.toolbox.streams.analysis.statements.AnalysisConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.analysis.statements.Env;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
+import org.geovistory.toolbox.streams.analysis.statements.*;
+import org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisStatementKey;
 import org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisStatementValue;
 import org.geovistory.toolbox.streams.analysis.statements.avro.ObjectInfoValue;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,30 +42,32 @@ class ProjectAnalysisStatementTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = ProjectAnalysisStatement.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var projectAnalysisStatement = new ProjectAnalysisStatement(avroSerdes, registerInputTopic, outputTopicNames);
+        projectAnalysisStatement.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
-        var localSerdes = new AnalysisConfluentAvroSerdes();
-
         projectStatementWithLiteralTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_PROJECT_STATEMENT_WITH_LITERAL,
+                inputTopicNames.getProjectStatementWithLiteral(),
                 avroSerdes.ProjectStatementKey().serializer(),
                 avroSerdes.ProjectStatementValue().serializer());
 
         projectStatementWithEntityTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_PROJECT_STATEMENT_WITH_ENTITY,
+                inputTopicNames.getProjectStatementWithEntity(),
                 avroSerdes.ProjectStatementKey().serializer(),
                 avroSerdes.ProjectStatementValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectAnalysisStatement.output.TOPICS.project_analysis_statement,
-                localSerdes.AnalysisStatementKey().deserializer(),
-                localSerdes.AnalysisStatementValue().deserializer());
+                outputTopicNames.projectAnalysisStatement(),
+                avroSerdes.AnalysisStatementKey().deserializer(),
+                avroSerdes.AnalysisStatementValue().deserializer());
     }
 
     @AfterEach

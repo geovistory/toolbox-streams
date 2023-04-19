@@ -1,42 +1,51 @@
 package org.geovistory.toolbox.streams.entity.preview.processors;
 
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.CommunityEntityKey;
 import org.geovistory.toolbox.streams.avro.EntityPreviewValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
+import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.entity.preview.processors.project.ProjectEntityPreviewReturnValue;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+@ApplicationScoped
 public class EntityPreview {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder(), "toolbox").describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+
+    public EntityPreview(AvroSerdes avroSerdes, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder, String nameSupplement) {
-        var innerTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                innerTopic.projectEntityPreviewStream(),
-                innerTopic.communityEntityPreviewStream(nameSupplement)
-        ).builder().build();
+        addProcessors(
+                registerInnerTopic.projectEntityPreviewStream(),
+                registerInnerTopic.communityEntityPreviewStream()
+        );
     }
 
-    public static ProjectEntityPreviewReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectEntityPreviewReturnValue addProcessors(
             KStream<ProjectEntityKey, EntityPreviewValue> projectEntityPreviewStream,
             KStream<CommunityEntityKey, EntityPreviewValue> communityEntityPreviewStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2)
@@ -48,19 +57,15 @@ public class EntityPreview {
                 .merge(projectEntityPreviewStream);
         /* SINK PROCESSORS */
 
-        s.to(output.TOPICS.entity_preview,
+        s.to(outputTopicNames.entityPreview(),
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.EntityPreviewValue())
-                        .withName(output.TOPICS.entity_preview + "-producer")
+                        .withName(outputTopicNames.entityPreview() + "-producer")
         );
 
 
-        return new ProjectEntityPreviewReturnValue(builder, s);
+        return new ProjectEntityPreviewReturnValue(s);
 
     }
 
-    public enum output {
-        TOPICS;
-        public final String entity_preview = Utils.tsPrefixed("entity_preview");
-    }
 
 }

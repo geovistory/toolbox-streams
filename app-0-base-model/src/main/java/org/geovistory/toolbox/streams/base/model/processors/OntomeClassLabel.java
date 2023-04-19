@@ -1,43 +1,66 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassLabelKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassLabelValue;
 import org.geovistory.toolbox.streams.avro.OntomeClassValue;
-import org.geovistory.toolbox.streams.base.model.DbTopicNames;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.model.AvroSerdes;
+import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 
-
+@ApplicationScoped
 public class OntomeClassLabel {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    AvroSerdes avroSerdes;
+
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    String inPrefix;
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    public String outPrefix;
+
+    @Inject
+    OntomeClassProjected ontomeClassProjected;
+    @Inject
+    BuilderSingleton builderSingleton;
+
+    @Inject
+    InputTopicNames inputTopicNames;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public OntomeClassLabel(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.builderSingleton = builderSingleton;
+        this.inputTopicNames = inputTopicNames;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
 
-        var ontomeClassStream = new OntomeClassProjected(builder).kStream;
-
-        return addProcessors(builder, ontomeClassStream).builder().build();
-
+    public void addProcessorsStandalone() {
+        addProcessors(
+                new OntomeClassProjected().getRegistrar(
+                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                ).kStream
+        );
     }
 
-    public static OntomeClassLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public OntomeClassLabelReturnValue addProcessors(
             KStream<OntomeClassKey, OntomeClassValue> ontomeClassStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         /* STREAM PROCESSORS */
         // 2)
@@ -67,27 +90,25 @@ public class OntomeClassLabel {
         /* SINK PROCESSORS */
         ontomeClassLabel
                 .to(
-                        output.TOPICS.ontome_class_label,
+                        outOntomeClassLabel(),
                         Produced.with(avroSerdes.OntomeClassLabelKey(), avroSerdes.OntomeClassLabelValue())
-                                .withName(output.TOPICS.ontome_class_label + "-producer")
+                                .withName(outOntomeClassLabel() + "-producer")
                 );
 
 
-        return new OntomeClassLabelReturnValue(builder, ontomeClassLabel);
+        return new OntomeClassLabelReturnValue(ontomeClassLabel);
 
     }
 
 
-    public enum input {
-        TOPICS;
-        public final String api_class = DbTopicNames.dfh_api_class.getName();
+    public String inApiClass() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.dfh_api_class.getValue());
     }
 
 
-    public enum output {
-        TOPICS;
-        public final String ontome_class_label = Utils.tsPrefixed("ontome_class_label");
-
+    public String outOntomeClassLabel() {
+        return Utils.prefixedOut(outPrefix, "ontome_class_label");
     }
+
 
 }

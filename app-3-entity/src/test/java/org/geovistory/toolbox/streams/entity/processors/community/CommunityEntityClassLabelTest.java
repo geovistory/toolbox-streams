@@ -1,12 +1,12 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.Env;
-import org.geovistory.toolbox.streams.entity.I;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,27 +33,30 @@ class CommunityEntityClassLabelTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        var nameSupplement = "toolbox";
-        Topology topology = CommunityEntityClassLabel.buildStandalone(new StreamsBuilder(), nameSupplement);
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var communityClassLabel = new CommunityEntityClassLabel(avroSerdes, registerInputTopic, outputTopicNames);
+        communityClassLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         communityClassLabelTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_CLASS_LABEL,
+                inputTopicNames.getCommunityClassLabel(),
                 avroSerdes.OntomeClassLabelKey().serializer(),
                 avroSerdes.CommunityClassLabelValue().serializer());
 
         communityEntityTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_COMMUNITY_ENTITY,
+                inputTopicNames.getCommunityEntity(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                CommunityEntityClassLabel.getOutputTopicName(nameSupplement),
+                outputTopicNames.communityEntityClassLabel(),
                 avroSerdes.CommunityEntityKey().deserializer(),
                 avroSerdes.CommunityEntityClassLabelValue().deserializer());
     }

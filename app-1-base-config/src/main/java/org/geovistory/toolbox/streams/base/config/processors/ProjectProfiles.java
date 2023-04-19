@@ -5,46 +5,58 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.BooleanMap;
+import org.geovistory.toolbox.streams.avro.IntegerList;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.ListSerdes;
+import org.geovistory.toolbox.streams.base.config.AvroSerdes;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
+import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
-import org.geovistory.toolbox.streams.base.config.DbTopicNames;
-import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
 
-import java.util.ArrayList;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+@ApplicationScoped
 public class ProjectProfiles {
+    @Inject
+    AvroSerdes avroSerdes;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectProfiles(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
         var proProjectTable = registerInputTopic.proProjectTable();
         var proProfileProjRelTable = registerInputTopic.proProfileProjRelTable();
         var sysConfigTable = registerInputTopic.sysConfigTable();
-        return addProcessors(
-                builder,
+        addProcessors(
                 proProjectTable,
                 proProfileProjRelTable,
                 sysConfigTable
-        ).builder().build();
+        );
     }
 
-    public static ProjectProfilesReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectProfilesReturnValue addProcessors(
             KTable<dev.projects.project.Key, dev.projects.project.Value> proProjects,
             KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> proDfhProfileProjRels,
             KTable<dev.system.config.Key, dev.system.config.Value> sysConfig
@@ -52,8 +64,6 @@ public class ProjectProfiles {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
         String REQUIRED_ONTOME_PROFILES = "REQUIRED_ONTOME_PROFILES";
-        var avroSerdes = new ConfluentAvroSerdes();
-        var listSerdes = new ListSerdes();
 
 
         /* STREAM PROCESSORS */
@@ -78,29 +88,31 @@ public class ProjectProfiles {
                 );
         // 4)
         // Aggregate: key: project, value: array of profiles
-        KTable<Integer, List<Integer>> projectsWithEnabledProfiles = profilesByProject.aggregate(
+        KTable<Integer, IntegerList> projectsWithEnabledProfiles = profilesByProject.aggregate(
                 // initializer
-                ArrayList::new,
+                () -> IntegerList.newBuilder().build(),
+
                 // adder
                 (k, v, agg) -> {
-                    agg.add(v);
+                    agg.getList().add(v);
                     return agg;
                 },
                 // subtractor
                 (k, v, agg) -> {
-                    agg.remove(v);
+                    var i = agg.getList().indexOf(v);
+                    if (i > -1) agg.getList().remove(i);
                     return agg;
                 },
                 Named.as(inner.TOPICS.projects_with_enabled_profiles),
                 Materialized.
-                        <Integer, List<Integer>, KeyValueStore<Bytes, byte[]>>as("inner.TOPICS.projects_with_enabled_profiles")
+                        <Integer, IntegerList, KeyValueStore<Bytes, byte[]>>as("inner.TOPICS.projects_with_enabled_profiles")
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(listSerdes.IntegerList())
+                        .withValueSerde(avroSerdes.IntegerList())
         );
 
         // 5)
         // Key: constant "REQUIRED_ONTOME_PROFILES", Value: List of profile ids
-        KTable<String, List<Integer>> requiredProfiles = sysConfig
+        KTable<String, IntegerList> requiredProfiles = sysConfig
                 .toStream(
                         Named.as(inner.TOPICS.projects_with_enabled_profiles + "-to-stream")
                 )
@@ -110,9 +122,10 @@ public class ProjectProfiles {
                 )
                 // 6)
                 .map((k, v) -> {
-                            List<Integer> p = new ArrayList<>();
+                            IntegerList p = IntegerList.newBuilder().build();
                             try {
-                                p = mapper.readValue(v.getConfig(), SysConfigValue.class).ontome.requiredOntomeProfiles;
+                                var profiles = mapper.readValue(v.getConfig(), SysConfigValue.class).ontome.requiredOntomeProfiles;
+                                p.setList(profiles);
                             } catch (JsonProcessingException e) {
                                 e.printStackTrace();
                             }
@@ -123,10 +136,10 @@ public class ProjectProfiles {
                 .toTable(
                         Named.as(inner.TOPICS.required_profiles),
                         Materialized
-                                .<String, List<Integer>, KeyValueStore<Bytes, byte[]>>
+                                .<String, IntegerList, KeyValueStore<Bytes, byte[]>>
                                         as(inner.TOPICS.required_profiles + "-store")
                                 .withKeySerde(Serdes.String())
-                                .withValueSerde(listSerdes.IntegerList())
+                                .withValueSerde(avroSerdes.IntegerList())
                 );
 
         // 7)
@@ -146,33 +159,33 @@ public class ProjectProfiles {
                                 .with(Serdes.Integer(), Serdes.Integer()));
         // 9)
         // Key: project, Val: required profiles
-        KTable<Integer, List<Integer>> projectsWithRequiredProfiles = projectKeys.leftJoin(
+        KTable<Integer, IntegerList> projectsWithRequiredProfiles = projectKeys.leftJoin(
                 requiredProfiles,
                 (v) -> REQUIRED_ONTOME_PROFILES,
                 (leftVal, rightVal) ->
                         leftVal == null ?
                                 null : rightVal == null ?
-                                new ArrayList<>() : rightVal,
+                                IntegerList.newBuilder().build() : rightVal,
                 TableJoined.as(inner.TOPICS.projects_with_required_profiles + "-fk-left-join"),
                 Materialized
-                        .<Integer, List<Integer>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.projects_with_required_profiles)
+                        .<Integer, IntegerList, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.projects_with_required_profiles)
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(listSerdes.IntegerList())
+                        .withValueSerde(avroSerdes.IntegerList())
         );
 
         // 10)
         // Key: project, Val: profiles (required + enabled)
-        KTable<Integer, List<Integer>> projectWithProfiles = projectsWithRequiredProfiles.leftJoin(
+        KTable<Integer, IntegerList> projectWithProfiles = projectsWithRequiredProfiles.leftJoin(
                 projectsWithEnabledProfiles,
                 (value1, value2) -> {
-                    if (value2 != null) value1.addAll(value2);
+                    if (value2 != null && value2.getList().size()>0) value1.getList().addAll(value2.getList());
                     return value1;
                 },
                 Named.as(inner.TOPICS.projects_with_profiles + "-fk-left-join"),
                 Materialized
-                        .<Integer, List<Integer>, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.projects_with_profiles)
+                        .<Integer, IntegerList, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.projects_with_profiles)
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(listSerdes.IntegerList())
+                        .withValueSerde(avroSerdes.IntegerList())
         );
         // 11
         KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream;
@@ -182,7 +195,7 @@ public class ProjectProfiles {
                         (readOnlyKey, value) -> {
                             var map = BooleanMap.newBuilder().build();
                             var __deleted = false;
-                            if (value != null) value.forEach(profileId -> map.getItem().put(profileId.toString(), __deleted));
+                            if (value != null) value.getList().forEach(profileId -> map.getItem().put(profileId.toString(), __deleted));
                             return map;
                         },
                         Named.as("kstream-mapvalues-integer-list-to-boolean-map")
@@ -224,20 +237,13 @@ public class ProjectProfiles {
                 );
 
         /* SINK PROCESSOR */
-        projectProfileStream.to(output.TOPICS.project_profile,
+        projectProfileStream.to(outputTopicNames.projectProfile(),
                 Produced.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
-                        .withName(output.TOPICS.project_profile + "-producer")
+                        .withName(outputTopicNames.projectProfile() + "-producer")
         );
 
-        return new ProjectProfilesReturnValue(builder, projectProfileStream);
+        return new ProjectProfilesReturnValue(projectProfileStream);
 
-    }
-
-    public enum input {
-        TOPICS;
-        public final String dfh_profile_proj_rel = DbTopicNames.pro_dfh_profile_proj_rel.getName();
-        public final String project = DbTopicNames.pro_projects.getName();
-        public final String config = DbTopicNames.sys_config.getName();
     }
 
 
@@ -250,11 +256,6 @@ public class ProjectProfiles {
         public final String required_profiles = Utils.tsPrefixed("required_profiles");
         public final String project_keys = Utils.tsPrefixed("project_keys");
 
-    }
-
-    public enum output {
-        TOPICS;
-        public final String project_profile = Utils.tsPrefixed("project_profile");
     }
 
 

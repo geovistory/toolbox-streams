@@ -3,14 +3,12 @@ package org.geovistory.toolbox.streams.analysis.statements.processors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
-import org.geovistory.toolbox.streams.analysis.statements.AnalysisConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.analysis.statements.AvroSerdes;
+import org.geovistory.toolbox.streams.analysis.statements.OutputTopicNames;
 import org.geovistory.toolbox.streams.analysis.statements.RegisterInputTopic;
 import org.geovistory.toolbox.streams.analysis.statements.avro.*;
-import org.geovistory.toolbox.streams.avro.AnalysisStatementKey;
 import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
@@ -19,33 +17,44 @@ import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.TimeUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 
 
+@ApplicationScoped
 public class ProjectAnalysisStatement {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectAnalysisStatement(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var inputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                inputTopic.projectStatementWithLiteral(),
-                inputTopic.projectStatementWithEntity()
-        ).builder().build();
+
+        addProcessors(
+                registerInputTopic.projectStatementWithLiteral(),
+                registerInputTopic.projectStatementWithEntity()
+        );
     }
 
-    public static ProjectAnalysisStatementReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectAnalysisStatementReturnValue addProcessors(
             KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteral,
             KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntity
     ) {
 
-        var avroSerdes = new AnalysisConfluentAvroSerdes();
         ObjectMapper mapper = JsonStringifier.getMapperIgnoringNulls();
 
         /* STREAM PROCESSORS */
@@ -85,12 +94,12 @@ public class ProjectAnalysisStatement {
         /* SINK PROCESSORS */
 
 
-        mapped.to(output.TOPICS.project_analysis_statement,
+        mapped.to(outputTopicNames.projectAnalysisStatement(),
                 Produced.with(avroSerdes.AnalysisStatementKey(), avroSerdes.AnalysisStatementValue())
-                        .withName(output.TOPICS.project_analysis_statement + "-producer")
+                        .withName(outputTopicNames.projectAnalysisStatement() + "-producer")
         );
 
-        return new ProjectAnalysisStatementReturnValue(builder, merged);
+        return new ProjectAnalysisStatementReturnValue(merged);
 
     }
 
@@ -223,12 +232,6 @@ public class ProjectAnalysisStatement {
                 .setCalGregorian(gregorianYMD.toString())
                 .setCalGregorianIso8601(fromIso8601)
                 .build();
-    }
-
-
-    public enum output {
-        TOPICS;
-        public final String project_analysis_statement = Utils.tsPrefixed("project_analysis_statement");
     }
 
 

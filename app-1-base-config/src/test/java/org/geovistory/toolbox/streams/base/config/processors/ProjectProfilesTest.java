@@ -1,11 +1,13 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.config.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,32 +35,36 @@ class ProjectProfilesTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-
-        Topology topology = ProjectProfiles.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var projectProfiles = new ProjectProfiles(avroSerdes, registerInputTopic, registerInnerTopic,outputTopicNames);
+        projectProfiles.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         projectTopic = testDriver.createInputTopic(
-                ProjectProfiles.input.TOPICS.project,
+                inputTopicNames. proProject(),
                 avroSerdes.ProProjectKey().serializer(),
                 avroSerdes.ProProjectValue().serializer());
 
         profileProjectTopic = testDriver.createInputTopic(
-                ProjectProfiles.input.TOPICS.dfh_profile_proj_rel,
+                inputTopicNames. proProfileProjRel(),
                 avroSerdes.ProProfileProjRelKey().serializer(),
                 avroSerdes.ProProfileProjRelValue().serializer());
 
         configTopic = testDriver.createInputTopic(
-                ProjectProfiles.input.TOPICS.config,
+                inputTopicNames.sysConfig(),
                 avroSerdes.SysConfigKey().serializer(),
                 avroSerdes.SysConfigValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectProfiles.output.TOPICS.project_profile,
+                outputTopicNames.projectProfile(),
                 avroSerdes.ProjectProfileKey().deserializer(),
                 avroSerdes.ProjectProfileValue().deserializer());
     }

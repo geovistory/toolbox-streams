@@ -8,9 +8,8 @@ import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.EntityLabelSlotWithStringValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.ProjectEntityLabelValue;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
 import org.geovistory.toolbox.streams.entity.label.processsors.project.ProjectEntityLabel;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,9 +31,9 @@ class EntityLabelsAggregatorTest {
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
         processorContext = new MockProcessorContext(props);
-        var avroSerdes = new ConfluentAvroSerdes();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
         KeyValueStore<ProjectEntityKey, ProjectEntityLabelValue> store =
                 Stores.keyValueStoreBuilder(
                                 Stores.inMemoryKeyValueStore(storeName),

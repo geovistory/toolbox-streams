@@ -1,48 +1,59 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.AvroSerdes;
 import org.geovistory.toolbox.streams.entity.I;
+import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 
+@ApplicationScoped
 public class CommunityEntityClassLabel {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder(), "toolbox").describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    @ConfigProperty(name = "ts.community.slug", defaultValue = "")
+    private String communitySlug;
+
+
+    public CommunityEntityClassLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder, String nameSupplement) {
-        var inputTopic = new RegisterInputTopic(builder);
-
-        return addProcessors(
-                builder,
-                inputTopic.communityEntityTable(),
-                inputTopic.communityClassLabelTable(),
-                nameSupplement
-        ).builder().build();
+    public void addProcessorsStandalone() {
+        addProcessors(
+                registerInputTopic.communityEntityTable(),
+                registerInputTopic.communityClassLabelTable()
+        );
     }
 
-    public static CommunityEntityClassLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityEntityClassLabelReturnValue addProcessors(
             KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable,
-            KTable<OntomeClassLabelKey, CommunityClassLabelValue> communityClassLabelTable,
-            String nameSupplement
+            KTable<OntomeClassLabelKey, CommunityClassLabelValue> communityClassLabelTable
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2)
 
-        var joinName = "communtiy_" + nameSupplement + "_entity_with_class_label";
+        var joinName = "communtiy_" + communitySlug + "_entity_with_class_label";
 
         var communityEntityClassLabelTable = communityEntityTable.join(
                 communityClassLabelTable,
@@ -67,19 +78,17 @@ public class CommunityEntityClassLabel {
         );
         /* SINK PROCESSORS */
 
-        var outputTopic = getOutputTopicName(nameSupplement);
+        var outputTopic = outputTopicNames.communityEntityClassLabel();
 
         communityEntityClassLabelStream.to(outputTopic,
                 Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityClassLabelValue())
                         .withName(outputTopic + "-producer")
         );
 
-        return new CommunityEntityClassLabelReturnValue(builder, communityEntityClassLabelTable, communityEntityClassLabelStream);
+        return new CommunityEntityClassLabelReturnValue( communityEntityClassLabelTable, communityEntityClassLabelStream);
 
     }
 
 
-    public static String getOutputTopicName(String nameSupplement) {
-        return Utils.tsPrefixed("community_" + nameSupplement + "_entity_class_label");
-    }
+
 }

@@ -1,41 +1,49 @@
 package org.geovistory.toolbox.streams.entity.processors.project;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.Env;
+import org.geovistory.toolbox.streams.entity.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+
+@ApplicationScoped
 public class ProjectEntityType {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectEntityType(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var inputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                inputTopic.projectEntityTable(),
-                inputTopic.hasTypePropertyTable(),
-                inputTopic.projectTopOutgoingStatementsTable()
-        ).builder().build();
+        addProcessors(
+                registerInputTopic.projectEntityTable(),
+                registerInputTopic.hasTypePropertyTable(),
+                registerInputTopic.projectTopOutgoingStatementsTable()
+        );
     }
 
-    public static ProjectEntityTypeReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectEntityTypeReturnValue addProcessors(
             KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,
             KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
             KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsTable) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
 
         /* STREAM PROCESSORS */
@@ -52,7 +60,7 @@ public class ProjectEntityType {
                         .setHasTypePropertyId(value2.getPropertyId())
                         .setDeleted$1(value2.getDeleted$1())
                         .build(),
-                TableJoined.as(inner.TOPICS.project_entity_with_has_type_property+ "-fk-join"),
+                TableJoined.as(inner.TOPICS.project_entity_with_has_type_property + "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityHasTypePropValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_has_type_property)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityHasTypePropValue())
@@ -90,7 +98,7 @@ public class ProjectEntityType {
                     }
 
                 },
-                TableJoined.as(inner.TOPICS.project_entity_with_has_type_statement+ "-fk-join"),
+                TableJoined.as(inner.TOPICS.project_entity_with_has_type_statement + "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityTypeValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_has_type_statement)
                         .withKeySerde(avroSerdes.ProjectEntityKey())
                         .withValueSerde(avroSerdes.ProjectEntityTypeValue())
@@ -101,21 +109,13 @@ public class ProjectEntityType {
         );
         /* SINK PROCESSORS */
 
-        projectEntityTypeStream.to(output.TOPICS.project_entity_type,
+        projectEntityTypeStream.to(outputTopicNames.projectEntityType(),
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityTypeValue())
-                        .withName(output.TOPICS.project_entity_type + "-producer")
+                        .withName(outputTopicNames.projectEntityType() + "-producer")
         );
 
-        return new ProjectEntityTypeReturnValue(builder, projectEntityTypeTable, projectEntityTypeStream);
+        return new ProjectEntityTypeReturnValue(projectEntityTypeTable, projectEntityTypeStream);
 
-    }
-
-
-    public enum input {
-        TOPICS;
-        public final String project_entity = Env.INSTANCE.TOPIC_PROJECT_ENTITY;
-        public final String has_type_property = Env.INSTANCE.TOPIC_HAS_TYPE_PROPERTY;
-        public final String project_top_outgoing_statements = Env.INSTANCE.TOPIC_PROJECT_TOP_OUTGOING_STATEMENTS;
     }
 
 
@@ -125,11 +125,5 @@ public class ProjectEntityType {
         public final String project_entity_with_has_type_statement = "project_entity_with_has_type_statement";
 
     }
-
-    public enum output {
-        TOPICS;
-        public final String project_entity_type = Utils.tsPrefixed("project_entity_type");
-    }
-
 
 }

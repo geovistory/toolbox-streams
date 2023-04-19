@@ -3,8 +3,6 @@ package org.geovistory.toolbox.streams.base.config.processors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.Transformer;
@@ -16,73 +14,75 @@ import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.CommunityEntityLabelConfigKey;
 import org.geovistory.toolbox.streams.avro.CommunityEntityLabelConfigValue;
 import org.geovistory.toolbox.streams.avro.EntityLabelConfig;
-import org.geovistory.toolbox.streams.base.config.DbTopicNames;
-import org.geovistory.toolbox.streams.base.config.I;
-import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.config.*;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
 
 
+@ApplicationScoped
 public class CommunityEntityLabelConfig {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public CommunityEntityLabelConfig(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
-
-        return addProcessors(
-                builder,
+    public void addProcessorsStandalone() {
+        addProcessors(
                 registerInputTopic.proEntityLabelConfigStream()
-        ).builder().build();
+        );
     }
 
 
-    public static CommunityEntityLabelConfigReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityEntityLabelConfigReturnValue addProcessors(
             KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream
     ) {
-        var avroSerdes = new ConfluentAvroSerdes();
         /* STREAM PROCESSORS */
         // 2)
         var communityEntityLabelConfigStream = proEntityLabelConfigStream.transform(
-                new TransformSupplier("kstream-flatmap-project-entity-label-config-to-community-entity-label-config")
+                new TransformSupplier("kstream-flatmap-project-entity-label-config-to-community-entity-label-config", avroSerdes)
         );
         /* SINK PROCESSORS */
 
         // 8) to
-        communityEntityLabelConfigStream.to(output.TOPICS.community_entity_label_config,
+        communityEntityLabelConfigStream.to(outputTopicNames.communityEntityLabelConfig(),
                 Produced.with(avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue())
-                        .withName(output.TOPICS.community_entity_label_config + "-producer")
+                        .withName(outputTopicNames.communityEntityLabelConfig() + "-producer")
         );
 
-        return new CommunityEntityLabelConfigReturnValue(builder, communityEntityLabelConfigStream);
+        return new CommunityEntityLabelConfigReturnValue(communityEntityLabelConfigStream);
 
     }
 
-    public enum input {
-        TOPICS;
-        public final String entity_label_config = DbTopicNames.pro_entity_label_config.getName();
-    }
-
-    public enum output {
-        TOPICS;
-        public final String community_entity_label_config = Utils.tsPrefixed("community_entity_label_config");
-    }
 
     public static class TransformSupplier implements TransformerSupplier<
             dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value,
             KeyValue<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue>> {
 
         private final String stateStoreName;
-        private final ConfluentAvroSerdes avroSerdes = new ConfluentAvroSerdes();
+        private final AvroSerdes avroSerdes;
 
-        TransformSupplier(String stateStoreName) {
+        public TransformSupplier(String stateStoreName, AvroSerdes avroSerdes) {
             this.stateStoreName = stateStoreName;
+            this.avroSerdes = avroSerdes;
         }
 
         @Override

@@ -2,12 +2,16 @@ package org.geovistory.toolbox.streams.nodes.processors;
 
 
 import io.debezium.data.geometry.Geography;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.NodeKey;
 import org.geovistory.toolbox.streams.avro.NodeValue;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
+import org.geovistory.toolbox.streams.nodes.AvroSerdes;
+import org.geovistory.toolbox.streams.nodes.BuilderSingleton;
+import org.geovistory.toolbox.streams.nodes.RegisterInputTopic;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,63 +45,64 @@ class NodesTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = Nodes.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton);
+        var nodes = new Nodes(avroSerdes, registerInputTopic);
+        nodes.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
         infResourceTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.inf_resource,
+                nodes.inInfResource(),
                 avroSerdes.InfResourceKey().serializer(),
                 avroSerdes.InfResourceValue().serializer()
         );
         infLanguageTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.inf_language,
+                nodes.inInfLanguage(),
                 avroSerdes.InfLanguageKey().serializer(),
                 avroSerdes.InfLanguageValue().serializer()
         );
         infAppellationTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.inf_appellation,
+                nodes.inInfAppellation(),
                 avroSerdes.InfAppellationKey().serializer(),
                 avroSerdes.InfAppellationValue().serializer()
         );
         infLangStringTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.inf_lang_string,
+                nodes.inInfLangString(),
                 avroSerdes.InfLangStringKey().serializer(),
                 avroSerdes.InfLangStringValue().serializer()
         );
         infPlaceTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.inf_place,
+                nodes.inInfPlace(),
                 avroSerdes.InfPlaceKey().serializer(),
                 avroSerdes.InfPlaceValue().serializer()
         );
         infTimePrimitiveTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.inf_time_primitive,
+                nodes.inInfTimePrimitive(),
                 avroSerdes.InfTimePrimitiveKey().serializer(),
                 avroSerdes.InfTimePrimitiveValue().serializer()
         );
         infDimensionTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.inf_dimension,
+                nodes.inInfDimension(),
                 avroSerdes.InfDimensionKey().serializer(),
                 avroSerdes.InfDimensionValue().serializer()
         );
         tabCellTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.tab_cell,
+                nodes.inTabCell(),
                 avroSerdes.TabCellKey().serializer(),
                 avroSerdes.TabCellValue().serializer()
         );
         datDigitalTopic = testDriver.createInputTopic(
-                Nodes.input.TOPICS.dat_digital,
+                nodes.inDatDigital(),
                 avroSerdes.DatDigitalKey().serializer(),
                 avroSerdes.DatDigitalValue().serializer()
         );
 
 
         nodeTopic = testDriver.createOutputTopic(
-                Nodes.output.TOPICS.nodes,
+                nodes.outNodes(),
                 avroSerdes.NodeKey().deserializer(),
                 avroSerdes.NodeValue().deserializer());
 

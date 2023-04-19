@@ -23,7 +23,7 @@ public class CLI {
     public static final Option OPT_LIST_SCHEMAS = new Option("s", "list-schemas", false, "list schemas of schema registry");
     public static final Option OPT_DELETE_SCHEMAS = new Option("d", "delete-schemas", true, "soft-delete schemas of schema registry containing the provided <arg> string. This will not delete unless you provide the --confirm flag.");
     public static final Option OPT_LIST_TOPICS = new Option(null, "list-topics", false, "list topics");
-    public static final Option OPT_LIST_TOPIC_CONFIGS = new Option(null, "list-topic-configs", false, "list topic configs");
+    public static final Option OPT_LIST_TOPIC_CONFIGS = new Option(null, "list-topic-configs", true, "list topic configs of topics matching the provided regex.");
     public static final Option OPT_LIST_TOPIC_PARTITION_SIZE = new Option(null, "list-topic-partition-size", false, "list topics with the number of partitions");
     public static final Option OPT_DELETE_TOPICS = new Option(null, "delete-topics", true, "delete topics containing the provided <arg> string. This will not delete unless you provide the --confirm flag.");
     public static final Option OPT_CONFIRM = new Option(null, "confirm", false, "Confirm performing a dangerous opteration.");
@@ -80,14 +80,15 @@ public class CLI {
 
             } else if (line.hasOption(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt())) {
                 Boolean confirmed = line.hasOption(OPT_CONFIRM.getLongOpt());
-                var strings = Arrays.stream(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt().split(",")).toList();
+                var strings = Arrays.stream(line.getOptionValue(OPT_DELETE_SCHEMAS_AND_TOPICS.getLongOpt()).split(",")).toList();
                 for (var s : strings) {
-                    deleteSchemas(line.getOptionValue(s.trim()), confirmed);
-                    deleteTopics(line.getOptionValue(s.trim()), confirmed);
+                    deleteSchemas(s.trim(), confirmed);
+                    deleteTopics(s.trim(), confirmed);
                 }
 
             } else if (line.hasOption(OPT_LIST_TOPIC_CONFIGS.getLongOpt())) {
-                var configs = getTopicConfigs();
+
+                var configs = getTopicConfigs(line.getOptionValue(OPT_LIST_TOPIC_CONFIGS.getLongOpt()));
                 configs.forEach(System.out::println);
                 System.out.println(configs.size() + " topic configs listed.");
 
@@ -137,17 +138,26 @@ public class CLI {
         }
     }
 
-    public static List<String> getTopicConfigs() {
+    public static List<String> getTopicConfigs(String str) {
         AdminClient adminClient = getAdminClient();
         var x = getTopics().stream().map(s -> new ConfigResource(ConfigResource.Type.TOPIC, s)).toList();
         var res = adminClient.describeConfigs(x);
 
         try {
             var v = res.all().get();
-            return v.entrySet().stream().map(config -> config.getKey()
-                    .name() + "\n" +
-                    "cleanup.policy:" + config.getValue().get("cleanup.policy").value() + "\n"
-            ).toList();
+            var strings = new ArrayList<String>();
+            for (var item : v.entrySet()) {
+                if (str.equals("*") || item.getKey().name().contains(str)) {
+                    var cleanupPolicy = item.getValue().get("cleanup.policy").value();
+                    if (cleanupPolicy.equals("delete")) {
+                        var configString = item.getKey()
+                                .name() + "\n" +
+                                "cleanup.policy:" + cleanupPolicy + "\n";
+                        strings.add(configString);
+                    }
+                }
+            }
+            return strings;
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }

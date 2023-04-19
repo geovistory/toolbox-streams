@@ -1,13 +1,15 @@
 package org.geovistory.toolbox.streams.entity.label.processors.project;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.ProjectEntityValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityVisibilityValue;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.project.ProjectEntity;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,21 +35,26 @@ class ProjectEntityTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
 
-        Topology topology = ProjectEntity.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var projectEntity = new ProjectEntity(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames, builderSingleton);
+        projectEntity.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         projectEntityVisibilityTopic = testDriver.createInputTopic(
-                ProjectEntity.input.TOPICS.project_entity_visibility,
+                outputTopicNames.projectEntityVisibility(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityVisibilityValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectEntity.output.TOPICS.project_entity,
+                outputTopicNames.projectEntity(),
                 avroSerdes.ProjectEntityKey().deserializer(),
                 avroSerdes.ProjectEntityValue().deserializer());
     }

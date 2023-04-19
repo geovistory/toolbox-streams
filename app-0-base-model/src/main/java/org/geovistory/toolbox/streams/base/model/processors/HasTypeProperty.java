@@ -1,40 +1,60 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.model.DbTopicNames;
-import org.geovistory.toolbox.streams.base.model.Prop;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.base.model.*;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
+import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 
-
+@ApplicationScoped
 public class HasTypeProperty {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    String inPrefix;
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    public String outPrefix;
+
+    @Inject
+    BuilderSingleton builderSingleton;
+
+    @Inject
+    InputTopicNames inputTopicNames;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public HasTypeProperty(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.builderSingleton = builderSingleton;
+        this.inputTopicNames = inputTopicNames;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
 
-
-        return addProcessors(builder, new OntomePropertyProjected(builder).kStream).builder().build();
-
+    public void addProcessorsStandalone() {
+        addProcessors(
+                new OntomePropertyProjected().getRegistrar(
+                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                ).kStream
+        );
     }
 
-    public static HasTypePropertyReturnValue addProcessors(
-            StreamsBuilder builder,
+
+    public HasTypePropertyReturnValue addProcessors(
             KStream<OntomePropertyKey, OntomePropertyValue> apiPropertyStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         /* STREAM PROCESSORS */
         // 2)
@@ -114,13 +134,13 @@ public class HasTypeProperty {
         /* SINK PROCESSORS */
         hasTypePropertyStream
                 .to(
-                        output.TOPICS.has_type_property,
+                        outHasTypeProperty(),
                         Produced.with(avroSerdes.HasTypePropertyKey(), avroSerdes.HasTypePropertyValue())
-                                .withName(output.TOPICS.has_type_property + "-producer")
+                                .withName(outHasTypeProperty() + "-producer")
                 );
 
 
-        return new HasTypePropertyReturnValue(builder, hasTypePropertyStream);
+        return new HasTypePropertyReturnValue(hasTypePropertyStream);
 
     }
 
@@ -133,12 +153,11 @@ public class HasTypeProperty {
                     && property.getDfhAncestorProperties().contains(Prop.HAS_TYPE.get());
     }
 
-    public enum input {
-        TOPICS;
-        public final String api_property = DbTopicNames.dfh_api_property.getName();
 
-
+    public String inApiProperty() {
+        return Utils.prefixedIn(inPrefix, TopicNameEnum.dfh_api_property.getValue());
     }
+
 
     public enum inner {
         TOPICS;
@@ -148,11 +167,9 @@ public class HasTypeProperty {
 
     }
 
-
-    public enum output {
-        TOPICS;
-        public final String has_type_property = Utils.tsPrefixed("has_type_property");
-
+    public String outHasTypeProperty() {
+        return Utils.prefixedOut(outPrefix, "has_type_property");
     }
+
 
 }

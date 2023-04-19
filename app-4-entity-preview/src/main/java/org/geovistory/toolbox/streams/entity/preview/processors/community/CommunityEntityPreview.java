@@ -1,62 +1,76 @@
 package org.geovistory.toolbox.streams.entity.preview.processors.community;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
 import org.geovistory.toolbox.streams.entity.preview.Klass;
+import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 
+@ApplicationScoped
 public class CommunityEntityPreview {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder(), "toolbox").describe());
+
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    @ConfigProperty(name = "ts.community.slug", defaultValue = "")
+    private String communitySlug;
+
+
+    public CommunityEntityPreview(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder, String nameSupplement) {
-        var inputTopic = new RegisterInputTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                inputTopic.communityEntityTable(),
-                inputTopic.communityEntityLabelTable(),
-                inputTopic.communityEntityClassLabelTable(),
-                inputTopic.communityEntityTypeTable(),
-                inputTopic.communityEntityTimeSpanTable(),
-                inputTopic.communityEntityFulltextTable(),
-                inputTopic.communityEntityClassMetadataTable(),
-                nameSupplement
-        ).builder().build();
+        addProcessors(
+                registerInputTopic.communityEntityTable(),
+                registerInputTopic.communityEntityLabelTable(),
+                registerInputTopic.communityEntityClassLabelTable(),
+                registerInputTopic.communityEntityTypeTable(),
+                registerInputTopic.communityEntityTimeSpanTable(),
+                registerInputTopic.communityEntityFulltextTable(),
+                registerInputTopic.communityEntityClassMetadataTable()
+        );
+
     }
 
-    public static CommunityEntityPreviewReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityEntityPreviewReturnValue addProcessors(
             KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable,
             KTable<CommunityEntityKey, CommunityEntityLabelValue> communityEntityLabelTable,
             KTable<CommunityEntityKey, CommunityEntityClassLabelValue> communityEntityClassLabelTable,
             KTable<CommunityEntityKey, CommunityEntityTypeValue> communityEntityTypeTable,
             KTable<CommunityEntityKey, TimeSpanValue> communityEntityTimeSpanTable,
             KTable<CommunityEntityKey, CommunityEntityFulltextValue> communityEntityFulltextTable,
-            KTable<CommunityEntityKey, CommunityEntityClassMetadataValue> communityEntityClassMetadataTable,
-            String nameSupplement
+            KTable<CommunityEntityKey, CommunityEntityClassMetadataValue> communityEntityClassMetadataTable
     ) {
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
-        String communityEntityPreviewLabelJoin = "community_" + nameSupplement + "_entity_preview_label_join";
-        String communityEntityPreviewClassLabelJoin = "community_" + nameSupplement + "_entity_preview_class_label_join";
-        String communityEntityPreviewTypeJoin = "community_" + nameSupplement + "_entity_preview_type_join";
-        String communityEntityPreviewTimeSpanJoin = "community_" + nameSupplement + "_entity_preview_time_span_join";
-        String communityEntityPreviewFulltextJoin = "community_" + nameSupplement + "_entity_preview_fulltext_join";
-        String communityEntityClassMetadataJoin = "community_" + nameSupplement + "_entity_class_metadata_join";
+        String communityEntityPreviewLabelJoin = "community_" + communitySlug + "_entity_preview_label_join";
+        String communityEntityPreviewClassLabelJoin = "community_" + communitySlug + "_entity_preview_class_label_join";
+        String communityEntityPreviewTypeJoin = "community_" + communitySlug + "_entity_preview_type_join";
+        String communityEntityPreviewTimeSpanJoin = "community_" + communitySlug + "_entity_preview_time_span_join";
+        String communityEntityPreviewFulltextJoin = "community_" + communitySlug + "_entity_preview_fulltext_join";
+        String communityEntityClassMetadataJoin = "community_" + communitySlug + "_entity_class_metadata_join";
         /* STREAM PROCESSORS */
         // 2)
 
@@ -178,12 +192,12 @@ public class CommunityEntityPreview {
         /* SINK PROCESSORS */
 
         communityEntityPreviewStream
-                .to(getOutputTopicName(nameSupplement),
+                .to(outputTopicNames.communityEntityPreview(),
                         Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.EntityPreviewValue())
-                                .withName(getOutputTopicName(nameSupplement) + "-producer")
+                                .withName(outputTopicNames.communityEntityPreview() + "-producer")
                 );
 
-        return new CommunityEntityPreviewReturnValue(builder, communityEntityPreviewStream);
+        return new CommunityEntityPreviewReturnValue(communityEntityPreviewStream);
 
     }
 
@@ -194,9 +208,5 @@ public class CommunityEntityPreview {
             e.printStackTrace();
         }
         return 0;
-    }
-
-    public static String getOutputTopicName(String nameSupplement) {
-        return Utils.tsPrefixed("community_" + nameSupplement + "_entity_preview");
     }
 }

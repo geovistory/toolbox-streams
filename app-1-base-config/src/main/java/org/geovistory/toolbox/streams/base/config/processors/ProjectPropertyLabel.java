@@ -2,49 +2,57 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
 
+@ApplicationScoped
 public class ProjectPropertyLabel {
+    @Inject
+    AvroSerdes avroSerdes;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectPropertyLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopic(builder);
-        var registerInnerTopic = new RegisterInnerTopic(builder);
 
-        return addProcessors(
-                builder,
+    public void addProcessorsStandalone() {
+        addProcessors(
                 registerInputTopic.proProjectTable(),
                 registerInputTopic.ontomePropertyLabelStream(),
                 registerInnerTopic.geovPropertyLabelStream(),
                 registerInnerTopic.projectPropertyStream()
-        ).builder().build();
+        );
     }
 
-    public static ProjectPropertyLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectPropertyLabelReturnValue addProcessors(
             KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable,
             KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelStream,
             KStream<GeovPropertyLabelKey, GeovPropertyLabelValue> geovPropertyLabelStream,
             KStream<ProjectPropertyKey, ProjectPropertyValue> projectPropertyStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
 
         /* SOURCE PROCESSORS */
         var projectPropertyTable = projectPropertyStream.toTable(
@@ -389,12 +397,12 @@ public class ProjectPropertyLabel {
         /* SINK PROCESSORS */
 
         // 8) to
-        projectPropertyLabelStream.to(output.TOPICS.project_property_label,
+        projectPropertyLabelStream.to(outputTopicNames.projectPropertyLabel(),
                 Produced.with(avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelValue())
-                        .withName(output.TOPICS.project_property_label + "-producer")
+                        .withName(outputTopicNames.projectPropertyLabel() + "-producer")
         );
 
-        return new ProjectPropertyLabelReturnValue(builder, projectPropertyLabelTable, projectPropertyLabelStream);
+        return new ProjectPropertyLabelReturnValue(projectPropertyLabelTable, projectPropertyLabelStream);
 
     }
 
@@ -422,15 +430,6 @@ public class ProjectPropertyLabel {
         return null;
     }
 
-    public enum input {
-        TOPICS;
-        public final String ontome_property_label = Env.INSTANCE.TOPIC_ONTOME_PROPERTY_LABEL;
-        public final String geov_property_label = GeovPropertyLabel.output.TOPICS.geov_property_label;
-        public final String project_property = ProjectProperty.output.TOPICS.project_property;
-
-        public final String project = DbTopicNames.pro_projects.getName();
-    }
-
 
     public enum inner {
         TOPICS;
@@ -440,9 +439,6 @@ public class ProjectPropertyLabel {
 
     }
 
-    public enum output {
-        TOPICS;
-        public final String project_property_label = Utils.tsPrefixed("project_property_label");
-    }
+
 
 }

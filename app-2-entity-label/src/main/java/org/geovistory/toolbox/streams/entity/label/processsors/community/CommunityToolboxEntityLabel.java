@@ -2,52 +2,61 @@ package org.geovistory.toolbox.streams.entity.label.processsors.community;
 
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.label.Env;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.entity.label.RegisterInputTopics;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.*;
 
 
+@ApplicationScoped
 public class CommunityToolboxEntityLabel {
 
     public static final int NUMBER_OF_SLOTS = 10;
     public static final int MAX_STRING_LENGTH = 100;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public CommunityToolboxEntityLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerInputTopic = new RegisterInputTopics(builder);
-        var registerInnerTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
+        addProcessors(
                 registerInnerTopic.communityToolboxEntityTable(),
                 registerInputTopic.communityEntityLabelConfigTable(),
                 registerInnerTopic.communityToolboxTopStatementsTable()
-        ).builder().build();
+        );
+
     }
 
-    public static CommunityEntityLabelReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityEntityLabelReturnValue addProcessors(
             KTable<CommunityEntityKey, CommunityEntityValue> communityToolboxEntityTable,
             KTable<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelConfigTable,
             KTable<CommunityTopStatementsKey, CommunityTopStatementsValue> communityToolboxTopStatementsTable) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2)
@@ -185,32 +194,24 @@ public class CommunityToolboxEntityLabel {
                                 .withValueSerde(avroSerdes.ProjectEntityLabelSlotWithStringValue())
                                 .withName(inner.TOPICS.community_toolbox_entity_label_slots_with_strings_repart)
                 )
-                .transform(new EntityLabelsAggregatorSupplier("community_toolbox_entity_labels_agg"));
+                .transform(new EntityLabelsAggregatorSupplier("community_toolbox_entity_labels_agg", avroSerdes));
 
         /* SINK PROCESSORS */
 
-        aggregatedStream.to(output.TOPICS.community_toolbox_entity_label,
+        aggregatedStream.to(outputTopicNames.communityToolboxEntityLabel(),
                 Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityLabelValue())
-                        .withName(output.TOPICS.community_toolbox_entity_label + "-producer")
+                        .withName(outputTopicNames.communityToolboxEntityLabel() + "-producer")
         );
 
         communityEntityWithConfigStream
                 .mapValues((readOnlyKey, value) -> value.getLabelConfig())
-                .to(output.TOPICS.community_toolbox_entity_with_label_config,
+                .to(outputTopicNames.communityToolboxEntityWithLabelConfig(),
                         Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityLabelConfigValue())
-                                .withName(output.TOPICS.community_toolbox_entity_with_label_config + "-producer")
+                                .withName(outputTopicNames.communityToolboxEntityWithLabelConfig() + "-producer")
                 );
 
-        return new CommunityEntityLabelReturnValue(builder, aggregatedStream);
+        return new CommunityEntityLabelReturnValue(aggregatedStream);
 
-    }
-
-
-    public enum input {
-        TOPICS;
-        public final String community_toolbox_entity = CommunityToolboxEntity.output.TOPICS.community_toolbox_entity;
-        public final String community_entity_label_config = Env.INSTANCE.TOPIC_COMMUNITY_ENTITY_LABEL_CONFIG;
-        public final String community_toolbox_top_statements = CommunityToolboxTopStatements.output.TOPICS.community_toolbox_top_statements;
     }
 
 
@@ -223,21 +224,17 @@ public class CommunityToolboxEntityLabel {
 
     }
 
-    public enum output {
-        TOPICS;
-        public final String community_toolbox_entity_label = Utils.tsPrefixed("community_toolbox_entity_label");
-        public final String community_toolbox_entity_with_label_config = Utils.tsPrefixed("community_toolbox_entity_with_label_config");
-    }
 
     public static class EntityLabelsAggregatorSupplier implements TransformerSupplier<
             CommunityEntityKey, EntityLabelSlotWithStringValue,
             KeyValue<CommunityEntityKey, CommunityEntityLabelValue>> {
 
         private final String stateStoreName;
-        private final ConfluentAvroSerdes avroSerdes = new ConfluentAvroSerdes();
+        private final AvroSerdes avroSerdes;
 
-        EntityLabelsAggregatorSupplier(String stateStoreName) {
+        public EntityLabelsAggregatorSupplier(String stateStoreName, AvroSerdes avroSerdes) {
             this.stateStoreName = stateStoreName;
+            this.avroSerdes = avroSerdes;
         }
 
         @Override

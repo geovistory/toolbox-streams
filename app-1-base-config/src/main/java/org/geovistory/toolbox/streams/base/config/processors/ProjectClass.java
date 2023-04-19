@@ -3,46 +3,52 @@ package org.geovistory.toolbox.streams.base.config.processors;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.config.Env;
+import org.geovistory.toolbox.streams.base.config.AvroSerdes;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
-import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.Objects;
 
-
+@ApplicationScoped
 public class ProjectClass {
+    @Inject
+    AvroSerdes avroSerdes;
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectClass(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var RegisterInputTopic = new RegisterInputTopic(builder);
-
-        var registerInnerTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
         var projectProfileStream = registerInnerTopic.projectProfileStream();
-        var ontomeClassStream = RegisterInputTopic.ontomeClassStream();
+        var ontomeClassStream = registerInputTopic.ontomeClassStream();
 
-        return addProcessors(builder, projectProfileStream, ontomeClassStream).builder().build();
+        addProcessors(projectProfileStream, ontomeClassStream);
     }
 
-    public static ProjectClassReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectClassReturnValue addProcessors(
             KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream,
             KStream<OntomeClassKey, OntomeClassValue> ontomeClassStream
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
         /* STREAM PROCESSORS */
         // 2)
         var ontomeClassProjected = ontomeClassStream
@@ -143,20 +149,13 @@ public class ProjectClass {
                         Named.as("project_class_suppress_duplicates"));
 
         projectClassFlat
-                .to(output.TOPICS.project_class,
+                .to(outputTopicNames.projectClass(),
                         Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
-                                .withName(output.TOPICS.project_class + "-producer")
+                                .withName(outputTopicNames.projectClass() + "-producer")
                 );
 
-        return new ProjectClassReturnValue(builder, projectClassFlat);
+        return new ProjectClassReturnValue(projectClassFlat);
 
-    }
-
-
-    public enum input {
-        TOPICS;
-        public final String project_profile = ProjectProfiles.output.TOPICS.project_profile;
-        public final String ontome_class = Env.INSTANCE.TOPIC_ONTOME_CLASS;
     }
 
 
@@ -167,9 +166,6 @@ public class ProjectClass {
         public final String project_classes_flat = "project_classes_flat";
     }
 
-    public enum output {
-        TOPICS;
-        public final String project_class = Utils.tsPrefixed("project_class");
-    }
+
 
 }

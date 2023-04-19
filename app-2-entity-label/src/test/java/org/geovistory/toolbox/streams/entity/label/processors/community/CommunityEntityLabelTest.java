@@ -1,11 +1,13 @@
 package org.geovistory.toolbox.streams.entity.label.processors.community;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.community.CommunityToolboxEntityLabel;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,31 +36,35 @@ class CommunityEntityLabelTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
-
-        Topology topology = CommunityToolboxEntityLabel.buildStandalone(new StreamsBuilder());
-
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
+        var communityToolboxEntityLabel = new CommunityToolboxEntityLabel(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        communityToolboxEntityLabel.addProcessorsStandalone();
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         communityEntityLabelConfigTopic = testDriver.createInputTopic(
-                CommunityToolboxEntityLabel.input.TOPICS.community_entity_label_config,
+                inputTopicNames.getCommunityEntityLabelConfig(),
                 avroSerdes.CommunityEntityLabelConfigKey().serializer(),
                 avroSerdes.CommunityEntityLabelConfigValue().serializer());
 
         communityToolboxTopStatements = testDriver.createInputTopic(
-                CommunityToolboxEntityLabel.input.TOPICS.community_toolbox_top_statements,
+                outputTopicNames.communityToolboxTopStatements(),
                 avroSerdes.CommunityTopStatementsKey().serializer(),
                 avroSerdes.CommunityTopStatementsValue().serializer());
 
         communityToolboxEntityTopic = testDriver.createInputTopic(
-                CommunityToolboxEntityLabel.input.TOPICS.community_toolbox_entity,
+                outputTopicNames.communityToolboxEntity(),
                 avroSerdes.CommunityEntityKey().serializer(),
                 avroSerdes.CommunityEntityValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                CommunityToolboxEntityLabel.output.TOPICS.community_toolbox_entity_label,
+                outputTopicNames.communityToolboxEntityLabel(),
                 avroSerdes.CommunityEntityKey().deserializer(),
                 avroSerdes.CommunityEntityLabelValue().deserializer());
     }

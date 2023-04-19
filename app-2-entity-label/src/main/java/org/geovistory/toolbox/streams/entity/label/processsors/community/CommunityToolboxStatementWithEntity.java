@@ -1,53 +1,59 @@
 package org.geovistory.toolbox.streams.entity.label.processsors.community;
 
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.entity.label.processsors.project.ProjectStatementWithEntity;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 
+@ApplicationScoped
 public class CommunityToolboxStatementWithEntity {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public CommunityToolboxStatementWithEntity(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var innerTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                innerTopic.projectStatementWithEntityStream()
-        ).builder().build();
+
+        addProcessors(
+                registerInnerTopic.projectStatementWithEntityStream()
+        );
     }
 
-    public static CommunityToolboxStatementReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityToolboxStatementReturnValue addProcessors(
             KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityStream) {
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         var result = projectStatementWithEntityStream
-                .transform(new CommunityToolboxStatementCounterSupplier("community_toolbox_statement_with_entity_counter"));
-        result.to(output.TOPICS.community_toolbox_statement_with_entity,
+                .transform(new CommunityToolboxStatementCounterSupplier("community_toolbox_statement_with_entity_counter", avroSerdes));
+        result.to(outputTopicNames.communityToolboxStatementWithEntity(),
                 Produced.with(avroSerdes.CommunityStatementKey(), avroSerdes.CommunityStatementValue())
-                        .withName(output.TOPICS.community_toolbox_statement_with_entity + "-producer")
+                        .withName(outputTopicNames.communityToolboxStatementWithEntity() + "-producer")
         );
 
-        return new CommunityToolboxStatementReturnValue(builder, result);
+        return new CommunityToolboxStatementReturnValue(result);
 
-    }
-
-
-    public enum input {
-        TOPICS;
-        public final String project_statement_with_entity = ProjectStatementWithEntity.output.TOPICS.project_statement_with_entity;
     }
 
 
@@ -55,8 +61,4 @@ public class CommunityToolboxStatementWithEntity {
         TOPICS
     }
 
-    public enum output {
-        TOPICS;
-        public final String community_toolbox_statement_with_entity = Utils.tsPrefixed("community_toolbox_statement_with_entity");
-    }
 }

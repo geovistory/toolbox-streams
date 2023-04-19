@@ -1,41 +1,52 @@
 package org.geovistory.toolbox.streams.entity.label.processsors.community;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.label.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
+import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
 
+@ApplicationScoped
 public class CommunityToolboxTopIncomingStatements {
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+    @Inject
+    RegisterInnerTopic registerInnerTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public CommunityToolboxTopIncomingStatements(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.registerInnerTopic = registerInnerTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-        var registerOutputTopic = new RegisterInnerTopic(builder);
+    public void addProcessorsStandalone() {
 
-        return addProcessors(
-                builder,
-                registerOutputTopic.communityToolboxStatementWithEntityTable(),
-                registerOutputTopic.communityToolboxEntityLabelTable()
-        ).builder().build();
+
+        addProcessors(
+                registerInnerTopic.communityToolboxStatementWithEntityTable(),
+                registerInnerTopic.communityToolboxEntityLabelTable()
+        );
     }
 
-    public static CommunityTopStatementsReturnValue addProcessors(
-            StreamsBuilder builder,
+    public CommunityTopStatementsReturnValue addProcessors(
             KTable<CommunityStatementKey, CommunityStatementValue> communityToolboxStatementWithEntityTable,
             KTable<CommunityEntityKey, CommunityEntityLabelValue> communityToolboxEntityLabelTable) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2)
@@ -107,22 +118,14 @@ public class CommunityToolboxTopIncomingStatements {
 
         /* SINK PROCESSORS */
 
-        aggregatedStream.to(output.TOPICS.community_toolbox_top_incoming_statements,
+        aggregatedStream.to(outputTopicNames.communityToolboxTopIncomingStatements(),
                 Produced.with(avroSerdes.CommunityTopStatementsKey(), avroSerdes.CommunityTopStatementsValue())
-                        .withName(output.TOPICS.community_toolbox_top_incoming_statements + "-producer")
+                        .withName(outputTopicNames.communityToolboxTopIncomingStatements() + "-producer")
         );
 
-        return new CommunityTopStatementsReturnValue(builder, aggregatedTable, aggregatedStream);
+        return new CommunityTopStatementsReturnValue(aggregatedTable, aggregatedStream);
 
     }
-
-
-    public enum input {
-        TOPICS;
-        public final String community_toolbox_statement_with_entity = CommunityToolboxStatementWithEntity.output.TOPICS.community_toolbox_statement_with_entity;
-        public final String community_toolbox_entity_label = CommunityToolboxEntityLabel.output.TOPICS.community_toolbox_entity_label;
-    }
-
 
     public enum inner {
         TOPICS;
@@ -130,11 +133,6 @@ public class CommunityToolboxTopIncomingStatements {
         public final String community_toolbox_top_incoming_statements_aggregate = "community_toolbox_top_incoming_statements_aggregate";
         public final String community_toolbox_top_incoming_statements_join_subject_entity_label = "community_toolbox_top_incoming_statements_join_subject_entity_label";
 
-    }
-
-    public enum output {
-        TOPICS;
-        public final String community_toolbox_top_incoming_statements = Utils.tsPrefixed("community_toolbox_top_incoming_statements");
     }
 
 }

@@ -6,11 +6,13 @@ import org.geovistory.toolbox.streams.avro.CommunityStatementKey;
 import org.geovistory.toolbox.streams.avro.CommunityStatementValue;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.entity.label.AvroSerdes;
 
 public class CommunityToolboxStatementCounterSupplier extends CommunityStatementCounterSupplier {
-    public CommunityToolboxStatementCounterSupplier(String stateStoreName) {
-        super(stateStoreName);
+    public CommunityToolboxStatementCounterSupplier(String stateStoreName, AvroSerdes avroSerdes) {
+        super(stateStoreName, avroSerdes);
     }
+
     @Override
     public Transformer<ProjectStatementKey, ProjectStatementValue, KeyValue<CommunityStatementKey, CommunityStatementValue>> get() {
         return new CommunityToolboxStatementCounter(stateStoreName);

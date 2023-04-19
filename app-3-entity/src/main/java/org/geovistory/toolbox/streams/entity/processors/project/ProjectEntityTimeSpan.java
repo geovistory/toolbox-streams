@@ -1,42 +1,47 @@
 package org.geovistory.toolbox.streams.entity.processors.project;
 
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
 import org.geovistory.toolbox.streams.entity.lib.TimeSpanFactory;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
-import org.geovistory.toolbox.streams.lib.Utils;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 
+@ApplicationScoped
 public class ProjectEntityTimeSpan {
 
-    public static void main(String[] args) {
-        System.out.println(buildStandalone(new StreamsBuilder()).describe());
+    @Inject
+    AvroSerdes avroSerdes;
+
+    @Inject
+    RegisterInputTopic registerInputTopic;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+
+    public ProjectEntityTimeSpan(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+        this.avroSerdes = avroSerdes;
+        this.registerInputTopic = registerInputTopic;
+        this.outputTopicNames = outputTopicNames;
     }
 
-    public static Topology buildStandalone(StreamsBuilder builder) {
-
-        var innerTopic = new RegisterInputTopic(builder);
-
-        var projectEntityTopStatementsValueStream = innerTopic.projectTopOutgoingStatementsStream();
-
-        return addProcessors(builder, projectEntityTopStatementsValueStream).builder().build();
+    public void addProcessorsStandalone() {
+        addProcessors(
+                registerInputTopic.projectTopOutgoingStatementsStream()
+        );
     }
 
-    public static ProjectEntityTimeSpanReturnValue addProcessors(
-            StreamsBuilder builder,
+    public ProjectEntityTimeSpanReturnValue addProcessors(
             KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> projectOutgoingTopStatements
     ) {
-
-        var avroSerdes = new ConfluentAvroSerdes();
-
 
         /* STREAM PROCESSORS */
         // 2)
@@ -97,12 +102,12 @@ public class ProjectEntityTimeSpan {
 
 
         /* SINK PROCESSORS */
-        timeSpanStream.to(output.TOPICS.project_entity_time_span,
+        timeSpanStream.to(outputTopicNames.projectEntityTimeSpan(),
                 Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.TimeSpanValue())
-                        .withName(output.TOPICS.project_entity_time_span + "-producer")
+                        .withName(outputTopicNames.projectEntityTimeSpan() + "-producer")
         );
 
-        return new ProjectEntityTimeSpanReturnValue(builder, timeSpanStream);
+        return new ProjectEntityTimeSpanReturnValue(timeSpanStream);
 
     }
 
@@ -117,20 +122,11 @@ public class ProjectEntityTimeSpan {
     }
 
 
-
-
-
     public enum inner {
         project_top_time_primitives_grouped,
         project_top_time_primitives_aggregated
 
     }
 
-
-    public enum output {
-        TOPICS;
-        public final String project_entity_time_span = Utils.tsPrefixed("project_entity_time_span");
-
-    }
 
 }

@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "IntegerList",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Array of integers",
+  "fields": [
+    {
+      "name": "list",
+      "type": {
+        "type": "array",
+        "items" : "int"
+      },
+      "default": []
+    }
+  ]
+}

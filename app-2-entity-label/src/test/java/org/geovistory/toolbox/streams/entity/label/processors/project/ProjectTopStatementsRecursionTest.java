@@ -2,14 +2,13 @@ package org.geovistory.toolbox.streams.entity.label.processors.project;
 
 
 import com.github.underscore.U;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.label.Env;
-import org.geovistory.toolbox.streams.entity.label.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.entity.label.RegisterInputTopics;
+import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.entity.label.processsors.project.*;
-import org.geovistory.toolbox.streams.lib.AppConfig;
-import org.geovistory.toolbox.streams.lib.ConfluentAvroSerdes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,91 +55,95 @@ class ProjectTopStatementsRecursionTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
+        var builderSingleton = new BuilderSingleton();
+        var avroSerdes = new AvroSerdes();
+        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var inputTopicNames = new InputTopicNames();
+        var outputTopicNames = new OutputTopicNames();
+        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
 
-        StreamsBuilder builder = new StreamsBuilder();
-        var registerInputTopics = new RegisterInputTopics(builder);
-        var registerInnerTopic = new RegisterInnerTopic(builder);
 
-        var proInfoProjRelTable = registerInputTopics.proInfoProjRelTable();
+        var proInfoProjRelTable = registerInputTopic.proInfoProjRelTable();
         var projectEntityLabelTable = registerInnerTopic.projectEntityLabelTable();
-        var statementWithLiteralTable = registerInputTopics.statementWithLiteralTable();
-        var statementWithEntityTable = registerInputTopics.statementWithEntityTable();
+        var statementWithLiteralTable = registerInputTopic.statementWithLiteralTable();
+        var statementWithEntityTable = registerInputTopic.statementWithEntityTable();
         var projectStatementWithEntityTable = registerInnerTopic.projectStatementWithEntityTable();
         var projectEntityTable = registerInnerTopic.projectEntityTable();
-        var projectEntityLabelConfigTable = registerInputTopics.projectEntityLabelConfigTable();
+        var projectEntityLabelConfigTable = registerInputTopic.projectEntityLabelConfigTable();
 
         // add sub-topology ProjectStatement
-        ProjectStatementWithEntity.addProcessors(builder,
+        var projectStatementWithEntity = new ProjectStatementWithEntity(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        projectStatementWithEntity.addProcessors(
                 statementWithEntityTable,
                 proInfoProjRelTable
         );
         // add sub-topology ProjectStatement
-        var projectStatementWithLiteral = ProjectStatementWithLiteral.addProcessors(builder,
+        var projectStatementWithLiteral = new ProjectStatementWithLiteral(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        var projectStatementWithLiteralReturn = projectStatementWithLiteral.addProcessors(
                 statementWithLiteralTable,
                 proInfoProjRelTable
         );
         // add sub-topology ProjectTopIncomingStatements
-        var projectTopIncomingStatements = ProjectTopIncomingStatements.addProcessors(builder,
+        var projectTopIncomingStatements = new ProjectTopIncomingStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        var projectTopIncomingStatementsReturn = projectTopIncomingStatements.addProcessors(
                 projectStatementWithEntityTable,
                 projectEntityLabelTable
         );
 
         // add sub-topology ProjectTopOutgoingStatements
-        var projectTopOutgoingStatements = ProjectTopOutgoingStatements.addProcessors(builder,
-                projectStatementWithLiteral.ProjectStatementStream(),
+        var projectTopOutgoingStatements = new ProjectTopOutgoingStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        var projectTopOutgoingStatementsReturn = projectTopOutgoingStatements.addProcessors(
+                projectStatementWithLiteralReturn.ProjectStatementStream(),
                 projectStatementWithEntityTable,
                 projectEntityLabelTable
         );
 
         // add sub-topology ProjectTopStatements
-        var projectTopStatements = ProjectTopStatements.addProcessors(builder,
-                projectTopOutgoingStatements.projectTopStatementStream(),
-                projectTopIncomingStatements.projectTopStatementStream()
+        var projectTopStatements = new ProjectTopStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        var projectTopStatementsReturn = projectTopStatements.addProcessors(
+                projectTopOutgoingStatementsReturn.projectTopStatementStream(),
+                projectTopIncomingStatementsReturn.projectTopStatementStream()
         );
 
         // Add processors for ProjectEntityLabel
-        ProjectEntityLabel.addProcessors(builder,
+        var projectEntityLabel = new ProjectEntityLabel(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        projectEntityLabel.addProcessors(
                 projectEntityTable,
                 projectEntityLabelConfigTable,
-                projectTopStatements.projectTopStatementTable()
+                projectTopStatementsReturn.projectTopStatementTable()
         );
-
-
-        Topology topology = builder.build();
-
+        var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
-        var avroSerdes = new ConfluentAvroSerdes();
-
         projectEntityLabelConfigTopic = testDriver.createInputTopic(
-                ProjectEntityLabel.input.TOPICS.project_entity_label_config,
+                inputTopicNames.getProjectEntityLabelConfig(),
                 avroSerdes.ProjectClassKey().serializer(),
                 avroSerdes.ProjectEntityLabelConfigValue().serializer());
 
         statementWitEntityTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_STATEMENT_WITH_ENTITY,
+                inputTopicNames.getStatementWithEntity(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer());
 
         statementWithLiteralTopic = testDriver.createInputTopic(
-                Env.INSTANCE.TOPIC_STATEMENT_WITH_LITERAL,
+                inputTopicNames.getStatementWithLiteral(),
                 avroSerdes.InfStatementKey().serializer(),
                 avroSerdes.StatementEnrichedValue().serializer());
 
         proInfoProjRelTopic = testDriver.createInputTopic(
-                ProjectStatementWithEntity.input.TOPICS.pro_info_proj_rel,
+                inputTopicNames.proInfoProjRel(),
                 avroSerdes.ProInfoProjRelKey().serializer(),
                 avroSerdes.ProInfoProjRelValue().serializer());
 
 
         projectEntityTopic = testDriver.createInputTopic(
-                ProjectEntityLabel.input.TOPICS.project_entity,
+                outputTopicNames.projectEntity(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ProjectTopStatements.output.TOPICS.project_top_statements,
+                outputTopicNames.projectTopStatements(),
                 avroSerdes.ProjectTopStatementsKey().deserializer(),
                 avroSerdes.ProjectTopStatementsValue().deserializer());
     }
