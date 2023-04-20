@@ -259,5 +259,135 @@ class CommunityEntityLabelTest {
 
     }
 
+    /**
+     * Test removing an entity label slot
+     */
+    @Test
+    void testRemovingEntityLabelSlot() {
+
+        var entityId = "i1";
+        var classId = 3;
+
+        var propIdFirstPart = 5;
+        var propIdSecondPart = 4;
+
+        var expected = "S1";
+
+        // add an entity
+        var kE = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
+        var vE = CommunityEntityValue.newBuilder().setEntityId(entityId).setClassId(3).setProjectCount(1).build();
+        communityToolboxEntityTopic.pipeInput(kE, vE);
+        /*
+         * The entity label configuration is:
+         * - First Part: property_it = 5, is_outgoing = false, number_of_statements = 1
+         * - Second Part: property_it = 4, is_outgoing = true, number_of_statements = 2
+         */
+        var kC = CommunityEntityLabelConfigKey.newBuilder().setClassId(classId).build();
+        var vC = CommunityEntityLabelConfigValue.newBuilder().setClassId(classId)
+                .setConfig(EntityLabelConfig.newBuilder().setLabelParts(List.of(
+                        // second part
+                        EntityLabelConfigPart.newBuilder().setOrdNum(2).setField(EntityLabelConfigPartField.newBuilder()
+                                .setFkProperty(propIdSecondPart)
+                                .setIsOutgoing(true)
+                                .setNrOfStatementsInLabel(2).build()).build(),
+                        // first part
+                        EntityLabelConfigPart.newBuilder().setOrdNum(1).setField(EntityLabelConfigPartField.newBuilder()
+                                .setFkProperty(propIdFirstPart)
+                                .setIsOutgoing(false)
+                                .setNrOfStatementsInLabel(1).build()).build()
+                )).build()).build();
+
+        communityEntityLabelConfigTopic.pipeInput(kC, vC);
+        /*
+         * Statements for the first part:
+         * - subject_id = i1, property_id = 5, object_id = i1, ord_num_for_domain = 1, subject_label = S1
+         * - subject_id = i1, property_id = 5, object_id = i1, ord_num_for_domain = 2, subject_label = NOISE
+         */
+        var kS = CommunityTopStatementsKey.newBuilder()
+                .setEntityId(entityId)
+                .setPropertyId(propIdFirstPart).setIsOutgoing(false).build();
+        var vS = CommunityTopStatementsValue.newBuilder()
+                .setEntityId(entityId)
+                .setPropertyId(propIdFirstPart).setIsOutgoing(false)
+                .setStatements(List.of(
+                        CommunityStatementValue.newBuilder().setStatementId(1)
+                                .setAvgOrdNumOfDomain(1f)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdFirstPart)
+                                        .setSubjectLabel("S1").build()).build(),
+                        CommunityStatementValue.newBuilder().setStatementId(1)
+                                .setAvgOrdNumOfDomain(2f)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdFirstPart)
+                                        .setSubjectLabel("NOISE").build()).build()
+                )).build();
+        communityToolboxTopStatements.pipeInput(kS, vS);
+
+        /*
+         * Statements for the Second part:
+         * - subject_id = i1, property_id = 4, object_id = i1, ord_num_for_range = 1, object_label = S2
+         * - subject_id = i1, property_id = 4, object_id = i1, ord_num_for_range = 2, object_label = S3
+         * - subject_id = i1, property_id = 4, object_id = i1, ord_num_for_range = 3, object_label = NOISE
+         */
+        kS = CommunityTopStatementsKey.newBuilder()
+                .setEntityId(entityId)
+                .setPropertyId(propIdSecondPart).setIsOutgoing(true).build();
+        vS = CommunityTopStatementsValue.newBuilder()
+                .setEntityId(entityId)
+                .setPropertyId(propIdSecondPart).setIsOutgoing(true)
+                .setStatements(List.of(
+                        CommunityStatementValue.newBuilder().setStatementId(1)
+                                .setAvgOrdNumOfRange(1f)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdSecondPart)
+                                        .setObjectLabel("S2").build()).build(),
+                        CommunityStatementValue.newBuilder().setStatementId(1)
+                                .setAvgOrdNumOfRange(2f)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdSecondPart)
+                                        .setObjectLabel("S3").build()).build(),
+                        CommunityStatementValue.newBuilder().setStatementId(1)
+                                .setAvgOrdNumOfRange(3f)
+                                .setStatement(StatementEnrichedValue.newBuilder()
+                                        .setSubjectId(entityId)
+                                        .setObjectId(entityId)
+                                        .setPropertyId(propIdSecondPart)
+                                        .setObjectLabel("NOISE").build()).build()
+                )).build();
+        communityToolboxTopStatements.pipeInput(kS, vS);
+
+        /*
+         * Remove second part from configuration
+         */
+        vC = CommunityEntityLabelConfigValue.newBuilder().setClassId(classId)
+                .setConfig(EntityLabelConfig.newBuilder().setLabelParts(List.of(
+                        // first part
+                        EntityLabelConfigPart.newBuilder().setOrdNum(1).setField(EntityLabelConfigPartField.newBuilder()
+                                .setFkProperty(propIdFirstPart)
+                                .setIsOutgoing(false)
+                                .setNrOfStatementsInLabel(1).build()).build()
+                )).build()).build();
+
+        communityEntityLabelConfigTopic.pipeInput(kC, vC);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = CommunityEntityKey.newBuilder()
+                .setEntityId(entityId)
+
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getLabel()).isEqualTo(expected);
+
+    }
 
 }

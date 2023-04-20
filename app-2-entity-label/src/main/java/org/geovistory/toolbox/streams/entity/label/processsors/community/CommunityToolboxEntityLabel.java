@@ -81,7 +81,30 @@ public class CommunityToolboxEntityLabel {
                 .toStream(
                         Named.as(inner.TOPICS.community_toolbox_entity_with_label_config + "-to-stream")
                 );
-        var communityEntityLabelSlots = communityEntityWithConfigStream
+        var communityEntityWithConfigReduced = communityEntityWithConfigStream.groupByKey().reduce((aggValue, newValue) -> {
+                    var o = getLabelParts(aggValue);
+                    var n = getLabelParts(newValue);
+                    var diff = o.size() - n.size();
+                    if (diff > 0) {
+                        o.sort(Comparator.comparingInt(EntityLabelConfigPart::getOrdNum));
+                        for (int i = diff; i < o.size(); i++) {
+                            var deletedPart = o.get(i);
+                            deletedPart.setDeleted(true);
+                            n.add(deletedPart);
+                        }
+                    }
+                    return newValue;
+                },
+                Named.as(inner.TOPICS.community_toolbox_entity_with_label_config + "-reducer"),
+                Materialized.<CommunityEntityKey, CommunityEntityWithConfigValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.community_toolbox_entity_with_label_config + "-reduced")
+                        .withKeySerde(avroSerdes.CommunityEntityKey())
+                        .withValueSerde(avroSerdes.CommunityEntityWithConfigValue()
+                        )
+        );
+        var communityEntityLabelSlots = communityEntityWithConfigReduced
+                .toStream(
+                        Named.as(inner.TOPICS.community_toolbox_entity_with_label_config + "reduced-to-stream")
+                )
                 .flatMap(
                         (key, value) -> {
                             List<KeyValue<CommunityEntityLabelPartKey, CommunityEntityLabelPartValue>> result = new LinkedList<>();
@@ -105,10 +128,12 @@ public class CommunityToolboxEntityLabel {
                                 CommunityEntityLabelPartValue v = null;
                                 // else assign the value
                                 if (labelParts.size() > i && labelParts.get(i) != null && labelParts.get(i).getField() != null) {
+                                    var part = labelParts.get(i);
                                     v = CommunityEntityLabelPartValue.newBuilder()
                                             .setEntityId(key.getEntityId())
                                             .setOrdNum(i)
-                                            .setConfiguration(labelParts.get(i).getField())
+                                            .setConfiguration(part.getField())
+                                            .setDeleted$1(part.getDeleted())
                                             .build();
                                 }
                                 result.add(KeyValue.pair(k, v));
@@ -144,7 +169,7 @@ public class CommunityToolboxEntityLabel {
                     if (topStatements.getStatements() == null) return result;
                     if (topStatements.getStatements().size() == 0) return result;
 
-                    result.setDeleted$1(false);
+                    result.setDeleted$1(entityLabelSlot.getDeleted$1());
 
                     // get the list of relevant statements
                     var relevantStmts = topStatements.getStatements();
@@ -212,6 +237,13 @@ public class CommunityToolboxEntityLabel {
 
         return new CommunityEntityLabelReturnValue(aggregatedStream);
 
+    }
+
+    private List<EntityLabelConfigPart> getLabelParts(CommunityEntityWithConfigValue in) {
+        if (in.getLabelConfig() == null) return List.of();
+        if (in.getLabelConfig().getConfig() == null) return List.of();
+        if (in.getLabelConfig().getConfig().getLabelParts() == null) return List.of();
+        return in.getLabelConfig().getConfig().getLabelParts();
     }
 
 

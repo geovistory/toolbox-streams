@@ -84,7 +84,30 @@ public class ProjectEntityLabel {
                 .toStream(
                         Named.as(inner.TOPICS.project_entity_with_label_config + "-to-stream")
                 );
-        var projectEntityLabelSlots = projectEntityWithConfigStream
+        var projectEntityWithConfigReduced = projectEntityWithConfigStream.groupByKey().reduce((aggValue, newValue) -> {
+                    var o = getLabelParts(aggValue);
+                    var n = getLabelParts(newValue);
+                    var diff = o.size() - n.size();
+                    if (diff > 0) {
+                        o.sort(Comparator.comparingInt(EntityLabelConfigPart::getOrdNum));
+                        for (int i = diff; i < o.size(); i++) {
+                            var deletedPart = o.get(i);
+                            deletedPart.setDeleted(true);
+                            n.add(deletedPart);
+                        }
+                    }
+                    return newValue;
+                },
+                Named.as(inner.TOPICS.project_entity_with_label_config + "-reducer"),
+                Materialized.<ProjectEntityKey, ProjectEntityWithConfigValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_label_config + "-reduced")
+                        .withKeySerde(avroSerdes.ProjectEntityKey())
+                        .withValueSerde(avroSerdes.ProjectEntityWithConfigValue()
+                        )
+        );
+        var projectEntityLabelSlots = projectEntityWithConfigReduced
+                .toStream(
+                        Named.as(inner.TOPICS.project_entity_with_label_config + "reduced-to-stream")
+                )
                 .flatMap(
                         (key, value) -> {
                             List<KeyValue<ProjectEntityLabelPartKey, ProjectEntityLabelPartValue>> result = new LinkedList<>();
@@ -109,11 +132,13 @@ public class ProjectEntityLabel {
                                 ProjectEntityLabelPartValue v = null;
                                 // else assign the value
                                 if (labelParts.size() > i && labelParts.get(i) != null && labelParts.get(i).getField() != null) {
+                                    var part = labelParts.get(i);
                                     v = ProjectEntityLabelPartValue.newBuilder()
                                             .setEntityId(key.getEntityId())
                                             .setProjectId(key.getProjectId())
                                             .setOrdNum(i)
-                                            .setConfiguration(labelParts.get(i).getField())
+                                            .setConfiguration(part.getField())
+                                            .setDeleted$1(part.getDeleted())
                                             .build();
                                 }
                                 result.add(KeyValue.pair(k, v));
@@ -149,8 +174,7 @@ public class ProjectEntityLabel {
                     if (topStatements == null) return result;
                     if (topStatements.getStatements() == null) return result;
                     if (topStatements.getStatements().size() == 0) return result;
-
-                    result.setDeleted$1(false);
+                    result.setDeleted$1(entityLabelSlot.getDeleted$1());
 
                     // get the list of relevant statements
                     var relevantStmts = topStatements.getStatements();
@@ -221,6 +245,13 @@ public class ProjectEntityLabel {
 
     }
 
+
+    private List<EntityLabelConfigPart> getLabelParts(ProjectEntityWithConfigValue in) {
+        if (in.getLabelConfig() == null) return List.of();
+        if (in.getLabelConfig().getConfig() == null) return List.of();
+        if (in.getLabelConfig().getConfig().getLabelParts() == null) return List.of();
+        return in.getLabelConfig().getConfig().getLabelParts();
+    }
 
     public enum inner {
         TOPICS;
