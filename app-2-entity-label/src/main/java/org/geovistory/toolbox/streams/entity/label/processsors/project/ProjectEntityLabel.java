@@ -104,50 +104,50 @@ public class ProjectEntityLabel {
                         .withValueSerde(avroSerdes.ProjectEntityWithConfigValue()
                         )
         );
-        var projectEntityLabelSlots = projectEntityWithConfigReduced
+        var projectEntityWithConfigReducedStream = projectEntityWithConfigReduced
                 .toStream(
                         Named.as(inner.TOPICS.project_entity_with_label_config + "reduced-to-stream")
-                )
-                .flatMap(
-                        (key, value) -> {
-                            List<KeyValue<ProjectEntityLabelPartKey, ProjectEntityLabelPartValue>> result = new LinkedList<>();
-
-                            if (value.getLabelConfig() == null) return result;
-                            if (value.getLabelConfig().getConfig() == null) return result;
-                            if (value.getLabelConfig().getConfig().getLabelParts() == null) return result;
-
-                            var labelParts = value.getLabelConfig().getConfig().getLabelParts();
-                            // sort parts according to ord num
-                            labelParts.sort(Comparator.comparingInt(EntityLabelConfigPart::getOrdNum));
-
-                            // create  slots, be they configured or not
-                            for (int i = 0; i < NUMBER_OF_SLOTS; i++) {
-                                var k = ProjectEntityLabelPartKey.newBuilder()
-                                        .setEntityId(key.getEntityId())
-                                        .setProjectId(key.getProjectId())
-                                        .setOrdNum(i)
-                                        .build();
-
-                                // if no config for slot, then v = null
-                                ProjectEntityLabelPartValue v = null;
-                                // else assign the value
-                                if (labelParts.size() > i && labelParts.get(i) != null && labelParts.get(i).getField() != null) {
-                                    var part = labelParts.get(i);
-                                    v = ProjectEntityLabelPartValue.newBuilder()
-                                            .setEntityId(key.getEntityId())
-                                            .setProjectId(key.getProjectId())
-                                            .setOrdNum(i)
-                                            .setConfiguration(part.getField())
-                                            .setDeleted$1(part.getDeleted())
-                                            .build();
-                                }
-                                result.add(KeyValue.pair(k, v));
-                            }
-
-                            return result;
-                        },
-                        Named.as("kstream-flatmap-project-entity-with-config-to-project-entity-label-slots")
                 );
+        var projectEntityLabelSlots = projectEntityWithConfigReducedStream.flatMap(
+                (key, value) -> {
+                    List<KeyValue<ProjectEntityLabelPartKey, ProjectEntityLabelPartValue>> result = new LinkedList<>();
+
+                    if (value.getLabelConfig() == null) return result;
+                    if (value.getLabelConfig().getConfig() == null) return result;
+                    if (value.getLabelConfig().getConfig().getLabelParts() == null) return result;
+
+                    var labelParts = value.getLabelConfig().getConfig().getLabelParts();
+                    // sort parts according to ord num
+                    labelParts.sort(Comparator.comparingInt(EntityLabelConfigPart::getOrdNum));
+
+                    // create  slots, be they configured or not
+                    for (int i = 0; i < NUMBER_OF_SLOTS; i++) {
+                        var k = ProjectEntityLabelPartKey.newBuilder()
+                                .setEntityId(key.getEntityId())
+                                .setProjectId(key.getProjectId())
+                                .setOrdNum(i)
+                                .build();
+
+                        // if no config for slot, then v = null
+                        ProjectEntityLabelPartValue v = null;
+                        // else assign the value
+                        if (labelParts.size() > i && labelParts.get(i) != null && labelParts.get(i).getField() != null) {
+                            var part = labelParts.get(i);
+                            v = ProjectEntityLabelPartValue.newBuilder()
+                                    .setEntityId(key.getEntityId())
+                                    .setProjectId(key.getProjectId())
+                                    .setOrdNum(i)
+                                    .setConfiguration(part.getField())
+                                    .setDeleted$1(part.getDeleted())
+                                    .build();
+                        }
+                        result.add(KeyValue.pair(k, v));
+                    }
+
+                    return result;
+                },
+                Named.as("kstream-flatmap-project-entity-with-config-to-project-entity-label-slots")
+        );
 
         // 4
         var projectEntityLabelSlotsTable = projectEntityLabelSlots.toTable(
@@ -234,7 +234,7 @@ public class ProjectEntityLabel {
                         .withName(outputTopicNames.projectEntityLabel() + "-producer")
         );
 
-        projectEntityWithConfigStream
+        projectEntityWithConfigReducedStream
                 .mapValues((readOnlyKey, value) -> value.getLabelConfig())
                 .to(outputTopicNames.projectEntityWithLabelConfig(),
                         Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelConfigValue())
