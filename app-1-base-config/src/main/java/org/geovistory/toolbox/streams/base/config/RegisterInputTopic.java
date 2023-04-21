@@ -62,8 +62,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KTable<dev.system.config.Key, dev.system.config.Value> sysConfigTable() {
-        return getRepartitionedTable(
+    public KStream<dev.system.config.Key, dev.system.config.Value> sysConfigStream() {
+        return getRepartitionedStream(
                 builderSingleton.builder,
                 inputTopicNames.sysConfig(),
                 avroSerdes.SysConfigKey(),
@@ -94,12 +94,6 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
                 avroSerdes.OntomePropertyKey(), avroSerdes.OntomePropertyValue());
     }
 
-    public KTable<OntomePropertyKey, OntomePropertyValue> ontomePropertyTable() {
-        return getTable(
-                builderSingleton.builder,
-                inputTopicNames.ontomeProperty(),
-                avroSerdes.OntomePropertyKey(), avroSerdes.OntomePropertyValue());
-    }
 
     public KStream<OntomeClassLabelKey, OntomeClassLabelValue> ontomeClassLabelStream() {
         return getStream(
@@ -117,13 +111,6 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
 
     public KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelStream() {
         return getStream(
-                builderSingleton.builder,
-                inputTopicNames.ontomePropertyLabel(),
-                avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue());
-    }
-
-    public KTable<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelTable() {
-        return getTable(
                 builderSingleton.builder,
                 inputTopicNames.ontomePropertyLabel(),
                 avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue());
