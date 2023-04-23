@@ -1,20 +1,25 @@
 package org.geovistory.toolbox.streams.entity.preview.processors.community;
 
-import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Named;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.processor.api.Processor;
+import org.apache.kafka.streams.processor.api.ProcessorContext;
+import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.apache.kafka.streams.state.StoreBuilder;
+import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.preview.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.Klass;
 import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
-import org.geovistory.toolbox.streams.entity.preview.RegisterInputTopic;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.geovistory.toolbox.streams.lib.JoinHelper.addStateStore;
+import static org.geovistory.toolbox.streams.lib.JoinHelper.registerSourceTopics;
 
 
 @ApplicationScoped
@@ -25,188 +30,313 @@ public class CommunityEntityPreview {
     AvroSerdes avroSerdes;
 
     @Inject
-    RegisterInputTopic registerInputTopic;
+    InputTopicNames inputTopicNames;
 
 
     @Inject
     OutputTopicNames outputTopicNames;
 
-    @ConfigProperty(name = "ts.community.slug", defaultValue = "")
-    private String communitySlug;
 
-
-    public CommunityEntityPreview(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+    public CommunityEntityPreview(AvroSerdes avroSerdes, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
         this.avroSerdes = avroSerdes;
-        this.registerInputTopic = registerInputTopic;
+        this.inputTopicNames = inputTopicNames;
         this.outputTopicNames = outputTopicNames;
     }
 
-    public void addProcessorsStandalone() {
-
-        addProcessors(
-                registerInputTopic.communityEntityTable(),
-                registerInputTopic.communityEntityLabelTable(),
-                registerInputTopic.communityEntityClassLabelTable(),
-                registerInputTopic.communityEntityTypeTable(),
-                registerInputTopic.communityEntityTimeSpanTable(),
-                registerInputTopic.communityEntityFulltextTable(),
-                registerInputTopic.communityEntityClassMetadataTable()
-        );
-
-    }
-
-    public CommunityEntityPreviewReturnValue addProcessors(
-            KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable,
-            KTable<CommunityEntityKey, CommunityEntityLabelValue> communityEntityLabelTable,
-            KTable<CommunityEntityKey, CommunityEntityClassLabelValue> communityEntityClassLabelTable,
-            KTable<CommunityEntityKey, CommunityEntityTypeValue> communityEntityTypeTable,
-            KTable<CommunityEntityKey, TimeSpanValue> communityEntityTimeSpanTable,
-            KTable<CommunityEntityKey, CommunityEntityFulltextValue> communityEntityFulltextTable,
-            KTable<CommunityEntityKey, CommunityEntityClassMetadataValue> communityEntityClassMetadataTable
+    public void addProcessors(
+            Topology topology
     ) {
 
-        String communityEntityPreviewLabelJoin = "community_" + communitySlug + "_entity_preview_label_join";
-        String communityEntityPreviewClassLabelJoin = "community_" + communitySlug + "_entity_preview_class_label_join";
-        String communityEntityPreviewTypeJoin = "community_" + communitySlug + "_entity_preview_type_join";
-        String communityEntityPreviewTimeSpanJoin = "community_" + communitySlug + "_entity_preview_time_span_join";
-        String communityEntityPreviewFulltextJoin = "community_" + communitySlug + "_entity_preview_fulltext_join";
-        String communityEntityClassMetadataJoin = "community_" + communitySlug + "_entity_class_metadata_join";
-        /* STREAM PROCESSORS */
-        // 2)
+        var joinProcessorName = "create-community-entity-preview";
 
-        var labelJoined = communityEntityTable.leftJoin(
-                communityEntityLabelTable,
-                (value1, value2) -> {
-                    if (value1.getProjectCount() == 0) return null;
-                    var newVal = EntityPreviewValue.newBuilder()
-                            .setFkProject(null)
-                            .setProject(0)
-                            .setEntityId(value1.getEntityId())
-                            .setPkEntity(parseStringId(value1.getEntityId()))
-                            .setFkClass(value1.getClassId())
-                            .setParentClasses("[]")
-                            .setAncestorClasses("[]")
-                            .setEntityType("")
-                            .build();
-
-                    if (value2 != null) newVal.setEntityLabel(value2.getLabel());
-
-                    return newVal;
-                },
-                Named.as(communityEntityPreviewLabelJoin + "-left-join"),
-                Materialized.<CommunityEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(communityEntityPreviewLabelJoin)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getCommunityEntity(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityValue()
         );
 
-        // 3
-        var classLabelJoin = labelJoined.leftJoin(
-                communityEntityClassLabelTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        value1.setClassLabel(value2.getClassLabel());
-                    }
-                    return value1;
-                },
-                Named.as(communityEntityPreviewClassLabelJoin + "-left-join"),
-                Materialized.<CommunityEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(communityEntityPreviewClassLabelJoin)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
-        );
-        // 4
-        var typeJoined = classLabelJoin.leftJoin(
-                communityEntityTypeTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        var typeId = value2.getTypeId();
-                        if (typeId != null && typeId.length() > 1) {
-                            value1.setTypeId(typeId);
-                            value1.setFkType(parseStringId(typeId));
-                        }
-                        value1.setTypeLabel(value2.getTypeLabel());
-                    }
-                    return value1;
-                },
-                Named.as(communityEntityPreviewTypeJoin + "-left-join"),
-                Materialized.<CommunityEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(communityEntityPreviewTypeJoin)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
-        );
-        // 5
-        var typeTimeSpan = typeJoined.leftJoin(
-                communityEntityTimeSpanTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        value1.setTimeSpan(value2.getTimeSpan().toString());
-                        value1.setFirstSecond(value2.getFirstSecond());
-                        value1.setLastSecond(value2.getLastSecond());
-                    }
-                    return value1;
-                },
-                Named.as(communityEntityPreviewTimeSpanJoin + "-left-join"),
-                Materialized.<CommunityEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(communityEntityPreviewTimeSpanJoin)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
-        );
-        // 6
-        var typeFulltext = typeTimeSpan.leftJoin(
-                communityEntityFulltextTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        value1.setFullText(value2.getFulltext());
-                    }
-                    return value1;
-                },
-                Named.as(communityEntityPreviewFulltextJoin + "-left-join"),
-                Materialized.<CommunityEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(communityEntityPreviewFulltextJoin)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getCommunityEntityLabel(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityLabelValue()
         );
 
-        // 7
-        var classMetadata = typeFulltext.leftJoin(
-                communityEntityClassMetadataTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        var parents = value2.getParentClasses();
-                        var ancestors = value2.getAncestorClasses();
-                        value1.setParentClasses(parents.toString());
-                        value1.setAncestorClasses(ancestors.toString());
-                        var isPersistentItem = parents.contains(Klass.PERSISTENT_ITEM.get()) ||
-                                ancestors.contains(Klass.PERSISTENT_ITEM.get());
-                        var entityType = isPersistentItem ? "peIt" : "teEn";
-                        value1.setEntityType(entityType);
-                    }
-                    return value1;
-                },
-                Named.as(communityEntityClassMetadataJoin + "-left-join"),
-                Materialized.<CommunityEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(communityEntityClassMetadataJoin)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getCommunityEntityType(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityTypeValue()
         );
 
-        var communityEntityPreviewStream = classMetadata.toStream(
-                Named.as(communityEntityClassMetadataJoin + "-to-stream")
+
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getCommunityEntityTimeSpan(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.TimeSpanValue()
         );
 
-        /* SINK PROCESSORS */
 
-        communityEntityPreviewStream
-                .to(outputTopicNames.communityEntityPreview(),
-                        Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.EntityPreviewValue())
-                                .withName(outputTopicNames.communityEntityPreview() + "-producer")
-                );
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getCommunityEntityFulltext(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityFulltextValue()
+        );
 
-        return new CommunityEntityPreviewReturnValue(communityEntityPreviewStream);
+
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getCommunityEntityClassLabel(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityClassLabelValue()
+        );
+
+
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getCommunityEntityClassMetadata(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityClassMetadataValue()
+        );
+
+
+        // create a state store builder
+        var stateStoreName = "joinedStore";
+        Map<String, String> changelogConfig = new HashMap<>();
+        StoreBuilder<KeyValueStore<CommunityEntityKey, EntityPreviewValue>> storeSupplier =
+                Stores.keyValueStoreBuilder(
+                                Stores.persistentKeyValueStore(stateStoreName),
+                                avroSerdes.CommunityEntityKey(),
+                                avroSerdes.EntityPreviewValue())
+                        .withLoggingEnabled(changelogConfig);
+
+
+        // add join processor
+        topology.addProcessor(joinProcessorName,
+                () -> new JoinProcessor(stateStoreName),
+                inputTopicNames.communityEntity + "-process",
+                inputTopicNames.getCommunityEntityLabel() + "-process",
+                inputTopicNames.getCommunityEntityType() + "-process",
+                inputTopicNames.getCommunityEntityTimeSpan() + "-process",
+                inputTopicNames.getCommunityEntityFulltext() + "-process",
+                inputTopicNames.getCommunityEntityClassLabel() + "-process",
+                inputTopicNames.getCommunityEntityClassMetadata() + "-process"
+        );
+
+        topology.addStateStore(storeSupplier, joinProcessorName);
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getCommunityEntity(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityValue(),
+                joinProcessorName
+        );
+
+        addStateStore(
+                topology,
+                inputTopicNames.getCommunityEntityLabel(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityLabelValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getCommunityEntityType(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityTypeValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getCommunityEntityTimeSpan(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.TimeSpanValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getCommunityEntityFulltext(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityFulltextValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getCommunityEntityClassLabel(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityClassLabelValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getCommunityEntityClassMetadata(),
+                avroSerdes.CommunityEntityKey(),
+                avroSerdes.CommunityEntityClassMetadataValue(),
+                joinProcessorName
+        );
+
+        // add sink processor
+        topology.addSink(
+                outputTopicNames.communityEntityPreview() + "-sink",
+                outputTopicNames.communityEntityPreview(),
+                avroSerdes.CommunityEntityKey().serializer(),
+                avroSerdes.EntityPreviewValue().serializer(),
+                joinProcessorName
+        );
+
 
     }
 
-    private static int parseStringId(String value1) {
-        try {
-            return Integer.parseInt(value1.substring(1));
-        } catch (NumberFormatException | IndexOutOfBoundsException e) {
-            e.printStackTrace();
+    private class JoinProcessor implements Processor<CommunityEntityKey, Object, CommunityEntityKey, EntityPreviewValue> {
+        String stateStoreName;
+        private KeyValueStore<CommunityEntityKey, EntityPreviewValue> joinedKeyValueStore;
+
+        private KeyValueStore<CommunityEntityKey, CommunityEntityValue> communityEntityStore;
+        private KeyValueStore<CommunityEntityKey, CommunityEntityLabelValue> communityEntityLabelStore;
+        private KeyValueStore<CommunityEntityKey, CommunityEntityTypeValue> communityEntityTypeStore;
+        private KeyValueStore<CommunityEntityKey, TimeSpanValue> communityEntityTimeSpanStore;
+        private KeyValueStore<CommunityEntityKey, CommunityEntityFulltextValue> communityEntityFulltextStore;
+        private KeyValueStore<CommunityEntityKey, CommunityEntityClassLabelValue> communityEntityClassLabelStore;
+        private KeyValueStore<CommunityEntityKey, CommunityEntityClassMetadataValue> communityEntityClassMetadataStore;
+        private ProcessorContext<CommunityEntityKey, EntityPreviewValue> context;
+
+        public JoinProcessor(String stateStoreName) {
+            this.stateStoreName = stateStoreName;
         }
-        return 0;
+
+
+        @Override
+        public void process(Record<CommunityEntityKey, Object> record) {
+
+            var communityEntity = this.communityEntityStore.get(record.key());
+            if (
+                    communityEntity == null ||
+                            // hide entities with 0 projects
+                            communityEntity.getProjectCount() < 1
+            ) {
+
+                // forward a tombstone
+                context.forward(record.withValue(null));
+
+            } else {
+                var communityEntityLabel = this.communityEntityLabelStore.get(record.key());
+                var communityEntityType = this.communityEntityTypeStore.get(record.key());
+                var communityEntityTimeSpan = this.communityEntityTimeSpanStore.get(record.key());
+                var communityEntityFulltext = this.communityEntityFulltextStore.get(record.key());
+                var communityEntityClassLabel = this.communityEntityClassLabelStore.get(record.key());
+                var communityEntityClassMetadata = this.communityEntityClassMetadataStore.get(record.key());
+
+                var newVal = EntityPreviewValue.newBuilder()
+                        .setFkProject(null)
+                        .setProject(0)
+                        .setEntityId(communityEntity.getEntityId())
+                        .setPkEntity(parseStringId(communityEntity.getEntityId()))
+                        .setFkClass(communityEntity.getClassId())
+                        .setParentClasses("[]")
+                        .setAncestorClasses("[]")
+                        .setEntityType("")
+                        .build();
+
+                if (communityEntityLabel != null) newVal.setEntityLabel(communityEntityLabel.getLabel());
+
+                if (communityEntityType != null) {
+                    var typeId = communityEntityType.getTypeId();
+                    if (typeId != null && typeId.length() > 1) {
+                        newVal.setTypeId(typeId);
+                        newVal.setFkType(parseStringId(typeId));
+                    }
+                    newVal.setTypeLabel(communityEntityType.getTypeLabel());
+                }
+
+                if (communityEntityTimeSpan != null) {
+                    newVal.setTimeSpan(communityEntityTimeSpan.getTimeSpan().toString());
+                    newVal.setFirstSecond(communityEntityTimeSpan.getFirstSecond());
+                    newVal.setLastSecond(communityEntityTimeSpan.getLastSecond());
+                }
+
+                if (communityEntityFulltext != null) {
+                    newVal.setFullText(communityEntityFulltext.getFulltext());
+                }
+
+                if (communityEntityClassLabel != null) {
+                    newVal.setClassLabel(communityEntityClassLabel.getClassLabel());
+                }
+
+                if (communityEntityClassMetadata != null) {
+                    var parents = communityEntityClassMetadata.getParentClasses();
+                    var ancestors = communityEntityClassMetadata.getAncestorClasses();
+                    newVal.setParentClasses(parents.toString());
+                    newVal.setAncestorClasses(ancestors.toString());
+                    var isPersistentItem = parents.contains(Klass.PERSISTENT_ITEM.get()) ||
+                            ancestors.contains(Klass.PERSISTENT_ITEM.get());
+                    var entityType = isPersistentItem ? "peIt" : "teEn";
+                    newVal.setEntityType(entityType);
+                }
+
+                // Put into state store.
+                joinedKeyValueStore.put(record.key(), newVal);
+
+                // forward join result
+                context.forward(record.withValue(newVal));
+
+            }
+        }
+
+        @Override
+        public void init(ProcessorContext<CommunityEntityKey, EntityPreviewValue> context) {
+
+            this.joinedKeyValueStore = context.getStateStore(stateStoreName);
+
+            this.communityEntityStore = context.getStateStore(inputTopicNames.getCommunityEntity() + "-store");
+
+            this.communityEntityLabelStore = context.getStateStore(inputTopicNames.getCommunityEntityLabel() + "-store");
+
+            this.communityEntityTypeStore = context.getStateStore(inputTopicNames.getCommunityEntityType() + "-store");
+
+            this.communityEntityTimeSpanStore = context.getStateStore(inputTopicNames.getCommunityEntityTimeSpan() + "-store");
+
+            this.communityEntityFulltextStore = context.getStateStore(inputTopicNames.getCommunityEntityFulltext() + "-store");
+
+            this.communityEntityClassLabelStore = context.getStateStore(inputTopicNames.getCommunityEntityClassLabel() + "-store");
+
+            this.communityEntityClassMetadataStore = context.getStateStore(inputTopicNames.getCommunityEntityClassMetadata() + "-store");
+
+            this.context = context;
+        }
+
+        @Override
+        public void close() {
+        }
+
+        private static int parseStringId(String value1) {
+            try {
+                return Integer.parseInt(value1.substring(1));
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
+            return 0;
+        }
     }
+
+
 }
+
+
+
+
+

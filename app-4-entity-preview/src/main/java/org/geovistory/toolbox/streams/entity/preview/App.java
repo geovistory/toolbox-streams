@@ -48,71 +48,30 @@ public class App {
     @Produces
     public Topology buildTopology() {
 
+        var topology = new Topology();
 
-        // add processors of sub-topologies
         if (!initialized) {
             initialized = true;
-            addSubTopologies();
+
+            // add processors of sub-topologies
+            topology = addSubTopologies();
 
             // create topics in advance to ensure correct configuration (partition, compaction, ect.)
             createTopics();
         }
 
         // build the topology
-        return builderSingleton.builder.build();
+        return topology;
     }
 
-
-    private void addSubTopologies() {
-
-        addProjectView();
-        addCommunityView();
+    private Topology addSubTopologies() {
         addMergedView();
+        var topology = builderSingleton.builder.build();
+        communityEntityPreview.addProcessors(topology);
+        projectEntityPreview.addProcessors(topology);
+        return topology;
     }
 
-    private void addProjectView() {
-        // register input topics as KTables
-        var projectEntityTable = registerInputTopic.projectEntityTable();
-        var projectEntityLabelTable = registerInputTopic.projectEntityLabelTable();
-        var projectEntityClassLabelTable = registerInputTopic.projectEntityClassLabelTable();
-        var projectEntityTypeTable = registerInputTopic.projectEntityTypeTable();
-        var projectEntityTimeSpanTable = registerInputTopic.projectEntityTimeSpanTable();
-        var projectEntityFulltextTable = registerInputTopic.projectEntityFulltextTable();
-        var projectEntityClassMetadataTable = registerInputTopic.projectEntityClassMetadataTable();
-
-        // add sub-topology ProjectEntityPreview
-        projectEntityPreview.addProcessors(
-                projectEntityTable,
-                projectEntityLabelTable,
-                projectEntityClassLabelTable,
-                projectEntityTypeTable,
-                projectEntityTimeSpanTable,
-                projectEntityFulltextTable,
-                projectEntityClassMetadataTable
-        );
-    }
-
-    private void addCommunityView() {
-        // register input topics as KTables
-        var communityEntityTable = registerInputTopic.communityEntityTable();
-        var communityEntityLabelTable = registerInputTopic.communityEntityLabelTable();
-        var communityEntityClassLabelTable = registerInputTopic.communityEntityClassLabelTable();
-        var communityEntityTypeTable = registerInputTopic.communityEntityTypeTable();
-        var communityEntityTimeSpanTable = registerInputTopic.communityEntityTimeSpanTable();
-        var communityEntityFulltextTable = registerInputTopic.communityEntityFulltextTable();
-        var communityEntityClassMetadataTable = registerInputTopic.communityEntityClassMetadataTable();
-
-        // add sub-topology ProjectEntityPreview
-        communityEntityPreview.addProcessors(
-                communityEntityTable,
-                communityEntityLabelTable,
-                communityEntityClassLabelTable,
-                communityEntityTypeTable,
-                communityEntityTimeSpanTable,
-                communityEntityFulltextTable,
-                communityEntityClassMetadataTable
-        );
-    }
 
     private void addMergedView() {
         // register inner topics as KStream
