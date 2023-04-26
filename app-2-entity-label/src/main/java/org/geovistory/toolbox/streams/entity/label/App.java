@@ -3,6 +3,7 @@
  */
 package org.geovistory.toolbox.streams.entity.label;
 
+import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.entity.label.processsors.base.ProjectEntityVisibility;
@@ -28,9 +29,7 @@ class App {
     @Inject
     ProjectStatementWithLiteral projectStatementWithLiteral;
     @Inject
-    ProjectTopIncomingStatements projectTopIncomingStatements;
-    @Inject
-    ProjectTopOutgoingStatements projectTopOutgoingStatements;
+    ProjectTopStatementsInAndOut projectTopStatementsInAndOut;
     @Inject
     ProjectTopStatements projectTopStatements;
     @Inject
@@ -66,23 +65,27 @@ class App {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    Boolean initialized = false;
 
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
     @Produces
     public Topology buildTopology() {
 
+        // add new instance, since this method is called twice in dev mode
+        builderSingleton.builder = new StreamsBuilder();
+
         // add processors of sub-topologies
-        if (!initialized) {
-            initialized = true;
-            addSubTopologies();
-        }
+        addSubTopologies();
+
+        // build the topology implemented with Streams DSL
+        var topology = builderSingleton.builder.build();
+
+        // add processors implemented with Processor API
+        projectTopStatementsInAndOut.addProcessors(topology);
 
         // create topics in advance to ensure correct configuration (partition, compaction, ect.)
         createTopics();
 
-        // build the topology
-        return builderSingleton.builder.build();
+        return topology;
     }
 
     private void addSubTopologies() {
@@ -96,12 +99,14 @@ class App {
         var communityEntityLabelConfigTable = registerInputTopic.communityEntityLabelConfigTable();
 
         // register inner topics as KTables
-        var projectEntityLabelTable = registerInnerTopic.projectEntityLabelTable();
         var projectEntityTable = registerInnerTopic.projectEntityTable();
-        var projectStatementWithEntityTable = registerInnerTopic.projectStatementWithEntityTable();
         var communityToolboxEntityLabelTable = registerInnerTopic.communityToolboxEntityLabelTable();
         var communityToolboxEntityTable = registerInnerTopic.communityToolboxEntityTable();
         var communityToolboxStatementWithEntityTable = registerInnerTopic.communityToolboxStatementWithEntityTable();
+
+        // register inner topics as KStreams
+        var projectTopOutgoingStatementsStream = registerInnerTopic.projectTopOutgoingStatementsStream();
+        var projectTopIncomingStatementsStream = registerInnerTopic.projectTopIncomingStatementsStream();
 
         // add sub-topology ProjectStatementWithEntity
         var projectStatementWithEntityReturn = projectStatementWithEntity.addProcessors(
@@ -114,23 +119,12 @@ class App {
                 statementWithLiteralTable,
                 proInfoProjRelTable
         );
-        // add sub-topology ProjectTopIncomingStatements
-        var projectTopIncomingStatementsReturn = projectTopIncomingStatements.addProcessors(
-                projectStatementWithEntityTable,
-                projectEntityLabelTable
-        );
 
-        // add sub-topology ProjectTopOutgoingStatements
-        var projectTopOutgoingStatementsReturn = projectTopOutgoingStatements.addProcessors(
-                projectStatementWithLiteralReturn.ProjectStatementStream(),
-                projectStatementWithEntityTable,
-                projectEntityLabelTable
-        );
 
         // add sub-topology ProjectTopStatements
         var projectTopStatementsReturn = projectTopStatements.addProcessors(
-                projectTopOutgoingStatementsReturn.projectTopStatementStream(),
-                projectTopIncomingStatementsReturn.projectTopStatementStream()
+                projectTopOutgoingStatementsStream,
+                projectTopIncomingStatementsStream
         );
 
 
@@ -217,6 +211,12 @@ class App {
         topics.add(outputTopicNames.communityToolboxTopStatements());
         topics.add(outputTopicNames.communityToolboxEntityLabel());
         topics.add(outputTopicNames.communityToolboxEntityWithLabelConfig());
+        topics.add(outputTopicNames.projectStatementsBySubjectId());
+        topics.add(outputTopicNames.projectStatementsByObjectId());
+        topics.add(outputTopicNames.projectEntityLabelByEntityId());
+        topics.add(outputTopicNames.communityToolboxEntityLabelByEntityId());
+        topics.add(outputTopicNames.projectIncomingStatements());
+        topics.add(outputTopicNames.projectOutgoingStatements());
 
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
     }

@@ -74,9 +74,35 @@ public class OutputTopicNames {
         return p("project_top_outgoing_statements");
     }
 
+
     public final String projectTopStatements() {
         return p("project_top_statements");
     }
+
+    public final String projectStatementsBySubjectId() {
+        return p("project_statements_by_subject_id");
+    }
+
+
+    public final String projectStatementsByObjectId() {
+        return p("project_statements_by_object_id");
+    }
+
+    public final String projectEntityLabelByEntityId() {
+        return p("project_entity_label_by_entity_id");
+    }
+    public final String communityToolboxEntityLabelByEntityId() {
+        return p("community_toolbox_entity_label_by_entity_id");
+    }
+
+    public final String projectIncomingStatements() {
+        return p("project_incoming_statements");
+    }
+
+    public final String projectOutgoingStatements() {
+        return p("project_outgoing_statements");
+    }
+
 
     private String p(String n) {
         return Utils.prefixedOut(outPrefix, n);

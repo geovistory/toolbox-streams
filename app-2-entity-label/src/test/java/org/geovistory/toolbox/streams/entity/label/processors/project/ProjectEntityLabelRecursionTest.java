@@ -69,12 +69,14 @@ class ProjectEntityLabelRecursionTest {
 
 
         var proInfoProjRelTable = registerInputTopic.proInfoProjRelTable();
-        var projectEntityLabelTable = registerInnerTopic.projectEntityLabelTable();
         var statementWithLiteralTable = registerInputTopic.statementWithLiteralTable();
         var statementWithEntityTable = registerInputTopic.statementWithEntityTable();
-        var projectStatementWithEntityTable = registerInnerTopic.projectStatementWithEntityTable();
         var projectEntityTable = registerInnerTopic.projectEntityTable();
         var projectEntityLabelConfigTable = registerInputTopic.projectEntityLabelConfigTable();
+
+        // register inner topics as KStreams
+        var projectTopOutgoingStatementsStream = registerInnerTopic.projectTopOutgoingStatementsStream();
+        var projectTopIncomingStatementsStream = registerInnerTopic.projectTopIncomingStatementsStream();
 
         // add sub-topology ProjectStatement
         var projectStatementWithEntity = new ProjectStatementWithEntity(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
@@ -84,30 +86,17 @@ class ProjectEntityLabelRecursionTest {
         );
         // add sub-topology ProjectStatement
         var projectStatementWithLiteral = new ProjectStatementWithLiteral(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
-        var projectStatementWithLiteralReturn = projectStatementWithLiteral.addProcessors(
+        projectStatementWithLiteral.addProcessors(
                 statementWithLiteralTable,
                 proInfoProjRelTable
         );
-        // add sub-topology ProjectTopIncomingStatements
-        var projectTopIncomingStatements = new ProjectTopIncomingStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
-        var projectTopIncomingStatementsReturn = projectTopIncomingStatements.addProcessors(
-                projectStatementWithEntityTable,
-                projectEntityLabelTable
-        );
 
-        // add sub-topology ProjectTopOutgoingStatements
-        var projectTopOutgoingStatements = new ProjectTopOutgoingStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
-        var projectTopOutgoingStatementsReturn = projectTopOutgoingStatements.addProcessors(
-                projectStatementWithLiteralReturn.ProjectStatementStream(),
-                projectStatementWithEntityTable,
-                projectEntityLabelTable
-        );
 
         // add sub-topology ProjectTopStatements
         var projectTopStatements = new ProjectTopStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
         var projectTopStatementsReturn = projectTopStatements.addProcessors(
-                projectTopOutgoingStatementsReturn.projectTopStatementStream(),
-                projectTopIncomingStatementsReturn.projectTopStatementStream()
+                projectTopOutgoingStatementsStream,
+                projectTopIncomingStatementsStream
         );
 
         // Add processors for ProjectEntityLabel
@@ -120,6 +109,8 @@ class ProjectEntityLabelRecursionTest {
 
 
         var topology = builderSingleton.builder.build();
+        var projectTopStatementsInAndOut = new ProjectTopStatementsInAndOut(avroSerdes, inputTopicNames, outputTopicNames);
+        projectTopStatementsInAndOut.standalone(topology);
         testDriver = new TopologyTestDriver(topology, props);
 
 
