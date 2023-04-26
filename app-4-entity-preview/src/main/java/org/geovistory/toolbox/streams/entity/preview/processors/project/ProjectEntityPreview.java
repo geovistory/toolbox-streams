@@ -52,7 +52,7 @@ public class ProjectEntityPreview {
 
         registerSourceTopics(
                 topology,
-                inputTopicNames.projectEntity,
+                inputTopicNames.getProjectEntity(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityValue()
         );
@@ -106,7 +106,7 @@ public class ProjectEntityPreview {
 
 
         // create a state store builder
-        var stateStoreName = "joinedStore";
+        var stateStoreName = "joinedProjectPreviewStore";
         Map<String, String> changelogConfig = new HashMap<>();
         StoreBuilder<KeyValueStore<ProjectEntityKey, EntityPreviewValue>> storeSupplier =
                 Stores.keyValueStoreBuilder(
@@ -119,7 +119,7 @@ public class ProjectEntityPreview {
         // add join processor
         topology.addProcessor(joinProcessorName,
                 () -> new JoinProcessor(stateStoreName),
-                inputTopicNames.projectEntity + "-process",
+                inputTopicNames.getProjectEntity() + "-process",
                 inputTopicNames.getProjectEntityLabel() + "-process",
                 inputTopicNames.getProjectEntityType() + "-process",
                 inputTopicNames.getProjectEntityTimeSpan() + "-process",
@@ -133,7 +133,7 @@ public class ProjectEntityPreview {
 
         addStateStore(
                 topology,
-                inputTopicNames.projectEntity,
+                inputTopicNames.getProjectEntity(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityValue(),
                 joinProcessorName
@@ -301,7 +301,7 @@ public class ProjectEntityPreview {
 
             this.joinedKeyValueStore = context.getStateStore(stateStoreName);
 
-            this.projectEntityStore = context.getStateStore(inputTopicNames.projectEntity + "-store");
+            this.projectEntityStore = context.getStateStore(inputTopicNames.getProjectEntity() + "-store");
 
             this.projectEntityLabelStore = context.getStateStore(inputTopicNames.getProjectEntityLabel() + "-store");
 

@@ -3,6 +3,7 @@
  */
 package org.geovistory.toolbox.streams.entity.preview;
 
+import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.entity.preview.processors.EntityPreview;
@@ -41,24 +42,18 @@ public class App {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    Boolean initialized = false;
-
 
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
     @Produces
     public Topology buildTopology() {
 
-        var topology = new Topology();
+        builderSingleton.builder = new StreamsBuilder();
 
-        if (!initialized) {
-            initialized = true;
+        // add processors of sub-topologies
+        var topology = addSubTopologies();
 
-            // add processors of sub-topologies
-            topology = addSubTopologies();
-
-            // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-            createTopics();
-        }
+        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
+        createTopics();
 
         // build the topology
         return topology;
