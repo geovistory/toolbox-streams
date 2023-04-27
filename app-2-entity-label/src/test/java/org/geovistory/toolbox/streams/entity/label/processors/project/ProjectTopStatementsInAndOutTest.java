@@ -200,6 +200,63 @@ class ProjectTopStatementsInAndOutTest {
         assertThat(record.getStatements().get(0).getStatement().getObjectLabel()).isEqualTo(null);
     }
 
+
+    @Test
+    void testUpdateEntityLabels() {
+        var projectId = 10;
+        var propertyId = 30;
+        var subjectId = "i1";
+        var objectId = "i2";
+
+        // add statement
+        var k = ProjectStatementKey.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(1)
+                .build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(3)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setPropertyId(propertyId)
+                                .setObjectId(objectId)
+                                .build()
+                )
+                .setOrdNumOfRange(3)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+        // add subject entity label
+        var kSE = ProjectEntityKey.newBuilder().setEntityId(subjectId).setProjectId(projectId).build();
+        var vSE = ProjectEntityLabelValue.newBuilder().setEntityId(subjectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Jack").build();
+        projectEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // add object entity label
+        var kOE = ProjectEntityKey.newBuilder().setEntityId(objectId).setProjectId(projectId).build();
+        var vOE = ProjectEntityLabelValue.newBuilder().setEntityId(objectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Maria").build();
+        projectEntityLabelTopic.pipeInput(kOE, vOE);
+
+        vSE.setLabel("Jack2");
+        projectEntityLabelTopic.pipeInput(kSE, vSE);
+
+        assertThat(topIncomingTopic.isEmpty()).isFalse();
+        var outRecords = topIncomingTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId)
+                .setIsOutgoing(false)
+                .setEntityId(objectId)
+                .setPropertyId(propertyId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getStatements().get(0).getStatement().getSubjectLabel()).isEqualTo("Jack2");
+        assertThat(record.getStatements().get(0).getStatement().getObjectLabel()).isEqualTo(null);
+    }
+
+
     @Test
     void testJoinEntityLabelsDeleteAndAdd() {
         var projectId = 10;
