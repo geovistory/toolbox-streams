@@ -1,0 +1,13 @@
+plugins {
+    id 'org.geovistory.toolbox.streams.java-application-conventions'
+
+    id 'io.quarkus'
+}
+
+dependencies {
+    // Quarkus
+    implementation 'io.quarkus:quarkus-smallrye-reactive-messaging-kafka'
+}
+
+group 'org.geovistory'
+version 'unspecified'

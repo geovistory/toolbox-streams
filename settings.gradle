@@ -33,3 +33,5 @@ include(
         'lib',
         'utilities'
 )
+include 'app-2-entity-label-producer'
+
