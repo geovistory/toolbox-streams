@@ -104,7 +104,7 @@ public class CommunityEntityPreview {
 
 
         // create a state store builder
-        var stateStoreName = "joinedStore";
+        var stateStoreName = "joinedCommunityPreviewStore";
         Map<String, String> changelogConfig = new HashMap<>();
         StoreBuilder<KeyValueStore<CommunityEntityKey, EntityPreviewValue>> storeSupplier =
                 Stores.keyValueStoreBuilder(
@@ -117,7 +117,7 @@ public class CommunityEntityPreview {
         // add join processor
         topology.addProcessor(joinProcessorName,
                 () -> new JoinProcessor(stateStoreName),
-                inputTopicNames.communityEntity + "-process",
+                inputTopicNames.getCommunityEntity() + "-process",
                 inputTopicNames.getCommunityEntityLabel() + "-process",
                 inputTopicNames.getCommunityEntityType() + "-process",
                 inputTopicNames.getCommunityEntityTimeSpan() + "-process",
