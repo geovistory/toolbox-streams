@@ -77,8 +77,8 @@ public class ProjectEntityType {
                         .setPropertyId(projectEntityValue.getHasTypePropertyId())
                         .build(),
                 (value1, value2) -> {
-                    var statements = value2.getStatements();
-                    var hasTypeStatement = statements.size() == 0 ? null : value2.getStatements().get(0);
+                    var edges = value2.getEdges();
+                    var hasTypeStatement = edges.size() == 0 ? null : value2.getEdges().get(0);
                     var deleted = hasTypeStatement == null || Utils.booleanIsEqualTrue(value1.getDeleted$1());
                     var newVal = ProjectEntityTypeValue.newBuilder()
                             .setEntityId(value1.getEntityId())
@@ -91,8 +91,8 @@ public class ProjectEntityType {
                                 .build();
                     } else {
                         return newVal
-                                .setTypeId(hasTypeStatement.getStatement().getObjectId())
-                                .setTypeLabel(hasTypeStatement.getStatement().getObjectLabel())
+                                .setTypeId(hasTypeStatement.getTargetId())
+                                .setTypeLabel(hasTypeStatement.getTargetLabel())
                                 .setDeleted$1(false)
                                 .build();
                     }

@@ -70,6 +70,7 @@ class ProjectEntityLabelRecursionTest {
 
         var proInfoProjRelTable = registerInputTopic.proInfoProjRelTable();
         var projectEntityLabelTable = registerInnerTopic.projectEntityLabelTable();
+        var communityToolboxEntityLabelTable = registerInnerTopic.communityToolboxEntityLabelTable();
         var statementWithLiteralTable = registerInputTopic.statementWithLiteralTable();
         var statementWithEntityTable = registerInputTopic.statementWithEntityTable();
         var projectStatementWithEntityTable = registerInnerTopic.projectStatementWithEntityTable();
@@ -92,7 +93,8 @@ class ProjectEntityLabelRecursionTest {
         var projectTopIncomingStatements = new ProjectTopIncomingStatements(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
         var projectTopIncomingStatementsReturn = projectTopIncomingStatements.addProcessors(
                 projectStatementWithEntityTable,
-                projectEntityLabelTable
+                projectEntityLabelTable,
+                communityToolboxEntityLabelTable
         );
 
         // add sub-topology ProjectTopOutgoingStatements
@@ -100,7 +102,8 @@ class ProjectEntityLabelRecursionTest {
         var projectTopOutgoingStatementsReturn = projectTopOutgoingStatements.addProcessors(
                 projectStatementWithLiteralReturn.ProjectStatementStream(),
                 projectStatementWithEntityTable,
-                projectEntityLabelTable
+                projectEntityLabelTable,
+                communityToolboxEntityLabelTable
         );
 
         // add sub-topology ProjectTopStatements

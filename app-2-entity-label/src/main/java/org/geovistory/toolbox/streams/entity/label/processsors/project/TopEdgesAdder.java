@@ -1,19 +1,19 @@
 package org.geovistory.toolbox.streams.entity.label.processsors.project;
 
-import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.avro.ProjectEdgeValue;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.util.List;
 
-public class TopStatementAdder {
-    public static List<ProjectStatementValue> addStatement(List<ProjectStatementValue> existingList, ProjectStatementValue newItem, boolean isOutgoing) {
+public class TopEdgesAdder {
+    public static List<ProjectEdgeValue> addEdge(List<ProjectEdgeValue> existingList, ProjectEdgeValue newItem) {
         int targetPosition = -1;
         int replacedItemPosition = -1;
 
         for (int i = 0; i < existingList.size(); i++) {
             var oldItem = existingList.get(i);
-            var oldOrdNum = isOutgoing ? oldItem.getOrdNumOfRange() : oldItem.getOrdNumOfDomain();
-            var newOrdNum = isOutgoing ? newItem.getOrdNumOfRange() : newItem.getOrdNumOfDomain();
+            var oldOrdNum = oldItem.getOrdNum();
+            var newOrdNum = newItem.getOrdNum();
             var oldId = oldItem.getStatementId();
             var newId = newItem.getStatementId();
             // if newOrdNum <= oldOrdNum ...
@@ -63,7 +63,7 @@ public class TopStatementAdder {
         }
 
         // if item was deleted...
-        if (newItem.getDeleted$1() != null && newItem.getDeleted$1()) {
+        if (newItem.getDeleted()) {
             // ...remove it
             if (replacedItemPosition > -1) existingList.remove(replacedItemPosition);
             // ...and return immediately

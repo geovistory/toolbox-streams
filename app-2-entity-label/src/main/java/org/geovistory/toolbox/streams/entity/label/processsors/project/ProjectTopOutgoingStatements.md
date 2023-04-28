@@ -4,28 +4,35 @@ This topology aggregates the top 5 outgoing statements of an entity's property.
 
 ```mermaid
 flowchart TD
-    1a-->2a-->2b-->3a-->3b-->4a-->5a-->5b
+    1a-->2a-->3a-->3b-->4a-->4b-->5a-->6a-->6b
     1c-->2a
-    1b-->3a
+    1d-->3a
+    1b-->4a
+    
     subgraph 1
         1a[project_statement_with_entity]
         1b[project_statement_with_literal]
         1c[project_entity_label]
+        1d[community_entity_label]
     end
     subgraph __2
-        2a([Join])
-        2b([toStream])
+        2a([LeftJoin])
     end  
     subgraph __3
-        3a([Merge])
-        3b([ToTable])
+        3a([LeftJoin])
+        3b([toStream])
     end  
+   
     subgraph __4
-        4a([GroupBy])
+        4a([Merge])
+        4b([ToTable])
     end  
     subgraph __5
-        5a([Aggregate])
-        5b[project_top_incoming_statements]
+        5a([GroupBy])
+    end  
+    subgraph __6
+        6a([Aggregate])
+        6b[project_top_outgoing_statements]
     end
 
 ```
@@ -33,9 +40,10 @@ flowchart TD
 | Step |                                                                     |
 |------|---------------------------------------------------------------------|
 | 1    | input topic                                                         |
-| 2    | Left Join the entity labels and add the object label.               |
-| 3    | GroupBy: group by subject_id                                        |
-| 4    | Aggregate: create a list of statements, ordered by ord_num_of_range |
+| 2    | Left Join the project entity labels and add the object label.       |
+| 3    | Left Join the community entity labels and add the object label.     |
+| 4    | GroupBy: group by subject_id                                        |
+| 5    | Aggregate: create a list of statements, ordered by ord_num_of_range |
 |      | To topic `project_top_outgoing_statements`                          |
 
 ## Input Topics

@@ -126,21 +126,19 @@ class ProjectEntityLabelTest {
         var vS = ProjectTopStatementsValue.newBuilder()
                 .setProjectId(projectId).setEntityId(entityId)
                 .setPropertyId(propIdFirstPart).setIsOutgoing(false)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setSubjectLabel("S1").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setSubjectLabel("NOISE").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setTargetId(entityId)
+                                .setSourceId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setTargetLabel("S1").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+                                .setTargetId(entityId)
+                                .setSourceId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setTargetLabel("NOISE").build()
                 )).build();
         projectTopStatements.pipeInput(kS, vS);
 
@@ -156,28 +154,25 @@ class ProjectEntityLabelTest {
         vS = ProjectTopStatementsValue.newBuilder()
                 .setProjectId(projectId).setEntityId(entityId)
                 .setPropertyId(propIdSecondPart).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfRange(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setObjectLabel("S2").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfRange(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setObjectLabel("S3").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfRange(3)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setObjectLabel("NOISE").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("S2").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("S3").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(3)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("NOISE").build()
                 )).build();
         projectTopStatements.pipeInput(kS, vS);
 
@@ -238,14 +233,14 @@ class ProjectEntityLabelTest {
         var vS = ProjectTopStatementsValue.newBuilder()
                 .setProjectId(projectId).setEntityId(entityId)
                 .setPropertyId(propIdFirstPart).setIsOutgoing(false)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setSubjectLabel("S1").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setOrdNum(1)
+                                .setProjectId(projectId)
+                                .setTargetId(entityId)
+                                .setSourceId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setStatementId(1)
+                                .setTargetLabel("S1").build()
                 )).build();
         projectTopStatements.pipeInput(kS, vS);
 
@@ -312,21 +307,21 @@ class ProjectEntityLabelTest {
         var vS = ProjectTopStatementsValue.newBuilder()
                 .setProjectId(projectId).setEntityId(entityId)
                 .setPropertyId(propIdFirstPart).setIsOutgoing(false)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setSubjectLabel("S1").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setSubjectLabel("NOISE").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+
+                                .setTargetId(entityId)
+                                .setSourceId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setTargetLabel("S1").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+
+                                .setTargetId(entityId)
+                                .setSourceId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setTargetLabel("NOISE").build()
                 )).build();
         projectTopStatements.pipeInput(kS, vS);
 
@@ -342,35 +337,32 @@ class ProjectEntityLabelTest {
         vS = ProjectTopStatementsValue.newBuilder()
                 .setProjectId(projectId).setEntityId(entityId)
                 .setPropertyId(propIdSecondPart).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfRange(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setObjectLabel("S2").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfRange(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setObjectLabel("S3").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfRange(3)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setObjectLabel("NOISE").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("S2").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("S3").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(3)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("NOISE").build()
                 )).build();
         projectTopStatements.pipeInput(kS, vS);
 
         /*
          * Remove second part from configuration
          */
-         vC = ProjectEntityLabelConfigValue.newBuilder().setProjectId(projectId).setClassId(classId)
+        vC = ProjectEntityLabelConfigValue.newBuilder().setProjectId(projectId).setClassId(classId)
                 .setConfig(EntityLabelConfig.newBuilder().setLabelParts(List.of(
                         // first part
                         EntityLabelConfigPart.newBuilder().setOrdNum(1).setField(EntityLabelConfigPartField.newBuilder()

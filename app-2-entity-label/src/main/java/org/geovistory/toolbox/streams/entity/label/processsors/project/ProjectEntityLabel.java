@@ -164,20 +164,20 @@ public class ProjectEntityLabel {
                         .setIsOutgoing(v.getConfiguration().getIsOutgoing())
                         .setPropertyId(v.getConfiguration().getFkProperty())
                         .build(),
-                (entityLabelSlot, topStatements) -> {
+                (entityLabelSlot, topEdges) -> {
                     var config = entityLabelSlot.getConfiguration();
                     var result = EntityLabelSlotWithStringValue.newBuilder()
                             .setString("")
                             .setDeleted$1(true)
                             .setOrdNum(entityLabelSlot.getOrdNum())
                             .build();
-                    if (topStatements == null) return result;
-                    if (topStatements.getStatements() == null) return result;
-                    if (topStatements.getStatements().size() == 0) return result;
+                    if (topEdges == null) return result;
+                    if (topEdges.getEdges() == null) return result;
+                    if (topEdges.getEdges().size() == 0) return result;
                     result.setDeleted$1(entityLabelSlot.getDeleted$1());
 
                     // get the list of relevant statements
-                    var relevantStmts = topStatements.getStatements();
+                    var relevantStmts = topEdges.getEdges();
                     var maxSize = config.getNrOfStatementsInLabel();
                     if (relevantStmts.size() > maxSize && maxSize > 0) {
                         relevantStmts = relevantStmts.subList(0, maxSize);
@@ -188,8 +188,8 @@ public class ProjectEntityLabel {
                             .stream()
                             .map(projectStatementValue -> {
                                 if (config.getIsOutgoing())
-                                    return projectStatementValue.getStatement().getObjectLabel();
-                                else return projectStatementValue.getStatement().getSubjectLabel();
+                                    return projectStatementValue.getTargetLabel();
+                                else return projectStatementValue.getTargetLabel();
                             })
                             .filter(Objects::nonNull)
                             .toList();

@@ -124,23 +124,21 @@ class ProjectEntityFulltextTest {
                 .build();
         var v1 = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
-                .setEntityId(entityId).setIsOutgoing(false).setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setObjectLabel("foo")
-                                        .setSubjectLabel("Max").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setObjectLabel("foo")
-                                        .setSubjectLabel("Mia").build()).build()
+                .setEntityId(entityId).setIsOutgoing(false).setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setTargetLabel("Max").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setTargetLabel("Mia").build()
                 )).build();
 
         projectTopStatementsTopic.pipeInput(k1, v1);
@@ -173,23 +171,21 @@ class ProjectEntityFulltextTest {
         var v2 = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdSecondPart)
                 .setEntityId(entityId).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setSubjectLabel("foo")
-                                        .setObjectLabel("Voyage 1").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setSubjectLabel("foo")
-                                        .setObjectLabel("Voyage 2").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("Voyage 1").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("Voyage 2").build()
                 )).build();
         projectTopStatementsTopic.pipeInput(k2, v2);
 
@@ -220,23 +216,21 @@ class ProjectEntityFulltextTest {
         var v3 = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(9876543)
                 .setEntityId(entityId).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(9876543)
-                                        .setSubjectLabel("foo")
-                                        .setObjectLabel("Toy 1").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(9876543)
-                                        .setSubjectLabel("foo")
-                                        .setObjectLabel("Toy 2").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(9876543)
+                                .setTargetLabel("Toy 1").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(9876543)
+                                .setTargetLabel("Toy 2").build()
                 )).build();
         projectTopStatementsTopic.pipeInput(k3, v3);
 
@@ -284,23 +278,19 @@ class ProjectEntityFulltextTest {
                 .build();
         var v1 = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
-                .setEntityId(entityId).setIsOutgoing(false).setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setObjectLabel("foo")
-                                        .setSubjectLabel("Max").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdFirstPart)
-                                        .setObjectLabel("foo")
-                                        .setSubjectLabel("Mia").build()).build()
+                .setEntityId(entityId).setIsOutgoing(false).setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setTargetLabel("Max").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdFirstPart)
+                                .setTargetLabel("Mia").build()
                 )).build();
 
         projectTopStatementsTopic.pipeInput(k1, v1);
@@ -333,23 +323,19 @@ class ProjectEntityFulltextTest {
         var v2 = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdSecondPart)
                 .setEntityId(entityId).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setSubjectLabel("foo")
-                                        .setObjectLabel("Voyage 1").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(propIdSecondPart)
-                                        .setSubjectLabel("foo")
-                                        .setObjectLabel("Voyage 2").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("Voyage 1").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(propIdSecondPart)
+                                .setTargetLabel("Voyage 2").build()
                 )).build();
         projectTopStatementsTopic.pipeInput(k2, v2);
 
@@ -380,23 +366,19 @@ class ProjectEntityFulltextTest {
         var v3 = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(9876543)
                 .setEntityId(entityId).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(9876543)
-                                        .setSubjectLabel("foo")
-                                        .setObjectLabel("Toy 1").build()).build(),
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(2)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(9876543)
-                                        .setSubjectLabel("foo")
-                                        .setObjectLabel("Toy 2").build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(9876543)
+                                .setTargetLabel("Toy 1").build(),
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(2)
+                                .setSourceId(entityId)
+                                .setTargetId(entityId)
+                                .setPropertyId(9876543)
+                                .setTargetLabel("Toy 2").build()
                 )).build();
         projectTopStatementsTopic.pipeInput(k3, v3);
 
@@ -444,7 +426,7 @@ class ProjectEntityFulltextTest {
                 .build();
         var v1 = ProjectTopStatementsValue.newBuilder()
                 .setClassId(classId).setProjectId(projectId).setPropertyId(propIdFirstPart)
-                .setEntityId(entityId).setIsOutgoing(false).setStatements(List.of()).build();
+                .setEntityId(entityId).setIsOutgoing(false).setEdges(List.of()).build();
 
         projectTopStatementsTopic.pipeInput(k1, v1);
 

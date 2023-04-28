@@ -29,10 +29,10 @@
       "default": null
     },
     {
-      "name": "statements",
+      "name": "edges",
       "type": {
         "type": "array",
-        "items": "org.geovistory.toolbox.streams.avro.ProjectStatementValue"
+        "items": "org.geovistory.toolbox.streams.avro.ProjectEdgeValue"
       }
     }
   ]

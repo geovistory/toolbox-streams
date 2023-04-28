@@ -25,6 +25,8 @@ class ProjectTopIncomingStatementsTest {
     private TestInputTopic<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityTopic;
 
     private TestInputTopic<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTopic;
+
+    private TestInputTopic<CommunityEntityKey, CommunityEntityLabelValue> communityEntityLabelTopic;
     private TestOutputTopic<ProjectTopStatementsKey, ProjectTopStatementsValue> outputTopic;
 
     @BeforeEach
@@ -58,6 +60,11 @@ class ProjectTopIncomingStatementsTest {
                 outputTopicNames.projectEntityLabel(),
                 avroSerdes.ProjectEntityKey().serializer(),
                 avroSerdes.ProjectEntityLabelValue().serializer());
+
+        communityEntityLabelTopic = testDriver.createInputTopic(
+                outputTopicNames.communityToolboxEntityLabel(),
+                avroSerdes.CommunityEntityKey().serializer(),
+                avroSerdes.CommunityEntityLabelValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectTopIncomingStatements(),
@@ -127,8 +134,8 @@ class ProjectTopIncomingStatementsTest {
                 .setIsOutgoing(false)
                 .build();
         var record = outRecords.get(resultKey);
-        assertThat(record.getStatements().size()).isEqualTo(4);
-        assertThat(record.getStatements().get(2).getOrdNumOfDomain()).isEqualTo(2);
+        assertThat(record.getEdges().size()).isEqualTo(4);
+        assertThat(record.getEdges().get(2).getOrdNum()).isEqualTo(2);
         assertThat(record.getClassId()).isEqualTo(8);
     }
 
@@ -181,7 +188,301 @@ class ProjectTopIncomingStatementsTest {
                 .setPropertyId(propertyId)
                 .build();
         var record = outRecords.get(resultingKey);
-        assertThat(record.getStatements().get(0).getStatement().getSubjectLabel()).isEqualTo("Jack");
-        assertThat(record.getStatements().get(0).getStatement().getObjectLabel()).isEqualTo(null);
+        assertThat(record.getEdges().get(0).getTargetLabel()).isEqualTo("Jack");
     }
+
+
+    @Test
+    void testJoinEntityLabelsDeleteAndAdd() {
+        var projectId = 10;
+        var propertyId = 30;
+        var subjectId = "i1";
+        var objectId = "i2";
+
+        // add statement
+        var k = ProjectStatementKey.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(1)
+                .build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(3)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setPropertyId(propertyId)
+                                .setObjectId(objectId)
+                                .build()
+                )
+                .setOrdNumOfRange(3)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+
+        // add subject community entity label
+        var kCE = CommunityEntityKey.newBuilder().setEntityId(subjectId).build();
+        var vCE = CommunityEntityLabelValue.newBuilder().setEntityId(subjectId)
+                .setLabelSlots(List.of("")).setLabel("Jack Community").build();
+        communityEntityLabelTopic.pipeInput(kCE, vCE);
+
+        // add subject project entity label
+        var kSE = ProjectEntityKey.newBuilder().setEntityId(subjectId).setProjectId(projectId).build();
+        var vSE = ProjectEntityLabelValue.newBuilder().setEntityId(subjectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Jack").build();
+        projectEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // delete subject project entity label
+        vSE.setDeleted$1(true);
+        projectEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // delete subject communty entity label
+        vCE.setDeleted$1(true);
+        communityEntityLabelTopic.pipeInput(kCE, vCE);
+
+        // add object entity label
+        var kOE = ProjectEntityKey.newBuilder().setEntityId(objectId).setProjectId(projectId).build();
+        var vOE = ProjectEntityLabelValue.newBuilder().setEntityId(objectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Maria").build();
+        projectEntityLabelTopic.pipeInput(kOE, vOE);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var incomingRecords = outputTopic.readRecordsToList();
+        assertThat(incomingRecords).hasSize(5);
+
+        assertThat(incomingRecords.get(0).getValue().getEdges().get(0).getTargetLabel()).isEqualTo(null);
+        assertThat(incomingRecords.get(1).getValue().getEdges().get(0).getTargetLabel()).isEqualTo("Jack Community");
+        assertThat(incomingRecords.get(2).getValue().getEdges().get(0).getTargetLabel()).isEqualTo("Jack");
+        assertThat(incomingRecords.get(3).getValue().getEdges().get(0).getTargetLabel()).isEqualTo("Jack Community");
+        assertThat(incomingRecords.get(4).getValue().getEdges().get(0).getTargetLabel()).isEqualTo(null);
+
+    }
+
+    @Test
+    void testJoinCommunityEntityLabels() {
+        var projectId = 10;
+        var propertyId = 30;
+        var subjectId = "i1";
+        var objectId = "i2";
+
+        // add statement
+        var k = ProjectStatementKey.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(1)
+                .build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(3)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setPropertyId(propertyId)
+                                .setObjectId(objectId)
+                                .build()
+                )
+                .setOrdNumOfRange(3)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+        // add subject entity label
+        var kSE = CommunityEntityKey.newBuilder().setEntityId(subjectId).build();
+        var vSE = CommunityEntityLabelValue.newBuilder().setEntityId(subjectId)
+                .setLabelSlots(List.of("")).setLabel("Jack").build();
+        communityEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // add object entity label
+        var kOE = ProjectEntityKey.newBuilder().setEntityId(objectId).setProjectId(projectId).build();
+        var vOE = ProjectEntityLabelValue.newBuilder().setEntityId(objectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Maria").build();
+        projectEntityLabelTopic.pipeInput(kOE, vOE);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId)
+                .setIsOutgoing(false)
+                .setEntityId(objectId)
+                .setPropertyId(propertyId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getEdges().get(0).getTargetLabel()).isEqualTo("Jack");
+    }
+
+
+    @Test
+    void testDeleteCommunityEntityLabels() {
+        var projectId = 10;
+        var propertyId = 30;
+        var subjectId = "i1";
+        var objectId = "i2";
+
+        // add statement
+        var k = ProjectStatementKey.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(1)
+                .build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(3)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setPropertyId(propertyId)
+                                .setObjectId(objectId)
+                                .build()
+                )
+                .setOrdNumOfRange(3)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+        // add subject entity label
+        var kSE = CommunityEntityKey.newBuilder().setEntityId(subjectId).build();
+        var vSE = CommunityEntityLabelValue.newBuilder().setEntityId(subjectId)
+                .setLabelSlots(List.of("")).setLabel("Jack").build();
+        communityEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // add object entity label
+        var kOE = ProjectEntityKey.newBuilder().setEntityId(objectId).setProjectId(projectId).build();
+        var vOE = ProjectEntityLabelValue.newBuilder().setEntityId(objectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Maria").build();
+        projectEntityLabelTopic.pipeInput(kOE, vOE);
+
+        // mark subject entity label as deleted
+        vSE.setDeleted$1(true);
+        communityEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // send tombstone subject entity label
+        communityEntityLabelTopic.pipeInput(kSE, null);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId)
+                .setIsOutgoing(false)
+                .setEntityId(objectId)
+                .setPropertyId(propertyId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getEdges().get(0).getTargetLabel()).isEqualTo(null);
+    }
+
+    @Test
+    void testDeleteEntityLabels() {
+        var projectId = 10;
+        var propertyId = 30;
+        var subjectId = "i1";
+        var objectId = "i2";
+
+        // add statement
+        var k = ProjectStatementKey.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(1)
+                .build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(3)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setPropertyId(propertyId)
+                                .setObjectId(objectId)
+                                .build()
+                )
+                .setOrdNumOfRange(3)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+        // add subject entity label
+        var kSE = ProjectEntityKey.newBuilder().setEntityId(subjectId).setProjectId(projectId).build();
+        var vSE = ProjectEntityLabelValue.newBuilder().setEntityId(subjectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Jack").build();
+        projectEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // add object entity label
+        var kOE = ProjectEntityKey.newBuilder().setEntityId(objectId).setProjectId(projectId).build();
+        var vOE = ProjectEntityLabelValue.newBuilder().setEntityId(objectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Maria").build();
+        projectEntityLabelTopic.pipeInput(kOE, vOE);
+
+        // mark subject entity label as deleted
+        vSE.setDeleted$1(true);
+        projectEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // send entity label as tombstone
+        projectEntityLabelTopic.pipeInput(kSE, null);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId)
+                .setIsOutgoing(false)
+                .setEntityId(objectId)
+                .setPropertyId(propertyId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getEdges().get(0).getTargetLabel()).isEqualTo(null);
+    }
+
+
+    @Test
+    void testDeleteStmt() {
+        var projectId = 10;
+        var propertyId = 30;
+        var subjectId = "i1";
+        var objectId = "i2";
+
+        // add statement
+        var k = ProjectStatementKey.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(1)
+                .build();
+        var v = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(3)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setPropertyId(propertyId)
+                                .setObjectId(objectId)
+                                .build()
+                )
+                .setOrdNumOfRange(3)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+        // add subject entity label
+        var kSE = ProjectEntityKey.newBuilder().setEntityId(subjectId).setProjectId(projectId).build();
+        var vSE = ProjectEntityLabelValue.newBuilder().setEntityId(subjectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Jack").build();
+        projectEntityLabelTopic.pipeInput(kSE, vSE);
+
+        // add object entity label
+        var kOE = ProjectEntityKey.newBuilder().setEntityId(objectId).setProjectId(projectId).build();
+        var vOE = ProjectEntityLabelValue.newBuilder().setEntityId(objectId).setProjectId(projectId)
+                .setLabelSlots(List.of("")).setLabel("Maria").build();
+        projectEntityLabelTopic.pipeInput(kOE, vOE);
+
+        // mark stmt as deleted
+        v.setDeleted$1(true);
+        projectStatementWithEntityTopic.pipeInput(k, v);
+
+        // send stmt as tombstone
+        projectStatementWithEntityTopic.pipeInput(k, null);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectTopStatementsKey.newBuilder()
+                .setProjectId(projectId)
+                .setIsOutgoing(false)
+                .setEntityId(objectId)
+                .setPropertyId(propertyId)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getEdges().size()).isEqualTo(0);
+    }
+
 }
