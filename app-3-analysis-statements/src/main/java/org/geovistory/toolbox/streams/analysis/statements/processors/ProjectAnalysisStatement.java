@@ -16,6 +16,7 @@ import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.TimeUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -25,6 +26,8 @@ import java.util.Objects;
 
 @ApplicationScoped
 public class ProjectAnalysisStatement {
+
+    private static final Logger LOGGER = Logger.getLogger(ProjectAnalysisStatement.class);
 
     @Inject
     AvroSerdes avroSerdes;
@@ -54,6 +57,7 @@ public class ProjectAnalysisStatement {
             KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteral,
             KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntity
     ) {
+
 
         ObjectMapper mapper = JsonStringifier.getMapperIgnoringNulls();
 
@@ -88,6 +92,7 @@ public class ProjectAnalysisStatement {
 
                 return KeyValue.pair(k, v);
             } catch (JsonProcessingException e) {
+                LOGGER.warn(e.getMessage());
                 throw new RuntimeException(e);
             }
         });
