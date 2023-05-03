@@ -15,6 +15,7 @@ import org.geovistory.toolbox.streams.base.config.AvroSerdes;
 import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplierMemory;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
 
@@ -48,18 +49,18 @@ public class ProjectProfiles {
     public void addProcessorsStandalone() {
         var proProjectTable = registerInputTopic.proProjectTable();
         var proProfileProjRelTable = registerInputTopic.proProfileProjRelTable();
-        var sysConfigTable = registerInputTopic.sysConfigTable();
+        var sysConfigStream = registerInputTopic.sysConfigStream();
         addProcessors(
                 proProjectTable,
                 proProfileProjRelTable,
-                sysConfigTable
+                sysConfigStream
         );
     }
 
     public ProjectProfilesReturnValue addProcessors(
             KTable<dev.projects.project.Key, dev.projects.project.Value> proProjects,
             KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> proDfhProfileProjRels,
-            KTable<dev.system.config.Key, dev.system.config.Value> sysConfig
+            KStream<dev.system.config.Key, dev.system.config.Value> sysConfig
     ) {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";
@@ -113,11 +114,8 @@ public class ProjectProfiles {
         // 5)
         // Key: constant "REQUIRED_ONTOME_PROFILES", Value: List of profile ids
         KTable<String, IntegerList> requiredProfiles = sysConfig
-                .toStream(
-                        Named.as(inner.TOPICS.projects_with_enabled_profiles + "-to-stream")
-                )
                 .filter(
-                        ((k, v) -> v.getKey().equals(SYS_CONFIG)),
+                        ((k, v) -> v.getKey() != null && v.getKey().equals(SYS_CONFIG)),
                         Named.as("kstream-filter-sys-config")
                 )
                 // 6)
@@ -132,6 +130,17 @@ public class ProjectProfiles {
                             return new KeyValue<>(REQUIRED_ONTOME_PROFILES, p);
                         },
                         Named.as("kstream-map-required-ontome-profiles")
+                )
+                .repartition(
+                        Repartitioned.<String, IntegerList>as(inner.TOPICS.required_profiles + "-repartition")
+                                .withKeySerde(Serdes.String())
+                                .withValueSerde(avroSerdes.IntegerList())
+                                .withName(inner.TOPICS.required_profiles + "-repartition-2")
+                )
+                .transform(
+                        new IdenticalRecordsFilterSupplierMemory<>(inner.TOPICS.required_profiles + "-deduplicate",
+                                Serdes.String(),
+                                avroSerdes.IntegerList())
                 )
                 .toTable(
                         Named.as(inner.TOPICS.required_profiles),
@@ -178,7 +187,7 @@ public class ProjectProfiles {
         KTable<Integer, IntegerList> projectWithProfiles = projectsWithRequiredProfiles.leftJoin(
                 projectsWithEnabledProfiles,
                 (value1, value2) -> {
-                    if (value2 != null && value2.getList().size()>0) value1.getList().addAll(value2.getList());
+                    if (value2 != null && value2.getList().size() > 0) value1.getList().addAll(value2.getList());
                     return value1;
                 },
                 Named.as(inner.TOPICS.projects_with_profiles + "-fk-left-join"),
@@ -195,7 +204,8 @@ public class ProjectProfiles {
                         (readOnlyKey, value) -> {
                             var map = BooleanMap.newBuilder().build();
                             var __deleted = false;
-                            if (value != null) value.getList().forEach(profileId -> map.getItem().put(profileId.toString(), __deleted));
+                            if (value != null)
+                                value.getList().forEach(profileId -> map.getItem().put(profileId.toString(), __deleted));
                             return map;
                         },
                         Named.as("kstream-mapvalues-integer-list-to-boolean-map")

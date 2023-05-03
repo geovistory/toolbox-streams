@@ -53,13 +53,8 @@ public class ProjectEntityFulltext {
         // 2
         var projectFieldTopLabelsTable = projectTopStatementsTable.mapValues((readOnlyKey, value) -> {
                     var l = new LinkedList<String>();
-                    for (var i : value.getStatements()) {
-                        var s = i.getStatement();
-                        if (readOnlyKey.getIsOutgoing() && s.getObjectLabel() != null) {
-                            l.add(s.getObjectLabel());
-                        } else if (s.getSubjectLabel() != null) {
-                            l.add(s.getSubjectLabel());
-                        }
+                    for (var e : value.getEdges()) {
+                        if (e.getTargetLabel() != null)  l.add(e.getTargetLabel());
                     }
                     var res = ProjectFieldTopLabelsValue.newBuilder()
                             .setTargetLabels(l)

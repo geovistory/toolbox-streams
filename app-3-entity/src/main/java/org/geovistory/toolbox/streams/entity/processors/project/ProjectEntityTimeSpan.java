@@ -59,7 +59,7 @@ public class ProjectEntityTimeSpan {
 
                     // convert statements to time primitives
                     var array = topTimePrimitives.getTimePrimitives();
-                    for (var s : value.getStatements()) {
+                    for (var s : value.getEdges()) {
                         var tp = extractTimePrimitive(s);
                         if (tp != null) array.add(tp);
                     }
@@ -111,14 +111,12 @@ public class ProjectEntityTimeSpan {
 
     }
 
-    public static TimePrimitive extractTimePrimitive(ProjectStatementValue value) {
-        var a = value.getStatement();
-        if (a == null) return null;
+    public static TimePrimitive extractTimePrimitive(ProjectEdgeValue value) {
+        var n = value.getTargetNode();
 
-        var b = a.getObject();
-        if (b == null) return null;
+        if (n == null) return null;
 
-        return b.getTimePrimitive();
+        return n.getTimePrimitive();
     }
 
 

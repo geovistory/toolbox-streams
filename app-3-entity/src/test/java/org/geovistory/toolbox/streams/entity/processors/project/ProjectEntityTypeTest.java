@@ -101,15 +101,14 @@ class ProjectEntityTypeTest {
         var vS = ProjectTopStatementsValue.newBuilder()
                 .setProjectId(projectId).setEntityId(entityId)
                 .setPropertyId(987).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setPropertyId(987)
-                                        .setObjectId("i654")
-                                        .setObjectLabel("Joy")
-                                        .build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setSourceId(entityId)
+                                .setPropertyId(987)
+                                .setTargetId("i654")
+                                .setTargetLabel("Joy")
+                                .build()
                 )).build();
         projectTopOutgoingStatements.pipeInput(kS, vS);
 
@@ -154,15 +153,14 @@ class ProjectEntityTypeTest {
         var vS = ProjectTopStatementsValue.newBuilder()
                 .setProjectId(projectId).setEntityId(entityId)
                 .setPropertyId(987).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setPropertyId(987)
-                                        .setObjectId("i654")
-                                        .setObjectLabel("Joy")
-                                        .build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setSourceId(entityId)
+                                .setPropertyId(987)
+                                .setTargetId("i654")
+                                .setTargetLabel("Joy")
+                                .build()
                 )).build();
         projectTopOutgoingStatements.pipeInput(kS, vS);
 
@@ -208,20 +206,19 @@ class ProjectEntityTypeTest {
         var vS = ProjectTopStatementsValue.newBuilder()
                 .setProjectId(projectId).setEntityId(entityId)
                 .setPropertyId(987).setIsOutgoing(true)
-                .setStatements(List.of(
-                        ProjectStatementValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNumOfDomain(1)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setPropertyId(987)
-                                        .setObjectId("i654")
-                                        .setObjectLabel("Joy")
-                                        .build()).build()
+                .setEdges(List.of(
+                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
+                                .setOrdNum(1)
+                                .setSourceId(entityId)
+                                .setPropertyId(987)
+                                .setTargetId("i654")
+                                .setTargetLabel("Joy")
+                                .build()
                 )).build();
 
         projectTopOutgoingStatements.pipeInput(kS, vS);
 
-        vS.setStatements(List.of());
+        vS.setEdges(List.of());
         projectTopOutgoingStatements.pipeInput(kS, vS);
 
 

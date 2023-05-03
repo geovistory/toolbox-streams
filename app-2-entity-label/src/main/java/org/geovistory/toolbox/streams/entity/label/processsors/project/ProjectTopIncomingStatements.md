@@ -4,15 +4,20 @@ This topology aggregates the top 5 incoming statements of an entity's property.
 
 ```mermaid
 flowchart TD
-    1a-->2a-->4a-->5a-->5b
-    1c-->2a
-
+    1b-->3a
+    1a-->2a
+    1c-->2a-->3a-->4a-->5a-->5b 
+    
     subgraph 1
         1a[project_statement_with_entity]
+        1b[community_toolbox_entity_label]
         1c[project_entity_label]
     end
     subgraph __2
-        2a([Join])
+        2a([LeftJoin])
+    end 
+    subgraph __3
+        3a([LeftJoin])
     end  
     subgraph __4
         4a([GroupBy])
@@ -27,7 +32,8 @@ flowchart TD
 | Step |                                                                     |
 |------|---------------------------------------------------------------------|
 | 1    | input topic                                                         |
-| 3    | Join: entity label to set subject label                             |
+| 2    | LeftJoin: project entity label to set subject label                 |
+| 3    | LeftJoin: community entity label to set subject label               |
 | 4    | GroupBy: group by subject_id                                        |
 | 5    | Aggregate: create a list of statements, ordered by ord_num_of_range |
 |      | To topic `project_top_incoming_statements`                          |
@@ -61,11 +67,11 @@ _{prefix_out} = TS_OUTPUT_TOPIC_NAME_PREFIX_
 
 ### Value
 
-| field       | type                         |
-|-------------|------------------------------|
-| entity_id   | string                       |
-| project_id  | int                          |
-| property_id | int                          |
-| is_outgoing | boolean                      |
-| statements  | Array<ProjectStatementValue> |
-| __deleted   | boolean, null                |
+| field       | type                    |
+|-------------|-------------------------|
+| entity_id   | string                  |
+| project_id  | int                     |
+| property_id | int                     |
+| is_outgoing | boolean                 |
+| edges       | Array<ProjectEdgeValue> |
+| __deleted   | boolean, null           |

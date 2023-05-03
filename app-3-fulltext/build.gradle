@@ -90,6 +90,7 @@ task generateReflectionConfiguration {
         classNames.add("EntityLabelConfigPart.class")
         classNames.add("EntityLabelConfigPartField.class")
         classNames.add("ProjectStatementValue.class")
+        classNames.add("ProjectEdgeValue.class")
         classNames.add("StatementEnrichedValue.class")
         classNames.add("CommunityStatementValue.class")
         classNames.add("ProjectFieldLabelKey.class")

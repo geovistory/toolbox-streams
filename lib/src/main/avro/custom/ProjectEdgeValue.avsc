@@ -1,0 +1,77 @@
+{
+  "type": "record",
+  "name": "ProjectEdgeValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "A project edge value is a directed statement with source and target instead of subject/object. The direction has to be set in the key.",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "statement_id",
+      "type": "int"
+    },
+    {
+      "name": "source_id",
+      "type": "string"
+    },
+    {
+      "name": "source_class_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "target_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "target_node",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NodeValue"
+      ],
+      "default": null
+    },
+    {
+      "name": "target_id",
+      "type": "string"
+    },
+    {
+      "name": "ord_num",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "modified_at",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "connect.version": 1,
+          "connect.name": "io.debezium.time.ZonedTimestamp"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "deleted",
+      "type": "boolean",
+      "default": false
+    }
+  ]
+}

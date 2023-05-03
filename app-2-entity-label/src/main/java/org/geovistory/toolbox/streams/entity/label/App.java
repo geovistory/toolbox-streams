@@ -117,14 +117,16 @@ class App {
         // add sub-topology ProjectTopIncomingStatements
         var projectTopIncomingStatementsReturn = projectTopIncomingStatements.addProcessors(
                 projectStatementWithEntityTable,
-                projectEntityLabelTable
+                projectEntityLabelTable,
+                communityToolboxEntityLabelTable
         );
 
         // add sub-topology ProjectTopOutgoingStatements
         var projectTopOutgoingStatementsReturn = projectTopOutgoingStatements.addProcessors(
                 projectStatementWithLiteralReturn.ProjectStatementStream(),
                 projectStatementWithEntityTable,
-                projectEntityLabelTable
+                projectEntityLabelTable,
+                communityToolboxEntityLabelTable
         );
 
         // add sub-topology ProjectTopStatements

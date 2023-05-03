@@ -43,18 +43,18 @@ class ProjectProfilesTest {
         var outputTopicNames = new OutputTopicNames();
         var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
         var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
-        var projectProfiles = new ProjectProfiles(avroSerdes, registerInputTopic, registerInnerTopic,outputTopicNames);
+        var projectProfiles = new ProjectProfiles(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
         projectProfiles.addProcessorsStandalone();
         var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
         projectTopic = testDriver.createInputTopic(
-                inputTopicNames. proProject(),
+                inputTopicNames.proProject(),
                 avroSerdes.ProProjectKey().serializer(),
                 avroSerdes.ProProjectValue().serializer());
 
         profileProjectTopic = testDriver.createInputTopic(
-                inputTopicNames. proProfileProjRel(),
+                inputTopicNames.proProfileProjRel(),
                 avroSerdes.ProProfileProjRelKey().serializer(),
                 avroSerdes.ProProfileProjRelValue().serializer());
 
@@ -238,5 +238,54 @@ class ProjectProfilesTest {
         assertThat(outRecords.get(new ProjectProfileKey(20, 100)).getDeleted$1()).isTrue();
     }
 
+
+    @Test
+    void testDeleteSysConfig() {
+        var pKey = new dev.projects.project.Key(20);
+        var pVal = dev.projects.project.Value.newBuilder().build();
+        projectTopic.pipeInput(pKey, pVal);
+
+        var cKey = new dev.system.config.Key(1);
+        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+                .setKey("SYS_CONFIG")
+                .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5]}}").build();
+        configTopic.pipeInput(cKey, cVal);
+
+        cKey = new dev.system.config.Key(1);
+        cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+                .setKey(null)
+                .setConfig(null)
+                .setDeleted$1("true").build();
+        configTopic.pipeInput(cKey, cVal);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        assertThat(outRecords.get(new ProjectProfileKey(20, 5)).getDeleted$1()).isFalse();
+    }
+
+    /**
+     * Test that output topic has no new message, if
+     * system config is changed but the requiredOntomeProfiles are untouched
+     */
+    @Test
+    void testUpdateSysConfigSuppressUnchangedProfiles() {
+        var pKey = new dev.projects.project.Key(20);
+        var pVal = dev.projects.project.Value.newBuilder().build();
+        projectTopic.pipeInput(pKey, pVal);
+
+        var cKey = new dev.system.config.Key(1);
+        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+                .setKey("SYS_CONFIG")
+                .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5]}}").build();
+        configTopic.pipeInput(cKey, cVal);
+
+        // pipe it again!
+        configTopic.pipeInput(cKey, cVal);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readRecordsToList();
+        assertThat(outRecords).hasSize(1);
+    }
 
 }

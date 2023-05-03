@@ -81,7 +81,7 @@ public class App {
             var proProjectTable = registerInputTopic.proProjectTable();
             var proTextPropertyStream = registerInputTopic.proTextPropertyStream();
             var proProfileProjRelTable = registerInputTopic.proProfileProjRelTable();
-            var sysConfigTable = registerInputTopic.sysConfigTable();
+            var sysConfigStream = registerInputTopic.sysConfigStream();
             var ontomeClassLabelTable = registerInputTopic.ontomeClassLabelTable();
 
             // register input topics as KStreams
@@ -95,7 +95,7 @@ public class App {
             var projectProfilesReturn = projectProfiles.addProcessors(
                     proProjectTable,
                     proProfileProjRelTable,
-                    sysConfigTable);
+                    sysConfigStream);
 
             // add sub-topology ProjectProperty
             var projectPropertyReturn = projectProperty.addProcessors(

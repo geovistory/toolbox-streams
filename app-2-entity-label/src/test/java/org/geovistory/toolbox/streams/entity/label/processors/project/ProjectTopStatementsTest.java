@@ -84,7 +84,7 @@ class ProjectTopStatementsTest {
                 .setIsOutgoing(true)
                 .build();
         var v = ProjectTopStatementsValue.newBuilder()
-                .setStatements(List.of())
+                .setEdges(List.of())
                 .setPropertyId(1)
                 .setProjectId(1)
                 .setEntityId("1")

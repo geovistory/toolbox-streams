@@ -1,20 +1,26 @@
 package org.geovistory.toolbox.streams.entity.preview.processors.project;
 
-import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Named;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.processor.api.Processor;
+import org.apache.kafka.streams.processor.api.ProcessorContext;
+import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.state.StoreBuilder;
+import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.preview.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.Klass;
 import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
-import org.geovistory.toolbox.streams.entity.preview.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.geovistory.toolbox.streams.lib.JoinHelper.addStateStore;
+import static org.geovistory.toolbox.streams.lib.JoinHelper.registerSourceTopics;
 
 
 @ApplicationScoped
@@ -25,191 +31,311 @@ public class ProjectEntityPreview {
     AvroSerdes avroSerdes;
 
     @Inject
-    RegisterInputTopic registerInputTopic;
+    InputTopicNames inputTopicNames;
 
 
     @Inject
     OutputTopicNames outputTopicNames;
 
 
-    public ProjectEntityPreview(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
+    public ProjectEntityPreview(AvroSerdes avroSerdes, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
         this.avroSerdes = avroSerdes;
-        this.registerInputTopic = registerInputTopic;
+        this.inputTopicNames = inputTopicNames;
         this.outputTopicNames = outputTopicNames;
     }
 
-    public void addProcessorsStandalone() {
-        addProcessors(
-                registerInputTopic.projectEntityTable(),
-                registerInputTopic.projectEntityLabelTable(),
-                registerInputTopic.projectEntityClassLabelTable(),
-                registerInputTopic.projectEntityTypeTable(),
-                registerInputTopic.projectEntityTimeSpanTable(),
-                registerInputTopic.projectEntityFulltextTable(),
-                registerInputTopic.projectEntityClassMetadataTable()
-        );
-    }
-
-    public  ProjectEntityPreviewReturnValue addProcessors(
-            KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,
-            KTable<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTable,
-            KTable<ProjectEntityKey, ProjectEntityClassLabelValue> projectEntityClassLabelTable,
-            KTable<ProjectEntityKey, ProjectEntityTypeValue> projectEntityTypeTable,
-            KTable<ProjectEntityKey, TimeSpanValue> projectEntityTimeSpanTable,
-            KTable<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextTable,
-            KTable<ProjectEntityKey, ProjectEntityClassMetadataValue> projectEntityClassMetadataTable
+    public void addProcessors(
+            Topology topology
     ) {
 
-        /* STREAM PROCESSORS */
-        // 2)
+        var joinProcessorName = "create-project-entity-preview";
 
-        var labelJoined = projectEntityTable.leftJoin(
-                projectEntityLabelTable,
-                (value1, value2) -> {
-                    if (Utils.booleanIsEqualTrue(value1.getDeleted$1())) return null;
-                    var newVal = EntityPreviewValue.newBuilder()
-                            .setFkProject(value1.getProjectId())
-                            .setProject(value1.getProjectId())
-                            .setEntityId(value1.getEntityId())
-                            .setPkEntity(parseStringId(value1.getEntityId()))
-                            .setFkClass(value1.getClassId())
-                            .setParentClasses("[]")
-                            .setAncestorClasses("[]")
-                            .setEntityType("")
-                            .build();
-
-                    if (value2 != null) newVal.setEntityLabel(value2.getLabel());
-
-                    return newVal;
-                },
-                Named.as(inner.TOPICS.project_entity_preview_label_join + "-left-join"),
-                Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_label_join)
-                        .withKeySerde(avroSerdes.ProjectEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getProjectEntity(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityValue()
         );
 
-        // 3
-        var classLabelJoin = labelJoined.leftJoin(
-                projectEntityClassLabelTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        value1.setClassLabel(value2.getClassLabel());
-                    }
-                    return value1;
-                },
-                Named.as(inner.TOPICS.project_entity_preview_class_label_join + "-left-join"),
-                Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_class_label_join)
-                        .withKeySerde(avroSerdes.ProjectEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
-        );
-        // 4
-        var typeJoined = classLabelJoin.leftJoin(
-                projectEntityTypeTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        var typeId = value2.getTypeId();
-                        if (typeId != null && typeId.length() > 1) {
-                            value1.setTypeId(typeId);
-                            value1.setFkType(parseStringId(typeId));
-                        }
-                        value1.setTypeLabel(value2.getTypeLabel());
-                    }
-                    return value1;
-                },
-                Named.as(inner.TOPICS.project_entity_preview_type_join + "-left-join"),
-                Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_type_join)
-                        .withKeySerde(avroSerdes.ProjectEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
-        );
-        // 5
-        var typeTimeSpan = typeJoined.leftJoin(
-                projectEntityTimeSpanTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        value1.setTimeSpan(value2.getTimeSpan().toString());
-                        value1.setFirstSecond(value2.getFirstSecond());
-                        value1.setLastSecond(value2.getLastSecond());
-                    }
-                    return value1;
-                },
-                Named.as(inner.TOPICS.project_entity_preview_time_span_join + "-left-join"),
-                Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_time_span_join)
-                        .withKeySerde(avroSerdes.ProjectEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
-        );
-        // 6
-        var typeFulltext = typeTimeSpan.leftJoin(
-                projectEntityFulltextTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        value1.setFullText(value2.getFulltext());
-                    }
-                    return value1;
-                },
-                Named.as(inner.TOPICS.project_entity_preview_fulltext_join + "-left-join"),
-                Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_preview_fulltext_join)
-                        .withKeySerde(avroSerdes.ProjectEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getProjectEntityLabel(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityLabelValue()
         );
 
-        // 7
-        var classMetadata = typeFulltext.leftJoin(
-                projectEntityClassMetadataTable,
-                (value1, value2) -> {
-                    if (value2 != null) {
-                        var parents = value2.getParentClasses();
-                        var ancestors = value2.getAncestorClasses();
-                        value1.setParentClasses(parents.toString());
-                        value1.setAncestorClasses(ancestors.toString());
-                        var isPersistentItem = parents.contains(Klass.PERSISTENT_ITEM.get()) ||
-                                ancestors.contains(Klass.PERSISTENT_ITEM.get());
-                        var entityType = isPersistentItem ? "peIt" : "teEn";
-                        value1.setEntityType(entityType);
-                    }
-                    return value1;
-                },
-                Named.as(inner.TOPICS.project_entity_class_metadata_join + "-left-join"),
-                Materialized.<ProjectEntityKey, EntityPreviewValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_class_metadata_join)
-                        .withKeySerde(avroSerdes.ProjectEntityKey())
-                        .withValueSerde(avroSerdes.EntityPreviewValue())
+
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getProjectEntityType(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityTypeValue()
         );
 
-        var projectEntityPreviewStream = classMetadata.toStream(
-                Named.as(inner.TOPICS.project_entity_class_metadata_join + "-to-stream")
+
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getProjectEntityTimeSpan(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.TimeSpanValue()
         );
 
-        /* SINK PROCESSORS */
 
-        projectEntityPreviewStream.to(outputTopicNames. projectEntityPreview(),
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.EntityPreviewValue())
-                        .withName(outputTopicNames.projectEntityPreview() + "-producer")
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getProjectEntityFulltext(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityFulltextValue()
         );
 
-        return new ProjectEntityPreviewReturnValue( projectEntityPreviewStream);
+
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getProjectEntityClassLabel(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityClassLabelValue()
+        );
+
+
+        registerSourceTopics(
+                topology,
+                inputTopicNames.getProjectEntityClassMetadata(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityClassMetadataValue()
+        );
+
+
+        // create a state store builder
+        var stateStoreName = "joinedProjectPreviewStore";
+        Map<String, String> changelogConfig = new HashMap<>();
+        StoreBuilder<KeyValueStore<ProjectEntityKey, EntityPreviewValue>> storeSupplier =
+                Stores.keyValueStoreBuilder(
+                                Stores.persistentKeyValueStore(stateStoreName),
+                                avroSerdes.ProjectEntityKey(),
+                                avroSerdes.EntityPreviewValue())
+                        .withLoggingEnabled(changelogConfig);
+
+
+        // add join processor
+        topology.addProcessor(joinProcessorName,
+                () -> new JoinProcessor(stateStoreName),
+                inputTopicNames.getProjectEntity() + "-process",
+                inputTopicNames.getProjectEntityLabel() + "-process",
+                inputTopicNames.getProjectEntityType() + "-process",
+                inputTopicNames.getProjectEntityTimeSpan() + "-process",
+                inputTopicNames.getProjectEntityFulltext() + "-process",
+                inputTopicNames.getProjectEntityClassLabel() + "-process",
+                inputTopicNames.getProjectEntityClassMetadata() + "-process"
+        );
+
+        topology.addStateStore(storeSupplier, joinProcessorName);
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getProjectEntity(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityValue(),
+                joinProcessorName
+        );
+
+        addStateStore(
+                topology,
+                inputTopicNames.getProjectEntityLabel(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityLabelValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getProjectEntityType(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityTypeValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getProjectEntityTimeSpan(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.TimeSpanValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getProjectEntityFulltext(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityFulltextValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getProjectEntityClassLabel(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityClassLabelValue(),
+                joinProcessorName
+        );
+
+
+        addStateStore(
+                topology,
+                inputTopicNames.getProjectEntityClassMetadata(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityClassMetadataValue(),
+                joinProcessorName
+        );
+
+        // add sink processor
+        topology.addSink(
+                outputTopicNames.projectEntityPreview() + "-sink",
+                outputTopicNames.projectEntityPreview(),
+                avroSerdes.ProjectEntityKey().serializer(),
+                avroSerdes.EntityPreviewValue().serializer(),
+                joinProcessorName
+        );
+
 
     }
 
-    private static int parseStringId(String value1) {
-        try {
-            return Integer.parseInt(value1.substring(1));
-        } catch (NumberFormatException | IndexOutOfBoundsException e) {
-            e.printStackTrace();
+
+    private class JoinProcessor implements Processor<ProjectEntityKey, Object, ProjectEntityKey, EntityPreviewValue> {
+        String stateStoreName;
+        private KeyValueStore<ProjectEntityKey, EntityPreviewValue> joinedKeyValueStore;
+
+        private KeyValueStore<ProjectEntityKey, ProjectEntityValue> projectEntityStore;
+        private KeyValueStore<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelStore;
+        private KeyValueStore<ProjectEntityKey, ProjectEntityTypeValue> projectEntityTypeStore;
+        private KeyValueStore<ProjectEntityKey, TimeSpanValue> projectEntityTimeSpanStore;
+        private KeyValueStore<ProjectEntityKey, ProjectEntityFulltextValue> projectEntityFulltextStore;
+        private KeyValueStore<ProjectEntityKey, ProjectEntityClassLabelValue> projectEntityClassLabelStore;
+        private KeyValueStore<ProjectEntityKey, ProjectEntityClassMetadataValue> projectEntityClassMetadataStore;
+        private ProcessorContext<ProjectEntityKey, EntityPreviewValue> context;
+
+        public JoinProcessor(String stateStoreName) {
+            this.stateStoreName = stateStoreName;
         }
-        return 0;
+
+
+        @Override
+        public void process(Record<ProjectEntityKey, Object> record) {
+
+            var projectEntity = this.projectEntityStore.get(record.key());
+            if (projectEntity == null || Utils.booleanIsEqualTrue(projectEntity.getDeleted$1())) {
+
+                // forward a tombstone
+                context.forward(record.withValue(null));
+
+            } else {
+                var projectEntityLabel = this.projectEntityLabelStore.get(record.key());
+                var projectEntityType = this.projectEntityTypeStore.get(record.key());
+                var projectEntityTimeSpan = this.projectEntityTimeSpanStore.get(record.key());
+                var projectEntityFulltext = this.projectEntityFulltextStore.get(record.key());
+                var projectEntityClassLabel = this.projectEntityClassLabelStore.get(record.key());
+                var projectEntityClassMetadata = this.projectEntityClassMetadataStore.get(record.key());
+
+                var newVal = EntityPreviewValue.newBuilder()
+                        .setFkProject(projectEntity.getProjectId())
+                        .setProject(projectEntity.getProjectId())
+                        .setEntityId(projectEntity.getEntityId())
+                        .setPkEntity(parseStringId(projectEntity.getEntityId()))
+                        .setFkClass(projectEntity.getClassId())
+                        .setParentClasses("[]")
+                        .setAncestorClasses("[]")
+                        .setEntityType("")
+                        .build();
+
+                if (projectEntityLabel != null) newVal.setEntityLabel(projectEntityLabel.getLabel());
+
+                if (projectEntityType != null) {
+                    var typeId = projectEntityType.getTypeId();
+                    if (typeId != null && typeId.length() > 1) {
+                        newVal.setTypeId(typeId);
+                        newVal.setFkType(parseStringId(typeId));
+                    }
+                    newVal.setTypeLabel(projectEntityType.getTypeLabel());
+                }
+
+                if (projectEntityTimeSpan != null) {
+                    newVal.setTimeSpan(projectEntityTimeSpan.getTimeSpan().toString());
+                    newVal.setFirstSecond(projectEntityTimeSpan.getFirstSecond());
+                    newVal.setLastSecond(projectEntityTimeSpan.getLastSecond());
+                }
+
+                if (projectEntityFulltext != null) {
+                    newVal.setFullText(projectEntityFulltext.getFulltext());
+                }
+
+                if (projectEntityClassLabel != null) {
+                    newVal.setClassLabel(projectEntityClassLabel.getClassLabel());
+                }
+
+                if (projectEntityClassMetadata != null) {
+                    var parents = projectEntityClassMetadata.getParentClasses();
+                    var ancestors = projectEntityClassMetadata.getAncestorClasses();
+                    newVal.setParentClasses(parents.toString());
+                    newVal.setAncestorClasses(ancestors.toString());
+                    var isPersistentItem = parents.contains(Klass.PERSISTENT_ITEM.get()) ||
+                            ancestors.contains(Klass.PERSISTENT_ITEM.get());
+                    var entityType = isPersistentItem ? "peIt" : "teEn";
+                    newVal.setEntityType(entityType);
+                }
+
+                // Put into state store.
+                joinedKeyValueStore.put(record.key(), newVal);
+
+                // forward join result
+                context.forward(record.withValue(newVal));
+
+            }
+        }
+
+        @Override
+        public void init(ProcessorContext<ProjectEntityKey, EntityPreviewValue> context) {
+
+            this.joinedKeyValueStore = context.getStateStore(stateStoreName);
+
+            this.projectEntityStore = context.getStateStore(inputTopicNames.getProjectEntity() + "-store");
+
+            this.projectEntityLabelStore = context.getStateStore(inputTopicNames.getProjectEntityLabel() + "-store");
+
+            this.projectEntityTypeStore = context.getStateStore(inputTopicNames.getProjectEntityType() + "-store");
+
+            this.projectEntityTimeSpanStore = context.getStateStore(inputTopicNames.getProjectEntityTimeSpan() + "-store");
+
+            this.projectEntityFulltextStore = context.getStateStore(inputTopicNames.getProjectEntityFulltext() + "-store");
+
+            this.projectEntityClassLabelStore = context.getStateStore(inputTopicNames.getProjectEntityClassLabel() + "-store");
+
+            this.projectEntityClassMetadataStore = context.getStateStore(inputTopicNames.getProjectEntityClassMetadata() + "-store");
+
+            this.context = context;
+        }
+
+        @Override
+        public void close() {
+        }
+
+        private static int parseStringId(String value1) {
+            try {
+                return Integer.parseInt(value1.substring(1));
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
+            return 0;
+        }
     }
 
-
-
-
-
-    public enum inner {
-        TOPICS;
-        public final String project_entity_preview_label_join = "project_entity_preview_label_join";
-        public final String project_entity_preview_class_label_join = "project_entity_preview_class_label_join";
-        public final String project_entity_preview_type_join = "project_entity_preview_type_join";
-        public final String project_entity_preview_time_span_join = "project_entity_preview_time_span_join";
-        public final String project_entity_preview_fulltext_join = "project_entity_preview_fulltext_join";
-        public final String project_entity_class_metadata_join = "project_entity_class_metadata_join";
-    }
 
 }
+
+
+
+
+

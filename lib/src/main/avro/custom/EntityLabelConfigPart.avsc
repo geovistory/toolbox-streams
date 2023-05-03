@@ -15,6 +15,11 @@
         "org.geovistory.toolbox.streams.avro.EntityLabelConfigPartField"
       ],
       "default": null
+    },
+    {
+      "name": "deleted",
+      "type": "boolean",
+      "default": false
     }
   ]
 }

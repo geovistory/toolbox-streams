@@ -96,6 +96,11 @@ public class AvroSerdes {
         serdes.configure(getProperties(), false);
         return serdes;
     }
+    public Serde<ProjectEdgeValue> ProjectEdgeValue() {
+        Serde<ProjectEdgeValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
     public Serde<CommunityEntityLabelConfigKey> CommunityEntityLabelConfigKey() {
         Serde<CommunityEntityLabelConfigKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);

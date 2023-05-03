@@ -89,6 +89,7 @@ task generateReflectionConfiguration {
 
         classNames.add("StatementEnrichedValue.class")
         classNames.add("ProjectStatementValue.class")
+        classNames.add("ProjectEdgeValue.class")
         classNames.add("TimeSpan.class")
         classNames.add("NewTimePrimitive.class")
         classNames.add("CommunityStatementValue.class")

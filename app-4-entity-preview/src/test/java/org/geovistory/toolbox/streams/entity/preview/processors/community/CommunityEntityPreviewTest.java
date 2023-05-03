@@ -1,12 +1,12 @@
 package org.geovistory.toolbox.streams.entity.preview.processors.community;
 
 
-import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.TestInputTopic;
-import org.apache.kafka.streams.TestOutputTopic;
-import org.apache.kafka.streams.TopologyTestDriver;
+import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.preview.*;
+import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.preview.BuilderSingleton;
+import org.geovistory.toolbox.streams.entity.preview.InputTopicNames;
+import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,10 +44,9 @@ class CommunityEntityPreviewTest {
         avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
         var inputTopicNames = new InputTopicNames();
         var outputTopicNames = new OutputTopicNames();
-        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
-        var communityClassLabel = new CommunityEntityPreview(avroSerdes, registerInputTopic, outputTopicNames);
-        communityClassLabel.addProcessorsStandalone();
-        var topology = builderSingleton.builder.build();
+        var communityClassLabel = new CommunityEntityPreview(avroSerdes, inputTopicNames, outputTopicNames);
+        var topology = new Topology();
+        communityClassLabel.addProcessors(topology);
         testDriver = new TopologyTestDriver(topology, props);
 
         communityEntityTopic = testDriver.createInputTopic(
