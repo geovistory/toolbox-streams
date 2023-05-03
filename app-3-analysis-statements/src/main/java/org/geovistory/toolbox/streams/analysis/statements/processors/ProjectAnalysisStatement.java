@@ -1,7 +1,5 @@
 package org.geovistory.toolbox.streams.analysis.statements.processors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
@@ -13,10 +11,8 @@ import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
-import org.geovistory.toolbox.streams.lib.JsonStringifier;
 import org.geovistory.toolbox.streams.lib.TimeUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -26,8 +22,6 @@ import java.util.Objects;
 
 @ApplicationScoped
 public class ProjectAnalysisStatement {
-
-    private static final Logger LOGGER = Logger.getLogger(ProjectAnalysisStatement.class);
 
     @Inject
     AvroSerdes avroSerdes;
@@ -59,7 +53,7 @@ public class ProjectAnalysisStatement {
     ) {
 
 
-        ObjectMapper mapper = JsonStringifier.getMapperIgnoringNulls();
+        // ObjectMapper mapper = JsonStringifier.getMapperIgnoringNulls();
 
         /* STREAM PROCESSORS */
         // 2)
@@ -74,27 +68,23 @@ public class ProjectAnalysisStatement {
                     .build();
 
             if (value.getDeleted$1()) return KeyValue.pair(k, null);
-            try {
-                var objectJsonString = mapper.writeValueAsString(object);
+            //  var objectJsonString = mapper.writeValueAsString(object);
 
-                var v = AnalysisStatementValue.newBuilder()
-                        .setPkEntity(key.getStatementId())
-                        .setProject(key.getProjectId())
-                        .setFkProject(key.getProjectId())
-                        .setFkSubjectInfo(Utils.parseStringId(value.getStatement().getSubjectId()))
-                        .setFkProperty(value.getStatement().getPropertyId())
-                        .setFkObjectInfo(Utils.parseStringId(value.getStatement().getObjectId()))
-                        .setIsInProjectCount(1)
-                        .setOrdNumOfDomain(value.getOrdNumOfDomain())
-                        .setOrdNumOfRange(value.getOrdNumOfRange())
-                        .setObjectInfoValue(objectJsonString)
-                        .build();
+            var v = AnalysisStatementValue.newBuilder()
+                    .setPkEntity(key.getStatementId())
+                    .setProject(key.getProjectId())
+                    .setFkProject(key.getProjectId())
+                    .setFkSubjectInfo(Utils.parseStringId(value.getStatement().getSubjectId()))
+                    .setFkProperty(value.getStatement().getPropertyId())
+                    .setFkObjectInfo(Utils.parseStringId(value.getStatement().getObjectId()))
+                    .setIsInProjectCount(1)
+                    .setOrdNumOfDomain(value.getOrdNumOfDomain())
+                    .setOrdNumOfRange(value.getOrdNumOfRange())
+                    .setObjectInfoValue(object.toString())
+                    .build();
 
-                return KeyValue.pair(k, v);
-            } catch (JsonProcessingException e) {
-                LOGGER.warn(e.getMessage());
-                throw new RuntimeException(e);
-            }
+            return KeyValue.pair(k, v);
+
         });
         /* SINK PROCESSORS */
 
