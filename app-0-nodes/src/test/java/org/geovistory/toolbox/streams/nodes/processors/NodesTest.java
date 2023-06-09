@@ -280,6 +280,29 @@ class NodesTest {
         assertThat(record.getPlace()).isNotNull();
     }
 
+    @Test
+    void testNullGeoPointPlace() {
+        int id = 30;
+
+        // add place
+        var k = dev.information.place.Key.newBuilder().setPkEntity(id).build();
+        var v = dev.information.place.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(id)
+                .setGeoPoint(null)
+                .setFkClass(0)
+                .build();
+        infPlaceTopic.pipeInput(k, v);
+
+        assertThat(nodeTopic.isEmpty()).isFalse();
+        var outRecords = nodeTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var record = outRecords.get(NodeKey.newBuilder().setId("i" + id).build());
+        assertThat(record.getLabel()).isEqualTo("WGS84: 0.0°, 0.0°");
+        assertThat(record.getPlace()).isNotNull();
+    }
+
 
     @Test
     void testTimePrimitive() {

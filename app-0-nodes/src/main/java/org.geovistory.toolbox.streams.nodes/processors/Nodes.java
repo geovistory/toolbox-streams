@@ -135,10 +135,21 @@ public class Nodes {
 
         // Map places to nodes
         var placeNodes = infPlaceStream.map((key, value) -> {
+
+                    // if geoPoint is null (it can be considered as invalid)
+                    if (value.getGeoPoint() == null) {
+                        // create a default geo point to not break downstream applications
+                        var fallback = io.debezium.data.geometry.Geography.newBuilder()
+                                .setWkb(GeoUtils.pointToBytes(0, 0, 4326))
+                                .setSrid(4326)
+                                .build();
+                        value.setGeoPoint(fallback);
+                    }
                     var wkb = value.getGeoPoint().getWkb();
                     var point = GeoUtils.bytesToPoint(wkb);
                     var x = point.getX();
                     var y = point.getY();
+
                     return KeyValue.pair(
                             NodeKey.newBuilder().setId("i" + key.getPkEntity()).build(),
                             NodeValue.newBuilder().setId("i" + key.getPkEntity())
