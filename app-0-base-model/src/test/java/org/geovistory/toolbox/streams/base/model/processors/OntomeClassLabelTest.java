@@ -57,7 +57,7 @@ class OntomeClassLabelTest {
 
 
         ontomeClassLabelTopic = testDriver.createOutputTopic(
-                ontomeClassLabel.outOntomeClassLabel(),
+                outputTopicNames.ontomeClassLabel(),
                 avroSerdes.OntomeClassLabelKey().deserializer(),
                 avroSerdes.OntomeClassLabelValue().deserializer());
     }
@@ -95,6 +95,43 @@ class OntomeClassLabelTest {
                 .setLanguageId(18605)
                 .build();
         assertThat(outRecords.get(classLangKey).getLabel()).isEqualTo("Label with valid lang");
+    }
+
+    @Test
+    void shouldOmitDuplicates() {
+
+        // add class lang de
+        var apKey = new dev.data_for_history.api_class.Key(1);
+        var apVal = dev.data_for_history.api_class.Value.newBuilder()
+                .setDfhAncestorClasses(new ArrayList<>())
+                .setDfhParentClasses(new ArrayList<>())
+                .setDfhFkProfile(97)
+                .setDfhPkClass(44)
+                .setDfhClassLabel("Label with valid lang")
+                .setDfhClassLabelLanguage(" de ") // add spaces to test trim
+                .build();
+        apiClassTopic.pipeInput(apKey, apVal);
+
+        // add class lang en
+       var apKey2 = new dev.data_for_history.api_class.Key(1);
+       var apVal2 = dev.data_for_history.api_class.Value.newBuilder()
+                .setDfhAncestorClasses(new ArrayList<>())
+                .setDfhParentClasses(new ArrayList<>())
+                .setDfhFkProfile(97)
+                .setDfhPkClass(44)
+                .setDfhClassLabel("Label with valid lang")
+                .setDfhClassLabelLanguage(" en ") // add spaces to test trim
+                .build();
+        apiClassTopic.pipeInput(apKey2, apVal2);
+
+
+        // re-add
+        apiClassTopic.pipeInput(apKey, apVal);
+
+        assertThat(ontomeClassLabelTopic.isEmpty()).isFalse();
+        var outRecords = ontomeClassLabelTopic.readValuesToList();
+        assertThat(outRecords).hasSize(2);
+
     }
 
 }

@@ -55,7 +55,7 @@ class HasTypePropertyTest {
 
 
         ontomePropertyLabelTopic = testDriver.createOutputTopic(
-                hasTypeProperty.outHasTypeProperty(),
+                outputTopicNames.hasTypeProperty(),
                 avroSerdes.HasTypePropertyKey().deserializer(),
                 avroSerdes.HasTypePropertyValue().deserializer());
     }

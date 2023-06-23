@@ -25,9 +25,6 @@ public class App {
     String bootstrapServers;
 
     @Inject
-    AvroSerdes avroSerdes;
-
-    @Inject
     BuilderSingleton builderSingleton;
 
     @Inject
@@ -93,10 +90,10 @@ public class App {
 
         // create output topics (with number of partitions and delete.policy=compact)
         var topics = new ArrayList<String>();
-        topics.add(ontomeClassLabel.outOntomeClassLabel());
-        topics.add(ontomePropertyLabel.outOntomePropertyLabel());
-        topics.add(ontomeClassMetadata.outOntomeClassMetadata());
-        topics.add(hasTypeProperty.outHasTypeProperty());
+        topics.add(outputTopicNames.ontomeClassLabel());
+        topics.add(outputTopicNames.ontomePropertyLabel());
+        topics.add(outputTopicNames.hasTypeProperty());
+        topics.add(outputTopicNames.ontomeClassMetadata());
         topics.add(outputTopicNames.ontomeClass());
         topics.add(outputTopicNames.ontomeProperty());
         admin.createOrConfigureTopics(topics, outputTopicPartitions, outputTopicReplicationFactor);
