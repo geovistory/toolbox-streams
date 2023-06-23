@@ -64,7 +64,13 @@ public class ProjectFieldChange {
                         .setFkObjectTablesCell(statement.getFkObjectTablesCell())
                         .setFkSubjectInfo(statement.getFkSubjectInfo())
                         .setFkSubjectTablesCell(statement.getFkSubjectTablesCell())
-                        .setTmspLastModification(Utils.InstantFromIso(projectRelation.getTmspLastModification()))
+                        .setTmspLastModification(
+                                // in case record was deleted, the tmsp is null
+                                projectRelation.getTmspLastModification() == null ?
+                                        // then we "invent" one, that will trigger a field chang update
+                                        Instant.now() :
+                                        Utils.InstantFromIso(projectRelation.getTmspLastModification())
+                        )
                         .build(),
                 TableJoined.as(inner.TOPICS.project_statement_modification_date_join + "-fk-join"),
                 Materialized.<dev.projects.info_proj_rel.Key, FieldChangeJoin, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_modification_date_join)

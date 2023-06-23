@@ -60,7 +60,7 @@ public class ProjectStatementWithEntity {
                 (projectRelation, statementEnriched) -> {
                     var v1Deleted = Utils.stringIsEqualTrue(projectRelation.getDeleted$1());
                     var v2Deleted = statementEnriched.getDeleted$1() != null && statementEnriched.getDeleted$1();
-                    var notInProject = !projectRelation.getIsInProject();
+                    var notInProject = projectRelation.getIsInProject() == null || !projectRelation.getIsInProject();
                     var deleted = v1Deleted || v2Deleted || notInProject;
                     return ProjectStatementValue.newBuilder()
                             .setProjectId(projectRelation.getFkProject())
