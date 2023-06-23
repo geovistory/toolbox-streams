@@ -141,6 +141,7 @@ class ProjectStatementWithEntityTest {
         infStatementTopic.pipeInput(kE, vE);
 
         vR.setDeleted$1("true");
+        vR.setIsInProject(null);
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         assertThat(outputTopic.isEmpty()).isFalse();

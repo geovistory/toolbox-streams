@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -179,5 +180,57 @@ class ProjectFieldChangeTest {
         assertThat(record.getTmspLastModification().toString()).isEqualTo(t3);
     }
 
+    @Test
+    void testDeleteProjectRel() {
+        var projectId = 10;
+        var statementId = 20;
+        var propertyId = 30;
+        var t1 = "2020-01-02T12:15:00Z";
+        var t2 = Instant.now();
+        // add relation between project and statement
+        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+                .setFkEntity(statementId)
+                .setFkProject(projectId)
+                .build();
+        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setEntityVersion(1)
+                .setFkEntity(statementId)
+                .setFkProject(projectId)
+                .setTmspLastModification(t1)
+                .setIsInProject(true)
+                .build();
+        proInfoProjRelTopic.pipeInput(kR, vR);
 
+        // add statement
+        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var vE = dev.information.statement.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(statementId)
+                .setFkProperty(propertyId)
+                .setFkSubjectInfo(1)
+                .setFkObjectInfo(2)
+                .build();
+        infStatementTopic.pipeInput(kE, vE);
+
+        // update rel
+        vR.setIsInProject(null);
+        vR.setTmspLastModification(null);
+        proInfoProjRelTopic.pipeInput(kR, vR);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(2);
+        var resultingKey = FieldChangeKey.newBuilder()
+                .setFkProject(projectId)
+                .setFkProperty(propertyId)
+                .setFkSourceInfo(1)
+                .setIsOutgoing(true)
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getTmspLastModification().isAfter(t2)).isTrue();
+    }
 }
