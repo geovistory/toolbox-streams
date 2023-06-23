@@ -18,7 +18,7 @@ public class OutputTopicNames {
         return p("ontome_class");
     }
     public final String ontomeClassMetadata() {
-        return p("ontome_class");
+        return p("ontome_class_metadata");
     }
     public final String hasTypeProperty() {
         return p("has_type_property");
