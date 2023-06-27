@@ -56,7 +56,7 @@ class OntomeClassMetadataTest {
                 avroSerdes.DfhApiClassValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
-                ontomeClassMetadata.outOntomeClassMetadata(),
+                outputTopicNames.ontomeClassMetadata(),
                 avroSerdes.OntomeClassKey().deserializer(),
                 avroSerdes.OntomeClassMetadataValue().deserializer());
     }
@@ -92,6 +92,37 @@ class OntomeClassMetadataTest {
                 .build();
         assertThat(outRecords.get(key).getParentClasses()).contains(1, 2, 3);
         assertThat(outRecords.get(key).getAncestorClasses()).contains(4, 5, 6);
+    }
+
+    @Test
+    void shouldOmitDuplicates() {
+
+        var parentClasses = List.of(1, 2, 3);
+        var ancestorClasses = List.of(4, 5, 6);
+
+        // add class 1
+        var apKey = new dev.data_for_history.api_class.Key(1);
+        var apVal = dev.data_for_history.api_class.Value.newBuilder()
+                .setDfhAncestorClasses(ancestorClasses)
+                .setDfhParentClasses(parentClasses)
+                .setDfhFkProfile(97)
+                .setDfhPkClass(44)
+                .setDfhClassLabel("Klasse 1")
+                .setDfhClassLabelLanguage("de")
+                .build();
+        apiClassTopic.pipeInput(apKey, apVal);
+
+        // update class 1
+        apVal.setDfhClassLabel("Class 1");
+        apVal.setDfhClassLabelLanguage("en");
+
+        apiClassTopic.pipeInput(apKey, apVal);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readRecordsToList();
+        assertThat(outRecords).hasSize(1);
+        assertThat(outRecords.get(0).getValue().getAncestorClasses()).isEqualTo(ancestorClasses);
+
     }
 
 }

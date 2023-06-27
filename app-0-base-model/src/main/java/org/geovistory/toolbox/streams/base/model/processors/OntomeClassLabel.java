@@ -13,6 +13,7 @@ import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
 import org.geovistory.toolbox.streams.base.model.InputTopicNames;
 import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -28,11 +29,6 @@ public class OntomeClassLabel {
 
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
     String inPrefix;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
-    public String outPrefix;
-
-    @Inject
-    OntomeClassProjected ontomeClassProjected;
     @Inject
     BuilderSingleton builderSingleton;
 
@@ -85,14 +81,19 @@ public class OntomeClassLabel {
                             return result;
                         },
                         Named.as("kstream-flatmap-ontome-class-to-ontome-class-label")
-                );
+                )
+                .transform(new IdenticalRecordsFilterSupplier<>(
+                                "ontome_class_label_suppress_duplicates",
+                                avroSerdes.OntomeClassLabelKey(),
+                                avroSerdes.OntomeClassLabelValue()),
+                        Named.as("ontome_class_label_suppress_duplicates"));
 
         /* SINK PROCESSORS */
         ontomeClassLabel
                 .to(
-                        outOntomeClassLabel(),
+                        outputTopicNames.ontomeClassLabel(),
                         Produced.with(avroSerdes.OntomeClassLabelKey(), avroSerdes.OntomeClassLabelValue())
-                                .withName(outOntomeClassLabel() + "-producer")
+                                .withName(outputTopicNames.ontomeClassLabel() + "-producer")
                 );
 
 
@@ -105,10 +106,6 @@ public class OntomeClassLabel {
         return Utils.prefixedIn(inPrefix, TopicNameEnum.dfh_api_class.getValue());
     }
 
-
-    public String outOntomeClassLabel() {
-        return Utils.prefixedOut(outPrefix, "ontome_class_label");
-    }
 
 
 }

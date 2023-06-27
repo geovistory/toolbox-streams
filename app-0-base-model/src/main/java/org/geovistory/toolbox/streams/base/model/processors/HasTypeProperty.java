@@ -23,9 +23,6 @@ public class HasTypeProperty {
 
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
     String inPrefix;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
-    public String outPrefix;
-
     @Inject
     BuilderSingleton builderSingleton;
 
@@ -134,9 +131,9 @@ public class HasTypeProperty {
         /* SINK PROCESSORS */
         hasTypePropertyStream
                 .to(
-                        outHasTypeProperty(),
+                        outputTopicNames.hasTypeProperty(),
                         Produced.with(avroSerdes.HasTypePropertyKey(), avroSerdes.HasTypePropertyValue())
-                                .withName(outHasTypeProperty() + "-producer")
+                                .withName(outputTopicNames.hasTypeProperty() + "-producer")
                 );
 
 
@@ -165,10 +162,6 @@ public class HasTypeProperty {
         public final String has_type_properties_aggregated = "has_type_properties_aggregated";
 
 
-    }
-
-    public String outHasTypeProperty() {
-        return Utils.prefixedOut(outPrefix, "has_type_property");
     }
 
 

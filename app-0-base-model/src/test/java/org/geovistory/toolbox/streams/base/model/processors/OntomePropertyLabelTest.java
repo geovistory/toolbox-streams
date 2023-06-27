@@ -56,7 +56,7 @@ class OntomePropertyLabelTest {
 
 
         ontomePropertyLabelTopic = testDriver.createOutputTopic(
-                ontomePropertyLabel.outOntomePropertyLabel(),
+                outputTopicNames.ontomePropertyLabel(),
                 avroSerdes.OntomePropertyLabelKey().deserializer(),
                 avroSerdes.OntomePropertyLabelValue().deserializer());
     }
@@ -96,6 +96,45 @@ class OntomePropertyLabelTest {
                 .build();
         assertThat(outRecords.get(propertyLangKey).getLabel()).isEqualTo("Label with valid lang");
         assertThat(outRecords.get(propertyLangKey).getInverseLabel()).isEqualTo("Inverse Label with valid lang");
+    }
+
+
+    @Test
+    void shouldOmitDuplicates() {
+
+        // add property lang de
+        var apKey = new dev.data_for_history.api_property.Key(1);
+        var apVal = dev.data_for_history.api_property.Value.newBuilder()
+                .setDfhAncestorProperties(new ArrayList<>())
+                .setDfhParentProperties(new ArrayList<>())
+                .setDfhFkProfile(97)
+                .setDfhPkProperty(44)
+                .setDfhPropertyLabel("Label with valid lang")
+                .setDfhPropertyInverseLabel("Inverse Label with valid lang")
+                .setDfhPropertyLabelLanguage(" de ") // add spaces to test trim
+                .build();
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+        // re-add
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+        // add property lang en
+        apKey = new dev.data_for_history.api_property.Key(2);
+        apVal = dev.data_for_history.api_property.Value.newBuilder()
+                .setDfhAncestorProperties(new ArrayList<>())
+                .setDfhParentProperties(new ArrayList<>())
+                .setDfhFkProfile(97)
+                .setDfhPkProperty(44)
+                .setDfhPropertyLabel("Label with valid lang")
+                .setDfhPropertyInverseLabel("Inverse Label with valid lang")
+                .setDfhPropertyLabelLanguage(" en ") // add spaces to test trim
+                .build();
+        apiPropertyTopic.pipeInput(apKey, apVal);
+
+        assertThat(ontomePropertyLabelTopic.isEmpty()).isFalse();
+        var outRecords = ontomePropertyLabelTopic.readValuesToList();
+        assertThat(outRecords).hasSize(2);
+
     }
 
 }

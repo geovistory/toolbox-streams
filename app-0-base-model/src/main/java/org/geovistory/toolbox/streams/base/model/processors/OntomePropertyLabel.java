@@ -28,10 +28,6 @@ public class OntomePropertyLabel {
 
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
     String inPrefix;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
-    public String outPrefix;
-    @Inject
-    OntomePropertyProjected ontomePropertyProjected;
 
     @Inject
     BuilderSingleton builderSingleton;
@@ -96,9 +92,9 @@ public class OntomePropertyLabel {
         /* SINK PROCESSORS */
         ontomePropertyLabel
                 .to(
-                        outOntomePropertyLabel(),
+                        outputTopicNames.ontomePropertyLabel(),
                         Produced.with(avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue())
-                                .withName(outOntomePropertyLabel() + "-producer")
+                                .withName(outputTopicNames.ontomePropertyLabel() + "-producer")
                 );
 
 
@@ -112,9 +108,6 @@ public class OntomePropertyLabel {
     }
 
 
-    public String outOntomePropertyLabel() {
-        return Utils.prefixedOut(outPrefix, "ontome_property_label");
-    }
 
 
 }

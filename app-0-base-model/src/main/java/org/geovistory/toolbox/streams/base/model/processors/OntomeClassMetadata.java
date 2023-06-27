@@ -11,6 +11,7 @@ import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
 import org.geovistory.toolbox.streams.base.model.InputTopicNames;
 import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -27,8 +28,7 @@ public class OntomeClassMetadata {
 
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
     String inPrefix;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
-    public String outPrefix;
+
     @Inject
     BuilderSingleton builderSingleton;
 
@@ -83,13 +83,18 @@ public class OntomeClassMetadata {
 
         var stream = table.toStream(
                 Named.as(inner.TOPICS.ontome_class_metadata_aggregated + "-to-stream")
-        );
+        ).transform(new IdenticalRecordsFilterSupplier<>(
+                        "ontome_class_metadata_suppress_duplicates",
+                        avroSerdes.OntomeClassKey(),
+                        avroSerdes.OntomeClassMetadataValue()),
+                Named.as("ontome_class_metadata_suppress_duplicates"));
+
         /* SINK PROCESSORS */
         stream
                 .to(
-                        outOntomeClassMetadata(),
+                        outputTopicNames.ontomeClassMetadata(),
                         Produced.with(avroSerdes.OntomeClassKey(), avroSerdes.OntomeClassMetadataValue())
-                                .withName(outOntomeClassMetadata() + "-producer")
+                                .withName(outputTopicNames.ontomeClassMetadata() + "-producer")
                 );
 
 
@@ -107,11 +112,6 @@ public class OntomeClassMetadata {
 
     public String inApiClass() {
         return Utils.prefixedIn(inPrefix, TopicNameEnum.dfh_api_class.getValue());
-    }
-
-
-    public String outOntomeClassMetadata() {
-        return Utils.prefixedOut(outPrefix, "ontome_class_metadata");
     }
 
 
