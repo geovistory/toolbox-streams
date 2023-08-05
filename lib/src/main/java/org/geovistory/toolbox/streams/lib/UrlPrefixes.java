@@ -3,6 +3,7 @@ package org.geovistory.toolbox.streams.lib;
 public enum UrlPrefixes {
     GEOVISTORY_RESOURCE("http://geovistory.org/resource/"),
     ONTOME_PROPERTY("https://ontome.net/ontology/p"),
+    ONTOME_CLASS("https://ontome.net/ontology/c"),
     OWL("http://www.w3.org/2002/07/owl#"),
     RDFS("http://www.w3.org/2000/01/rdf-schema#"),
     RDF("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
