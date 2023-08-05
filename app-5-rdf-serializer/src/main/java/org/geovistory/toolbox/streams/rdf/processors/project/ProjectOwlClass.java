@@ -65,10 +65,10 @@ public class ProjectOwlClass {
                 //get class ID and label
                 var classId = value.getClassId();
                 var classLabel = value.getLabel();
-                var classLiteralType = (value.getLanguageIso() == null) ? "^^<"+XSD+"string>" : "@"+ value.getLanguageIso();
+                var classLiteralType = (value.getLanguageIso() == null) ? "^^<"+XSD.getUrl()+"string>" : "@"+ value.getLanguageIso();
 
-                turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> a <" + OWL +"Class>");
-                turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> <" + RDFS +"label> "+ classLabel.replaceAll("[\\\\\"]", "\\$0") + classLiteralType +" .");
+                turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> a <" + OWL.getUrl() +"Class> .");
+                turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> <" + RDFS.getUrl() +"label> \""+ classLabel.replaceAll("[\\\\\"]", "\\\\$0") +"\""+ classLiteralType +" .");
 
                 // add the class label triples
                 ProjectRdfKey k;
