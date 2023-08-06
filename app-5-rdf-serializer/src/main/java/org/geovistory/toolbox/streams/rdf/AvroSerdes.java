@@ -57,4 +57,16 @@ public class AvroSerdes {
         return serdes;
     }
 
+    public Serde<ProjectEntityKey> ProjectEntityKey() {
+        Serde<ProjectEntityKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityLabelValue> ProjectEntityLabelValue() {
+        Serde<ProjectEntityLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
 }

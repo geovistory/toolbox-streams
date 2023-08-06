@@ -13,6 +13,8 @@ public class InputTopicNames {
     public String projectStatementWithLiteral = "ts.topic.project.statement.with.literal";
     @ConfigProperty(name = "ts.topic.project.class.label", defaultValue = "")
     public String projectClassLabel = "ts.topic.project.class.label";
+    @ConfigProperty(name = "ts.topic.project.entity.label", defaultValue = "")
+    public String projectEntityLabel = "ts.topic.project.entity.label";
 
     public String getProjectStatementWithEntity() {
         return projectStatementWithEntity;
@@ -24,5 +26,9 @@ public class InputTopicNames {
 
     public String getProjectClassLabel() {
         return projectClassLabel;
+    }
+
+    public String getProjectEntityLabel() {
+        return projectEntityLabel;
     }
 }
