@@ -66,7 +66,7 @@ public class ProjectEntityVisibility {
                     if (value2.getCommunityVisibility() == null) return null;
                     var v1Deleted = Utils.stringIsEqualTrue(value1.getDeleted$1());
                     var v2Deleted = Utils.stringIsEqualTrue(value2.getDeleted$1());
-                    var notInProject = !value1.getIsInProject();
+                    var notInProject = value1.getIsInProject() == null || !value1.getIsInProject();
                     var deleted = v1Deleted || v2Deleted || notInProject;
                     var communityCanSeeInToolbox = false;
                     var communityCanSeeInDataApi = false;

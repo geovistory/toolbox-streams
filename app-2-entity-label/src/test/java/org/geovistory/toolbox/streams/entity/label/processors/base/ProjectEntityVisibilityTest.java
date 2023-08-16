@@ -253,6 +253,60 @@ class ProjectEntityVisibilityTest {
         assertThat(record.getDeleted$1()).isEqualTo(true);
     }
 
+
+    @Test()
+    void testDeleteEntityProjectRelation() {
+        var projectId = 10;
+        var entityId = 20;
+        var classId = 30;
+        // add relation between project and entity
+        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+                .setFkEntity(entityId)
+                .setFkProject(projectId)
+                .build();
+        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setEntityVersion(1)
+                .setFkEntity(entityId)
+                .setFkProject(projectId)
+                .setIsInProject(true)
+                .build();
+        proInfoProjRelTopic.pipeInput(kR, vR);
+
+        // add entity
+        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = dev.information.resource.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setPkEntity(entityId)
+                .setFkClass(classId)
+                .setCommunityVisibility("{ \"toolbox\": true, \"dataApi\": true, \"website\": true}")
+                .build();
+        infResourceTopic.pipeInput(kE, vE);
+
+        var vRDeleted = dev.projects.info_proj_rel.Value.newBuilder()
+                .setSchemaName("")
+                .setTableName("")
+                .setEntityVersion(0)
+                .setFkEntity(entityId)
+                .setFkProject(projectId)
+                .setDeleted$1("true")
+                .build();
+        proInfoProjRelTopic.pipeInput(kR, vRDeleted);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = ProjectEntityKey.newBuilder()
+                .setProjectId(projectId)
+                .setEntityId("i" + entityId)
+                .build();
+        assertThat(outRecords.containsKey(resultingKey)).isTrue();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getDeleted$1()).isEqualTo(true);
+    }
+
     @Test
     void testTwoProjectsOneEntity() {
         var projectOneId = 10;
