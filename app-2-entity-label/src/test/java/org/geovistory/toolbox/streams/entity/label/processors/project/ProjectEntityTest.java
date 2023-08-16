@@ -105,5 +105,33 @@ class ProjectEntityTest {
         assertThat(record.value().getDeleted$1()).isEqualTo(false);
     }
 
+    @Test
+    void testTombstone() {
+        var entityId = "i1";
+        var projectId = 2;
+
+        // add entity
+        var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(projectId).build();
+        var vE = ProjectEntityVisibilityValue.newBuilder()
+                .setEntityId(entityId).setProjectId(projectId)
+                .setClassId(3)
+                .setCommunityVisibilityToolbox(true)
+                .setCommunityVisibilityDataApi(true)
+                .setCommunityVisibilityWebsite(true)
+                .setDeleted$1(false)
+                .build();
+        projectEntityVisibilityTopic.pipeInput(kE, vE);
+
+        // add tombstone
+        projectEntityVisibilityTopic.pipeInput(kE, null);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readRecordsToList();
+        assertThat(outRecords).hasSize(2);
+
+        var record = outRecords.get(1);
+        assertThat(record.value().getDeleted$1()).isEqualTo(true);
+    }
 
 }

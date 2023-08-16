@@ -119,8 +119,7 @@ public class CommunityToolboxEntity {
                 ProjectEntityKey key,
                 ProjectEntityVisibilityValue projectEntityValue
         ) {
-            // if we have no value, we cant do anything
-            if (projectEntityValue == null) return null;
+
 
             // create CommunityEntityKey
             var k = CommunityEntityKey.newBuilder().setEntityId(key.getEntityId()).build();
@@ -136,8 +135,11 @@ public class CommunityToolboxEntity {
                             BooleanMap.newBuilder().build() :
                             // else take existing count map
                             existingCountMap;
-
-            if (
+            // if we have no value
+            if (projectEntityValue == null) {
+                // remove the project id from count map
+                countMap.getItem().remove("" + key.getProjectId());
+            } else if (
                 // if input record was not deleted
                     Utils.booleanIsNotEqualTrue(projectEntityValue.getDeleted$1())
                             // and is visible for toolbox community
@@ -157,7 +159,7 @@ public class CommunityToolboxEntity {
 
             // create CommunityEntityValue
             var v = CommunityEntityValue.newBuilder()
-                    .setClassId(projectEntityValue.getClassId())
+                    .setClassId(projectEntityValue == null ? 0 : projectEntityValue.getClassId())
                     .setEntityId(key.getEntityId())
                     .setProjectCount(countMap.getItem().size())
                     .build();

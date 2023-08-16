@@ -179,4 +179,39 @@ class CommunityToolboxEntityTest {
     }
 
 
+    @Test
+    public void testTombstone() {
+
+        var key1 = ProjectEntityKey.newBuilder()
+                .setEntityId("i1").setProjectId(1).build();
+        var value1 = ProjectEntityVisibilityValue.newBuilder()
+                .setEntityId("i1")
+                .setProjectId(1)
+                .setClassId(1)
+                .setCommunityVisibilityToolbox(true)
+                .setCommunityVisibilityDataApi(true)
+                .setCommunityVisibilityWebsite(true)
+                .setDeleted$1(false)
+                .build();
+
+        // add to project 1
+        projectEntityTopic.pipeInput(key1, value1);
+
+        // add tombstone
+        projectEntityTopic.pipeInput(key1, null);
+
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+        assertThat(outRecords).hasSize(1);
+        var resultingKey = CommunityEntityKey.newBuilder()
+                .setEntityId("i1")
+                .build();
+        var record = outRecords.get(resultingKey);
+        assertThat(record.getProjectCount()).isEqualTo(0);
+
+    }
+
+
+
 }
