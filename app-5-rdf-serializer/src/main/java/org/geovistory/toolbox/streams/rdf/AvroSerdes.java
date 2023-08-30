@@ -69,4 +69,9 @@ public class AvroSerdes {
         return serdes;
     }
 
+    public Serde<ProjectRdfList> ProjectRdfList() {
+        Serde<ProjectRdfList> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
 }

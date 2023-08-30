@@ -41,12 +41,12 @@ public class ProjectEntityRdfsLabel {
     }
 
     public void addProcessorsStandalone() {
-         addProcessors(
-                 registerInputTopic.projectEntityLabelStream()
+        addProcessors(
+                registerInputTopic.projectEntityLabelStream()
         );
     }
 
-    public  ProjectRdfReturnValue addProcessors(
+    public ProjectRdfReturnValue addProcessors(
             KStream<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelStream
     ) {
 
@@ -56,110 +56,74 @@ public class ProjectEntityRdfsLabel {
                         avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelValue()
                 ).withName(inner.TOPICS.project_entity_label_grouped)
         );
-        // 2b)  aggregate the old and new value to a ProjectRdfList
-        List<ArrayList<KeyValue<ProjectRdfKey, ProjectRdfValue>>> projectRdfList = new ArrayList<>();
 
-        KTable<String, Integer> aggregatedTable = groupedStream.aggregate(
-                () -> ProjectEntityLabelValue.newBuilder()
-                        .build(),
-                new Aggregator<String, Integer, Integer>() {
-                    @Override
-                    public Integer apply(String key, Integer newValue, Integer aggregate) {
-                        // Access old value using a state store
-                        KeyValueStore<String, Integer> stateStore = (KeyValueStore<String, Integer>) context().getStateStore("old-value-store");
-                        Integer oldValue = stateStore.get(key);
+        // Aggregating a KGroupedStream (note how the value type changes from String to Long)
+        KTable<ProjectEntityKey, ProjectRdfList> aggregatedStream = groupedStream.aggregate(
+                () -> ProjectRdfList.newBuilder().build(),
+                (aggKey, newValue, aggValue) -> {
 
-                        if (oldValue != null) {
-                            // Perform your custom aggregation or calculations here
-                            int aggregatedValue = oldValue + newValue;
-                            stateStore.put(key, aggregatedValue);
-                            return aggregatedValue;
-                        } else {
-                            stateStore.put(key, newValue);
-                            return newValue;
+                    // we create a new ProjectRdfRecord for the new label
+                    var newRdfValueOp = newValue.getDeleted$1() ? Operation.delete : Operation.insert;
+                    var newRdfValue = ProjectRdfValue.newBuilder().setOperation(newRdfValueOp).build();
+                    var newRdfKey = ProjectRdfKey.newBuilder().setProjectId(aggKey.getProjectId())
+                            .setTurtle("<" + GEOVISTORY_RESOURCE.getUrl() + aggKey.getEntityId() + "> <" + RDFS.getUrl() + "label>\"" + newValue.getLabel() + "\" <" + XSD.getUrl() + "string>")
+                            .build();
+                    var newRdfRecord = ProjectRdfRecord.newBuilder().setKey(newRdfKey).setValue(newRdfValue).build();
+
+
+                    // if: size 2 -> we remove the first item from list, as it is not relevant anymore.
+                    if (aggValue.getList().size() == 2) {
+                        aggValue.getList().remove(0);
+                    }
+
+                    // case: size 1
+                    if (aggValue.getList().size() == 1) {
+                        var oldVal = aggValue.getList().get(0).getValue();
+                        // if operation was delete, remove it
+                        if (oldVal.getOperation() == Operation.delete) {
+                            aggValue.getList().remove(0);
+                        }
+                        // else we modify the operation from 'insert' to 'delete'
+                        else {
+                            oldVal.setOperation(Operation.delete);
                         }
                     }
+                    // case: size 0 -> do nothing
+
+                    // add the new rdf record to the agg value
+                    aggValue.getList().add(newRdfRecord);
+
+                    return aggValue;
                 },
-                Materialized.<String, Integer, KeyValueStore<Bytes, byte[]>>as("aggregated-store")
-                        .withCachingDisabled() // Disable caching to ensure old values are accessed from the state store
+                Materialized.<ProjectEntityKey, ProjectRdfList, KeyValueStore<Bytes, byte[]>>as("aggregated-project-entity-rdfs-label-store") /* state store name */
+                        .withKeySerde(
+                                avroSerdes.ProjectEntityKey()
+                        )
+                        .withValueSerde(
+                                avroSerdes.ProjectRdfList()
+                        )
         );
 
-
-        var table = grouped.aggregate(
-                () -> ProjectEntityLabelValue.newBuilder()
-                        .build(),
-                (aggKey, newValue, aggValue) -> {
-                    if (aggKey != null) {
-                        var v = ProjectRdfValue.newBuilder()
-                                .setOperation(Operation.delete)
-                                .build();
-                        var k = ProjectRdfKey.newBuilder()
-                                .setProjectId(newValue.getProjectId())
-                                .setTurtle("<" + GEOVISTORY_RESOURCE.getUrl() + newValue.getEntityId() + "> <" + RDFS.getUrl() + "label>\""+ aggValue. +"\" <" + XSD.getUrl() + "string>")
-                                .build();
-                        result.add(KeyValue.pair(k, v));
-
-                        projectRdfList.add()
-                    }
-                    aggregate.setParentClasses(value.getDfhParentClasses());
-                    return aggregate;
-                },
-                Materialized.<OntomeClassKey, OntomeClassMetadataValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.ontome_class_metadata_aggregated) /* state store name */
-                        .withKeySerde(avroSerdes.OntomeClassKey())
-                        .withValueSerde(avroSerdes.OntomeClassMetadataValue())
-        );
-
-        var stream = table.toStream(
-                Named.as(inner.TOPICS.ontome_class_metadata_aggregated + "-to-stream")
-        ).transform(new IdenticalRecordsFilterSupplier<>(
-                        "ontome_class_metadata_suppress_duplicates",
-                        avroSerdes.OntomeClassKey(),
-                        avroSerdes.OntomeClassMetadataValue()),
-                Named.as("ontome_class_metadata_suppress_duplicates"));
-
-        /* STREAM PROCESSORS */
-        // 2)
-
-        var s = projectEntityLabelStream.flatMap(
-            (key, value) -> {
-                List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
-
-                //value of operation
-                var v = ProjectRdfValue.newBuilder()
-                        .setOperation(
-                                Utils.booleanIsEqualTrue(value.getDeleted$1()) ? Operation.delete : Operation.insert)
-                        .build();
-                ArrayList<String> turtles = new ArrayList<>();
-
-                //get class ID and label
-                var classId = value.getClassId();
-                var classLabel = value.getLabel();
-                var classLiteralType = (value.getLanguageIso() == null) ? "^^<"+XSD.getUrl()+"string>" : "@"+ value.getLanguageIso();
-
-                turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> a <" + OWL.getUrl() +"Class> .");
-                turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> <" + RDFS.getUrl() +"label> \""+ classLabel.replaceAll("[\\\\\"]", "\\\\$0") +"\""+ classLiteralType +" .");
-
-                // add the class label triples
-                ProjectRdfKey k;
-                for (String item : turtles) {
-                    k = ProjectRdfKey.newBuilder()
-                            .setProjectId(value.getProjectId())
-                            .setTurtle(item)
-                            .build();
-                    result.add(KeyValue.pair(k, v));
+        var projectRdfStream = aggregatedStream.toStream().flatMap(
+                (key, value) -> {
+                    List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
+                    value.getList().forEach(projectRdfRecord -> {
+                        result.add(KeyValue.pair(projectRdfRecord.getKey(), projectRdfRecord.getValue()));
+                    });
+                    return result;
                 }
-                return result;
-            }
         );
+
+
         /* SINK PROCESSORS */
 
-        s.to(outputTopicNames.projectRdf(),
+        projectRdfStream.to(outputTopicNames.projectRdf(),
                 Produced.with(avroSerdes.ProjectRdfKey(), avroSerdes.ProjectRdfValue())
                         .withName(outputTopicNames.projectRdf() + "-class-label-producer")
         );
 
 
-        return new ProjectRdfReturnValue(s);
+        return new ProjectRdfReturnValue(projectRdfStream);
 
     }
 
