@@ -33,6 +33,8 @@ public class App {
     @Inject
     ProjectOwlClass projectOwlClass;
     @Inject
+    ProjectCustomRdfsLabels projectCustomRdfsLabels;
+    @Inject
     BuilderSingleton builderSingleton;
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -85,9 +87,9 @@ public class App {
         );
 
         // add sub-topology ProjectCustomRdfsLabels
-        /*ProjectCustomRdfsLabels.addProcessors(
+        projectCustomRdfsLabels.addProcessors(
                 registerInputTopic.projectStream()
-        );*/
+        );
     }
 
     private void createTopics() {
