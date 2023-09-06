@@ -66,4 +66,13 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
+    public KStream<ProjectRdfKey, ProjectRdfValue> projectStream() {
+        return getStream(
+                builderSingleton.builder,
+                inputTopicNames.getProject(),
+                avroSerdes.ProjectRdfKey(),
+                avroSerdes.ProjectRdfValue()
+        );
+    }
+
 }
