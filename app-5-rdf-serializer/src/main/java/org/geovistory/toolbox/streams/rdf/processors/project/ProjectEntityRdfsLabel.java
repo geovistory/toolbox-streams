@@ -62,7 +62,7 @@ public class ProjectEntityRdfsLabel {
                 () -> ProjectRdfList.newBuilder().build(),
                 (aggKey, newValue, aggValue) -> {
                     // we create a new ProjectRdfRecord for the new label
-                    var newRdfValueOp = newValue.getDeleted$1() ? Operation.delete : Operation.insert;
+                    var newRdfValueOp = Utils.booleanIsEqualTrue(newValue.getDeleted$1()) ? Operation.delete : Operation.insert;
                     var newRdfValue = ProjectRdfValue.newBuilder().setOperation(newRdfValueOp).build();
                     var newRdfKey = ProjectRdfKey.newBuilder().setProjectId(aggKey.getProjectId())
                             .setTurtle("<" + GEOVISTORY_RESOURCE.getUrl() + aggKey.getEntityId() + "> <" + RDFS.getUrl() + "label> \"" + newValue.getLabel() + "\"@^^<" + XSD.getUrl() + "string> .")
