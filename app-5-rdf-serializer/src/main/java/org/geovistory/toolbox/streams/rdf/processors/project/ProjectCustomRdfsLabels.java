@@ -60,15 +60,6 @@ public class ProjectCustomRdfsLabels {
                             .setOperation(Operation.insert)
                             .build();
                     /**
-                     * <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#label> "has type"@en .
-                     * <http://www.w3.org/2000/01/rdf-schema#label> <http://www.w3.org/2000/01/rdf-schema#label> "has label"@en .
-                     * <http://www.w3.org/2002/07/owl#sameAs> <http://www.w3.org/2000/01/rdf-schema#label> "same as"@en .
-                     *
-                     * <https://ontome.net/ontology/c50> <http://www.w3.org/2000/01/rdf-schema#label> "Time-Span"@en .
-                     * <https://ontome.net/ontology/c50> a <http://www.w3.org/2002/07/owl#Class> .
-                     * <https://ontome.net/ontology/p4> <http://www.w3.org/2000/01/rdf-schema#label> "has time-span"@en .
-                     * <https://ontome.net/ontology/p4i> <http://www.w3.org/2000/01/rdf-schema#label> "is time-span of"@en .
-                     *
                      * <http://www.w3.org/2006/time#DateTimeDescription> <http://www.w3.org/2000/01/rdf-schema#label> "Date-Time description"@en .
                      * <http://www.w3.org/2006/time#hasTRS> <http://www.w3.org/2000/01/rdf-schema#label> "Temporal reference system used"@en .
                      * <http://www.w3.org/2006/time#unitType> <http://www.w3.org/2000/01/rdf-schema#label> "temporal unit type"@en .
@@ -85,6 +76,26 @@ public class ProjectCustomRdfsLabels {
                     turtles.add("<" + RDF.getUrl() + "type> <" + RDFS.getUrl() + "label> \"has type\"@en .");
                     turtles.add("<" + RDFS.getUrl() + "label> <" + RDFS.getUrl() + "label> \"has label\"@en .");
                     turtles.add("<" + OWL.getUrl() + "sameAs> <" + RDFS.getUrl() + "label> \"same as\"@en .");
+
+                    turtles.add("<" + ONTOME_CLASS.getUrl() + "50> <" + RDFS.getUrl() + "label> \"Time-Span\"@en .");
+                    turtles.add("<" + ONTOME_CLASS.getUrl() + "50> a <" + OWL.getUrl() + "Class> .");
+                    turtles.add("<" + ONTOME_PROPERTY.getUrl() + "4> <" + RDFS.getUrl() + "label> \"has time-span\"@en .");
+                    turtles.add("<" + ONTOME_PROPERTY.getUrl() + "4i> <" + RDFS.getUrl() + "label> \"is time-span of\"@en .");
+
+                    turtles.add("<" + TIME.getUrl() + "DateTimeDescription> <" + RDFS.getUrl() + "label> \"Date-Time description\"@en .");
+                    turtles.add("<" + TIME.getUrl() + "hasTRS> <" + RDFS.getUrl() + "label> \"Temporal reference system used\"@en .");
+                    turtles.add("<" + TIME.getUrl() + "unitType> <" + RDFS.getUrl() + "label> \"temporal unit type\"@en .");
+                    turtles.add("<" + TIME.getUrl() + "year> <" + RDFS.getUrl() + "label> \"Year\"@en .");
+                    turtles.add("<" + TIME.getUrl() + "month> <" + RDFS.getUrl() + "label> \"Month\"@en .");
+                    turtles.add("<" + TIME.getUrl() + "day> <" + RDFS.getUrl() + "label> \"Day\"@en .");
+                    turtles.add("<" + TIME.getUrl() + "unitYear> <" + RDFS.getUrl() + "label> \"Year (unit of temporal duration)\"@en .");
+                    turtles.add("<" + TIME.getUrl() + "unitMonth> <" + RDFS.getUrl() + "label> \"Month (unit of temporal duration)\"@en .");
+                    turtles.add("<" + TIME.getUrl() + "unitDay> <" + RDFS.getUrl() + "label> \"Day (unit of temporal duration)\"@en .");
+
+                    turtles.add("<" + GREG.getUrl() + "> <" + RDFS.getUrl() + "label> \"Gregorian Calendar\"@en .");
+                    turtles.add("<" + GREG.getUrl() + "> <" + RDFS.getUrl() + "label> \"Gregorian Calendar\"@en .");
+                    turtles.add("<" + JUL.getUrl() + "> <" + RDFS.getUrl() + "label> \"Julian Calendar\"@en .");
+
 
 
                     ProjectRdfKey k;
