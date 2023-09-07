@@ -93,7 +93,6 @@ public class ProjectCustomRdfsLabels {
                     turtles.add("<" + TIME.getUrl() + "unitDay> <" + RDFS.getUrl() + "label> \"Day (unit of temporal duration)\"@en .");
 
                     turtles.add("<" + GREG.getUrl() + "> <" + RDFS.getUrl() + "label> \"Gregorian Calendar\"@en .");
-                    turtles.add("<" + GREG.getUrl() + "> <" + RDFS.getUrl() + "label> \"Gregorian Calendar\"@en .");
                     turtles.add("<" + JUL.getUrl() + "> <" + RDFS.getUrl() + "label> \"Julian Calendar\"@en .");
 
 
