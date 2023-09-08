@@ -48,7 +48,7 @@ public class ProjectCustomRdfsLabels {
     ) {
 
         /* STREAM PROCESSORS */
-        // 2)
+        // 2a) FlatMap the records to ProjectRdfKey and ProjectRdfValue to the triples in the "turtles" list
 
         var s = projectStream.flatMap(
                 (key, value) -> {
@@ -59,20 +59,7 @@ public class ProjectCustomRdfsLabels {
                     var v = ProjectRdfValue.newBuilder()
                             .setOperation(Operation.insert)
                             .build();
-                    /**
-                     * <http://www.w3.org/2006/time#DateTimeDescription> <http://www.w3.org/2000/01/rdf-schema#label> "Date-Time description"@en .
-                     * <http://www.w3.org/2006/time#hasTRS> <http://www.w3.org/2000/01/rdf-schema#label> "Temporal reference system used"@en .
-                     * <http://www.w3.org/2006/time#unitType> <http://www.w3.org/2000/01/rdf-schema#label> "temporal unit type"@en .
-                     * <http://www.w3.org/2006/time#year> <http://www.w3.org/2000/01/rdf-schema#label> "Year"@en .
-                     * <http://www.w3.org/2006/time#month> <http://www.w3.org/2000/01/rdf-schema#label> "Month"@en .
-                     * <http://www.w3.org/2006/time#day> <http://www.w3.org/2000/01/rdf-schema#label> "Day"@en .
-                     * <http://www.w3.org/2006/time#unitYear> <http://www.w3.org/2000/01/rdf-schema#label> "Year (unit of temporal duration)"@en .
-                     * <http://www.w3.org/2006/time#unitMonth> <http://www.w3.org/2000/01/rdf-schema#label> "Month (unit of temporal duration)"@en .
-                     * <http://www.w3.org/2006/time#unitDay> <http://www.w3.org/2000/01/rdf-schema#label> "Day (unit of temporal duration)"@en .
-                     *
-                     * <http://www.opengis.net/def/uom/ISO-8601/0/Gregorian> <http://www.w3.org/2000/01/rdf-schema#label> "Gregorian Calendar"@en .
-                     * <https://d-nb.info/gnd/4318310-4> <http://www.w3.org/2000/01/rdf-schema#label> "Julian Calendar"@en .
-                     */
+
                     turtles.add("<" + RDF.getUrl() + "type> <" + RDFS.getUrl() + "label> \"has type\"@en .");
                     turtles.add("<" + RDFS.getUrl() + "label> <" + RDFS.getUrl() + "label> \"has label\"@en .");
                     turtles.add("<" + OWL.getUrl() + "sameAs> <" + RDFS.getUrl() + "label> \"same as\"@en .");
@@ -110,7 +97,7 @@ public class ProjectCustomRdfsLabels {
                 }
         );
         /* SINK PROCESSORS */
-
+        //3a) To: sink it to project_rdf
         s.to(outputTopicNames.projectRdf(),
                 Produced.with(avroSerdes.ProjectRdfKey(), avroSerdes.ProjectRdfValue())
                         .withName(outputTopicNames.projectRdf() + "-custom-rdfs-labels-producer")
