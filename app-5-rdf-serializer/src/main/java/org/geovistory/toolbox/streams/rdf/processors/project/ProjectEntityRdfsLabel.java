@@ -50,14 +50,14 @@ public class ProjectEntityRdfsLabel {
             KStream<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelStream
     ) {
 
-        // 2a) group by ProjectEntityKey
+        // 2a) Group by ProjectEntityKey
         var groupedStream = projectEntityLabelStream.groupByKey(
                 Grouped.with(
                         avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityLabelValue()
                 ).withName(inner.TOPICS.project_entity_label_grouped)
         );
 
-        // Aggregating a KGroupedStream (note how the value type changes from String to Long)
+        //  2b) Aggregate the old and new value to a ProjectRdfList
         KTable<ProjectEntityKey, ProjectRdfList> aggregatedStream = groupedStream.aggregate(
                 () -> ProjectRdfList.newBuilder().build(),
                 (aggKey, newValue, aggValue) -> {
@@ -103,6 +103,7 @@ public class ProjectEntityRdfsLabel {
                         )
         );
 
+        // 2c) FlapMap the records
         var projectRdfStream = aggregatedStream.toStream().flatMap(
                 (key, value) -> {
                     List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
@@ -115,10 +116,10 @@ public class ProjectEntityRdfsLabel {
 
 
         /* SINK PROCESSORS */
-
+        // 3a) Sink to project_rdf
         projectRdfStream.to(outputTopicNames.projectRdf(),
                 Produced.with(avroSerdes.ProjectRdfKey(), avroSerdes.ProjectRdfValue())
-                        .withName(outputTopicNames.projectRdf() + "-class-label-producer")
+                        .withName(outputTopicNames.projectRdf() + "-project-entity-label-producer")
         );
 
 
