@@ -84,7 +84,8 @@ class ProjectOwlClassTest {
     }
 
     /**
-     * The goal of this test is to check if the output has the correct size (should be equals to twice the number of statements in the input topic)
+     * The goal of this test is to check if the output has the correct size:
+     * The size should be equals to twice the number of statements in the input topic as for each class, we must create two RDF triples
      */
     @Test
     void testSizeOfOutput() {
@@ -180,6 +181,7 @@ class ProjectOwlClassTest {
 
     /**
      * The goal of this test is to check if the key/value pairs generated in the processor match the expected list of key/value pairs
+     * The expectation is that special characters " and \ are properly escaped.
      */
     @Test
     void testListKeyValuePairs() {
