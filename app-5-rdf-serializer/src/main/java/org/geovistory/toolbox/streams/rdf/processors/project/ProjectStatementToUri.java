@@ -90,7 +90,7 @@ public class ProjectStatementToUri {
         );
 
 
-        return new ProjectRdfReturnValue( s);
+        return new ProjectRdfReturnValue(s);
 
     }
 
