@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "ProjectRdfList",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "fields": [
+    {
+      "name": "list",
+      "type": {
+        "type": "array",
+        "items": "org.geovistory.toolbox.streams.avro.ProjectRdfRecord"
+      },
+      "default": []
+    }
+  ]
+}

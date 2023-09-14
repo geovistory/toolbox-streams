@@ -2,10 +2,7 @@
 package org.geovistory.toolbox.streams.rdf;
 
 import org.apache.kafka.streams.kstream.KStream;
-import org.geovistory.toolbox.streams.avro.ProjectClassLabelKey;
-import org.geovistory.toolbox.streams.avro.ProjectClassLabelValue;
-import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
-import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -54,9 +51,18 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KStream<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelStream() {
         return getStream(
                 builderSingleton.builder,
-                inputTopicNames. getProjectClassLabel(),
+                inputTopicNames.getProjectClassLabel(),
                 avroSerdes.ProjectClassLabelKey(),
                 avroSerdes.ProjectClassLabelValue()
+        );
+    }
+
+    public KStream<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelStream() {
+        return getStream(
+                builderSingleton.builder,
+                inputTopicNames.getProjectEntityLabel(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityLabelValue()
         );
     }
 
