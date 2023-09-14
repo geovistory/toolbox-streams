@@ -80,7 +80,8 @@ class ProjectEntityRdfsLabelTest {
         assertThat(outputTopic.isEmpty()).isFalse();
     }
     /**
-     * The goal of this test is to check if the output has the correct size (should be equals to twice the number of statements in the input topic)
+     * The goal of this test is to check if the output has the correct size
+     * For each entity, one triple for the label should be added (size = 1)
      */
     @Test
     void testSizeOfOutput() {
