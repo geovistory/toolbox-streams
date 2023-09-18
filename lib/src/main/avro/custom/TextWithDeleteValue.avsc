@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "TextWithDeleteValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "text with delete value",
+  "fields": [
+    {
+      "name": "text",
+      "type": "string"
+    },
+    {
+      "name": "__deleted",
+      "type": [
+        "null",
+        "boolean"
+      ],
+      "default": null
+    }
+  ]
+}
