@@ -12,8 +12,8 @@ import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.Objects;
 

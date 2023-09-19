@@ -9,12 +9,8 @@
       "type": "string"
     },
     {
-      "name": "__deleted",
-      "type": [
-        "null",
-        "boolean"
-      ],
-      "default": null
+      "name": "deleted",
+      "type": "boolean"
     }
   ]
 }

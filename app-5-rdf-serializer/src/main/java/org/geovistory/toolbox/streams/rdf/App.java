@@ -10,9 +10,9 @@ import org.geovistory.toolbox.streams.rdf.processors.project.ProjectOwlClass;
 import org.geovistory.toolbox.streams.rdf.processors.project.ProjectStatementToLiteral;
 import org.geovistory.toolbox.streams.rdf.processors.project.ProjectStatementToUri;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 
 @ApplicationScoped

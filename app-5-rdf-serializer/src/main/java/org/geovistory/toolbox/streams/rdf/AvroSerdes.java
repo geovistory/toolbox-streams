@@ -5,7 +5,7 @@ import org.apache.kafka.common.serialization.Serde;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,6 +72,12 @@ public class AvroSerdes {
     public Serde<ProjectRdfList> ProjectRdfList() {
         Serde<ProjectRdfList> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<TextWithDeleteValue> TextWithDeleteValue() {
+        Serde<TextWithDeleteValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
         return serdes;
     }
 }
