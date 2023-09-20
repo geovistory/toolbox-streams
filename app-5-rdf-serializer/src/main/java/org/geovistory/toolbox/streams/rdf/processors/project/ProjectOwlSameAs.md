@@ -48,8 +48,7 @@ flowchart TD
 
 ### 2) KTable of left statement
 
-2a) FlatMap the stream to List<KeyValue<`ProjectEntityKey`, `Boolean`>>
-`TextWithDeleteValue`:
+2a) FlatMap the stream to List<KeyValue<`ProjectEntityKey`, `TextWithDeleteValue`>>:
 - text `String`
 - deleted `Boolean`
 
@@ -99,3 +98,52 @@ the turtle is:
 
 5a) To: sink it to `project_rdf`
 
+As an example flow (pseudo data):
+```
+left stream
+
+s:1 p:1943 o:200 d:false
+s:2 p:1943 o:200 d:false
+
+
+left flat mapped
+
+k:200 v:(text:1,deleted:false)
+k:200 v:(text:2,deleted:false)
+
+right stream
+
+s:200 p:1843 o:https://wikidata/i345 d:false
+
+
+right flat mapped
+
+k:200 v(text:https://wikidata/i345,deleted:false)
+
+
+join
+
+k:200 v:(text:1,deleted:false) | k:200 v(text:https://wikidata/i345,deleted:false)
+k:200 v:(text:2,deleted:false) | k:200 v(text:https://wikidata/i345,deleted:false)
+
+
+output
+
+s:1 p:sameAs o:https://wikidata/i345 d:false
+s:2 p:sameAs o:https://wikidata/i345 d:false
+
+
+left stream
+s:1 p:1943 o:200 d:true
+
+left flat mapped
+
+k:200 v:(text:1,deleted:true)
+
+join
+k:200 v:(text:1,deleted:true) | k:200 v(text:https://wikidata/i345,deleted:false)
+
+output
+
+s:1 p:sameAs o:https://wikidata/i345 d:true
+```
