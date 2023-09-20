@@ -90,7 +90,7 @@ public class ProjectOwlSameAs {
                         var k = new ProjectEntityKey().newBuilder().setProjectId(key.getProjectId()).setEntityId(Integer.toString(value.getStatementId())).build();
 
                         var textWithDeleteValue = TextWithDeleteValue.newBuilder()
-                                .setText(value.getStatement().getSubjectId())
+                                .setText(value.getStatement().getObject().getAppellation().getString())
                                 .setDeleted(value.getDeleted$1())
                                 .build();
                         result.add(KeyValue.pair(k, textWithDeleteValue));
