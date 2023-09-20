@@ -1,27 +1,19 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.utils.Bytes;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.*;
-import org.apache.kafka.streams.state.KeyValueStore;
-import org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisStatementKey;
-import org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisStatementValue;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Named;
+import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
-import static org.geovistory.toolbox.streams.lib.UrlPrefixes.*;
-import static org.geovistory.toolbox.streams.lib.UrlPrefixes.XSD;
 
 
 @ApplicationScoped
@@ -118,9 +110,9 @@ public class ProjectOwlSameAs {
          * 4a) Join the KTables (KTable-KTable Equi-Join), creating a ProjectRdfRecord
          */
 
-        var joinTable = table1.join(table2, (TextWithDeleteValue table1Value, TextWithDeleteValue table2Value) -> {
-                    TextWithDeleteValue[] a = {table1Value, table2Value};
-                    return a;
+        var joinTable = table1.join(table2,
+                (TextWithDeleteValue table1Value, TextWithDeleteValue table2Value) -> new TextWithDeleteValue[]{
+                        table1Value, table2Value
                 }
         );
 
