@@ -125,9 +125,14 @@ public class ProjectOwlSameAs {
         );
 
         var mapped = joinTable.toStream().map((key, value) -> {
+            var operation = Operation.insert;
+            //set the operation to delete if both TextWithDeleteValue are deleted
+            if (value[0].getDeleted() && value[1].getDeleted()) operation = Operation.delete;
 
-            var k = ProjectRdfKey.newBuilder().setProjectId(key.getProjectId()).setTurtle("").build();
-            var v = ProjectRdfValue.newBuilder().setOperation(Operation.insert).build();
+            var turtle = "<http://geovistory.org/resource/" + value[0].getText() + "> <http://www.w3.org/2002/07/owl#sameAs> <" + value[1].getText() + "> .";
+
+            var k = ProjectRdfKey.newBuilder().setProjectId(key.getProjectId()).setTurtle(turtle).build();
+            var v = ProjectRdfValue.newBuilder().setOperation(operation).build();
 
             return KeyValue.pair(k, v);
 
