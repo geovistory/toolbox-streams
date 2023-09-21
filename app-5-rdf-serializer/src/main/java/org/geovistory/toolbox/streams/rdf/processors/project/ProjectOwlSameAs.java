@@ -2,11 +2,10 @@ package org.geovistory.toolbox.streams.rdf.processors.project;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Named;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
@@ -87,7 +86,7 @@ public class ProjectOwlSameAs {
                     List<KeyValue<ProjectEntityKey, TextWithDeleteValue>> result = new LinkedList<>();
 
                     if (value.getStatement().getPropertyId() == 1843 && value.getStatement().getObject().getAppellation().getString().matches("^[a-z](?:[-a-z0-9\\+\\.])*:(?:\\/\\/(?:(?:%[0-9a-f][0-9a-f]|[-a-z0-9\\._~!\\$&''\\(\\)\\*\\+,;=:@])|[\\/\\?])*)?")) {
-                        var k = new ProjectEntityKey().newBuilder().setProjectId(key.getProjectId()).setEntityId(Integer.toString(value.getStatementId())).build();
+                        var k = new ProjectEntityKey().newBuilder().setProjectId(key.getProjectId()).setEntityId(value.getStatement().getSubjectId()).build();
 
                         var textWithDeleteValue = TextWithDeleteValue.newBuilder()
                                 .setText(value.getStatement().getObject().getAppellation().getString())

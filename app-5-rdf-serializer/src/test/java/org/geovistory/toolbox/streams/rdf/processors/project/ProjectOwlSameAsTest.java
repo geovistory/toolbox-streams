@@ -79,7 +79,7 @@ class ProjectOwlSameAsTest {
         var projectIdRight = 1;
         var subjectIdRight = "i200";
         var statementIdRight = 999;
-        var objectAppelationStringRight = "i200";
+        var objectAppellationStringRight = "https://wikidata/i345";
         var propertyIdRight = 1843;
 
         var kLeft = ProjectStatementKey.newBuilder().setProjectId(projectIdLeft).setStatementId(statementIdLeft).build();
@@ -107,7 +107,7 @@ class ProjectOwlSameAsTest {
                                         .setClassId(0)
                                         .setAppellation(Appellation.newBuilder()
                                                 .setFkClass(0)
-                                                .setString(objectAppelationStringRight)
+                                                .setString(objectAppellationStringRight)
                                                 .build()
                                         ).build()
                                 )
