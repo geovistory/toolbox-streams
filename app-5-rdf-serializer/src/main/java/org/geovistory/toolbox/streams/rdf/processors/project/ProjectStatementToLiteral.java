@@ -50,13 +50,13 @@ public class ProjectStatementToLiteral {
     }
 
     public ProjectRdfReturnValue addProcessors(
-            KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityStream
+            KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteralStream
     ) {
 
         /* STREAM PROCESSORS */
         // 2)
 
-        var s = projectStatementWithEntityStream.flatMap(
+        var s = projectStatementWithLiteralStream.flatMap(
                 (key, value) -> {
                     List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
 
