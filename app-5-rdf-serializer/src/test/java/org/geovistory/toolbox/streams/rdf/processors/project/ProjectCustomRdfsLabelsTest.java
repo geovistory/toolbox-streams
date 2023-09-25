@@ -1,13 +1,11 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
 
-import io.debezium.data.geometry.Geography;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.rdf.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +20,7 @@ class ProjectCustomRdfsLabelsTest {
     private static final String SCHEMA_REGISTRY_SCOPE = ProjectCustomRdfsLabelsTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<ProjectRdfKey, ProjectRdfValue> projectTopic;
+    private TestInputTopic<dev.projects.project.Key, dev.projects.project.Value> projectTopic;
     private TestOutputTopic<ProjectRdfKey, ProjectRdfValue> outputTopic;
 
     @BeforeEach
@@ -47,8 +45,8 @@ class ProjectCustomRdfsLabelsTest {
 
         projectTopic = testDriver.createInputTopic(
                 inputTopicNames.getProject(),
-                avroSerdes.ProjectRdfKey().serializer(),
-                avroSerdes.ProjectRdfValue().serializer());
+                avroSerdes.ProProjectKey().serializer(),
+                avroSerdes.ProProjectValue().serializer());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectRdf(),
@@ -68,10 +66,17 @@ class ProjectCustomRdfsLabelsTest {
     void testLanguageOutputIsNotEmpty() {
         var projectId = 1;
 
-        var k = ProjectRdfKey.newBuilder().setProjectId(projectId).setTurtle("").build();
+        var k = dev.projects.project.Key.newBuilder()
+                .setPkEntity(projectId)
+                .build();
+        var v = dev.projects.project.Value.newBuilder()
+                .setFkLanguage(I.EN.get())
+                .build();
+
+        /*var k = ProjectRdfKey.newBuilder().setProjectId(projectId).setTurtle("").build();
         var v = ProjectRdfValue.newBuilder()
                 .setOperation(Operation.insert)
-                .build();
+                .build();*/
         projectTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isFalse();
@@ -85,9 +90,11 @@ class ProjectCustomRdfsLabelsTest {
     void testSizeOfLanguageOutput() {
         var projectId = 1;
 
-        var k = ProjectRdfKey.newBuilder().setProjectId(projectId).setTurtle("").build();
-        var v = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
+        var k = dev.projects.project.Key.newBuilder()
+                .setPkEntity(projectId)
+                .build();
+        var v = dev.projects.project.Value.newBuilder()
+                .setFkLanguage(I.EN.get())
                 .build();
         projectTopic.pipeInput(k, v);
 
@@ -102,9 +109,11 @@ class ProjectCustomRdfsLabelsTest {
     void testTurtleAndOperationValue() {
         var projectId = 1;
 
-        var k = ProjectRdfKey.newBuilder().setProjectId(projectId).setTurtle("").build();
-        var v = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
+        var k = dev.projects.project.Key.newBuilder()
+                .setPkEntity(projectId)
+                .build();
+        var v = dev.projects.project.Value.newBuilder()
+                .setFkLanguage(I.EN.get())
                 .build();
         projectTopic.pipeInput(k, v);
 

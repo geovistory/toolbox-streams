@@ -44,7 +44,7 @@ public class ProjectCustomRdfsLabels {
     }
 
     public ProjectRdfReturnValue addProcessors(
-            KStream<ProjectRdfKey, ProjectRdfValue> projectStream
+            KStream<dev.projects.project.Key, dev.projects.project.Value> projectStream
     ) {
 
         /* STREAM PROCESSORS */
@@ -87,7 +87,7 @@ public class ProjectCustomRdfsLabels {
                     ProjectRdfKey k;
                     for (String item : turtles) {
                         k = ProjectRdfKey.newBuilder()
-                                .setProjectId(key.getProjectId())
+                                .setProjectId(key.getPkEntity())
                                 .setTurtle(item)
                                 .build();
                         result.add(KeyValue.pair(k, v));
