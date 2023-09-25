@@ -15,6 +15,8 @@ public class InputTopicNames {
     public String projectClassLabel = "ts.topic.project.class.label";
     @ConfigProperty(name = "ts.topic.project.entity.label", defaultValue = "")
     public String projectEntityLabel = "ts.topic.project.entity.label";
+    @ConfigProperty(name = "ts.topic.ontome.property.label", defaultValue = "")
+    public String ontomePropertyLabel = "ontome.property.label";
 
     public String getProjectStatementWithEntity() {
         return projectStatementWithEntity;
@@ -30,5 +32,9 @@ public class InputTopicNames {
 
     public String getProjectEntityLabel() {
         return projectEntityLabel;
+    }
+
+    public String getOntomePropertyLabel() {
+        return ontomePropertyLabel;
     }
 }

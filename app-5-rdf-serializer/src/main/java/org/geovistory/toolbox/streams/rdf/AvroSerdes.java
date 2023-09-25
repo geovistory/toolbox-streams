@@ -74,4 +74,16 @@ public class AvroSerdes {
         serdes.configure(getProperties(), false);
         return serdes;
     }
+
+    public Serde<OntomePropertyLabelKey> OntomePropertyLabelKey() {
+        Serde<OntomePropertyLabelKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<OntomePropertyLabelValue> OntomePropertyLabelValue() {
+        Serde<OntomePropertyLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
 }
