@@ -1,6 +1,7 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
 import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.*;
@@ -53,7 +54,13 @@ public class ProjectOwlProperties {
     ) {
 
         /* STREAM PROCESSORS */
-        // 2)
+
+        // 2) project_statement_with_literal group by ProjectOwlPropertyKey
+        /*var groupedStatementWithLiteral = projectStatementWithLiteralStream.groupByKey(
+                Grouped.with(
+                        avroSerdes.ProjectOwlPropertyKey(), avroSerdes.OntomeClassValue()
+                ).withName(inner.TOPICS.ontome_class_metadata_grouped)
+        );*/
 
         var s = projectClassLabelStream.flatMap(
                 (key, value) -> {
