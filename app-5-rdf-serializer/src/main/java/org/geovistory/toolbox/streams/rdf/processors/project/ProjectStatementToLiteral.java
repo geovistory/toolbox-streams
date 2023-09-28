@@ -10,6 +10,7 @@ import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
+import org.geovistory.toolbox.streams.utilities.StringSanitizer;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -50,13 +51,13 @@ public class ProjectStatementToLiteral {
     }
 
     public ProjectRdfReturnValue addProcessors(
-            KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityStream
+            KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteralStream
     ) {
 
         /* STREAM PROCESSORS */
         // 2)
 
-        var s = projectStatementWithEntityStream.flatMap(
+        var s = projectStatementWithLiteralStream.flatMap(
                 (key, value) -> {
                     List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
 
@@ -90,10 +91,10 @@ public class ProjectStatementToLiteral {
                             lng = language.getNotes();
                         } else lng = language.getPkLanguage();
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1112> "Italian"^^<http://www.w3.org/2001/XMLSchema#string> .
-                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + lng + "\"^^<" + XSD_STRING.getUri() + "> .");
+                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(lng) + "\"^^<" + XSD_STRING.getUri() + "> .");
                     } else if (appellation != null) {
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "Foo"^^<http://www.w3.org/2001/XMLSchema#string> .
-                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + appellation.getString() + "\"^^<" + XSD_STRING.getUri() + "> .");
+                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(appellation.getString()) + "\"^^<" + XSD_STRING.getUri() + "> .");
                     } else if (langString != null) {
                         var lng = "";
                         lng = getLanguageFromId(langString.getFkLanguage());
@@ -153,7 +154,7 @@ public class ProjectStatementToLiteral {
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "month> \"--" + m + "\"^^<" + TIME.getUrl() + "generalMonth>");
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "year> \"-" + y + "\"^^<" + TIME.getUrl() + "generalYear>");
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "hasTRS> <" + TIME.getUrl() + durationUnit + ">");
-                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "year> \"" + label + "\"^^<" + XSD_STRING.getUri() + ">");
+                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "year> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(label) + "\"^^<" + XSD_STRING.getUri() + ">");
                         }
                     } else if (dimension != null) {
                         DecimalFormat format = new DecimalFormat("0.#");
