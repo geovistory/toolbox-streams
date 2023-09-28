@@ -52,7 +52,7 @@ public class ProjectOwlProperties {
     public ProjectRdfReturnValue addProcessors(
             KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithLiteralStream,
             KStream<ProjectStatementKey, ProjectStatementValue> projectStatementWithEntityStream,
-            KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> projectClassLabelStream
+            KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelStream
     ) {
 
         /* STREAM PROCESSORS */
@@ -105,7 +105,7 @@ public class ProjectOwlProperties {
                 Grouped.with(
                         avroSerdes.ProjectOwlPropertyKey(), avroSerdes.ProjectStatementValue()
                 ));
-        // 2b) Aggregate KGroupedStream to stream with ProjectOwlPropertyValue: type='d' (for datatype property)
+        // 3b) Aggregate KGroupedStream to stream with ProjectOwlPropertyValue: type='o' (for object property)
         var aggregatedProjectObjectProperty = groupedStatementWithEntity.aggregate(
                 () -> ProjectOwlPropertyValue.newBuilder().setType("o").build(), /* initializer */
                 (aggKey, newValue, aggValue) -> aggValue, /* adder */
@@ -114,7 +114,7 @@ public class ProjectOwlProperties {
                         .withValueSerde(avroSerdes.ProjectOwlPropertyValue())
         );
 
-        // 2c) Suppress duplicates
+        // 3c) Suppress duplicates
         var deduplicatedProjectObjectPropertyStream = aggregatedProjectObjectProperty
                 .toStream(
                         Named.as("project_object_property_owl_aggregated" + "-to-stream")
@@ -127,20 +127,18 @@ public class ProjectOwlProperties {
                 (key, value) -> {
                     List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
 
-                    //value of operation
                     var v = ProjectRdfValue.newBuilder()
                             .setOperation(Operation.insert)
                             .build();
+
                     ArrayList<String> turtles = new ArrayList<>();
 
-                    //get class ID and label
-                    var propertyId = key.getPropertyId());
+                    var propertyId = key.getPropertyId();
 
                     turtles.add("<https://ontome.net/ontology/" + propertyId + "> a <http://www.w3.org/2002/07/owl#ObjectProperty> .");
                     turtles.add("<https://ontome.net/ontology/" + propertyId + "i> a <http://www.w3.org/2002/07/owl#ObjectProperty> .");
                     turtles.add("<https://ontome.net/ontology/" + propertyId + "i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/"+propertyId+"> .");
 
-                    // add the class label triples
                     ProjectRdfKey k;
                     for (String item : turtles) {
                         k = ProjectRdfKey.newBuilder()
@@ -151,6 +149,29 @@ public class ProjectOwlProperties {
                     }
                     return result;
                 }
+        );
+
+        // 4a) and 4b) Merge the streams of 2c and 3c into a KTable
+        var mergedProjectPropertyTable = mappedProjectDatatypeProperty.merge(mappedProjectObjectProperty).toTable();
+
+
+        /*
+        (     KTable<KO, VO> other,
+    Function<V, KO> foreignKeyExtractor,
+    ValueJoiner<V, VO, VR> joiner,
+    TableJoined<K, KO> tableJoined,
+    Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized )
+         */
+        var joinedProjectPropertyWithOntomeLabel = mergedProjectPropertyTable.leftJoin()
+                ontomePropertyLabelStream.toTable(),
+                (leftValue, rightValue) -> {
+                    "left=" + leftValue + ", right=" + rightValue
+                }/* ValueJoiner */
+                ,
+                TableJoined.as(inner.TOPICS.project_top_incoming_edges_join_project_entity_label + "-fk-join"),
+                Materialized.<ProjectStatementKey, ProjectEdgeValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_incoming_edges_join_project_entity_label)
+                        .withKeySerde(avroSerdes.ProjectStatementKey())
+                        .withValueSerde(avroSerdes.ProjectEdgeValue())
         );
 
         /* SINK PROCESSORS */
