@@ -74,4 +74,16 @@ public class AvroSerdes {
         serdes.configure(getProperties(), false);
         return serdes;
     }
+
+    public Serde<dev.projects.project.Key> ProProjectKey() {
+        Serde<dev.projects.project.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<dev.projects.project.Value> ProProjectValue() {
+        Serde<dev.projects.project.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
 }
