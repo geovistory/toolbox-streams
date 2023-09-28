@@ -73,10 +73,6 @@ class ProjectCustomRdfsLabelsTest {
                 .setFkLanguage(I.EN.get())
                 .build();
 
-        /*var k = ProjectRdfKey.newBuilder().setProjectId(projectId).setTurtle("").build();
-        var v = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
-                .build();*/
         projectTopic.pipeInput(k, v);
 
         assertThat(outputTopic.isEmpty()).isFalse();
