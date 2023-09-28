@@ -5,12 +5,6 @@
   "doc": "ProjectOwlPropertyValue",
   "fields": [
     {
-      "name": "project_id",
-      "type": {
-        "type": "int"
-      }
-    },
-    {
       "name": "type",
       "type": {
         "type": "string"
