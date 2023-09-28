@@ -1,7 +1,9 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Grouped;
+import org.apache.kafka.streams.kstream.KGroupedStream;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.*;
@@ -56,11 +58,26 @@ public class ProjectOwlProperties {
         /* STREAM PROCESSORS */
 
         // 2) project_statement_with_literal group by ProjectOwlPropertyKey
-        /*var groupedStatementWithLiteral = projectStatementWithLiteralStream.groupByKey(
+        var groupedStatementWithLiteral = projectStatementWithLiteralStream.groupBy(
+                (key, value) ->
+                        ProjectOwlPropertyKey.newBuilder()
+                                .setProjectId(key.getProjectId())
+                                .setPropertyId("p123")
+                                .build(),
                 Grouped.with(
-                        avroSerdes.ProjectOwlPropertyKey(), avroSerdes.OntomeClassValue()
-                ).withName(inner.TOPICS.ontome_class_metadata_grouped)
-        );*/
+                        avroSerdes.ProjectOwlPropertyKey(), Serdes.String()
+                ));
+
+        KGroupedStream<ProjectOwlPropertyKey, String> groupedStream = projectStatementWithLiteralStream.groupBy(
+                (key, value) ->
+                        ProjectOwlPropertyKey.newBuilder()
+                        .setProjectId(key.getProjectId())
+                        .setPropertyId("p123")
+                        .build(),
+                Grouped.with(
+                        avroSerdes.ProjectOwlPropertyKey(), /* key (note: type was modified) */
+                        Serdes.String())  /* value */
+        );
 
         var s = projectClassLabelStream.flatMap(
                 (key, value) -> {
