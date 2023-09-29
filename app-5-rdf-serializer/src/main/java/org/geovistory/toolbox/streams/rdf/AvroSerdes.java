@@ -93,8 +93,20 @@ public class AvroSerdes {
         return serdes;
     }
 
+    public Serde<ProjectOwlPropertyKey> ProjectOwlPropertyKeyAsValue() {
+        Serde<ProjectOwlPropertyKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
     public Serde<ProjectOwlPropertyValue> ProjectOwlPropertyValue() {
         Serde<ProjectOwlPropertyValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectOwlPropertyLabelValue> ProjectOwlPropertyLabelValue() {
+        Serde<ProjectOwlPropertyLabelValue> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }

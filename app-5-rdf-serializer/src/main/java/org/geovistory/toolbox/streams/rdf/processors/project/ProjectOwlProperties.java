@@ -1,13 +1,12 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
-import org.geovistory.toolbox.streams.lib.Utils;
+
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
@@ -62,7 +61,7 @@ public class ProjectOwlProperties {
                 (key, value) ->
                         ProjectOwlPropertyKey.newBuilder()
                                 .setProjectId(key.getProjectId())
-                                .setPropertyId("p" + value.getStatement().getPropertyId())
+                                .setPropertyId(value.getStatement().getPropertyId())
                                 .build(),
                 Grouped.with(
                         avroSerdes.ProjectOwlPropertyKey(), avroSerdes.ProjectStatementValue()
@@ -100,7 +99,7 @@ public class ProjectOwlProperties {
                 (key, value) ->
                         ProjectOwlPropertyKey.newBuilder()
                                 .setProjectId(key.getProjectId())
-                                .setPropertyId("p" + value.getStatement().getPropertyId())
+                                .setPropertyId(value.getStatement().getPropertyId())
                                 .build(),
                 Grouped.with(
                         avroSerdes.ProjectOwlPropertyKey(), avroSerdes.ProjectStatementValue()
@@ -135,9 +134,9 @@ public class ProjectOwlProperties {
 
                     var propertyId = key.getPropertyId();
 
-                    turtles.add("<https://ontome.net/ontology/" + propertyId + "> a <http://www.w3.org/2002/07/owl#ObjectProperty> .");
-                    turtles.add("<https://ontome.net/ontology/" + propertyId + "i> a <http://www.w3.org/2002/07/owl#ObjectProperty> .");
-                    turtles.add("<https://ontome.net/ontology/" + propertyId + "i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/"+propertyId+"> .");
+                    turtles.add("<https://ontome.net/ontology/p" + propertyId + "> a <http://www.w3.org/2002/07/owl#ObjectProperty> .");
+                    turtles.add("<https://ontome.net/ontology/p" + propertyId + "i> a <http://www.w3.org/2002/07/owl#ObjectProperty> .");
+                    turtles.add("<https://ontome.net/ontology/p" + propertyId + "i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/" + propertyId + "> .");
 
                     ProjectRdfKey k;
                     for (String item : turtles) {
@@ -152,37 +151,54 @@ public class ProjectOwlProperties {
         );
 
         // 4a) and 4b) Merge the streams of 2c and 3c into a KTable
-        var mergedProjectPropertyTable = mappedProjectDatatypeProperty.merge(mappedProjectObjectProperty).toTable();
+        var mergedProjectPropertyTable = deduplicatedProjectDatatypePropertyStream.merge(deduplicatedProjectObjectPropertyStream)
+                .mapValues((readOnlyKey, value) -> readOnlyKey)
+                .toTable(
+                        Named.as("mergedProjectPropertyTable-to-table"),
+                        Materialized
+                                .<ProjectOwlPropertyKey, ProjectOwlPropertyKey, KeyValueStore<Bytes, byte[]>>
+                                        as("mergedProjectPropertyTable-store")
+                                .withKeySerde(avroSerdes.ProjectOwlPropertyKey())
+                                .withValueSerde(avroSerdes.ProjectOwlPropertyKeyAsValue())
+                );
 
 
-        /*
-        (     KTable<KO, VO> other,
-    Function<V, KO> foreignKeyExtractor,
-    ValueJoiner<V, VO, VR> joiner,
-    TableJoined<K, KO> tableJoined,
-    Materialized<K, VR, KeyValueStore<Bytes, byte[]>> materialized )
-         */
-        var joinedProjectPropertyWithOntomeLabel = mergedProjectPropertyTable.leftJoin()
-                ontomePropertyLabelStream.toTable(),
-                (leftValue, rightValue) -> {
-                    "left=" + leftValue + ", right=" + rightValue
-                }/* ValueJoiner */
-                ,
-                TableJoined.as(inner.TOPICS.project_top_incoming_edges_join_project_entity_label + "-fk-join"),
-                Materialized.<ProjectStatementKey, ProjectEdgeValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_top_incoming_edges_join_project_entity_label)
-                        .withKeySerde(avroSerdes.ProjectStatementKey())
-                        .withValueSerde(avroSerdes.ProjectEdgeValue())
+        // 4c) Join the english ontome property using a foreign key join, creating ProjectOwlPropertyLabelValue
+        // Define the ValueJoiner with appropriate types
+        ValueJoiner<ProjectOwlPropertyKey, OntomePropertyLabelValue, ProjectOwlPropertyLabelValue> valueJoiner = (value1, value2) -> {
+            // Combine the values as needed to create a ResultValue
+            var result = ProjectOwlPropertyLabelValue.newBuilder().setLabel(value2.getLabel()).setInverseLabel(value2.getInverseLabel()).build();
+            return result;
+        };
+
+        Materialized<ProjectOwlPropertyKey, ProjectOwlPropertyLabelValue, KeyValueStore<Bytes, byte[]>> materialized =
+                Materialized.<ProjectOwlPropertyKey, ProjectOwlPropertyLabelValue, KeyValueStore<Bytes, byte[]>>as("project_entity_fulltext_join_prop_label")
+                        .withKeySerde(avroSerdes.ProjectOwlPropertyKey())
+                        .withValueSerde(avroSerdes.ProjectOwlPropertyLabelValue());
+        var ontomePropertyLabelTable = ontomePropertyLabelStream.toTable();
+
+
+        var joinedProjectPropertyWithOntomeLabel = mergedProjectPropertyTable.leftJoin(
+                ontomePropertyLabelTable,
+                projectOwlPropertyKey -> OntomePropertyLabelKey.newBuilder()
+                        .setPropertyId(projectOwlPropertyKey.getPropertyId())
+                        .setLanguageId(18889)
+                        .build(),
+                valueJoiner,
+                TableJoined.as("project_owl_prop_join_ontome_prop_label" + "-fk-left-join"),
+                materialized
         );
+
 
         /* SINK PROCESSORS */
 
-        s.to(outputTopicNames.projectRdf(),
+        /*s.to(outputTopicNames.projectRdf(),
                 Produced.with(avroSerdes.ProjectRdfKey(), avroSerdes.ProjectRdfValue())
                         .withName(outputTopicNames.projectRdf() + "-class-label-producer")
         );
 
 
-        return new ProjectRdfReturnValue(s);
+        return new ProjectRdfReturnValue(s);*/
 
     }
 
