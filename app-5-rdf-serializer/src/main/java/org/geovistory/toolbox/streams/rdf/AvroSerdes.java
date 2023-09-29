@@ -74,10 +74,4 @@ public class AvroSerdes {
         serdes.configure(getProperties(), false);
         return serdes;
     }
-
-    public Serde<TextWithDeleteValue> TextWithDeleteValue() {
-        Serde<TextWithDeleteValue> serdes = new SpecificAvroSerde<>();
-        serdes.configure(getProperties(), true);
-        return serdes;
-    }
 }

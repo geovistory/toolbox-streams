@@ -76,20 +76,19 @@ public class App {
                 registerInputTopic.projectStatementWithEntityStream()
         );
 
-        // add sub-topology projectStatementToLiteral
+        // add sub-topology ProjectStatementToLiteral
         projectStatementToLiteral.addProcessors(
                 registerInputTopic.projectStatementWithLiteralStream()
         );
 
-        // add sub-topology projectClassLabel
+        // add sub-topology ProjectClassLabel
         projectOwlClass.addProcessors(
                 registerInputTopic.projectClassLabelStream()
         );
 
-        // add sub-topology projectClassLabel
-        projectOwlSameAs.addProcessors(
-                registerInputTopic.projectStatementWithEntityStream(),
-                registerInputTopic.projectStatementWithLiteralStream()
+        // add sub-topology ProjectCustomRdfsLabels
+        projectCustomRdfsLabels.addProcessors(
+                registerInputTopic.projectStream()
         );
     }
 

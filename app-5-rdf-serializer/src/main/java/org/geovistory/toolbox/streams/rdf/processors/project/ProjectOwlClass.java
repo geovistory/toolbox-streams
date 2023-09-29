@@ -8,6 +8,7 @@ import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
+import org.geovistory.toolbox.streams.utilities.StringSanitizer;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -39,12 +40,12 @@ public class ProjectOwlClass {
     }
 
     public void addProcessorsStandalone() {
-         addProcessors(
-                 registerInputTopic.projectClassLabelStream()
+        addProcessors(
+                registerInputTopic.projectClassLabelStream()
         );
     }
 
-    public  ProjectRdfReturnValue addProcessors(
+    public ProjectRdfReturnValue addProcessors(
             KStream<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelStream
     ) {
 
@@ -52,35 +53,35 @@ public class ProjectOwlClass {
         // 2)
 
         var s = projectClassLabelStream.flatMap(
-            (key, value) -> {
-                List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
+                (key, value) -> {
+                    List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
 
-                //value of operation
-                var v = ProjectRdfValue.newBuilder()
-                        .setOperation(
-                                Utils.booleanIsEqualTrue(value.getDeleted$1()) ? Operation.delete : Operation.insert)
-                        .build();
-                ArrayList<String> turtles = new ArrayList<>();
-
-                //get class ID and label
-                var classId = value.getClassId();
-                var classLabel = value.getLabel();
-                var classLiteralType = (value.getLanguageIso() == null) ? "^^<"+XSD.getUrl()+"string>" : "@"+ value.getLanguageIso();
-
-                turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> a <" + OWL.getUrl() +"Class> .");
-                turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> <" + RDFS.getUrl() +"label> \""+ classLabel.replaceAll("[\\\\\"]", "\\\\$0") +"\""+ classLiteralType +" .");
-
-                // add the class label triples
-                ProjectRdfKey k;
-                for (String item : turtles) {
-                    k = ProjectRdfKey.newBuilder()
-                            .setProjectId(value.getProjectId())
-                            .setTurtle(item)
+                    //value of operation
+                    var v = ProjectRdfValue.newBuilder()
+                            .setOperation(
+                                    Utils.booleanIsEqualTrue(value.getDeleted$1()) ? Operation.delete : Operation.insert)
                             .build();
-                    result.add(KeyValue.pair(k, v));
+                    ArrayList<String> turtles = new ArrayList<>();
+
+                    //get class ID and label
+                    var classId = value.getClassId();
+                    var classLabel = value.getLabel();
+                    var classLiteralType = (value.getLanguageIso() == null) ? "^^<" + XSD.getUrl() + "string>" : "@" + value.getLanguageIso();
+
+                    turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> a <" + OWL.getUrl() + "Class> .");
+                    turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> <" + RDFS.getUrl() + "label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(classLabel) + "\"" + classLiteralType + " .");
+
+                    // add the class label triples
+                    ProjectRdfKey k;
+                    for (String item : turtles) {
+                        k = ProjectRdfKey.newBuilder()
+                                .setProjectId(value.getProjectId())
+                                .setTurtle(item)
+                                .build();
+                        result.add(KeyValue.pair(k, v));
+                    }
+                    return result;
                 }
-                return result;
-            }
         );
         /* SINK PROCESSORS */
 
