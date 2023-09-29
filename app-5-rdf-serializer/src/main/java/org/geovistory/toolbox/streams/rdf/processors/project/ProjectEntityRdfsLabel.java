@@ -10,9 +10,10 @@ import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.util.ArrayList;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.geovistory.toolbox.streams.utilities.StringSanitizer;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -106,9 +107,7 @@ public class ProjectEntityRdfsLabel {
         var projectRdfStream = aggregatedStream.toStream().flatMap(
                 (key, value) -> {
                     List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
-                    value.getList().forEach(projectRdfRecord -> {
-                        result.add(KeyValue.pair(projectRdfRecord.getKey(), projectRdfRecord.getValue()));
-                    });
+                    value.getList().forEach(projectRdfRecord -> result.add(KeyValue.pair(projectRdfRecord.getKey(), projectRdfRecord.getValue())));
                     return result;
                 }
         );
@@ -129,8 +128,6 @@ public class ProjectEntityRdfsLabel {
     public enum inner {
         TOPICS;
         public final String project_entity_label_grouped = "project_entity_label_grouped";
-        public final String project_entity_label_aggregated = "project_entity_label_aggregated";
-
     }
 
 
