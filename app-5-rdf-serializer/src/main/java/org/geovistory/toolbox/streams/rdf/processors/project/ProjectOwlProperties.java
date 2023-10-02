@@ -7,9 +7,11 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 
+import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
+import org.geovistory.toolbox.streams.utilities.StringSanitizer;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -189,16 +191,52 @@ public class ProjectOwlProperties {
                 materialized
         );
 
+        // 4d) FlatMap to ProjectRdfKey and ProjectRdfValue, with insert operations
+        var mappedProjectPropertyOntomeLabel = joinedProjectPropertyWithOntomeLabel.toStream().flatMap(
+                (key, value) -> {
+                    List<KeyValue<ProjectRdfKey, ProjectRdfValue>> result = new LinkedList<>();
 
-        /* SINK PROCESSORS */
+                    //value of operation
+                    var v = ProjectRdfValue.newBuilder().setOperation(Operation.insert).build();
+                    ArrayList<String> turtles = new ArrayList<>();
 
-        /*s.to(outputTopicNames.projectRdf(),
-                Produced.with(avroSerdes.ProjectRdfKey(), avroSerdes.ProjectRdfValue())
-                        .withName(outputTopicNames.projectRdf() + "-class-label-producer")
+                    //get class ID and label
+                    var propertyId = key.getPropertyId();
+
+                    if (value.getLabel() != null) {
+                        turtles.add("<https://ontome.net/ontology/p" + propertyId + "> <http://www.w3.org/2000/01/rdf-schema#label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(value.getLabel()) + "\"@en .");
+
+                    }
+
+                    if (value.getInverseLabel() != null) {
+                        turtles.add("<<https://ontome.net/ontology/p" + propertyId + "i> <http://www.w3.org/2000/01/rdf-schema#label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(value.getLabel()) + "\"@en .");
+                    }
+
+                    // add the class label triples
+                    ProjectRdfKey k;
+                    for (String item : turtles) {
+                        k = ProjectRdfKey.newBuilder()
+                                .setProjectId(key.getProjectId())
+                                .setTurtle(item)
+                                .build();
+                        result.add(KeyValue.pair(k, v));
+                    }
+                    return result;
+                }
         );
 
 
-        return new ProjectRdfReturnValue(s);*/
+        /* SINK PROCESSORS */
+
+        var s = mappedProjectObjectProperty.merge(mappedProjectDatatypeProperty).merge(mappedProjectPropertyOntomeLabel);
+
+        s.to(outputTopicNames.projectRdf(),
+                Produced.with(avroSerdes.ProjectRdfKey(), avroSerdes.ProjectRdfValue())
+                        .withName(outputTopicNames.projectRdf() + "-project-owl-property-producer")
+        );
+
+
+        return new ProjectRdfReturnValue(s);
 
     }
 
