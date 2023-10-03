@@ -88,7 +88,7 @@ public class ProjectOwlProperties {
 
         var mappedProjectDatatypeProperty = deduplicatedProjectDatatypePropertyStream.map((key, value) -> {
             var operation = Operation.insert;
-            var turtle = "<https://ontome.net/ontology/" + key.getPropertyId() + "> a <http://www.w3.org/2002/07/owl#DatatypeProperty> .";
+            var turtle = "<https://ontome.net/ontology/p" + key.getPropertyId() + "> a <http://www.w3.org/2002/07/owl#DatatypeProperty> .";
             var k = ProjectRdfKey.newBuilder().setProjectId(key.getProjectId()).setTurtle(turtle).build();
             var v = ProjectRdfValue.newBuilder().setOperation(operation).build();
 
@@ -169,8 +169,7 @@ public class ProjectOwlProperties {
         // Define the ValueJoiner with appropriate types
         ValueJoiner<ProjectOwlPropertyKey, OntomePropertyLabelValue, ProjectOwlPropertyLabelValue> valueJoiner = (value1, value2) -> {
             // Combine the values as needed to create a ResultValue
-            var result = ProjectOwlPropertyLabelValue.newBuilder().setLabel(value2.getLabel()).setInverseLabel(value2.getInverseLabel()).build();
-            return result;
+            return ProjectOwlPropertyLabelValue.newBuilder().setLabel(value2.getLabel()).setInverseLabel(value2.getInverseLabel()).build();
         };
 
         Materialized<ProjectOwlPropertyKey, ProjectOwlPropertyLabelValue, KeyValueStore<Bytes, byte[]>> materialized =
