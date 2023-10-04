@@ -134,7 +134,7 @@ public class ProjectOwlProperties {
 
                     turtles.add("<https://ontome.net/ontology/p" + propertyId + "> a <http://www.w3.org/2002/07/owl#ObjectProperty> .");
                     turtles.add("<https://ontome.net/ontology/p" + propertyId + "i> a <http://www.w3.org/2002/07/owl#ObjectProperty> .");
-                    turtles.add("<https://ontome.net/ontology/p" + propertyId + "i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/" + propertyId + "> .");
+                    turtles.add("<https://ontome.net/ontology/p" + propertyId + "i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/p" + propertyId + "> .");
 
                     ProjectRdfKey k;
                     for (String item : turtles) {

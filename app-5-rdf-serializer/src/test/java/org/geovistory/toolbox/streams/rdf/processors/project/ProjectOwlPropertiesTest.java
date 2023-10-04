@@ -121,7 +121,7 @@ class ProjectOwlPropertiesTest {
     }
 
     /**
-     * The goal of this test is to check if the output has the correct size: 4
+     * The goal of this test is to check if the output has the correct size: 13
      */
     @Test
     void testSizeOfOutput() {
@@ -228,4 +228,222 @@ class ProjectOwlPropertiesTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(13);
     }
+
+    /**
+     * The goal of this test is to check if the keys generated in the processor match the expected list of keys
+     * The expectation is that the test turtle values are contained in the produced output topic
+     */
+    @Test
+    void testListKeyValuePairs() {
+
+        var projectId = 7;
+        var propertyIdL = 123;
+        var propertyIdL2 = 1843;
+        var propertyIdE = 86;
+        var propertyIdE2 = 1599;
+
+        var propertyIdO = 86;
+        var label = "brought into life";
+        var inverseLabel = "was born";
+
+        var propertyIdO2 = 1599;
+        var label2 = "took place at";
+        //var inverseLabel2 = null; not used
+
+        var propertyIdO3 = 1843;
+        var label3 = "has value";
+        var inverseLabel3 = "is value of";
+
+        var subjectId = "i1";
+        var statementId = 111;
+        var objectId = "i200";
+
+        var lang = I.EN.get();
+
+        var kOntPrLab = OntomePropertyLabelKey.newBuilder().setPropertyId(propertyIdO).setLanguageId(lang).build();
+        var vOntPrLab = OntomePropertyLabelValue.newBuilder().setPropertyId(propertyIdO).setLabel(label).setLanguageId(lang).setInverseLabel(inverseLabel).build();
+        ontomePropertyLabelTopic.pipeInput(kOntPrLab, vOntPrLab);
+
+        var kOntPrLab2 = OntomePropertyLabelKey.newBuilder().setPropertyId(propertyIdO2).setLanguageId(lang).build();
+        var vOntPrLab2 = OntomePropertyLabelValue.newBuilder().setPropertyId(propertyIdO2).setLabel(label2).setLanguageId(lang).setInverseLabel(null).build();
+        ontomePropertyLabelTopic.pipeInput(kOntPrLab2, vOntPrLab2);
+
+        var kOntPrLab3 = OntomePropertyLabelKey.newBuilder().setPropertyId(propertyIdO3).setLanguageId(lang).build();
+        var vOntPrLab3 = OntomePropertyLabelValue.newBuilder().setPropertyId(propertyIdO3).setLabel(label3).setLanguageId(lang).setInverseLabel(inverseLabel3).build();
+        ontomePropertyLabelTopic.pipeInput(kOntPrLab3, vOntPrLab3);
+
+        var kStLit = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var vStLit = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyIdL)
+                                .build())
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(kStLit, vStLit);
+
+        var kStLit2 = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var vStLit2 = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObjectId(objectId)
+                                .setPropertyId(propertyIdL2)
+                                .build())
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithLiteralTopic.pipeInput(kStLit2, vStLit2);
+
+        var kStEnt = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var vStEnt = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .build()
+                                )
+                                .setPropertyId(propertyIdE)
+                                .build())
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(kStEnt, vStEnt);
+
+        var kStEnt2 = ProjectStatementKey.newBuilder().setProjectId(projectId).setStatementId(statementId).build();
+        var vStEnt2 = ProjectStatementValue.newBuilder()
+                .setProjectId(projectId)
+                .setStatementId(statementId)
+                .setStatement(
+                        StatementEnrichedValue.newBuilder()
+                                .setSubjectId(subjectId)
+                                .setObject(NodeValue.newBuilder()
+                                        .setClassId(0)
+                                        .build()
+                                )
+                                .setPropertyId(propertyIdE2)
+                                .build())
+                .setDeleted$1(false)
+                .build();
+        projectStatementWithEntityTopic.pipeInput(kStEnt2, vStEnt2);
+
+        assertThat(outputTopic.isEmpty()).isFalse();
+        var outRecords = outputTopic.readKeyValuesToMap();
+
+
+        var expectedKey = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p123> a <http://www.w3.org/2002/07/owl#DatatypeProperty> .")
+                .build();
+        var expectedValue = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+
+        var expectedKey2 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p1843> a <http://www.w3.org/2002/07/owl#DatatypeProperty> .")
+                .build();
+        var expectedValue2 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey3 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p1843> <http://www.w3.org/2000/01/rdf-schema#label> \"has value\"@en .")
+                .build();
+        var expectedValue3 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey4 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p1843i> <http://www.w3.org/2000/01/rdf-schema#label> \"is value of\"@en .")
+                .build();
+        var expectedValue4 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey5 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p86> a <http://www.w3.org/2002/07/owl#ObjectProperty> .")
+                .build();
+        var expectedValue5 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey6 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p86i> a <http://www.w3.org/2002/07/owl#ObjectProperty> .")
+                .build();
+        var expectedValue6 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey7 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p86i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/p86> .")
+                .build();
+        var expectedValue7 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey8 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p86> <http://www.w3.org/2000/01/rdf-schema#label> \"brought into life\"@en .")
+                .build();
+        var expectedValue8 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey9 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p86i> <http://www.w3.org/2000/01/rdf-schema#label> \"was born\"@en .")
+                .build();
+        var expectedValue9 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey10 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p1599> a <http://www.w3.org/2002/07/owl#ObjectProperty> .")
+                .build();
+        var expectedValue10 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey11 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p1599i> a <http://www.w3.org/2002/07/owl#ObjectProperty> .")
+                .build();
+        var expectedValue11 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey12 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p1599i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/p1599> .")
+                .build();
+        var expectedValue12 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+        var expectedKey13 = ProjectRdfKey.newBuilder()
+                .setProjectId(projectId)
+                .setTurtle("<https://ontome.net/ontology/p1599> <http://www.w3.org/2000/01/rdf-schema#label> \"took place at\"@en .")
+                .build();
+        var expectedValue13 = ProjectRdfValue.newBuilder()
+                .setOperation(Operation.insert)
+                .build();
+
+        assertThat(outRecords.containsKey(expectedKey)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey2)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey3)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey4)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey5)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey6)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey7)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey8)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey9)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey10)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey11)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey12)).isTrue();
+        assertThat(outRecords.containsKey(expectedKey13)).isTrue();
+    }
+
 }
