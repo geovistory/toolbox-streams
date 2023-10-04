@@ -7,7 +7,6 @@ import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 import org.geovistory.toolbox.streams.rdf.processors.project.*;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
@@ -31,6 +30,8 @@ public class App {
     ProjectCustomRdfsLabels projectCustomRdfsLabels;
     @Inject
     ProjectOwlClass projectOwlClass;
+    @Inject
+    ProjectOwlProperties projectOwlProperties;
     @Inject
     ProjectOwlSameAs projectOwlSameAs;
     @Inject
@@ -90,6 +91,11 @@ public class App {
                 registerInputTopic.projectStream()
         );
 
+        projectOwlProperties.addProcessors(
+                registerInputTopic.projectStatementWithLiteralStream(),
+                registerInputTopic.projectStatementWithEntityStream(),
+                registerInputTopic.ontomePropertyLabelStream()
+        );
         // add sub-topology ProjectOwlSameAs
         projectOwlSameAs.addProcessors(
                 registerInputTopic.projectStatementWithEntityStream(),

@@ -34,7 +34,6 @@ public class ProjectStatementToLiteral {
     @Inject
     RegisterInputTopic registerInputTopic;
 
-
     @Inject
     OutputTopicNames outputTopicNames;
 
