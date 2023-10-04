@@ -5,8 +5,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * This class provides helper methods to register

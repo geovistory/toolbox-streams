@@ -6,14 +6,11 @@ package org.geovistory.toolbox.streams.rdf;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
-import org.geovistory.toolbox.streams.rdf.processors.project.ProjectCustomRdfsLabels;
-import org.geovistory.toolbox.streams.rdf.processors.project.ProjectOwlClass;
-import org.geovistory.toolbox.streams.rdf.processors.project.ProjectStatementToLiteral;
-import org.geovistory.toolbox.streams.rdf.processors.project.ProjectStatementToUri;
+import org.geovistory.toolbox.streams.rdf.processors.project.*;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 
 @ApplicationScoped
@@ -31,9 +28,11 @@ public class App {
     @Inject
     ProjectStatementToLiteral projectStatementToLiteral;
     @Inject
+    ProjectCustomRdfsLabels projectCustomRdfsLabels;
+    @Inject
     ProjectOwlClass projectOwlClass;
     @Inject
-    ProjectCustomRdfsLabels projectCustomRdfsLabels;
+    ProjectOwlSameAs projectOwlSameAs;
     @Inject
     BuilderSingleton builderSingleton;
     @Inject
@@ -89,6 +88,12 @@ public class App {
         // add sub-topology ProjectCustomRdfsLabels
         projectCustomRdfsLabels.addProcessors(
                 registerInputTopic.projectStream()
+        );
+
+        // add sub-topology ProjectOwlSameAs
+        projectOwlSameAs.addProcessors(
+                registerInputTopic.projectStatementWithEntityStream(),
+                registerInputTopic.projectStatementWithLiteralStream()
         );
     }
 

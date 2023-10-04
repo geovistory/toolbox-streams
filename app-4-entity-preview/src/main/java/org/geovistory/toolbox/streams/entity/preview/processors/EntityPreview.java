@@ -10,8 +10,8 @@ import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.entity.preview.processors.project.ProjectEntityPreviewReturnValue;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class EntityPreview {
