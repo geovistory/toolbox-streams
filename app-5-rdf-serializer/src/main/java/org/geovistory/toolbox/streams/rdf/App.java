@@ -33,8 +33,6 @@ public class App {
     @Inject
     ProjectOwlProperties projectOwlProperties;
     @Inject
-    ProjectCustomRdfsLabels projectCustomRdfsLabels;
-    @Inject
     ProjectOwlSameAs projectOwlSameAs;
     @Inject
     BuilderSingleton builderSingleton;
