@@ -342,93 +342,54 @@ class ProjectOwlPropertiesTest {
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p123> a <http://www.w3.org/2002/07/owl#DatatypeProperty> .")
                 .build();
-        var expectedValue = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
-                .build();
 
         var expectedKey2 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p1843> a <http://www.w3.org/2002/07/owl#DatatypeProperty> .")
                 .build();
-        var expectedValue2 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
-                .build();
         var expectedKey3 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p1843> <http://www.w3.org/2000/01/rdf-schema#label> \"has value\"@en .")
-                .build();
-        var expectedValue3 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
                 .build();
         var expectedKey4 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p1843i> <http://www.w3.org/2000/01/rdf-schema#label> \"is value of\"@en .")
                 .build();
-        var expectedValue4 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
-                .build();
         var expectedKey5 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p86> a <http://www.w3.org/2002/07/owl#ObjectProperty> .")
-                .build();
-        var expectedValue5 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
                 .build();
         var expectedKey6 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p86i> a <http://www.w3.org/2002/07/owl#ObjectProperty> .")
                 .build();
-        var expectedValue6 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
-                .build();
         var expectedKey7 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p86i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/p86> .")
-                .build();
-        var expectedValue7 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
                 .build();
         var expectedKey8 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p86> <http://www.w3.org/2000/01/rdf-schema#label> \"brought into life\"@en .")
                 .build();
-        var expectedValue8 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
-                .build();
         var expectedKey9 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p86i> <http://www.w3.org/2000/01/rdf-schema#label> \"was born\"@en .")
-                .build();
-        var expectedValue9 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
                 .build();
         var expectedKey10 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p1599> a <http://www.w3.org/2002/07/owl#ObjectProperty> .")
                 .build();
-        var expectedValue10 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
-                .build();
         var expectedKey11 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p1599i> a <http://www.w3.org/2002/07/owl#ObjectProperty> .")
-                .build();
-        var expectedValue11 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
                 .build();
         var expectedKey12 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p1599i> <http://www.w3.org/2002/07/owl#inverseOf> <https://ontome.net/ontology/p1599> .")
                 .build();
-        var expectedValue12 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
-                .build();
         var expectedKey13 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
                 .setTurtle("<https://ontome.net/ontology/p1599> <http://www.w3.org/2000/01/rdf-schema#label> \"took place at\"@en .")
-                .build();
-        var expectedValue13 = ProjectRdfValue.newBuilder()
-                .setOperation(Operation.insert)
                 .build();
 
         assertThat(outRecords.containsKey(expectedKey)).isTrue();
