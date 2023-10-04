@@ -9,8 +9,8 @@ import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 

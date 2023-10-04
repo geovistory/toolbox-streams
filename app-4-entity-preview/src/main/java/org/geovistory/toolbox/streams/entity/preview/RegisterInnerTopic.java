@@ -7,8 +7,8 @@ import org.geovistory.toolbox.streams.avro.EntityPreviewValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * This class provides helper methods to register

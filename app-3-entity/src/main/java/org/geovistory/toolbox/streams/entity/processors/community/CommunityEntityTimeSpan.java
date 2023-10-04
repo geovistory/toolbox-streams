@@ -10,8 +10,8 @@ import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
 import org.geovistory.toolbox.streams.entity.lib.TimeSpanFactory;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
