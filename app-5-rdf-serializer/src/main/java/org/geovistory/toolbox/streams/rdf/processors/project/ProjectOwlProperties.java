@@ -7,7 +7,6 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 
-import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
@@ -18,9 +17,6 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
-import static org.geovistory.toolbox.streams.lib.UrlPrefixes.*;
-
 
 @ApplicationScoped
 public class ProjectOwlProperties {
@@ -168,8 +164,10 @@ public class ProjectOwlProperties {
         // 4c) Join the english ontome property using a foreign key join, creating ProjectOwlPropertyLabelValue
         // Define the ValueJoiner with appropriate types
         ValueJoiner<ProjectOwlPropertyKey, OntomePropertyLabelValue, ProjectOwlPropertyLabelValue> valueJoiner = (value1, value2) -> {
+            var res = ProjectOwlPropertyLabelValue.newBuilder();
+            if (value2 == null) return res.build();
             // Combine the values as needed to create a ResultValue
-            return ProjectOwlPropertyLabelValue.newBuilder().setLabel(value2.getLabel()).setInverseLabel(value2.getInverseLabel()).build();
+            return res.setLabel(value2.getLabel()).setInverseLabel(value2.getInverseLabel()).build();
         };
 
         Materialized<ProjectOwlPropertyKey, ProjectOwlPropertyLabelValue, KeyValueStore<Bytes, byte[]>> materialized =
@@ -208,7 +206,7 @@ public class ProjectOwlProperties {
                     }
 
                     if (value.getInverseLabel() != null) {
-                        turtles.add("<<https://ontome.net/ontology/p" + propertyId + "i> <http://www.w3.org/2000/01/rdf-schema#label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(value.getLabel()) + "\"@en .");
+                        turtles.add("<https://ontome.net/ontology/p" + propertyId + "i> <http://www.w3.org/2000/01/rdf-schema#label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(value.getInverseLabel()) + "\"@en .");
                     }
 
                     // add the class label triples
@@ -238,6 +236,4 @@ public class ProjectOwlProperties {
         return new ProjectRdfReturnValue(s);
 
     }
-
-
 }

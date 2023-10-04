@@ -6,9 +6,11 @@
   "fields": [
     {
       "name": "label",
-      "type": {
-        "type": "string"
-      }
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
     },
     {
       "name": "inverse_label",

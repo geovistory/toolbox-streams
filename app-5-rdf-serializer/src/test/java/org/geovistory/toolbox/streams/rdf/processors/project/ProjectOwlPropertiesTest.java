@@ -8,8 +8,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,7 +79,6 @@ class ProjectOwlPropertiesTest {
         var subjectId = "i1";
         var statementId = 111;
         var objectId = "i200";
-        var propertyType = "d";
         var label = "test";
         var lang = I.EN.get();
 
@@ -141,7 +138,7 @@ class ProjectOwlPropertiesTest {
 
         var propertyIdO2 = 1599;
         var label2 = "took place at";
-        var inverseLabel2 = "was place of";
+        //var inverseLabel2 = null; not used
 
         var propertyIdO3 = 1843;
         var label3 = "has value";
@@ -158,7 +155,7 @@ class ProjectOwlPropertiesTest {
         ontomePropertyLabelTopic.pipeInput(kOntPrLab, vOntPrLab);
 
         var kOntPrLab2 = OntomePropertyLabelKey.newBuilder().setPropertyId(propertyIdO2).setLanguageId(lang).build();
-        var vOntPrLab2 = OntomePropertyLabelValue.newBuilder().setPropertyId(propertyIdO2).setLabel(label2).setLanguageId(lang).setInverseLabel(inverseLabel2).build();
+        var vOntPrLab2 = OntomePropertyLabelValue.newBuilder().setPropertyId(propertyIdO2).setLabel(label2).setLanguageId(lang).setInverseLabel(null).build();
         ontomePropertyLabelTopic.pipeInput(kOntPrLab2, vOntPrLab2);
 
         var kOntPrLab3 = OntomePropertyLabelKey.newBuilder().setPropertyId(propertyIdO3).setLanguageId(lang).build();
