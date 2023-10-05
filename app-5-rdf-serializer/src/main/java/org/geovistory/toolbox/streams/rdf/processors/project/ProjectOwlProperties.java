@@ -1,19 +1,18 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
-
+import org.geovistory.toolbox.streams.lib.StringSanitizer;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
-import org.geovistory.toolbox.streams.utilities.StringSanitizer;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -201,12 +200,12 @@ public class ProjectOwlProperties {
                     var propertyId = key.getPropertyId();
 
                     if (value.getLabel() != null) {
-                        turtles.add("<https://ontome.net/ontology/p" + propertyId + "> <http://www.w3.org/2000/01/rdf-schema#label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(value.getLabel()) + "\"@en .");
+                        turtles.add("<https://ontome.net/ontology/p" + propertyId + "> <http://www.w3.org/2000/01/rdf-schema#label> \"" + StringSanitizer.escapeJava(value.getLabel()) + "\"@en .");
 
                     }
 
                     if (value.getInverseLabel() != null) {
-                        turtles.add("<https://ontome.net/ontology/p" + propertyId + "i> <http://www.w3.org/2000/01/rdf-schema#label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(value.getInverseLabel()) + "\"@en .");
+                        turtles.add("<https://ontome.net/ontology/p" + propertyId + "i> <http://www.w3.org/2000/01/rdf-schema#label> \"" + StringSanitizer.escapeJava(value.getInverseLabel()) + "\"@en .");
                     }
 
                     // add the class label triples

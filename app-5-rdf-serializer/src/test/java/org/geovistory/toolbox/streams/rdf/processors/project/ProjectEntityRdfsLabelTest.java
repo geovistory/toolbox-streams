@@ -1,14 +1,16 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
 
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TestOutputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.rdf.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -128,7 +130,7 @@ class ProjectEntityRdfsLabelTest {
 
         var expectedKey = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/1> <http://www.w3.org/2000/01/rdf-schema#label> \"test\"@^^<http://www.w3.org/2001/XMLSchema#string> .")
+                .setTurtle("<http://geovistory.org/resource/1> <http://www.w3.org/2000/01/rdf-schema#label> \"test\"^^<http://www.w3.org/2001/XMLSchema#string> .")
                 .build();
 
         var record = outRecords.get(expectedKey);
@@ -136,7 +138,7 @@ class ProjectEntityRdfsLabelTest {
 
         var expectedKey2 = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/1> <http://www.w3.org/2000/01/rdf-schema#label> \"test\"@^^<http://www.w3.org/2001/XMLSchema#string> .")
+                .setTurtle("<http://geovistory.org/resource/1> <http://www.w3.org/2000/01/rdf-schema#label> \"test\"^^<http://www.w3.org/2001/XMLSchema#string> .")
                 .build();
 
         var record2 = outRecords.get(expectedKey2);
@@ -162,7 +164,7 @@ class ProjectEntityRdfsLabelTest {
 
         expectedKey = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/1> <http://www.w3.org/2000/01/rdf-schema#label> \"test\"@^^<http://www.w3.org/2001/XMLSchema#string> .")
+                .setTurtle("<http://geovistory.org/resource/1> <http://www.w3.org/2000/01/rdf-schema#label> \"test\"^^<http://www.w3.org/2001/XMLSchema#string> .")
                 .build();
 
         record = outRecords.get(expectedKey);
@@ -170,7 +172,7 @@ class ProjectEntityRdfsLabelTest {
 
         expectedKey = ProjectRdfKey.newBuilder()
                 .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/1> <http://www.w3.org/2000/01/rdf-schema#label> \"test2\"@^^<http://www.w3.org/2001/XMLSchema#string> .")
+                .setTurtle("<http://geovistory.org/resource/1> <http://www.w3.org/2000/01/rdf-schema#label> \"test2\"^^<http://www.w3.org/2001/XMLSchema#string> .")
                 .build();
 
         record = outRecords.get(expectedKey);

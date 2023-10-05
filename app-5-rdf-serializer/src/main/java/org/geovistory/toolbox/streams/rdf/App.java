@@ -3,13 +3,14 @@
  */
 package org.geovistory.toolbox.streams.rdf;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 import org.geovistory.toolbox.streams.rdf.processors.project.*;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
-import jakarta.inject.Inject;
+
 import java.util.ArrayList;
 
 @ApplicationScoped
@@ -22,6 +23,8 @@ public class App {
 
     @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
     String bootstrapServers;
+    @Inject
+    ProjectEntityRdfsLabel projectEntityRdfsLabel;
     @Inject
     ProjectStatementToUri projectStatementToUri;
     @Inject
@@ -71,10 +74,6 @@ public class App {
     }
 
     private void addProjectView() {
-        // add sub-topology ProjectStatementToUri
-        projectStatementToUri.addProcessors(
-                registerInputTopic.projectStatementWithEntityStream()
-        );
 
         // add sub-topology ProjectStatementToLiteral
         projectStatementToLiteral.addProcessors(
@@ -101,6 +100,17 @@ public class App {
                 registerInputTopic.projectStatementWithEntityStream(),
                 registerInputTopic.projectStatementWithLiteralStream()
         );
+
+        // add sub-topology ProjectStatementToUri
+        projectStatementToUri.addProcessors(
+                registerInputTopic.projectStatementWithEntityStream()
+        );
+
+        // add sub-topology ProjectEntityRdfsLabel
+        projectEntityRdfsLabel.addProcessors(
+                registerInputTopic.projectEntityLabelStream()
+        );
+
     }
 
     private void createTopics() {

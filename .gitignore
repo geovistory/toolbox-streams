@@ -29,3 +29,4 @@ lib/src/main/avro/debezium-prod
 
 /app-0-statement-subject/kafka_streams_state/
 kafka_streams_state
+state_dev_mode

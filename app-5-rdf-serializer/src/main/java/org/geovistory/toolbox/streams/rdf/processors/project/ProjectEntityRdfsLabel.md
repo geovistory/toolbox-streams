@@ -42,14 +42,14 @@ If the old value is not null, add to `ProjectRdfList.items` a `KeyValue<ProjectR
 operation `delete` and the triple:
 
 ```turtle
-<http://geovistory.org/resource/{entityId}> <http://www.w3.org/2000/01/rdf-schema#label> "OLD_LABEL"@^^<http://www.w3.org/2001/XMLSchema#string> .
+<http://geovistory.org/resource/{entityId}> <http://www.w3.org/2000/01/rdf-schema#label> "OLD_LABEL"^^<http://www.w3.org/2001/XMLSchema#string> .
 ```
 
 For the new value, add to `ProjectRdfList.items` a `KeyValue<ProjectRdfKey,ProjectRdfValue>.pair()` with
 the triple:
 
 ```turtle
-<http://geovistory.org/resource/{entityId}> <http://www.w3.org/2000/01/rdf-schema#label> "NEW_LABEL"@^^<http://www.w3.org/2001/XMLSchema#string> .
+<http://geovistory.org/resource/{entityId}> <http://www.w3.org/2000/01/rdf-schema#label> "NEW_LABEL"^^<http://www.w3.org/2001/XMLSchema#string> .
 ```
 
 Depending on the new values delete flag, operation is `insert` or `delete`.
