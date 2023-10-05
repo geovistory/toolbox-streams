@@ -1,18 +1,17 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.lib.StringSanitizer;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.geovistory.toolbox.streams.utilities.StringSanitizer;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -65,7 +64,7 @@ public class ProjectEntityRdfsLabel {
                     var newRdfValueOp = Utils.booleanIsEqualTrue(newValue.getDeleted$1()) ? Operation.delete : Operation.insert;
                     var newRdfValue = ProjectRdfValue.newBuilder().setOperation(newRdfValueOp).build();
                     var newRdfKey = ProjectRdfKey.newBuilder().setProjectId(aggKey.getProjectId())
-                            .setTurtle("<" + GEOVISTORY_RESOURCE.getUrl() + aggKey.getEntityId() + "> <" + RDFS.getUrl() + "label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(newValue.getLabel()) + "\"@^^<" + XSD.getUrl() + "string> .")
+                            .setTurtle("<" + GEOVISTORY_RESOURCE.getUrl() + aggKey.getEntityId() + "> <" + RDFS.getUrl() + "label> \"" + StringSanitizer.escapeJava(newValue.getLabel()) + "\"^^<" + XSD.getUrl() + "string> .")
                             .build();
                     var newRdfRecord = ProjectRdfRecord.newBuilder().setKey(newRdfKey).setValue(newRdfValue).build();
 

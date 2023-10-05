@@ -1,17 +1,17 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.lib.StringSanitizer;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
-import org.geovistory.toolbox.streams.utilities.StringSanitizer;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,7 +69,7 @@ public class ProjectOwlClass {
                     var classLiteralType = (value.getLanguageIso() == null) ? "^^<" + XSD.getUrl() + "string>" : "@" + value.getLanguageIso();
 
                     turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> a <" + OWL.getUrl() + "Class> .");
-                    turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> <" + RDFS.getUrl() + "label> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(classLabel) + "\"" + classLiteralType + " .");
+                    turtles.add("<" + ONTOME_CLASS.getUrl() + classId + "> <" + RDFS.getUrl() + "label> \"" + StringSanitizer.escapeJava(classLabel) + "\"" + classLiteralType + " .");
 
                     // add the class label triples
                     ProjectRdfKey k;

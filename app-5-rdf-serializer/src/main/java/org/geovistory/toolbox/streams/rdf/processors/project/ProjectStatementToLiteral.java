@@ -1,19 +1,19 @@
 package org.geovistory.toolbox.streams.rdf.processors.project;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
+import org.geovistory.toolbox.streams.lib.StringSanitizer;
 import org.geovistory.toolbox.streams.lib.TimeUtils;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.rdf.AvroSerdes;
 import org.geovistory.toolbox.streams.rdf.OutputTopicNames;
 import org.geovistory.toolbox.streams.rdf.RegisterInputTopic;
-import org.geovistory.toolbox.streams.utilities.StringSanitizer;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -90,16 +90,16 @@ public class ProjectStatementToLiteral {
                             lng = language.getNotes();
                         } else lng = language.getPkLanguage();
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1112> "Italian"^^<http://www.w3.org/2001/XMLSchema#string> .
-                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(lng) + "\"^^<" + XSD_STRING.getUri() + "> .");
+                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeJava(lng) + "\"^^<" + XSD_STRING.getUri() + "> .");
                     } else if (appellation != null) {
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "Foo"^^<http://www.w3.org/2001/XMLSchema#string> .
-                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(appellation.getString()) + "\"^^<" + XSD_STRING.getUri() + "> .");
+                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeJava(appellation.getString()) + "\"^^<" + XSD_STRING.getUri() + "> .");
                     } else if (langString != null) {
                         var lng = "";
                         lng = getLanguageFromId(langString.getFkLanguage());
                         if (lng == null) lng = "" + langString.getFkLanguage();
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "Bar"@it .
-                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + langString.getString() + "\"@" + lng + " .");
+                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeJava(langString.getString()) + "\"@" + lng + " .");
                     } else if (place != null) {
                         var wkb = place.getGeoPoint().getWkb();
                         var point = GeoUtils.bytesToPoint(wkb);
@@ -153,7 +153,7 @@ public class ProjectStatementToLiteral {
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "month> \"--" + m + "\"^^<" + TIME.getUrl() + "generalMonth>");
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "year> \"-" + y + "\"^^<" + TIME.getUrl() + "generalYear>");
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "hasTRS> <" + TIME.getUrl() + durationUnit + ">");
-                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "year> \"" + StringSanitizer.escapeBackslashAndDoubleQuote(label) + "\"^^<" + XSD_STRING.getUri() + ">");
+                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "year> \"" + StringSanitizer.escapeJava(label) + "\"^^<" + XSD_STRING.getUri() + ">");
                         }
                     } else if (dimension != null) {
                         DecimalFormat format = new DecimalFormat("0.#");
