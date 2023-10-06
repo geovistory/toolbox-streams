@@ -83,7 +83,7 @@ public class AvroSerdes {
 
     public Serde<TextWithDeleteValue> TextWithDeleteValue() {
         Serde<TextWithDeleteValue> serdes = new SpecificAvroSerde<>();
-        serdes.configure(getProperties(), true);
+        serdes.configure(getProperties(), false);
         return serdes;
     }
 
