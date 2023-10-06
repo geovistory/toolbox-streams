@@ -43,7 +43,7 @@ dependencies {
 
     // see https://quarkus.io/guides/kafka-schema-registry-avro#confluent
     // Confluent registry libraries use JAX-RS client
-    implementation("io.confluent:kafka-streams-avro-serde:7.3.2") {
+    implementation("io.confluent:kafka-streams-avro-serde:7.2.5") {
         exclude group: "jakarta.ws.rs", module: "jakarta.ws.rs-api"
     }
 
