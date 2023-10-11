@@ -1050,7 +1050,8 @@ jobs:
             -Dquarkus.container-image.registry="ghcr.io" \
             -Dquarkus.container-image.group="geovistory" \
             -Dquarkus.container-image.name="toolbox-streams-rdf-serializer-quarkus" \
-            -Dquarkus.container-image.tag="${{steps.extract_docker_tag_suffix.outputs.value}}"
+            -Dquarkus.container-image.tag="${{steps.extract_docker_tag_suffix.outputs.value}}" \
+            -Dquarkus.native.additional-build-args=-march=compatibility
 
 
       - name: Send Discord Notification
