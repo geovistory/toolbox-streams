@@ -1,4 +1,2 @@
-ext {
-    pullRequestNumber = 123
-    pullRequestPushCount = 0
-}
+pullRequestNumber = 123
+pullRequestPushCount = 0
