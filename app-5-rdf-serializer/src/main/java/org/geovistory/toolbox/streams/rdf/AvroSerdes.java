@@ -1,11 +1,11 @@
 package org.geovistory.toolbox.streams.rdf;
 
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.kafka.common.serialization.Serde;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,6 +60,12 @@ public class AvroSerdes {
     public Serde<ProjectEntityKey> ProjectEntityKey() {
         Serde<ProjectEntityKey> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityValue> ProjectEntityValue() {
+        Serde<ProjectEntityValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
         return serdes;
     }
 

@@ -1,12 +1,11 @@
 
 package org.geovistory.toolbox.streams.rdf;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.kstream.KStream;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * This class provides helper methods to register
@@ -63,6 +62,15 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
                 inputTopicNames.getProjectEntityLabel(),
                 avroSerdes.ProjectEntityKey(),
                 avroSerdes.ProjectEntityLabelValue()
+        );
+    }
+
+    public KStream<ProjectEntityKey, ProjectEntityValue> projectEntityStream() {
+        return getStream(
+                builderSingleton.builder,
+                inputTopicNames.getProjectEntity(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityValue()
         );
     }
 

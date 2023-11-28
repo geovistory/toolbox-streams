@@ -1,8 +1,7 @@
 package org.geovistory.toolbox.streams.rdf;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class InputTopicNames {
@@ -15,8 +14,11 @@ public class InputTopicNames {
     public String projectClassLabel = "ts.topic.project.class.label";
     @ConfigProperty(name = "ts.topic.project.entity.label", defaultValue = "")
     public String projectEntityLabel = "ts.topic.project.entity.label";
+    @ConfigProperty(name = "ts.topic.project.entity", defaultValue = "")
+    public String projectEntity = "ts.topic.project.entity";
     @ConfigProperty(name = "ts.topic.ontome.property.label", defaultValue = "")
     public String ontomePropertyLabel = "ontome.property.label";
+
     @ConfigProperty(name = "ts.topic.projects.project", defaultValue = "")
     public String project = "ts.topic.projects.project";
 
@@ -34,6 +36,10 @@ public class InputTopicNames {
 
     public String getProjectEntityLabel() {
         return projectEntityLabel;
+    }
+
+    public String getProjectEntity() {
+        return projectEntity;
     }
 
     public String getProject() {

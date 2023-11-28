@@ -26,6 +26,8 @@ public class App {
     @Inject
     ProjectEntityRdfsLabel projectEntityRdfsLabel;
     @Inject
+    ProjectEntityRdfType projectEntityRdfType;
+    @Inject
     ProjectStatementToUri projectStatementToUri;
     @Inject
     ProjectStatementToLiteral projectStatementToLiteral;
@@ -109,6 +111,11 @@ public class App {
         // add sub-topology ProjectEntityRdfsLabel
         projectEntityRdfsLabel.addProcessors(
                 registerInputTopic.projectEntityLabelStream()
+        );
+
+        // add sub-topology ProjectEntityRdfType
+        projectEntityRdfType.addProcessors(
+                registerInputTopic.projectEntityStream()
         );
 
     }
