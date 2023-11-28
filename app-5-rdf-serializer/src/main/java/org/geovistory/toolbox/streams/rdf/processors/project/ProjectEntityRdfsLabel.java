@@ -77,9 +77,15 @@ public class ProjectEntityRdfsLabel {
                     // case: size 1
                     if (aggValue.getList().size() == 1) {
                         var oldVal = aggValue.getList().get(0).getValue();
+                        var oldKey = aggValue.getList().get(0).getKey();
                         // if operation was delete, remove it
                         if (oldVal.getOperation() == Operation.delete) {
                             aggValue.getList().remove(0);
+                        }
+                        // if the newVal is identical to the oldVal
+                        else if (oldVal.equals(newRdfValue) && oldKey.equals(newRdfKey)) {
+                            // we return the list as is
+                            return aggValue;
                         }
                         // else we modify the operation from 'insert' to 'delete'
                         else {

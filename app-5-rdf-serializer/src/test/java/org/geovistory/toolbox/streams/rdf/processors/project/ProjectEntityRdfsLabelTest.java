@@ -178,4 +178,31 @@ class ProjectEntityRdfsLabelTest {
         record = outRecords.get(expectedKey);
         assertThat(record.getOperation()).isEqualTo(Operation.insert);
     }
+
+
+    /**
+     * The goal of this test is to check if the output topic does not contain unnecessary records
+     */
+    @Test
+    void testNumberOfRecords() {
+
+        var projectId = 1;
+        var entityId = "1";
+
+        var k = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
+        var v = ProjectEntityLabelValue.newBuilder()
+                .setProjectId(projectId)
+                .setEntityId(entityId)
+                .setLabel("A")
+                .setLabelSlots(List.of("A"))
+                .build();
+        projectEntityLabel.pipeInput(k, v);
+
+        // pipe the same input again
+        projectEntityLabel.pipeInput(k, v);
+
+        var outRecords = outputTopic.readValuesToList();
+
+        assertThat(outRecords.size()).isEqualTo(2);
+    }
 }
