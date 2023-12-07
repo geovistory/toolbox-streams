@@ -152,8 +152,8 @@ public class ProjectStatementToLiteral {
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "day> \"---" + d + "\"^^<" + TIME.getUrl() + "generalDay>");
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "month> \"--" + m + "\"^^<" + TIME.getUrl() + "generalMonth>");
                             turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "year> \"-" + y + "\"^^<" + TIME.getUrl() + "generalYear>");
-                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "hasTRS> <" + TIME.getUrl() + durationUnit + ">");
-                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "year> \"" + StringSanitizer.escapeJava(label) + "\"^^<" + XSD_STRING.getUri() + ">");
+                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + TIME.getUrl() + "unitType> <" + TIME.getUrl() + durationUnit + ">");
+                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + objectId + "> <" + RDFS.getUrl() + "label> \"" + StringSanitizer.escapeJava(label) + "\"^^<" + XSD_STRING.getUri() + ">");
                         }
                     } else if (dimension != null) {
                         DecimalFormat format = new DecimalFormat("0.#");

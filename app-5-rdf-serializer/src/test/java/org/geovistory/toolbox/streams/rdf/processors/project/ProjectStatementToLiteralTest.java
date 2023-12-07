@@ -2,10 +2,7 @@ package org.geovistory.toolbox.streams.rdf.processors.project;
 
 
 import io.debezium.data.geometry.Geography;
-import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.TestInputTopic;
-import org.apache.kafka.streams.TestOutputTopic;
-import org.apache.kafka.streams.TopologyTestDriver;
+import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.GeoUtils;
 import org.geovistory.toolbox.streams.rdf.*;
@@ -46,7 +43,7 @@ class ProjectStatementToLiteralTest {
         testDriver = new TopologyTestDriver(topology, props);
 
         projectStatementWithLiteralTopic = testDriver.createInputTopic(
-                inputTopicNames. getProjectStatementWithLiteral(),
+                inputTopicNames.getProjectStatementWithLiteral(),
                 avroSerdes.ProjectStatementKey().serializer(),
                 avroSerdes.ProjectStatementValue().serializer());
 
@@ -780,7 +777,7 @@ class ProjectStatementToLiteralTest {
                                         .setPlace(Place.newBuilder()
                                                 .setFkClass(2)
                                                 .setGeoPoint(Geography.newBuilder()
-                                                        .setWkb(GeoUtils.pointToBytes(2.348611,  48.853333, 4326))
+                                                        .setWkb(GeoUtils.pointToBytes(2.348611, 48.853333, 4326))
                                                         .setSrid(4326)
                                                         .build())
                                                 .build()
@@ -814,7 +811,7 @@ class ProjectStatementToLiteralTest {
                                         .setPlace(Place.newBuilder()
                                                 .setFkClass(2)
                                                 .setGeoPoint(Geography.newBuilder()
-                                                        .setWkb(GeoUtils.pointToBytes(2.348611,  48.853333, 4326))
+                                                        .setWkb(GeoUtils.pointToBytes(2.348611, 48.853333, 4326))
                                                         .setSrid(4326)
                                                         .build())
                                                 .build()
@@ -869,79 +866,21 @@ class ProjectStatementToLiteralTest {
                 .build();
         projectStatementWithLiteralTopic.pipeInput(k, v);
 
-        var outRecords = outputTopic.readKeyValuesToMap();
+        var ourRecs = outputTopic.readKeyValuesToList();
+        assertThat(ourRecs.size()).isEqualTo(9);
 
-        var expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i1761647ts> <https://ontome.net/ontology/p71> <http://geovistory.org/resource/i2255949>")
-                .build();
+        assertThat(ourRecs).containsExactly(
+                createKeyValue("<http://geovistory.org/resource/i1761647ts> <https://ontome.net/ontology/p71> <http://geovistory.org/resource/i2255949>", Operation.insert, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <https://ontome.net/ontology/p71i> <http://geovistory.org/resource/i1761647ts>", Operation.insert, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> a <http://www.w3.org/2006/time#DateTimeDescription>", Operation.insert, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#hasTRS> <https://d-nb.info/gnd/4318310-4>", Operation.insert, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#day> \"---01\"^^<http://www.w3.org/2006/time#generalDay>", Operation.insert, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#month> \"--01\"^^<http://www.w3.org/2006/time#generalMonth>", Operation.insert, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#year> \"-1559\"^^<http://www.w3.org/2006/time#generalYear>", Operation.insert, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#unitType> <http://www.w3.org/2006/time#unitYear>", Operation.insert, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2000/01/rdf-schema#label> \"1559\"^^<http://www.w3.org/2001/XMLSchema#string>", Operation.insert, projectId)
+        );
 
-        var record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <https://ontome.net/ontology/p71i> <http://geovistory.org/resource/i1761647ts>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> a <http://www.w3.org/2006/time#DateTimeDescription>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#hasTRS> <https://d-nb.info/gnd/4318310-4>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#day> \"---01\"^^<http://www.w3.org/2006/time#generalDay>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#month> \"--01\"^^<http://www.w3.org/2006/time#generalMonth>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#year> \"-1559\"^^<http://www.w3.org/2006/time#generalYear>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#hasTRS> <http://www.w3.org/2006/time#unitYear>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#year> \"1559\"^^<http://www.w3.org/2001/XMLSchema#string>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.insert);
 
         var v2 = ProjectStatementValue.newBuilder()
                 .setProjectId(projectId)
@@ -966,79 +905,21 @@ class ProjectStatementToLiteralTest {
                 .setDeleted$1(true)
                 .build();
         projectStatementWithLiteralTopic.pipeInput(k, v2);
-        outRecords = outputTopic.readKeyValuesToMap();
+        var ourRecs2 = outputTopic.readKeyValuesToList();
+        assertThat(ourRecs2.size()).isEqualTo(9);
 
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i1761647ts> <https://ontome.net/ontology/p71> <http://geovistory.org/resource/i2255949>")
-                .build();
+        assertThat(ourRecs2).containsExactly(
+                createKeyValue("<http://geovistory.org/resource/i1761647ts> <https://ontome.net/ontology/p71> <http://geovistory.org/resource/i2255949>", Operation.delete, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <https://ontome.net/ontology/p71i> <http://geovistory.org/resource/i1761647ts>", Operation.delete, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> a <http://www.w3.org/2006/time#DateTimeDescription>", Operation.delete, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#hasTRS> <https://d-nb.info/gnd/4318310-4>", Operation.delete, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#day> \"---01\"^^<http://www.w3.org/2006/time#generalDay>", Operation.delete, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#month> \"--01\"^^<http://www.w3.org/2006/time#generalMonth>", Operation.delete, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#year> \"-1559\"^^<http://www.w3.org/2006/time#generalYear>", Operation.delete, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#unitType> <http://www.w3.org/2006/time#unitYear>", Operation.delete, projectId),
+                createKeyValue("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2000/01/rdf-schema#label> \"1559\"^^<http://www.w3.org/2001/XMLSchema#string>", Operation.delete, projectId)
+        );
 
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <https://ontome.net/ontology/p71i> <http://geovistory.org/resource/i1761647ts>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> a <http://www.w3.org/2006/time#DateTimeDescription>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#hasTRS> <https://d-nb.info/gnd/4318310-4>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#day> \"---01\"^^<http://www.w3.org/2006/time#generalDay>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#month> \"--01\"^^<http://www.w3.org/2006/time#generalMonth>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#year> \"-1559\"^^<http://www.w3.org/2006/time#generalYear>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#hasTRS> <http://www.w3.org/2006/time#unitYear>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
-
-        expectedKey = ProjectRdfKey.newBuilder()
-                .setProjectId(projectId)
-                .setTurtle("<http://geovistory.org/resource/i2255949> <http://www.w3.org/2006/time#year> \"1559\"^^<http://www.w3.org/2001/XMLSchema#string>")
-                .build();
-
-        record = outRecords.get(expectedKey);
-        assertThat(record.getOperation()).isEqualTo(Operation.delete);
     }
 
     /**
@@ -1184,5 +1065,20 @@ class ProjectStatementToLiteralTest {
         record = outRecords.get(expectedKey);
         assertThat(record.getOperation()).isEqualTo(Operation.delete);
 
+    }
+
+    /**
+     * Create a KeyValue<ProjectRdfKey, ProjectRdfValue>
+     *
+     * @param projectId project id
+     * @param tutrle    the turtle string
+     * @param operation the operation
+     * @return KeyValue<ProjectRdfKey, ProjectRdfValue>
+     */
+    public KeyValue<ProjectRdfKey, ProjectRdfValue> createKeyValue(String tutrle, Operation operation, int projectId) {
+        return new KeyValue<>(
+                ProjectRdfKey.newBuilder().setProjectId(projectId).setTurtle(tutrle).build(),
+                ProjectRdfValue.newBuilder().setOperation(operation).build()
+        );
     }
 }
