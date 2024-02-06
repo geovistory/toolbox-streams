@@ -9,8 +9,8 @@ import org.geovistory.toolbox.streams.avro.ProjectEntityVisibilityValue;
 import org.geovistory.toolbox.streams.entity.label.*;
 import org.geovistory.toolbox.streams.lib.ProjectedTableRegistrar;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 
 @ApplicationScoped

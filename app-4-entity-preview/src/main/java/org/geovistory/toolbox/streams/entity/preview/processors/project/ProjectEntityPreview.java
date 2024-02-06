@@ -14,8 +14,8 @@ import org.geovistory.toolbox.streams.entity.preview.Klass;
 import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -12,8 +12,8 @@ import org.geovistory.toolbox.streams.field.changes.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.time.Instant;
 
 @ApplicationScoped

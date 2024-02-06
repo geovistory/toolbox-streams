@@ -8,9 +8,9 @@ import org.geovistory.toolbox.streams.fulltext.processors.community.CommunityEnt
 import org.geovistory.toolbox.streams.fulltext.processors.project.ProjectEntityFulltext;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 
 

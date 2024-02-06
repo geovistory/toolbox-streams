@@ -14,8 +14,8 @@ import org.geovistory.toolbox.streams.entity.label.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 
 @ApplicationScoped

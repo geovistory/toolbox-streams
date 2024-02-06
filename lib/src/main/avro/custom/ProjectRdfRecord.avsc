@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "ProjectRdfRecord",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "A record of ProjectRdf",
+  "fields": [
+    {
+      "name": "key",
+      "type": "org.geovistory.toolbox.streams.avro.ProjectRdfKey"
+    },
+    {
+      "name": "value",
+      "type": "org.geovistory.toolbox.streams.avro.ProjectRdfValue"
+    }
+  ]
+}

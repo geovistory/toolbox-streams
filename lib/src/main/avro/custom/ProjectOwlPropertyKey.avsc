@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "ProjectOwlPropertyKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "ProjectOwlPropertyKey",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "property_id",
+      "type": {
+        "type": "int"
+      }
+    }
+  ]
+}
