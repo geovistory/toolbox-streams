@@ -85,10 +85,10 @@ public class ProjectEntity {
                     (key, value) -> KeyValue.pair(
                             key,
                             ProjectEntityValue.newBuilder()
-                                    .setProjectId(value.getProjectId())
-                                    .setEntityId(value.getEntityId())
-                                    .setClassId(value.getClassId())
-                                    .setDeleted$1(value.getDeleted$1())
+                                    .setProjectId(key.getProjectId())
+                                    .setEntityId(key.getEntityId())
+                                    .setClassId(value == null ? 0 : value.getClassId())
+                                    .setDeleted$1(value == null || value.getDeleted$1())
                                     .build()
                     ),
                     avroSerdes.ProjectEntityKey(),
