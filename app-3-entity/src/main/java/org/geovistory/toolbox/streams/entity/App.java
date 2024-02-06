@@ -21,9 +21,9 @@ import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityTim
 import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityType;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 
 

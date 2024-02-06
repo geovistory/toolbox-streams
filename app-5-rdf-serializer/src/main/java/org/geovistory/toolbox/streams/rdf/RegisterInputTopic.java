@@ -1,13 +1,11 @@
 
 package org.geovistory.toolbox.streams.rdf;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.kstream.KStream;
-import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
-import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 /**
  * This class provides helper methods to register
@@ -46,6 +44,49 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
                 inputTopicNames.getProjectStatementWithLiteral(),
                 avroSerdes.ProjectStatementKey(),
                 avroSerdes.ProjectStatementValue()
+        );
+    }
+
+    public KStream<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelStream() {
+        return getStream(
+                builderSingleton.builder,
+                inputTopicNames.getProjectClassLabel(),
+                avroSerdes.ProjectClassLabelKey(),
+                avroSerdes.ProjectClassLabelValue()
+        );
+    }
+
+    public KStream<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelStream() {
+        return getStream(
+                builderSingleton.builder,
+                inputTopicNames.getProjectEntityLabel(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityLabelValue()
+        );
+    }
+
+    public KStream<ProjectEntityKey, ProjectEntityValue> projectEntityStream() {
+        return getStream(
+                builderSingleton.builder,
+                inputTopicNames.getProjectEntity(),
+                avroSerdes.ProjectEntityKey(),
+                avroSerdes.ProjectEntityValue()
+        );
+    }
+
+    public KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelStream() {
+        return getStream(
+                builderSingleton.builder,
+                inputTopicNames.getOntomePropertyLabel(),
+                avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue());
+    }
+
+    public KStream<dev.projects.project.Key, dev.projects.project.Value> projectStream() {
+        return getStream(
+                builderSingleton.builder,
+                inputTopicNames.getProject(),
+                avroSerdes.ProProjectKey(),
+                avroSerdes.ProProjectValue()
         );
     }
 

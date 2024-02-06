@@ -1,14 +1,11 @@
 package org.geovistory.toolbox.streams.rdf;
 
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.kafka.common.serialization.Serde;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.geovistory.toolbox.streams.avro.ProjectRdfKey;
-import org.geovistory.toolbox.streams.avro.ProjectRdfValue;
-import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
-import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
+import org.geovistory.toolbox.streams.avro.*;
 
-import javax.enterprise.context.ApplicationScoped;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,4 +45,93 @@ public class AvroSerdes {
         return serdes;
     }
 
+    public Serde<ProjectClassLabelKey> ProjectClassLabelKey() {
+        Serde<ProjectClassLabelKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectClassLabelValue> ProjectClassLabelValue() {
+        Serde<ProjectClassLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityKey> ProjectEntityKey() {
+        Serde<ProjectEntityKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityValue> ProjectEntityValue() {
+        Serde<ProjectEntityValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectEntityLabelValue> ProjectEntityLabelValue() {
+        Serde<ProjectEntityLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectRdfList> ProjectRdfList() {
+        Serde<ProjectRdfList> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<OntomePropertyLabelKey> OntomePropertyLabelKey() {
+        Serde<OntomePropertyLabelKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<TextWithDeleteValue> TextWithDeleteValue() {
+        Serde<TextWithDeleteValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<OntomePropertyLabelValue> OntomePropertyLabelValue() {
+        Serde<OntomePropertyLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectOwlPropertyKey> ProjectOwlPropertyKey() {
+        Serde<ProjectOwlPropertyKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<ProjectOwlPropertyKey> ProjectOwlPropertyKeyAsValue() {
+        Serde<ProjectOwlPropertyKey> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectOwlPropertyValue> ProjectOwlPropertyValue() {
+        Serde<ProjectOwlPropertyValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<ProjectOwlPropertyLabelValue> ProjectOwlPropertyLabelValue() {
+        Serde<ProjectOwlPropertyLabelValue> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
+
+    public Serde<dev.projects.project.Key> ProProjectKey() {
+        Serde<dev.projects.project.Key> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), true);
+        return serdes;
+    }
+
+    public Serde<dev.projects.project.Value> ProProjectValue() {
+        Serde<dev.projects.project.Value> serdes = new SpecificAvroSerde<>();
+        serdes.configure(getProperties(), false);
+        return serdes;
+    }
 }

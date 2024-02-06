@@ -8,7 +8,7 @@ import org.geovistory.toolbox.streams.analysis.statements.avro.AnalysisStatement
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementValue;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -8,9 +8,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 import org.geovistory.toolbox.streams.nodes.processors.Nodes;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.Objects;
 

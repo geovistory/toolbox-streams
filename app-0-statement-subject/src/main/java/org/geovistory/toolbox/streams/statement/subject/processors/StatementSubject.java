@@ -16,8 +16,8 @@ import org.geovistory.toolbox.streams.statement.subject.AvroSerdes;
 import org.geovistory.toolbox.streams.statement.subject.BuilderSingleton;
 import org.geovistory.toolbox.streams.statement.subject.RegisterInputTopic;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.Objects;
 
 @ApplicationScoped

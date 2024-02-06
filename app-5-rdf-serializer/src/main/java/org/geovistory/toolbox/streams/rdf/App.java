@@ -3,15 +3,14 @@
  */
 package org.geovistory.toolbox.streams.rdf;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
-import org.geovistory.toolbox.streams.rdf.processors.project.ProjectStatementToLiteral;
-import org.geovistory.toolbox.streams.rdf.processors.project.ProjectStatementToUri;
+import org.geovistory.toolbox.streams.rdf.processors.project.*;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
 import java.util.ArrayList;
 
 @ApplicationScoped
@@ -25,9 +24,21 @@ public class App {
     @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
     String bootstrapServers;
     @Inject
+    ProjectEntityRdfsLabel projectEntityRdfsLabel;
+    @Inject
+    ProjectEntityRdfType projectEntityRdfType;
+    @Inject
     ProjectStatementToUri projectStatementToUri;
     @Inject
     ProjectStatementToLiteral projectStatementToLiteral;
+    @Inject
+    ProjectCustomRdfsLabels projectCustomRdfsLabels;
+    @Inject
+    ProjectOwlClass projectOwlClass;
+    @Inject
+    ProjectOwlProperties projectOwlProperties;
+    @Inject
+    ProjectOwlSameAs projectOwlSameAs;
     @Inject
     BuilderSingleton builderSingleton;
     @Inject
@@ -65,15 +76,48 @@ public class App {
     }
 
     private void addProjectView() {
+
+        // add sub-topology ProjectStatementToLiteral
+        projectStatementToLiteral.addProcessors(
+                registerInputTopic.projectStatementWithLiteralStream()
+        );
+
+        // add sub-topology ProjectClassLabel
+        projectOwlClass.addProcessors(
+                registerInputTopic.projectClassLabelStream()
+        );
+
+        // add sub-topology ProjectCustomRdfsLabels
+        projectCustomRdfsLabels.addProcessors(
+                registerInputTopic.projectStream()
+        );
+
+        projectOwlProperties.addProcessors(
+                registerInputTopic.projectStatementWithLiteralStream(),
+                registerInputTopic.projectStatementWithEntityStream(),
+                registerInputTopic.ontomePropertyLabelStream()
+        );
+        // add sub-topology ProjectOwlSameAs
+        projectOwlSameAs.addProcessors(
+                registerInputTopic.projectStatementWithEntityStream(),
+                registerInputTopic.projectStatementWithLiteralStream()
+        );
+
         // add sub-topology ProjectStatementToUri
         projectStatementToUri.addProcessors(
                 registerInputTopic.projectStatementWithEntityStream()
         );
 
-        // add sub-topology projectStatementToLiteral
-        projectStatementToLiteral.addProcessors(
-                registerInputTopic.projectStatementWithLiteralStream()
+        // add sub-topology ProjectEntityRdfsLabel
+        projectEntityRdfsLabel.addProcessors(
+                registerInputTopic.projectEntityLabelStream()
         );
+
+        // add sub-topology ProjectEntityRdfType
+        projectEntityRdfType.addProcessors(
+                registerInputTopic.projectEntityStream()
+        );
+
     }
 
     private void createTopics() {

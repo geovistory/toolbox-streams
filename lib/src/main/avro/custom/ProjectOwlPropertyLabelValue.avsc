@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "ProjectOwlPropertyLabelValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "ProjectOwlPropertyLabelValue",
+  "fields": [
+    {
+      "name": "label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "inverse_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}
