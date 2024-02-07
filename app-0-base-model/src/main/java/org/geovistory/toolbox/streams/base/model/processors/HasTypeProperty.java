@@ -1,27 +1,26 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.model.*;
+import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.model.Prop;
 import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import java.util.LinkedList;
 import java.util.List;
 
 @ApplicationScoped
 public class HasTypeProperty {
-
-    @Inject
-    AvroSerdes avroSerdes;
 
     @Inject
     ConfiguredAvroSerde as;
@@ -37,17 +36,17 @@ public class HasTypeProperty {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public HasTypeProperty(BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
+    public HasTypeProperty(ConfiguredAvroSerde as, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.builderSingleton = builderSingleton;
         this.inputTopicNames = inputTopicNames;
         this.outputTopicNames = outputTopicNames;
     }
 
-
     public void addProcessorsStandalone() {
         addProcessors(
                 new OntomePropertyProjected().getRegistrar(
-                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                        this.as, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
                 ).kStream
         );
     }
@@ -135,8 +134,9 @@ public class HasTypeProperty {
         /* SINK PROCESSORS */
         hasTypePropertyStream
                 .to(
-                        outputTopicNames.hasTypeProperty() + "-producer",
-                        Produced.with(as.key(), as.value())
+                        outputTopicNames.hasTypeProperty(),
+                        Produced.with(as.<HasTypePropertyKey>key(), as.<HasTypePropertyValue>value())
+                                .withName(outputTopicNames.hasTypeProperty() + "-producer")
                 );
 
 

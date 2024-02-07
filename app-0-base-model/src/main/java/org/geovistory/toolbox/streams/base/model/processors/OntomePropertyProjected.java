@@ -1,23 +1,22 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.KeyValue;
 import org.geovistory.toolbox.streams.avro.OntomePropertyKey;
 import org.geovistory.toolbox.streams.avro.OntomePropertyValue;
-import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
 import org.geovistory.toolbox.streams.base.model.InputTopicNames;
 import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.ProjectedTableRegistrar;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 @ApplicationScoped
 
 public class OntomePropertyProjected {
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
     @Inject
     BuilderSingleton builderSingleton;
     @Inject
@@ -38,8 +37,8 @@ public class OntomePropertyProjected {
             dev.data_for_history.api_property.Value,
             OntomePropertyKey,
             OntomePropertyValue
-            > getRegistrar(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+            > getRegistrar(ConfiguredAvroSerde as, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.builderSingleton = builderSingleton;
         this.inputTopicNames = inputTopicNames;
         this.outputTopicNames = outputTopicNames;
@@ -59,9 +58,9 @@ public class OntomePropertyProjected {
                     // input topic name
                     inputTopicNames.dfhApiProperty(),
                     // input key serde
-                    avroSerdes.DfhApiPropertyKey(),
+                    as.key(),
                     // input value serde
-                    avroSerdes.DfhApiPropertyValue(),
+                    as.value(),
                     // prefix for outputs
                     outputTopicNames.ontomeProperty(),
                     (key, value) -> KeyValue.pair(
@@ -81,9 +80,9 @@ public class OntomePropertyProjected {
                                     .build()
                     ),
                     // output key serde
-                    avroSerdes.OntomePropertyKey(),
+                    as.key(),
                     // output value serde
-                    avroSerdes.OntomePropertyValue()
+                    as.value()
             );
         }
         return registrar;

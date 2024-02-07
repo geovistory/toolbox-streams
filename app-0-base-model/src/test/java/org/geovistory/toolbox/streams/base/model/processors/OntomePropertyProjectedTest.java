@@ -4,10 +4,10 @@ package org.geovistory.toolbox.streams.base.model.processors;
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.OntomePropertyKey;
 import org.geovistory.toolbox.streams.avro.OntomePropertyValue;
-import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
 import org.geovistory.toolbox.streams.base.model.InputTopicNames;
 import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.ProjectedTableRegistrar;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,10 +46,10 @@ class OntomePropertyProjectedTest {
         var inputTopicNames = new InputTopicNames();
         var outputTopicNames = new OutputTopicNames();
         var builderSingleton = new BuilderSingleton();
-        var avroSerdes = new AvroSerdes();
-        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var as = new ConfiguredAvroSerde();
+        as.schemaRegistryUrl = MOCK_SCHEMA_REGISTRY_URL;
         registrar = new OntomePropertyProjected().getRegistrar(
-                avroSerdes,
+                as,
                 builderSingleton,
                 inputTopicNames,
                 outputTopicNames

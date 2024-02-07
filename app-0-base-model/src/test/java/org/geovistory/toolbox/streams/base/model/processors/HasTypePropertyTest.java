@@ -1,15 +1,16 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
 
-import jakarta.inject.Inject;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.HasTypePropertyKey;
 import org.geovistory.toolbox.streams.avro.HasTypePropertyValue;
-import org.geovistory.toolbox.streams.base.model.*;
+import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.model.Prop;
 import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,19 +23,11 @@ import java.util.Properties;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class HasTypePropertyTest {
-
-    @Inject
-    ConfiguredAvroSerde as;
-
     private static final String SCHEMA_REGISTRY_SCOPE = HasTypePropertyTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-
-    private TestInputTopic<ts.data_for_history.api_property.Key, ts.data_for_history.api_property.Value> apiPropertyTopic;
+    private TestInputTopic<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiPropertyTopic;
     private TestOutputTopic<HasTypePropertyKey, HasTypePropertyValue> ontomePropertyLabelTopic;
-
-    @ConfigProperty(name = "quarkus.kafka.streams.schema.registry.url", defaultValue = "mock://HasTypePropertyTest")
-    String schemaRegistryUrl ;
 
     @BeforeEach
     void setup() {
@@ -47,24 +40,25 @@ class HasTypePropertyTest {
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
 
         var builderSingleton = new BuilderSingleton();
-
+        ConfiguredAvroSerde as = new ConfiguredAvroSerde();
+        as.schemaRegistryUrl = MOCK_SCHEMA_REGISTRY_URL;
         var inputTopicNames = new InputTopicNames();
         var outputTopicNames = new OutputTopicNames();
-        var hasTypeProperty = new HasTypeProperty(builderSingleton, inputTopicNames, outputTopicNames);
+        var hasTypeProperty = new HasTypeProperty(as, builderSingleton, inputTopicNames, outputTopicNames);
         hasTypeProperty.addProcessorsStandalone();
         var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
         apiPropertyTopic = testDriver.createInputTopic(
                 hasTypeProperty.inApiProperty(),
-                as.key().serializer(),
-                as.value().serializer());
+                as.<dev.data_for_history.api_property.Key>key().serializer(),
+                as.<dev.data_for_history.api_property.Value>value().serializer());
 
 
         ontomePropertyLabelTopic = testDriver.createOutputTopic(
                 outputTopicNames.hasTypeProperty(),
-                avroSerdes.HasTypePropertyKey().deserializer(),
-                avroSerdes.HasTypePropertyValue().deserializer());
+                as.<HasTypePropertyKey>key().deserializer(),
+                as.<HasTypePropertyValue>value().deserializer());
     }
 
     @AfterEach
@@ -75,8 +69,8 @@ class HasTypePropertyTest {
     @Test
     void testAddingThreeProperties() {
         // add has type property for class 10
-        var apKey = new ts.data_for_history.api_property.Key(1);
-        var apVal = ts.data_for_history.api_property.Value.newBuilder()
+        var apKey = new dev.data_for_history.api_property.Key(1);
+        var apVal = dev.data_for_history.api_property.Value.newBuilder()
                 .setDfhAncestorProperties(List.of(123, Prop.HAS_TYPE.get())) // <- remark !
                 .setDfhParentProperties(new ArrayList<>())
                 .setDfhFkProfile(97)
@@ -121,8 +115,8 @@ class HasTypePropertyTest {
     @Test
     void testDisableProperty() {
         // add has type property for class 10
-        var apKey = new ts.data_for_history.api_property.Key(1);
-        var apVal = ts.data_for_history.api_property.Value.newBuilder()
+        var apKey = new dev.data_for_history.api_property.Key(1);
+        var apVal = dev.data_for_history.api_property.Value.newBuilder()
                 .setDfhAncestorProperties(List.of(123, Prop.HAS_TYPE.get())) // <- remark !
                 .setDfhParentProperties(new ArrayList<>())
                 .setDfhFkProfile(97)
