@@ -1,13 +1,13 @@
 
 package org.geovistory.toolbox.streams.base.config;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * This class provides helper methods to register
@@ -18,14 +18,14 @@ import jakarta.inject.Inject;
 public class RegisterInnerTopic extends TsRegisterInputTopic {
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
     @Inject
     public BuilderSingleton builderSingleton;
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public RegisterInnerTopic(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public RegisterInnerTopic(ConfiguredAvroSerde as, BuilderSingleton builderSingleton, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.builderSingleton = builderSingleton;
         this.outputTopicNames = outputTopicNames;
     }
@@ -35,7 +35,7 @@ public class RegisterInnerTopic extends TsRegisterInputTopic {
         return getStream(
                 builderSingleton.builder,
                 outputTopicNames.projectProfile(),
-                avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue());
+                as.key(), as.value());
     }
 
 
@@ -43,7 +43,7 @@ public class RegisterInnerTopic extends TsRegisterInputTopic {
         return getStream(
                 builderSingleton.builder,
                 outputTopicNames.geovClassLabel(),
-                avroSerdes.GeovClassLabelKey(), avroSerdes.GeovClassLabelValue());
+                as.key(), as.value());
     }
 
 
@@ -51,14 +51,14 @@ public class RegisterInnerTopic extends TsRegisterInputTopic {
         return getStream(
                 builderSingleton.builder,
                 outputTopicNames.projectClass(),
-                avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue());
+                as.key(), as.value());
     }
 
     public KTable<ProjectClassKey, ProjectClassValue> projectClassTable() {
         return getTable(
                 builderSingleton.builder,
                 outputTopicNames.projectClass(),
-                avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue());
+                as.key(), as.value());
     }
 
 
@@ -66,14 +66,14 @@ public class RegisterInnerTopic extends TsRegisterInputTopic {
         return getStream(
                 builderSingleton.builder,
                 outputTopicNames.geovPropertyLabel(),
-                avroSerdes.GeovPropertyLabelKey(), avroSerdes.GeovPropertyLabelValue());
+                as.key(), as.value());
     }
 
     public KStream<ProjectPropertyKey, ProjectPropertyValue> projectPropertyStream() {
         return getStream(
                 builderSingleton.builder,
                 outputTopicNames.projectProperty(),
-                avroSerdes.ProjectPropertyKey(), avroSerdes.ProjectPropertyValue());
+                as.key(), as.value());
 
     }
 
@@ -81,7 +81,7 @@ public class RegisterInnerTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 outputTopicNames.communityEntityLabelConfig(),
-                avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue());
+                as.key(), as.value());
     }
 
 

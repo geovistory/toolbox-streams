@@ -1,26 +1,26 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.config.AvroSerdes;
 import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.Objects;
 
 @ApplicationScoped
 public class ProjectClass {
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -31,8 +31,8 @@ public class ProjectClass {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public ProjectClass(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public ProjectClass(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -66,7 +66,7 @@ public class ProjectClass {
                 .groupBy(
                         (key, value) -> value.getProfileId(),
                         Grouped.with(
-                                Serdes.Integer(), avroSerdes.ProfileClassValue()
+                                Serdes.Integer(), as.value()
                         ));
         // 3) Aggregate
         var classByProfileIdAggregated = classByProfileIdGrouped.aggregate(
@@ -80,7 +80,7 @@ public class ProjectClass {
                 ,
                 Materialized.<Integer, ProfileClassMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.profile_with_classes)
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(avroSerdes.ProfileClassMapValue())
+                        .withValueSerde(as.value())
         );
 
 
@@ -91,8 +91,8 @@ public class ProjectClass {
                         Materialized
                                 .<ProjectProfileKey, ProjectProfileValue, KeyValueStore<Bytes, byte[]>>
                                         as(inner.TOPICS.profile_with_classes + "-store")
-                                .withKeySerde(avroSerdes.ProjectProfileKey())
-                                .withValueSerde(avroSerdes.ProjectProfileValue())
+                                .withKeySerde(as.key())
+                                .withValueSerde(as.value())
                 );
 
         // 5)
@@ -143,14 +143,14 @@ public class ProjectClass {
                         Named.as(inner.TOPICS.project_classes_flat))
                 .transform(new IdenticalRecordsFilterSupplier<>(
                                 "project_class_suppress_duplicates",
-                                avroSerdes.ProjectClassKey(),
-                                avroSerdes.ProjectClassValue()
+                                as.key(),
+                                as.value()
                         ),
                         Named.as("project_class_suppress_duplicates"));
 
         projectClassFlat
                 .to(outputTopicNames.projectClass(),
-                        Produced.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
+                        Produced.with(as.<ProjectClassKey>key(), as.<ProjectClassValue>value())
                                 .withName(outputTopicNames.projectClass() + "-producer")
                 );
 

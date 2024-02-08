@@ -6,6 +6,7 @@ import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,31 +38,31 @@ class CommunityClassLabelTest {
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
 
         var builderSingleton = new BuilderSingleton();
-        var avroSerdes = new AvroSerdes();
-        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var as = new ConfiguredAvroSerde();
+        as.schemaRegistryUrl = MOCK_SCHEMA_REGISTRY_URL;
         var inputTopicNames = new InputTopicNames();
         var outputTopicNames = new OutputTopicNames();
-        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
-        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
-        var communityClassLabel = new CommunityClassLabel(avroSerdes, registerInputTopic, registerInnerTopic, outputTopicNames);
+        var registerInputTopic = new RegisterInputTopic(as, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(as, builderSingleton, outputTopicNames);
+        var communityClassLabel = new CommunityClassLabel(as, registerInputTopic, registerInnerTopic, outputTopicNames);
         communityClassLabel.addProcessorsStandalone();
         var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
         ontomeClassLabelTopic = testDriver.createInputTopic(
                 inputTopicNames.ontomeClassLabel(),
-                avroSerdes.OntomeClassLabelKey().serializer(),
-                avroSerdes.OntomeClassLabelValue().serializer());
+                as.<OntomeClassLabelKey>key().serializer(),
+                as.<OntomeClassLabelValue>value().serializer());
 
         geovClassLabelTopic = testDriver.createInputTopic(
                 outputTopicNames.geovClassLabel(),
-                avroSerdes.GeovClassLabelKey().serializer(),
-                avroSerdes.GeovClassLabelValue().serializer());
+                as.<GeovClassLabelKey>key().serializer(),
+                as.<GeovClassLabelValue>value().serializer());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.communityClassLabel(),
-                avroSerdes.OntomeClassLabelKey().deserializer(),
-                avroSerdes.CommunityClassLabelValue().deserializer());
+                as.<OntomeClassLabelKey>key().deserializer(),
+                as.<CommunityClassLabelValue>value().deserializer());
     }
 
     @AfterEach

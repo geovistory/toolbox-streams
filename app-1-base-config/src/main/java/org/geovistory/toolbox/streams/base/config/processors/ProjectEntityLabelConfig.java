@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.projects.entity_label_config.Key;
 import dev.projects.entity_label_config.Value;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
@@ -12,14 +14,12 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.config.AvroSerdes;
 import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
 
@@ -27,7 +27,7 @@ import java.util.Set;
 @ApplicationScoped
 public class ProjectEntityLabelConfig {
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -38,8 +38,8 @@ public class ProjectEntityLabelConfig {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public ProjectEntityLabelConfig(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public ProjectEntityLabelConfig(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -63,18 +63,18 @@ public class ProjectEntityLabelConfig {
         // 2)
 
         var configByProjectClassKey = proEntityLabelConfigStream
-                .transform(new TransformSupplier("handle_project_entity_label_config_deletes", avroSerdes))
+                .transform(new TransformSupplier("handle_project_entity_label_config_deletes", as))
                 .repartition(
                         Repartitioned.<ProjectClassKey, ProjectEntityLabelConfigValue>as(inner.TOPICS.project_entity_label_config_by_project_class + "-repartition")
-                                .withKeySerde(avroSerdes.ProjectClassKey())
-                                .withValueSerde(avroSerdes.ProjectEntityLabelConfigValue())
+                                .withKeySerde(as.key())
+                                .withValueSerde(as.value())
                                 .withName(inner.TOPICS.project_entity_label_config_by_project_class + "-repartition")
                 )
                 .toTable(
                         Named.as(inner.TOPICS.project_entity_label_config_by_project_class + "-to-table"),
                         Materialized.<ProjectClassKey, ProjectEntityLabelConfigValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_label_config_by_project_class)
-                                .withKeySerde(avroSerdes.ProjectClassKey())
-                                .withValueSerde(avroSerdes.ProjectEntityLabelConfigValue())
+                                .withKeySerde(as.key())
+                                .withValueSerde(as.value())
                 );
 
         // 2
@@ -94,8 +94,8 @@ public class ProjectEntityLabelConfig {
                 },
                 Named.as(inner.TOPICS.project_class_with_project_label_config + "-fk-left-join"),
                 Materialized.<ProjectClassKey, ProjectEntityLabelConfigValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_class_with_project_label_config)
-                        .withKeySerde(avroSerdes.ProjectClassKey())
-                        .withValueSerde(avroSerdes.ProjectEntityLabelConfigValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
         // 3
@@ -125,8 +125,8 @@ public class ProjectEntityLabelConfig {
                 },
                 TableJoined.as(outputTopicNames.projectEntityLabelConfig() + "-fk-left-join"),
                 Materialized.<ProjectClassKey, ProjectEntityLabelConfigValue, KeyValueStore<Bytes, byte[]>>as(outputTopicNames.projectEntityLabelConfig())
-                        .withKeySerde(avroSerdes.ProjectClassKey())
-                        .withValueSerde(avroSerdes.ProjectEntityLabelConfigValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
         projectEntityLabelConfigEnrichedTable.toStream(
@@ -134,8 +134,8 @@ public class ProjectEntityLabelConfig {
         ).to(
                 outputTopicNames.projectEntityLabelConfig(),
                 Produced.with(
-                                avroSerdes.ProjectClassKey(),
-                                avroSerdes.ProjectEntityLabelConfigValue()
+                                as.<ProjectClassKey>key(),
+                                as.<ProjectEntityLabelConfigValue>value()
                         )
                         .withName(outputTopicNames.projectEntityLabelConfig() + "-producer")
         );
@@ -158,11 +158,11 @@ public class ProjectEntityLabelConfig {
             KeyValue<ProjectClassKey, ProjectEntityLabelConfigValue>> {
 
         private final String stateStoreName;
-        private final AvroSerdes avroSerdes;
+        private final ConfiguredAvroSerde as;
 
-        public TransformSupplier(String stateStoreName, AvroSerdes avroSerdes) {
+        public TransformSupplier(String stateStoreName, ConfiguredAvroSerde as) {
             this.stateStoreName = stateStoreName;
-            this.avroSerdes = avroSerdes;
+            this.as = as;
         }
 
         @Override
@@ -174,8 +174,8 @@ public class ProjectEntityLabelConfig {
         public Set<StoreBuilder<?>> stores() {
             StoreBuilder<KeyValueStore<dev.projects.entity_label_config.Key, ProjectEntityLabelConfigValue>> keyValueStoreBuilder =
                     Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(stateStoreName),
-                            avroSerdes.ProEntityLabelConfigKey(),
-                            avroSerdes.ProjectEntityLabelConfigValue());
+                            as.key(),
+                            as.value());
             return Collections.singleton(keyValueStoreBuilder);
         }
     }

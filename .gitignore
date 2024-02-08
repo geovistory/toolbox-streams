@@ -1,5 +1,6 @@
 .gradle
 .idea
+.quarkus
 /build/
 
 # Ignore Gradle GUI config

@@ -1,12 +1,12 @@
 package org.geovistory.toolbox.streams.base.config;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * This class provides helper methods to register
@@ -17,7 +17,7 @@ import jakarta.inject.Inject;
 public class RegisterInputTopic extends TsRegisterInputTopic {
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
     @Inject
     public BuilderSingleton builderSingleton;
 
@@ -27,8 +27,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     RegisterInputTopic() {
     }
 
-    public RegisterInputTopic(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public RegisterInputTopic(ConfiguredAvroSerde as, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames) {
+        this.as = as;
         this.builderSingleton = builderSingleton;
         this.inputTopicNames = inputTopicNames;
     }
@@ -38,8 +38,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getRepartitionedStream(
                 builderSingleton.builder,
                 inputTopicNames.proTextProperty(),
-                avroSerdes.ProTextPropertyKey(),
-                avroSerdes.ProTextPropertyValue()
+                as.key(),
+                as.value()
         );
     }
 
@@ -47,8 +47,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 inputTopicNames.proProfileProjRel(),
-                avroSerdes.ProProfileProjRelKey(),
-                avroSerdes.ProProfileProjRelValue()
+                as.key(),
+                as.value()
         );
     }
 
@@ -57,8 +57,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 inputTopicNames.proProject(),
-                avroSerdes.ProProjectKey(),
-                avroSerdes.ProProjectValue()
+                as.key(),
+                as.value()
         );
     }
 
@@ -66,8 +66,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getRepartitionedStream(
                 builderSingleton.builder,
                 inputTopicNames.sysConfig(),
-                avroSerdes.SysConfigKey(),
-                avroSerdes.SysConfigValue()
+                as.key(),
+                as.value()
         );
     }
 
@@ -75,8 +75,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getStream(
                 builderSingleton.builder,
                 inputTopicNames.proEntityLabelConfig(),
-                avroSerdes.ProEntityLabelConfigKey(),
-                avroSerdes.ProEntityLabelConfigValue()
+                as.key(),
+                as.value()
         );
     }
 
@@ -84,14 +84,14 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getStream(
                 builderSingleton.builder,
                 inputTopicNames.ontomeClass(),
-                avroSerdes.OntomeClassKey(), avroSerdes.OntomeClassValue());
+                as.key(), as.value());
     }
 
     public KStream<OntomePropertyKey, OntomePropertyValue> ontomePropertyStream() {
         return getStream(
                 builderSingleton.builder,
                 inputTopicNames.ontomeProperty(),
-                avroSerdes.OntomePropertyKey(), avroSerdes.OntomePropertyValue());
+                as.key(), as.value());
     }
 
 
@@ -99,21 +99,21 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getStream(
                 builderSingleton.builder,
                 inputTopicNames.ontomeClassLabel(),
-                avroSerdes.OntomeClassLabelKey(), avroSerdes.OntomeClassLabelValue());
+                as.key(), as.value());
     }
 
     public KTable<OntomeClassLabelKey, OntomeClassLabelValue> ontomeClassLabelTable() {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.ontomeClassLabel(),
-                avroSerdes.OntomeClassLabelKey(), avroSerdes.OntomeClassLabelValue());
+                as.key(), as.value());
     }
 
     public KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelStream() {
         return getStream(
                 builderSingleton.builder,
                 inputTopicNames.ontomePropertyLabel(),
-                avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue());
+                as.key(), as.value());
     }
 
 }

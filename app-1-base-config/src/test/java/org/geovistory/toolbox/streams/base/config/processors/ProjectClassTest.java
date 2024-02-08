@@ -7,6 +7,7 @@ import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,32 +36,32 @@ class ProjectClassTest {
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
         var builderSingleton = new BuilderSingleton();
-        var avroSerdes = new AvroSerdes();
-        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var as = new ConfiguredAvroSerde();
+        as.schemaRegistryUrl = MOCK_SCHEMA_REGISTRY_URL;
         var inputTopicNames = new InputTopicNames();
         var outputTopicNames = new OutputTopicNames();
-        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
-        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
-        var projectClass = new ProjectClass(avroSerdes, registerInputTopic, registerInnerTopic,outputTopicNames);
+        var registerInputTopic = new RegisterInputTopic(as, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(as, builderSingleton, outputTopicNames);
+        var projectClass = new ProjectClass(as, registerInputTopic, registerInnerTopic, outputTopicNames);
         projectClass.addProcessorsStandalone();
         var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
 
         ontomeClassTopic = testDriver.createInputTopic(
-                inputTopicNames. ontomeClass(),
-                avroSerdes.OntomeClassKey().serializer(),
-                avroSerdes.OntomeClassValue().serializer());
+                inputTopicNames.ontomeClass(),
+                as.<OntomeClassKey>key().serializer(),
+                as.<OntomeClassValue>value().serializer());
 
         projectProfilesTopic = testDriver.createInputTopic(
-                outputTopicNames. projectProfile(),
-                avroSerdes.ProjectProfileKey().serializer(),
-                avroSerdes.ProjectProfileValue().serializer());
+                outputTopicNames.projectProfile(),
+                as.<ProjectProfileKey>key().serializer(),
+                as.<ProjectProfileValue>value().serializer());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectClass(),
-                avroSerdes.ProjectClassKey().deserializer(),
-                avroSerdes.ProjectClassValue().deserializer());
+                as.<ProjectClassKey>key().deserializer(),
+                as.<ProjectClassValue>value().deserializer());
     }
 
     @AfterEach

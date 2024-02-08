@@ -8,6 +8,7 @@ import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,36 +38,36 @@ class ProjectEntityLabelConfigTest {
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
         var builderSingleton = new BuilderSingleton();
-        var avroSerdes = new AvroSerdes();
-        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var as = new ConfiguredAvroSerde();
+        as.schemaRegistryUrl = MOCK_SCHEMA_REGISTRY_URL;
         var inputTopicNames = new InputTopicNames();
         var outputTopicNames = new OutputTopicNames();
-        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
-        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
-        var projectEntityLabelConfig = new ProjectEntityLabelConfig(avroSerdes, registerInputTopic, registerInnerTopic,outputTopicNames);
+        var registerInputTopic = new RegisterInputTopic(as, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(as, builderSingleton, outputTopicNames);
+        var projectEntityLabelConfig = new ProjectEntityLabelConfig(as, registerInputTopic, registerInnerTopic, outputTopicNames);
         projectEntityLabelConfig.addProcessorsStandalone();
         var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
         proEntityLabelConfigTopic = testDriver.createInputTopic(
-                inputTopicNames. proEntityLabelConfig(),
-                avroSerdes.ProEntityLabelConfigKey().serializer(),
-                avroSerdes.ProEntityLabelConfigValue().serializer());
+                inputTopicNames.proEntityLabelConfig(),
+                as.<dev.projects.entity_label_config.Key>key().serializer(),
+                as.<dev.projects.entity_label_config.Value>value().serializer());
 
         communityEntityLabelTopic = testDriver.createInputTopic(
-                outputTopicNames. communityEntityLabelConfig(),
-                avroSerdes.CommunityEntityLabelConfigKey().serializer(),
-                avroSerdes.CommunityEntityLabelConfigValue().serializer());
+                outputTopicNames.communityEntityLabelConfig(),
+                as.<CommunityEntityLabelConfigKey>key().serializer(),
+                as.<CommunityEntityLabelConfigValue>value().serializer());
 
         projectClassTopic = testDriver.createInputTopic(
-                outputTopicNames. projectClass(),
-                avroSerdes.ProjectClassKey().serializer(),
-                avroSerdes.ProjectClassValue().serializer());
+                outputTopicNames.projectClass(),
+                as.<ProjectClassKey>key().serializer(),
+                as.<ProjectClassValue>value().serializer());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectEntityLabelConfig(),
-                avroSerdes.ProjectClassKey().deserializer(),
-                avroSerdes.ProjectEntityLabelConfigValue().deserializer());
+                as.<ProjectClassKey>key().deserializer(),
+                as.<ProjectEntityLabelConfigValue>value().deserializer());
     }
 
     @AfterEach

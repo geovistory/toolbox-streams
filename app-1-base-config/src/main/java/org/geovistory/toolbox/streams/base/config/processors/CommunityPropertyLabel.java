@@ -1,5 +1,7 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
@@ -8,19 +10,21 @@ import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.base.config.I;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
+import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 
 
 @ApplicationScoped
 public class CommunityPropertyLabel {
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -31,8 +35,8 @@ public class CommunityPropertyLabel {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public CommunityPropertyLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public CommunityPropertyLabel(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -92,8 +96,8 @@ public class CommunityPropertyLabel {
         var langFieldsTable = langFieldsStream.toTable(
                 Named.as(inner.TOPICS.ontome_property_by_lang_and_direction),
                 Materialized.<CommunityPropertyLabelKey, CommunityPropertyLabelValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.ontome_property_by_lang_and_direction)
-                        .withKeySerde(avroSerdes.CommunityPropertyLabelKey())
-                        .withValueSerde(avroSerdes.CommunityPropertyLabelValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
         // 4
         var defaultGeovPropertyLabelStream = geovPropertyLabelStream
@@ -113,8 +117,8 @@ public class CommunityPropertyLabel {
         var defaultGeovPropertyLabelTable = defaultGeovPropertyLabelStream.toTable(
                 Named.as(inner.TOPICS.default_geov_property_label_by_ontome_property_label_key),
                 Materialized.<CommunityPropertyLabelKey, GeovPropertyLabelValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.default_geov_property_label_by_ontome_property_label_key)
-                        .withKeySerde(avroSerdes.CommunityPropertyLabelKey())
-                        .withValueSerde(avroSerdes.GeovPropertyLabelValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
         // 5
         var communityPropertyLabelTable = defaultGeovPropertyLabelTable.outerJoin(
@@ -130,21 +134,21 @@ public class CommunityPropertyLabel {
                         .build(),
                 Named.as(inner.TOPICS.community_property_label + "-outer-join"),
                 Materialized.<CommunityPropertyLabelKey, CommunityPropertyLabelValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.community_property_label)
-                        .withKeySerde(avroSerdes.CommunityPropertyLabelKey())
-                        .withValueSerde(avroSerdes.CommunityPropertyLabelValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
         var communityPropertyLabelStream = communityPropertyLabelTable
                 .toStream(Named.as("ktable-to-stream-community_property_label"))
                 .transform(new IdenticalRecordsFilterSupplier<>(
                         "community_community_property_label_label_identical_records_filter",
-                        avroSerdes.CommunityPropertyLabelKey(),
-                        avroSerdes.CommunityPropertyLabelValue()
+                        as.key(),
+                        as.value()
                 ));
 
         communityPropertyLabelStream.to(
                 outputTopicNames.communityPropertyLabel(),
-                Produced.with(avroSerdes.CommunityPropertyLabelKey(), avroSerdes.CommunityPropertyLabelValue())
+                Produced.with(as.<CommunityPropertyLabelKey>key(), as.<CommunityPropertyLabelValue>value())
                         .withName(outputTopicNames.communityPropertyLabel() + "-producer")
         );
         return new CommunityPropertyLabelReturnValue(communityPropertyLabelTable, communityPropertyLabelStream);
