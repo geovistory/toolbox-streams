@@ -1,18 +1,18 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.GeovClassLabelKey;
 import org.geovistory.toolbox.streams.avro.GeovClassLabelValue;
-import org.geovistory.toolbox.streams.base.config.AvroSerdes;
 import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -20,7 +20,7 @@ import java.util.Objects;
 @ApplicationScoped
 public class GeovClassLabel {
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -31,8 +31,8 @@ public class GeovClassLabel {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public GeovClassLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public GeovClassLabel(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -84,7 +84,7 @@ public class GeovClassLabel {
         geovClassLabel
                 .to(
                         outputTopicNames.geovClassLabel(),
-                        Produced.with(avroSerdes.GeovClassLabelKey(), avroSerdes.GeovClassLabelValue())
+                        Produced.with(as.<GeovClassLabelKey>key(), as.<GeovClassLabelValue>value())
                                 .withName(outputTopicNames.geovClassLabel() + "-producer")
                 );
 

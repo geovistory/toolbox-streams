@@ -1,5 +1,7 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Named;
@@ -9,22 +11,21 @@ import org.geovistory.toolbox.streams.avro.OntomePropertyKey;
 import org.geovistory.toolbox.streams.avro.OntomePropertyLabelKey;
 import org.geovistory.toolbox.streams.avro.OntomePropertyLabelValue;
 import org.geovistory.toolbox.streams.avro.OntomePropertyValue;
-import org.geovistory.toolbox.streams.base.model.AvroSerdes;
 import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
 import org.geovistory.toolbox.streams.base.model.InputTopicNames;
 import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 
 @ApplicationScoped
 public class OntomePropertyLabel {
-    AvroSerdes avroSerdes;
+    @Inject
+    ConfiguredAvroSerde as;
 
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
     String inPrefix;
@@ -38,8 +39,8 @@ public class OntomePropertyLabel {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public OntomePropertyLabel(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public OntomePropertyLabel(ConfiguredAvroSerde as, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.builderSingleton = builderSingleton;
         this.inputTopicNames = inputTopicNames;
         this.outputTopicNames = outputTopicNames;
@@ -49,7 +50,7 @@ public class OntomePropertyLabel {
     public void addProcessorsStandalone() {
         addProcessors(
                 new OntomePropertyProjected().getRegistrar(
-                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                        this.as, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
                 ).kStream
         );
     }
@@ -85,15 +86,15 @@ public class OntomePropertyLabel {
                 )
                 .transform(new IdenticalRecordsFilterSupplier<>(
                                 "ontome_property_label_suppress_duplicates",
-                                avroSerdes.OntomePropertyLabelKey(),
-                                avroSerdes.OntomePropertyLabelValue()),
+                                as.key(),
+                                as.value()),
                         Named.as("ontome_property_label_suppress_duplicates"));
 
         /* SINK PROCESSORS */
         ontomePropertyLabel
                 .to(
                         outputTopicNames.ontomePropertyLabel(),
-                        Produced.with(avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue())
+                        Produced.with(as.<OntomePropertyLabelKey>key(), as.<OntomePropertyLabelValue>value())
                                 .withName(outputTopicNames.ontomePropertyLabel() + "-producer")
                 );
 
@@ -106,8 +107,6 @@ public class OntomePropertyLabel {
     public String inDfhApiProperty() {
         return Utils.prefixedIn(inPrefix, TopicNameEnum.dfh_api_property.getValue());
     }
-
-
 
 
 }

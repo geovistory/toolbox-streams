@@ -2,6 +2,8 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
@@ -14,11 +16,13 @@ import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.CommunityEntityLabelConfigKey;
 import org.geovistory.toolbox.streams.avro.CommunityEntityLabelConfigValue;
 import org.geovistory.toolbox.streams.avro.EntityLabelConfig;
-import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.base.config.I;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
+import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
 
@@ -28,7 +32,7 @@ public class CommunityEntityLabelConfig {
 
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -38,8 +42,8 @@ public class CommunityEntityLabelConfig {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public CommunityEntityLabelConfig(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public CommunityEntityLabelConfig(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -58,13 +62,13 @@ public class CommunityEntityLabelConfig {
         /* STREAM PROCESSORS */
         // 2)
         var communityEntityLabelConfigStream = proEntityLabelConfigStream.transform(
-                new TransformSupplier("kstream-flatmap-project-entity-label-config-to-community-entity-label-config", avroSerdes)
+                new TransformSupplier("kstream-flatmap-project-entity-label-config-to-community-entity-label-config", as)
         );
         /* SINK PROCESSORS */
 
         // 8) to
         communityEntityLabelConfigStream.to(outputTopicNames.communityEntityLabelConfig(),
-                Produced.with(avroSerdes.CommunityEntityLabelConfigKey(), avroSerdes.CommunityEntityLabelConfigValue())
+                Produced.with(as.<CommunityEntityLabelConfigKey>key(), as.<CommunityEntityLabelConfigValue>value())
                         .withName(outputTopicNames.communityEntityLabelConfig() + "-producer")
         );
 
@@ -78,11 +82,11 @@ public class CommunityEntityLabelConfig {
             KeyValue<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue>> {
 
         private final String stateStoreName;
-        private final AvroSerdes avroSerdes;
+        private final ConfiguredAvroSerde as;
 
-        public TransformSupplier(String stateStoreName, AvroSerdes avroSerdes) {
+        public TransformSupplier(String stateStoreName, ConfiguredAvroSerde as) {
             this.stateStoreName = stateStoreName;
-            this.avroSerdes = avroSerdes;
+            this.as = as;
         }
 
         @Override
@@ -94,8 +98,8 @@ public class CommunityEntityLabelConfig {
         public Set<StoreBuilder<?>> stores() {
             StoreBuilder<KeyValueStore<dev.projects.entity_label_config.Key, CommunityEntityLabelConfigValue>> keyValueStoreBuilder =
                     Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(stateStoreName),
-                            avroSerdes.ProEntityLabelConfigKey(),
-                            avroSerdes.CommunityEntityLabelConfigValue());
+                            as.key(),
+                            as.value());
             return Collections.singleton(keyValueStoreBuilder);
         }
     }

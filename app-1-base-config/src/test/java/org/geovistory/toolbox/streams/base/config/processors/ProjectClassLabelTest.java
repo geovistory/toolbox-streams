@@ -6,6 +6,7 @@ import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,43 +38,43 @@ class ProjectClassLabelTest {
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
         var builderSingleton = new BuilderSingleton();
-        var avroSerdes = new AvroSerdes();
-        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var as = new ConfiguredAvroSerde();
+        as.schemaRegistryUrl = MOCK_SCHEMA_REGISTRY_URL;
         var inputTopicNames = new InputTopicNames();
         var outputTopicNames = new OutputTopicNames();
-        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
-        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
-        var projectClassLabel = new ProjectClassLabel(avroSerdes, registerInputTopic, registerInnerTopic,outputTopicNames);
+        var registerInputTopic = new RegisterInputTopic(as, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(as, builderSingleton, outputTopicNames);
+        var projectClassLabel = new ProjectClassLabel(as, registerInputTopic, registerInnerTopic, outputTopicNames);
         projectClassLabel.addProcessorsStandalone();
         var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
 
         ontomeClassLabelTopic = testDriver.createInputTopic(
-                inputTopicNames. ontomeClassLabel(),
-                avroSerdes.OntomeClassLabelKey().serializer(),
-                avroSerdes.OntomeClassLabelValue().serializer());
+                inputTopicNames.ontomeClassLabel(),
+                as.<OntomeClassLabelKey>key().serializer(),
+                as.<OntomeClassLabelValue>value().serializer());
 
         geovClassLabelTopic = testDriver.createInputTopic(
-                outputTopicNames. geovClassLabel(),
-                avroSerdes.GeovClassLabelKey().serializer(),
-                avroSerdes.GeovClassLabelValue().serializer());
+                outputTopicNames.geovClassLabel(),
+                as.<GeovClassLabelKey>key().serializer(),
+                as.<GeovClassLabelValue>value().serializer());
 
         projectClassTopic = testDriver.createInputTopic(
-                outputTopicNames. projectClass(),
-                avroSerdes.ProjectClassKey().serializer(),
-                avroSerdes.ProjectClassValue().serializer());
+                outputTopicNames.projectClass(),
+                as.<ProjectClassKey>key().serializer(),
+                as.<ProjectClassValue>value().serializer());
 
         projectTopic = testDriver.createInputTopic(
                 inputTopicNames.proProject(),
-                avroSerdes.ProProjectKey().serializer(),
-                avroSerdes.ProProjectValue().serializer());
+                as.<dev.projects.project.Key>key().serializer(),
+                as.<dev.projects.project.Value>value().serializer());
 
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectClassLabel(),
-                avroSerdes.ProjectClassLabelKey().deserializer(),
-                avroSerdes.ProjectClassLabelValue().deserializer());
+                as.<ProjectClassLabelKey>key().deserializer(),
+                as.<ProjectClassLabelValue>value().deserializer());
     }
 
     @AfterEach

@@ -2,19 +2,19 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import dev.projects.text_property.Key;
 import dev.projects.text_property.Value;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.geovistory.toolbox.streams.avro.GeovPropertyLabelKey;
 import org.geovistory.toolbox.streams.avro.GeovPropertyLabelValue;
-import org.geovistory.toolbox.streams.base.config.AvroSerdes;
 import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -22,7 +22,7 @@ import java.util.Objects;
 @ApplicationScoped
 public class GeovPropertyLabel {
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -33,8 +33,8 @@ public class GeovPropertyLabel {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public GeovPropertyLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public GeovPropertyLabel(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -97,7 +97,7 @@ public class GeovPropertyLabel {
         geovPropertyLabel
                 .to(
                         outputTopicNames.geovPropertyLabel(),
-                        Produced.with(avroSerdes.GeovPropertyLabelKey(), avroSerdes.GeovPropertyLabelValue())
+                        Produced.with(as.key(), as.value())
                 );
 
         return new GeovPropertyLabelReturnValue(geovPropertyLabel);

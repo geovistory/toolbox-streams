@@ -2,6 +2,8 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
@@ -11,16 +13,14 @@ import org.geovistory.toolbox.streams.avro.BooleanMap;
 import org.geovistory.toolbox.streams.avro.IntegerList;
 import org.geovistory.toolbox.streams.avro.ProjectProfileKey;
 import org.geovistory.toolbox.streams.avro.ProjectProfileValue;
-import org.geovistory.toolbox.streams.base.config.AvroSerdes;
 import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
 import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
 import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplierMemory;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.SysConfigValue;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +28,7 @@ import java.util.Objects;
 @ApplicationScoped
 public class ProjectProfiles {
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -39,8 +39,8 @@ public class ProjectProfiles {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public ProjectProfiles(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public ProjectProfiles(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -108,7 +108,7 @@ public class ProjectProfiles {
                 Materialized.
                         <Integer, IntegerList, KeyValueStore<Bytes, byte[]>>as("inner.TOPICS.projects_with_enabled_profiles")
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(avroSerdes.IntegerList())
+                        .withValueSerde(as.value())
         );
 
         // 5)
@@ -134,13 +134,13 @@ public class ProjectProfiles {
                 .repartition(
                         Repartitioned.<String, IntegerList>as(inner.TOPICS.required_profiles + "-repartition")
                                 .withKeySerde(Serdes.String())
-                                .withValueSerde(avroSerdes.IntegerList())
+                                .withValueSerde(as.value())
                                 .withName(inner.TOPICS.required_profiles + "-repartition-2")
                 )
                 .transform(
                         new IdenticalRecordsFilterSupplierMemory<>(inner.TOPICS.required_profiles + "-deduplicate",
                                 Serdes.String(),
-                                avroSerdes.IntegerList())
+                                as.value())
                 )
                 .toTable(
                         Named.as(inner.TOPICS.required_profiles),
@@ -148,7 +148,7 @@ public class ProjectProfiles {
                                 .<String, IntegerList, KeyValueStore<Bytes, byte[]>>
                                         as(inner.TOPICS.required_profiles + "-store")
                                 .withKeySerde(Serdes.String())
-                                .withValueSerde(avroSerdes.IntegerList())
+                                .withValueSerde(as.value())
                 );
 
         // 7)
@@ -179,7 +179,7 @@ public class ProjectProfiles {
                 Materialized
                         .<Integer, IntegerList, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.projects_with_required_profiles)
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(avroSerdes.IntegerList())
+                        .withValueSerde(as.value())
         );
 
         // 10)
@@ -194,7 +194,7 @@ public class ProjectProfiles {
                 Materialized
                         .<Integer, IntegerList, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.projects_with_profiles)
                         .withKeySerde(Serdes.Integer())
-                        .withValueSerde(avroSerdes.IntegerList())
+                        .withValueSerde(as.value())
         );
         // 11
         KStream<ProjectProfileKey, ProjectProfileValue> projectProfileStream;
@@ -212,7 +212,7 @@ public class ProjectProfiles {
                 )
                 // 12
                 .groupByKey(
-                        Grouped.with(Serdes.Integer(), avroSerdes.BooleanMapValue())
+                        Grouped.with(Serdes.Integer(), as.<BooleanMap>value())
                                 .withName("kstream-group-by-key-project-profile-map")
                 )
                 //13
@@ -248,7 +248,7 @@ public class ProjectProfiles {
 
         /* SINK PROCESSOR */
         projectProfileStream.to(outputTopicNames.projectProfile(),
-                Produced.with(avroSerdes.ProjectProfileKey(), avroSerdes.ProjectProfileValue())
+                Produced.with(as.<ProjectProfileKey>key(), as.<ProjectProfileValue>value())
                         .withName(outputTopicNames.projectProfile() + "-producer")
         );
 

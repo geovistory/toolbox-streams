@@ -8,6 +8,7 @@ import org.apache.kafka.streams.TopologyTestDriver;
 import org.geovistory.toolbox.streams.avro.GeovClassLabelKey;
 import org.geovistory.toolbox.streams.avro.GeovClassLabelValue;
 import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,27 +38,27 @@ class GeovClassLabelTest {
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
 
         var builderSingleton = new BuilderSingleton();
-        var avroSerdes = new AvroSerdes();
-        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
+        var as = new ConfiguredAvroSerde();
+        as.schemaRegistryUrl = MOCK_SCHEMA_REGISTRY_URL;
         var inputTopicNames = new InputTopicNames();
         var outputTopicNames = new OutputTopicNames();
-        var registerInputTopic = new RegisterInputTopic(avroSerdes, builderSingleton, inputTopicNames);
-        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
-        var geovClassLabel = new GeovClassLabel(avroSerdes, registerInputTopic, registerInnerTopic,outputTopicNames);
+        var registerInputTopic = new RegisterInputTopic(as, builderSingleton, inputTopicNames);
+        var registerInnerTopic = new RegisterInnerTopic(as, builderSingleton, outputTopicNames);
+        var geovClassLabel = new GeovClassLabel(as, registerInputTopic, registerInnerTopic, outputTopicNames);
         geovClassLabel.addProcessorsStandalone();
         var topology = builderSingleton.builder.build();
         testDriver = new TopologyTestDriver(topology, props);
 
         textPropertyTopic = testDriver.createInputTopic(
                 inputTopicNames.proTextProperty(),
-                avroSerdes.ProTextPropertyKey().serializer(),
-                avroSerdes.ProTextPropertyValue().serializer());
+                as.<dev.projects.text_property.Key>key().serializer(),
+                as.<dev.projects.text_property.Value>value().serializer());
 
 
         geovClassLabelTopic = testDriver.createOutputTopic(
                 outputTopicNames.geovClassLabel(),
-                avroSerdes.GeovClassLabelKey().deserializer(),
-                avroSerdes.GeovClassLabelValue().deserializer());
+                as.<GeovClassLabelKey>key().deserializer(),
+                as.<GeovClassLabelValue>value().deserializer());
 
 
     }

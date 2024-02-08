@@ -1,16 +1,20 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.base.config.I;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
+import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -18,7 +22,7 @@ import java.util.Objects;
 @ApplicationScoped
 public class ProjectClassLabel {
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -29,8 +33,8 @@ public class ProjectClassLabel {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public ProjectClassLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public ProjectClassLabel(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -55,15 +59,15 @@ public class ProjectClassLabel {
         /* SOURCE PROCESSORS */
         var projectClassTable = projectClassStream.toTable(
                 Named.as("project_class_table"),
-                Materialized.with(avroSerdes.ProjectClassKey(), avroSerdes.ProjectClassValue())
+                Materialized.with(as.key(), as.value())
         );
         var ontomeClassLabelTable = ontomeClassLabelStream.toTable(
                 Named.as("ontome_class_label_table"),
-                Materialized.with(avroSerdes.OntomeClassLabelKey(), avroSerdes.OntomeClassLabelValue())
+                Materialized.with(as.key(), as.value())
         );
         var geovClassLabelTable = geovClassLabelStream.toTable(
                 Named.as("geov_class_label_table"),
-                Materialized.with(avroSerdes.GeovClassLabelKey(), avroSerdes.GeovClassLabelValue())
+                Materialized.with(as.key(), as.value())
         );
 
         /* STREAM PROCESSORS */
@@ -79,8 +83,8 @@ public class ProjectClassLabel {
                         .build(),
                 TableJoined.as("project_class_language" + "-fk-join"),
                 Materialized.<ProjectClassKey, ProjectClassLanguageValue, KeyValueStore<Bytes, byte[]>>as("project_class_language")
-                        .withKeySerde(avroSerdes.ProjectClassKey())
-                        .withValueSerde(avroSerdes.ProjectClassLanguageValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
         // 3
         var projectClassLabelOptionsTable = projectClassLanguage
@@ -131,8 +135,8 @@ public class ProjectClassLabel {
                         Materialized
                                 .<ProjectClassLanguageKey, ProjectClassLanguageValue, KeyValueStore<Bytes, byte[]>>
                                         as(inner.TOPICS.project_class_label_options + "-store")
-                                .withKeySerde(avroSerdes.ProjectClassLanguageKey())
-                                .withValueSerde(avroSerdes.ProjectClassLanguageValue())
+                                .withKeySerde(as.key())
+                                .withValueSerde(as.value())
                 );
 // 4) left join
         var withGeov = projectClassLabelOptionsTable.leftJoin(
@@ -168,8 +172,8 @@ public class ProjectClassLabel {
                 },
                 TableJoined.as("project_class_label_options_with_geov" + "-fk-left-join"),
                 Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov")
-                        .withKeySerde(avroSerdes.ProjectClassLanguageKey())
-                        .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
 // 4b) left join geov default
@@ -200,8 +204,8 @@ public class ProjectClassLabel {
                 },
                 TableJoined.as("project_class_label_options_with_geov_and_default" + "-fk-left-join"),
                 Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov_and_default")
-                        .withKeySerde(avroSerdes.ProjectClassLanguageKey())
-                        .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
         // 5) left join
@@ -231,8 +235,8 @@ public class ProjectClassLabel {
                 },
                 TableJoined.as("project_class_label_options_with_geov_and_default_and_ontome" + "-fk-left-join"),
                 Materialized.<ProjectClassLanguageKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_class_label_options_with_geov_and_default_and_ontome")
-                        .withKeySerde(avroSerdes.ProjectClassLanguageKey())
-                        .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
 
@@ -249,7 +253,7 @@ public class ProjectClassLabel {
                                         .build(),
                         Grouped.with(
                                 inner.TOPICS.project_class_label_options_grouped,
-                                avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelOptionMapValue()
+                                as.key(), as.value()
                         ));
 
         // 7) aggregate
@@ -268,8 +272,8 @@ public class ProjectClassLabel {
                 },
                 Named.as(inner.TOPICS.project_class_label_options_aggregated),
                 Materialized.<ProjectClassLabelKey, ProjectClassLabelOptionMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_class_label_options_aggregated)
-                        .withKeySerde(avroSerdes.ProjectClassLabelKey())
-                        .withValueSerde(avroSerdes.ProjectClassLabelOptionMapValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
         var projectClassLabelTable = projectClassLabelOptionsAggregated.mapValues(
                 (readOnlyKey, map) -> {
@@ -307,15 +311,15 @@ public class ProjectClassLabel {
                 .toStream(Named.as("project_class_label" + "-to-stream"))
                 .transform(new IdenticalRecordsFilterSupplier<>(
                         "project_class_label_identical_records_filter",
-                        avroSerdes.ProjectClassLabelKey(),
-                        avroSerdes.ProjectClassLabelValue()
+                        as.key(),
+                        as.value()
                 ));
 
         /* SINK PROCESSORS */
 
         // 8) to
         projectClassLabelStream.to(outputTopicNames.projectClassLabel(),
-                Produced.with(avroSerdes.ProjectClassLabelKey(), avroSerdes.ProjectClassLabelValue())
+                Produced.with(as.<ProjectClassLabelKey>key(), as.<ProjectClassLabelValue>value())
                         .withName(outputTopicNames.projectClassLabel() + "-producer")
         );
 

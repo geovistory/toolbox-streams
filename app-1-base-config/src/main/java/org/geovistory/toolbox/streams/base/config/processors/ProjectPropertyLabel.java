@@ -1,16 +1,20 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.config.*;
+import org.geovistory.toolbox.streams.base.config.I;
+import org.geovistory.toolbox.streams.base.config.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.config.RegisterInnerTopic;
+import org.geovistory.toolbox.streams.base.config.RegisterInputTopic;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +23,7 @@ import java.util.Objects;
 @ApplicationScoped
 public class ProjectPropertyLabel {
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -30,8 +34,8 @@ public class ProjectPropertyLabel {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public ProjectPropertyLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public ProjectPropertyLabel(ConfiguredAvroSerde as, RegisterInputTopic registerInputTopic, RegisterInnerTopic registerInnerTopic, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.registerInputTopic = registerInputTopic;
         this.registerInnerTopic = registerInnerTopic;
         this.outputTopicNames = outputTopicNames;
@@ -59,22 +63,22 @@ public class ProjectPropertyLabel {
                 Named.as("project_property_table"),
                 Materialized.<ProjectPropertyKey, ProjectPropertyValue, KeyValueStore<Bytes, byte[]>>
                                 as("project_property_table" + "-store")
-                        .withKeySerde(avroSerdes.ProjectPropertyKey())
-                        .withValueSerde(avroSerdes.ProjectPropertyValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
         var ontomePropertyLabelTable = ontomePropertyLabelStream.toTable(
                 Named.as("ontome_property_label_table"),
                 Materialized.<OntomePropertyLabelKey, OntomePropertyLabelValue, KeyValueStore<Bytes, byte[]>>
                                 as("ontome_property_label_table" + "-store")
-                        .withKeySerde(avroSerdes.OntomePropertyLabelKey())
-                        .withValueSerde(avroSerdes.OntomePropertyLabelValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
         var geovPropertyLabelTable = geovPropertyLabelStream.toTable(
                 Named.as("geov_property_label_table"),
                 Materialized.<GeovPropertyLabelKey, GeovPropertyLabelValue, KeyValueStore<Bytes, byte[]>>
                                 as("geov_property_label_table" + "-store")
-                        .withKeySerde(avroSerdes.GeovPropertyLabelKey())
-                        .withValueSerde(avroSerdes.GeovPropertyLabelValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
         /* STREAM PROCESSORS */
@@ -92,8 +96,8 @@ public class ProjectPropertyLabel {
                         .build(),
                 TableJoined.as("project_property_language" + "-fk-join"),
                 Materialized.<ProjectPropertyKey, ProjectPropertyLanguageValue, KeyValueStore<Bytes, byte[]>>as("project_property_language")
-                        .withKeySerde(avroSerdes.ProjectPropertyKey())
-                        .withValueSerde(avroSerdes.ProjectPropertyLanguageValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
         // 3
         var projectPropertyLabelOptionsTable = projectPropertyLanguage
@@ -188,8 +192,8 @@ public class ProjectPropertyLabel {
                         Materialized
                                 .<ProjectFieldLanguageKey, ProjectFieldLanguageValue, KeyValueStore<Bytes, byte[]>>
                                         as(inner.TOPICS.project_property_label_options + "-store")
-                                .withKeySerde(avroSerdes.ProjectPropertyLanguageKey())
-                                .withValueSerde(avroSerdes.ProjectFieldLanguageValue())
+                                .withKeySerde(as.key())
+                                .withValueSerde(as.value())
                 );
 
         // 4.1) left join labels of project
@@ -234,8 +238,8 @@ public class ProjectPropertyLabel {
                 },
                 TableJoined.as("project_property_label_options_with_geov" + "-fk-left-join"),
                 Materialized.<ProjectFieldLanguageKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_property_label_options_with_geov")
-                        .withKeySerde(avroSerdes.ProjectPropertyLanguageKey())
-                        .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
         // 4.2) left join labels of geov default
@@ -273,8 +277,8 @@ public class ProjectPropertyLabel {
                 },
                 TableJoined.as("project_property_label_options_with_geov_and_default" + "-fk-left-join"),
                 Materialized.<ProjectFieldLanguageKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_property_label_options_with_geov_and_default")
-                        .withKeySerde(avroSerdes.ProjectPropertyLanguageKey())
-                        .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
 
@@ -309,8 +313,8 @@ public class ProjectPropertyLabel {
                 },
                 TableJoined.as("project_property_label_options_with_geov_and_default_and_ontome" + "-fk-left-join"),
                 Materialized.<ProjectFieldLanguageKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as("project_property_label_options_with_geov_and_default_and_ontome")
-                        .withKeySerde(avroSerdes.ProjectPropertyLanguageKey())
-                        .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
 
         // 6) group by
@@ -328,7 +332,7 @@ public class ProjectPropertyLabel {
                                         .build(),
                         Grouped.with(
                                 inner.TOPICS.project_property_label_options_grouped,
-                                avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelOptionMapValue()
+                                as.key(), as.value()
                         ));
 
         // 7) aggregate
@@ -351,8 +355,8 @@ public class ProjectPropertyLabel {
                 },
                 Named.as(inner.TOPICS.project_property_label_options_aggregated),
                 Materialized.<ProjectFieldLabelKey, ProjectFieldLabelOptionMap, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_property_label_options_aggregated)
-                        .withKeySerde(avroSerdes.ProjectPropertyLabelKey())
-                        .withValueSerde(avroSerdes.ProjectPropertyLabelOptionMapValue())
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value())
         );
         var projectPropertyLabelTable = projectPropertyLabelOptionsAggregated.mapValues(
                 (readOnlyKey, map) -> {
@@ -390,15 +394,15 @@ public class ProjectPropertyLabel {
                 .toStream(Named.as("project_property_label_table" + "-to-stream"))
                 .transform(new IdenticalRecordsFilterSupplier<>(
                         "project_property_label_identical_records_filter",
-                        avroSerdes.ProjectPropertyLabelKey(),
-                        avroSerdes.ProjectPropertyLabelValue()
+                        as.key(),
+                        as.value()
                 ));
 
         /* SINK PROCESSORS */
 
         // 8) to
         projectPropertyLabelStream.to(outputTopicNames.projectPropertyLabel(),
-                Produced.with(avroSerdes.ProjectPropertyLabelKey(), avroSerdes.ProjectPropertyLabelValue())
+                Produced.with(as.<ProjectFieldLabelKey>key(), as.<ProjectFieldLabelValue>value())
                         .withName(outputTopicNames.projectPropertyLabel() + "-producer")
         );
 
@@ -407,13 +411,13 @@ public class ProjectPropertyLabel {
     }
 
     /**
-     * pick key from ProjectPropertyLabelOptionMap and
-     * convert ProjectPropertyLabelOption to ProjectPropertyLabelValue
+     * pick key from ProjectFieldLabelOptionMap and
+     * convert ProjectPropertyLabelOption to ProjectFieldLabelValue
      * if key is not available return null
      *
-     * @param map ProjectPropertyLabelOptionMap
+     * @param map ProjectFieldLabelOptionMap
      * @param key String
-     * @return ProjectPropertyLabelValue
+     * @return ProjectFieldLabelValue
      */
     private static ProjectFieldLabelValue toValue(ProjectFieldLabelOptionMap map, String key) {
         var val = map.getMap().get(key);

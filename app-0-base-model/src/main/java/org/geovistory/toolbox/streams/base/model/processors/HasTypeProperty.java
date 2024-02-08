@@ -1,17 +1,21 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.base.model.*;
+import org.geovistory.toolbox.streams.base.model.BuilderSingleton;
+import org.geovistory.toolbox.streams.base.model.InputTopicNames;
+import org.geovistory.toolbox.streams.base.model.OutputTopicNames;
+import org.geovistory.toolbox.streams.base.model.Prop;
+import org.geovistory.toolbox.streams.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.IdenticalRecordsFilterSupplier;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,7 +23,7 @@ import java.util.List;
 public class HasTypeProperty {
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde as;
 
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
     String inPrefix;
@@ -32,18 +36,17 @@ public class HasTypeProperty {
     @Inject
     OutputTopicNames outputTopicNames;
 
-    public HasTypeProperty(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
+    public HasTypeProperty(ConfiguredAvroSerde as, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
+        this.as = as;
         this.builderSingleton = builderSingleton;
         this.inputTopicNames = inputTopicNames;
         this.outputTopicNames = outputTopicNames;
     }
 
-
     public void addProcessorsStandalone() {
         addProcessors(
                 new OntomePropertyProjected().getRegistrar(
-                        this.avroSerdes, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
+                        this.as, this.builderSingleton, this.inputTopicNames, this.outputTopicNames
                 ).kStream
         );
     }
@@ -82,8 +85,8 @@ public class HasTypeProperty {
                         .setClassId(value.getClassId()).build(),
                 Grouped.with(
                         inner.TOPICS.has_type_properties_grouped,
-                        avroSerdes.HasTypePropertyKey(),
-                        avroSerdes.HasTypePropertyGroupByValue()
+                        as.key(),
+                        as.value()
                 )
         );
         var hasTypePropertyTable = groupedByDomain.aggregate(() -> HasTypePropertyAggregateValue.newBuilder()
@@ -103,8 +106,8 @@ public class HasTypeProperty {
                     return aggregate;
                 },
                 Materialized.<HasTypePropertyKey, HasTypePropertyAggregateValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.has_type_properties_aggregated)
-                        .withKeySerde(avroSerdes.HasTypePropertyKey())
-                        .withValueSerde(avroSerdes.HasTypePropertyAggregateValue()));
+                        .withKeySerde(as.key())
+                        .withValueSerde(as.value()));
 
         var hasTypePropertyStream = hasTypePropertyTable
                 .toStream(
@@ -124,15 +127,15 @@ public class HasTypeProperty {
                 )
                 .transform(new IdenticalRecordsFilterSupplier<>(
                                 "has_type_property_suppress_duplicates",
-                                avroSerdes.HasTypePropertyKey(),
-                                avroSerdes.HasTypePropertyValue()),
+                                as.key(),
+                                as.value()),
                         Named.as("has_type_property_suppress_duplicates"));
 
         /* SINK PROCESSORS */
         hasTypePropertyStream
                 .to(
                         outputTopicNames.hasTypeProperty(),
-                        Produced.with(avroSerdes.HasTypePropertyKey(), avroSerdes.HasTypePropertyValue())
+                        Produced.with(as.<HasTypePropertyKey>key(), as.<HasTypePropertyValue>value())
                                 .withName(outputTopicNames.hasTypeProperty() + "-producer")
                 );
 
