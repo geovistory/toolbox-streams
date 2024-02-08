@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.information.dimension",
+  "namespace": "ts.information.dimension",
   "fields": [
     {
       "name": "pk_entity",
@@ -12,5 +12,5 @@
       "default": 0
     }
   ],
-  "connect.name": "dev.information.dimension.Key"
+  "connect.name": "ts.information.dimension.Key"
 }

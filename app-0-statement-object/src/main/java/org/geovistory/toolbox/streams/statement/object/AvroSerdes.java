@@ -26,8 +26,8 @@ public class AvroSerdes {
     }
 
 
-    public Serde<dev.information.statement.Key> InfStatementKey() {
-        Serde<dev.information.statement.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.statement.Key> InfStatementKey() {
+        Serde<ts.information.statement.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }

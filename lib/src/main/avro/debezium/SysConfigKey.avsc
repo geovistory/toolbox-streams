@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.system.config",
+  "namespace": "ts.system.config",
   "fields": [
     {
       "name": "pk_entity",
@@ -12,5 +12,5 @@
       "default": 0
     }
   ],
-  "connect.name": "dev.system.config.Key"
+  "connect.name": "ts.system.config.Key"
 }

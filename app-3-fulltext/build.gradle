@@ -119,8 +119,8 @@ task generateReflectionConfiguration {
                 if (x.size() > 0) {
                     var fullClassName = (line =~ p)[0][1].toString()
                     classNames.add(fullClassName + ".class")
-                    if (fullClassName.startsWith("dev.")) {
-                        var newFullName = fullClassName.replace("dev.", "stag.")
+                    if (fullClassName.startsWith("ts.")) {
+                        var newFullName = fullClassName.replace("ts.", "stag.")
                         var parts = fullClassName.split("\\.")
                         var className = parts[parts.size() - 1]
                         var newPackageName = newFullName.replace("." + className, "")

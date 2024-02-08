@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Value",
-  "namespace": "dev.projects.dfh_profile_proj_rel",
+  "namespace": "ts.projects.dfh_profile_proj_rel",
   "fields": [
     {
       "name": "pk_entity",
@@ -113,5 +113,5 @@
       "default": null
     }
   ],
-  "connect.name": "dev.projects.dfh_profile_proj_rel.Value"
+  "connect.name": "ts.projects.dfh_profile_proj_rel.Value"
 }

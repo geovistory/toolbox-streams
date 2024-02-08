@@ -22,9 +22,9 @@ class ProjectProfilesTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
 
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> profileProjectTopic;
-    private TestInputTopic<dev.system.config.Key, dev.system.config.Value> configTopic;
-    private TestInputTopic<dev.projects.project.Key, dev.projects.project.Value> projectTopic;
+    private TestInputTopic<ts.projects.dfh_profile_proj_rel.Key, ts.projects.dfh_profile_proj_rel.Value> profileProjectTopic;
+    private TestInputTopic<ts.system.config.Key, ts.system.config.Value> configTopic;
+    private TestInputTopic<ts.projects.project.Key, ts.projects.project.Value> projectTopic;
     private TestOutputTopic<ProjectProfileKey, ProjectProfileValue> outputTopic;
 
     @BeforeEach
@@ -76,20 +76,20 @@ class ProjectProfilesTest {
 
     @Test
     void testZeroProfiles() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
         assertThat(outputTopic.isEmpty()).isTrue();
     }
 
     @Test
     void testOneEnabledProfile() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var ppKey1 = new dev.projects.dfh_profile_proj_rel.Key(4);
-        var ppVal1 = dev.projects.dfh_profile_proj_rel.Value.newBuilder()
+        var ppKey1 = new ts.projects.dfh_profile_proj_rel.Key(4);
+        var ppVal1 = ts.projects.dfh_profile_proj_rel.Value.newBuilder()
                 .setFkProject(20).setFkProfile(100).setEnabled(true).build();
         profileProjectTopic.pipeInput(ppKey1, ppVal1);
 
@@ -102,12 +102,12 @@ class ProjectProfilesTest {
 
     @Test
     void testOneRequiredProfile() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+        var cKey = new ts.system.config.Key(1);
+        var cVal = ts.system.config.Value.newBuilder().setSchemaName("").setTableName("")
                 .setKey("SYS_CONFIG")
                 .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5]}}").build();
         configTopic.pipeInput(cKey, cVal);
@@ -120,12 +120,12 @@ class ProjectProfilesTest {
 
     @Test
     void testTwoEnabledAndTwoRequiredProfiles() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var ppKey = new dev.projects.dfh_profile_proj_rel.Key(4);
-        var ppVal = dev.projects.dfh_profile_proj_rel.Value.newBuilder()
+        var ppKey = new ts.projects.dfh_profile_proj_rel.Key(4);
+        var ppVal = ts.projects.dfh_profile_proj_rel.Value.newBuilder()
                 .setFkProject(20).setFkProfile(100).setEnabled(true).build();
         profileProjectTopic.pipeInput(ppKey, ppVal);
 
@@ -133,8 +133,8 @@ class ProjectProfilesTest {
         ppVal.setFkProfile(101);
         profileProjectTopic.pipeInput(ppKey, ppVal);
 
-        var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+        var cKey = new ts.system.config.Key(1);
+        var cVal = ts.system.config.Value.newBuilder().setSchemaName("").setTableName("")
                 .setKey("SYS_CONFIG")
                 .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5, 97]}}").build();
         configTopic.pipeInput(cKey, cVal);
@@ -150,12 +150,12 @@ class ProjectProfilesTest {
 
     @Test
     void testRemoveEnabledProfile() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var ppKey = new dev.projects.dfh_profile_proj_rel.Key(1);
-        var ppVal = dev.projects.dfh_profile_proj_rel.Value.newBuilder()
+        var ppKey = new ts.projects.dfh_profile_proj_rel.Key(1);
+        var ppVal = ts.projects.dfh_profile_proj_rel.Value.newBuilder()
                 .setFkProject(20).setFkProfile(100).setEnabled(true).build();
         profileProjectTopic.pipeInput(ppKey, ppVal);
 
@@ -178,12 +178,12 @@ class ProjectProfilesTest {
 
     @Test
     void testDisableEnabledProfile() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var ppKey = new dev.projects.dfh_profile_proj_rel.Key(1);
-        var ppVal = dev.projects.dfh_profile_proj_rel.Value.newBuilder()
+        var ppKey = new ts.projects.dfh_profile_proj_rel.Key(1);
+        var ppVal = ts.projects.dfh_profile_proj_rel.Value.newBuilder()
                 .setFkProject(20).setFkProfile(100).setEnabled(true).build();
         profileProjectTopic.pipeInput(ppKey, ppVal);
 
@@ -199,12 +199,12 @@ class ProjectProfilesTest {
 
     @Test
     void testRemoveRequiredProfile() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+        var cKey = new ts.system.config.Key(1);
+        var cVal = ts.system.config.Value.newBuilder().setSchemaName("").setTableName("")
                 .setKey("SYS_CONFIG")
                 .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5]}}").build();
         configTopic.pipeInput(cKey, cVal);
@@ -221,12 +221,12 @@ class ProjectProfilesTest {
     @Test
     void testRemoveProjectTombstone() {
 
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var ppKey = new dev.projects.dfh_profile_proj_rel.Key(4);
-        var ppVal = dev.projects.dfh_profile_proj_rel.Value.newBuilder()
+        var ppKey = new ts.projects.dfh_profile_proj_rel.Key(4);
+        var ppVal = ts.projects.dfh_profile_proj_rel.Value.newBuilder()
                 .setFkProject(20).setFkProfile(100).setEnabled(true).build();
         profileProjectTopic.pipeInput(ppKey, ppVal);
 
@@ -241,18 +241,18 @@ class ProjectProfilesTest {
 
     @Test
     void testDeleteSysConfig() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+        var cKey = new ts.system.config.Key(1);
+        var cVal = ts.system.config.Value.newBuilder().setSchemaName("").setTableName("")
                 .setKey("SYS_CONFIG")
                 .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5]}}").build();
         configTopic.pipeInput(cKey, cVal);
 
-        cKey = new dev.system.config.Key(1);
-        cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+        cKey = new ts.system.config.Key(1);
+        cVal = ts.system.config.Value.newBuilder().setSchemaName("").setTableName("")
                 .setKey(null)
                 .setConfig(null)
                 .setDeleted$1("true").build();
@@ -270,12 +270,12 @@ class ProjectProfilesTest {
      */
     @Test
     void testUpdateSysConfigSuppressUnchangedProfiles() {
-        var pKey = new dev.projects.project.Key(20);
-        var pVal = dev.projects.project.Value.newBuilder().build();
+        var pKey = new ts.projects.project.Key(20);
+        var pVal = ts.projects.project.Value.newBuilder().build();
         projectTopic.pipeInput(pKey, pVal);
 
-        var cKey = new dev.system.config.Key(1);
-        var cVal = dev.system.config.Value.newBuilder().setSchemaName("").setTableName("")
+        var cKey = new ts.system.config.Key(1);
+        var cVal = ts.system.config.Value.newBuilder().setSchemaName("").setTableName("")
                 .setKey("SYS_CONFIG")
                 .setConfig("{\"ontome\": {\"requiredOntomeProfiles\": [5]}}").build();
         configTopic.pipeInput(cKey, cVal);

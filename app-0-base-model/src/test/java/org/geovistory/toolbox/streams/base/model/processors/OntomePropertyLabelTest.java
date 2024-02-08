@@ -26,7 +26,7 @@ class OntomePropertyLabelTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
 
-    private TestInputTopic<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiPropertyTopic;
+    private TestInputTopic<ts.data_for_history.api_property.Key, ts.data_for_history.api_property.Value> apiPropertyTopic;
     private TestOutputTopic<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelTopic;
 
 
@@ -69,8 +69,8 @@ class OntomePropertyLabelTest {
     @Test
     void testOntoMePropertyLabel() {
         // add property with valid language
-        var apKey = new dev.data_for_history.api_property.Key(1);
-        var apVal = dev.data_for_history.api_property.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_property.Key(1);
+        var apVal = ts.data_for_history.api_property.Value.newBuilder()
                 .setDfhAncestorProperties(new ArrayList<>())
                 .setDfhParentProperties(new ArrayList<>())
                 .setDfhFkProfile(97)
@@ -103,8 +103,8 @@ class OntomePropertyLabelTest {
     void shouldOmitDuplicates() {
 
         // add property lang de
-        var apKey = new dev.data_for_history.api_property.Key(1);
-        var apVal = dev.data_for_history.api_property.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_property.Key(1);
+        var apVal = ts.data_for_history.api_property.Value.newBuilder()
                 .setDfhAncestorProperties(new ArrayList<>())
                 .setDfhParentProperties(new ArrayList<>())
                 .setDfhFkProfile(97)
@@ -119,8 +119,8 @@ class OntomePropertyLabelTest {
         apiPropertyTopic.pipeInput(apKey, apVal);
 
         // add property lang en
-        apKey = new dev.data_for_history.api_property.Key(2);
-        apVal = dev.data_for_history.api_property.Value.newBuilder()
+        apKey = new ts.data_for_history.api_property.Key(2);
+        apVal = ts.data_for_history.api_property.Value.newBuilder()
                 .setDfhAncestorProperties(new ArrayList<>())
                 .setDfhParentProperties(new ArrayList<>())
                 .setDfhFkProfile(97)

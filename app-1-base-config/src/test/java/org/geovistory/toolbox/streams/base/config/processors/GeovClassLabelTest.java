@@ -22,7 +22,7 @@ class GeovClassLabelTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
 
-    private TestInputTopic<dev.projects.text_property.Key, dev.projects.text_property.Value> textPropertyTopic;
+    private TestInputTopic<ts.projects.text_property.Key, ts.projects.text_property.Value> textPropertyTopic;
     private TestOutputTopic<GeovClassLabelKey, GeovClassLabelValue> geovClassLabelTopic;
 
 
@@ -70,8 +70,8 @@ class GeovClassLabelTest {
     @Test
     void testGeovClassLabel() {
         // add class label
-        var k = new dev.projects.text_property.Key(1);
-        var v = dev.projects.text_property.Value.newBuilder()
+        var k = new ts.projects.text_property.Key(1);
+        var v = ts.projects.text_property.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setQuillDoc("")

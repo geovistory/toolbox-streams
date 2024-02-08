@@ -23,38 +23,38 @@ public class AvroSerdes {
     }
 
 
-    public Serde<dev.projects.project.Key> ProProjectKey() {
-        Serde<dev.projects.project.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.project.Key> ProProjectKey() {
+        Serde<ts.projects.project.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.projects.project.Value> ProProjectValue() {
-        Serde<dev.projects.project.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.project.Value> ProProjectValue() {
+        Serde<ts.projects.project.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.system.config.Key> SysConfigKey() {
-        Serde<dev.system.config.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.system.config.Key> SysConfigKey() {
+        Serde<ts.system.config.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.system.config.Value> SysConfigValue() {
-        Serde<dev.system.config.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.system.config.Value> SysConfigValue() {
+        Serde<ts.system.config.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.projects.dfh_profile_proj_rel.Key> ProProfileProjRelKey() {
-        Serde<dev.projects.dfh_profile_proj_rel.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.dfh_profile_proj_rel.Key> ProProfileProjRelKey() {
+        Serde<ts.projects.dfh_profile_proj_rel.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.projects.dfh_profile_proj_rel.Value> ProProfileProjRelValue() {
-        Serde<dev.projects.dfh_profile_proj_rel.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.dfh_profile_proj_rel.Value> ProProfileProjRelValue() {
+        Serde<ts.projects.dfh_profile_proj_rel.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
@@ -178,14 +178,14 @@ public class AvroSerdes {
         return serdes;
     }
 
-    public Serde<dev.projects.text_property.Key> ProTextPropertyKey() {
-        Serde<dev.projects.text_property.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.text_property.Key> ProTextPropertyKey() {
+        Serde<ts.projects.text_property.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.projects.text_property.Value> ProTextPropertyValue() {
-        Serde<dev.projects.text_property.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.text_property.Value> ProTextPropertyValue() {
+        Serde<ts.projects.text_property.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
@@ -260,14 +260,14 @@ public class AvroSerdes {
     }
 
 
-    public Serde<dev.projects.entity_label_config.Key> ProEntityLabelConfigKey() {
-        Serde<dev.projects.entity_label_config.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.entity_label_config.Key> ProEntityLabelConfigKey() {
+        Serde<ts.projects.entity_label_config.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.projects.entity_label_config.Value> ProEntityLabelConfigValue() {
-        Serde<dev.projects.entity_label_config.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.entity_label_config.Value> ProEntityLabelConfigValue() {
+        Serde<ts.projects.entity_label_config.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }

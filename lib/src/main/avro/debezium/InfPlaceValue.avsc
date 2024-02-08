@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Value",
-  "namespace": "dev.information.place",
+  "namespace": "ts.information.place",
   "fields": [
     {
       "name": "pk_entity",
@@ -134,5 +134,5 @@
       "default": null
     }
   ],
-  "connect.name": "dev.information.place.Value"
+  "connect.name": "ts.information.place.Value"
 }

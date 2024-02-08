@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.information.time_primitive",
+  "namespace": "ts.information.time_primitive",
   "fields": [
     {
       "name": "pk_entity",
@@ -12,5 +12,5 @@
       "default": 0
     }
   ],
-  "connect.name": "dev.information.time_primitive.Key"
+  "connect.name": "ts.information.time_primitive.Key"
 }

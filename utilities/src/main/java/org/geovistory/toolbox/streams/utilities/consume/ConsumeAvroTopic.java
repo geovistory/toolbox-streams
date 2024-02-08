@@ -1,7 +1,7 @@
 package org.geovistory.toolbox.streams.utilities.consume;
 
-import dev.projects.project.Key;
-import dev.projects.project.Value;
+import ts.projects.project.Key;
+import ts.projects.project.Value;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;

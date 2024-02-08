@@ -1,8 +1,8 @@
 package org.geovistory.toolbox.streams.base.model.processors;
 
 
-import dev.data_for_history.api_class.Key;
-import dev.data_for_history.api_class.Value;
+import ts.data_for_history.api_class.Key;
+import ts.data_for_history.api_class.Value;
 import org.apache.kafka.streams.*;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassValue;
@@ -26,7 +26,7 @@ class OntomeClassProjectedTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
 
-    private TestInputTopic<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> dfhApiClassTopic;
+    private TestInputTopic<ts.data_for_history.api_class.Key, ts.data_for_history.api_class.Value> dfhApiClassTopic;
     private TestOutputTopic<OntomeClassKey, OntomeClassValue> outputTopic;
     private Topology topology;
     ProjectedTableRegistrar<
@@ -96,8 +96,8 @@ class OntomeClassProjectedTest {
     void shouldOmitDuplicates() {
 
         // add class 1
-        var apKey = new dev.data_for_history.api_class.Key(1);
-        var apVal = dev.data_for_history.api_class.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_class.Key(1);
+        var apVal = ts.data_for_history.api_class.Value.newBuilder()
                 .setDfhAncestorClasses(new ArrayList<>())
                 .setDfhParentClasses(new ArrayList<>())
                 .setDfhFkProfile(97)

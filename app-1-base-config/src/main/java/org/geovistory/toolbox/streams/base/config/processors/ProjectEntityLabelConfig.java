@@ -2,8 +2,8 @@ package org.geovistory.toolbox.streams.base.config.processors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.projects.entity_label_config.Key;
-import dev.projects.entity_label_config.Value;
+import ts.projects.entity_label_config.Key;
+import ts.projects.entity_label_config.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
@@ -154,7 +154,7 @@ public class ProjectEntityLabelConfig {
 
 
     public static class TransformSupplier implements TransformerSupplier<
-            dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value,
+            ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value,
             KeyValue<ProjectClassKey, ProjectEntityLabelConfigValue>> {
 
         private final String stateStoreName;
@@ -166,13 +166,13 @@ public class ProjectEntityLabelConfig {
         }
 
         @Override
-        public Transformer<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value, KeyValue<ProjectClassKey, ProjectEntityLabelConfigValue>> get() {
+        public Transformer<ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value, KeyValue<ProjectClassKey, ProjectEntityLabelConfigValue>> get() {
             return new ProjectEntityLabelConfig.Transform(stateStoreName);
         }
 
         @Override
         public Set<StoreBuilder<?>> stores() {
-            StoreBuilder<KeyValueStore<dev.projects.entity_label_config.Key, ProjectEntityLabelConfigValue>> keyValueStoreBuilder =
+            StoreBuilder<KeyValueStore<ts.projects.entity_label_config.Key, ProjectEntityLabelConfigValue>> keyValueStoreBuilder =
                     Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(stateStoreName),
                             avroSerdes.ProEntityLabelConfigKey(),
                             avroSerdes.ProjectEntityLabelConfigValue());
@@ -181,11 +181,11 @@ public class ProjectEntityLabelConfig {
     }
 
     public static class Transform implements Transformer<
-            dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value,
+            ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value,
             KeyValue<ProjectClassKey, ProjectEntityLabelConfigValue>> {
 
         private final String stateStoreName;
-        private KeyValueStore<dev.projects.entity_label_config.Key, ProjectEntityLabelConfigValue> kvStore;
+        private KeyValueStore<ts.projects.entity_label_config.Key, ProjectEntityLabelConfigValue> kvStore;
 
         private final ObjectMapper mapper = new ObjectMapper(); // create once, reuse
 
@@ -200,8 +200,8 @@ public class ProjectEntityLabelConfig {
 
         @Override
         public KeyValue<ProjectClassKey, ProjectEntityLabelConfigValue> transform(
-                dev.projects.entity_label_config.Key key,
-                dev.projects.entity_label_config.Value value
+                ts.projects.entity_label_config.Key key,
+                ts.projects.entity_label_config.Value value
         ) {
 
             // if the item was deleted

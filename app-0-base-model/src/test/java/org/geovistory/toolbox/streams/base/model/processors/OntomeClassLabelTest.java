@@ -26,7 +26,7 @@ class OntomeClassLabelTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
 
-    private TestInputTopic<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> apiClassTopic;
+    private TestInputTopic<ts.data_for_history.api_class.Key, ts.data_for_history.api_class.Value> apiClassTopic;
     private TestOutputTopic<OntomeClassLabelKey, OntomeClassLabelValue> ontomeClassLabelTopic;
 
 
@@ -70,8 +70,8 @@ class OntomeClassLabelTest {
     @Test
     void testOntoMeClassLabel() {
         // add class with valid language
-        var apKey = new dev.data_for_history.api_class.Key(1);
-        var apVal = dev.data_for_history.api_class.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_class.Key(1);
+        var apVal = ts.data_for_history.api_class.Value.newBuilder()
                 .setDfhAncestorClasses(new ArrayList<>())
                 .setDfhParentClasses(new ArrayList<>())
                 .setDfhFkProfile(97)
@@ -101,8 +101,8 @@ class OntomeClassLabelTest {
     void shouldOmitDuplicates() {
 
         // add class lang de
-        var apKey = new dev.data_for_history.api_class.Key(1);
-        var apVal = dev.data_for_history.api_class.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_class.Key(1);
+        var apVal = ts.data_for_history.api_class.Value.newBuilder()
                 .setDfhAncestorClasses(new ArrayList<>())
                 .setDfhParentClasses(new ArrayList<>())
                 .setDfhFkProfile(97)
@@ -113,8 +113,8 @@ class OntomeClassLabelTest {
         apiClassTopic.pipeInput(apKey, apVal);
 
         // add class lang en
-       var apKey2 = new dev.data_for_history.api_class.Key(1);
-       var apVal2 = dev.data_for_history.api_class.Value.newBuilder()
+       var apKey2 = new ts.data_for_history.api_class.Key(1);
+       var apVal2 = ts.data_for_history.api_class.Value.newBuilder()
                 .setDfhAncestorClasses(new ArrayList<>())
                 .setDfhParentClasses(new ArrayList<>())
                 .setDfhFkProfile(97)

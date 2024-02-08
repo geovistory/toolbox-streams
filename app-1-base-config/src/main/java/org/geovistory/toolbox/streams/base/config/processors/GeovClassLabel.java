@@ -45,7 +45,7 @@ public class GeovClassLabel {
     }
 
     public GeovClassLabelReturnValue addProcessors(
-            KStream<dev.projects.text_property.Key, dev.projects.text_property.Value> proTextPropertyStream
+            KStream<ts.projects.text_property.Key, ts.projects.text_property.Value> proTextPropertyStream
     ) {
 
         /* STREAM PROCESSORS */

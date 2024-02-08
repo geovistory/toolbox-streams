@@ -53,7 +53,7 @@ public class CommunityEntityLabelConfig {
 
 
     public CommunityEntityLabelConfigReturnValue addProcessors(
-            KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream
+            KStream<ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value> proEntityLabelConfigStream
     ) {
         /* STREAM PROCESSORS */
         // 2)
@@ -74,7 +74,7 @@ public class CommunityEntityLabelConfig {
 
 
     public static class TransformSupplier implements TransformerSupplier<
-            dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value,
+            ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value,
             KeyValue<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue>> {
 
         private final String stateStoreName;
@@ -86,13 +86,13 @@ public class CommunityEntityLabelConfig {
         }
 
         @Override
-        public Transformer<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value, KeyValue<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue>> get() {
+        public Transformer<ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value, KeyValue<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue>> get() {
             return new Transform(stateStoreName);
         }
 
         @Override
         public Set<StoreBuilder<?>> stores() {
-            StoreBuilder<KeyValueStore<dev.projects.entity_label_config.Key, CommunityEntityLabelConfigValue>> keyValueStoreBuilder =
+            StoreBuilder<KeyValueStore<ts.projects.entity_label_config.Key, CommunityEntityLabelConfigValue>> keyValueStoreBuilder =
                     Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(stateStoreName),
                             avroSerdes.ProEntityLabelConfigKey(),
                             avroSerdes.CommunityEntityLabelConfigValue());
@@ -101,11 +101,11 @@ public class CommunityEntityLabelConfig {
     }
 
     public static class Transform implements Transformer<
-            dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value,
+            ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value,
             KeyValue<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue>> {
 
         private final String stateStoreName;
-        private KeyValueStore<dev.projects.entity_label_config.Key, CommunityEntityLabelConfigValue> kvStore;
+        private KeyValueStore<ts.projects.entity_label_config.Key, CommunityEntityLabelConfigValue> kvStore;
 
         private final ObjectMapper mapper = new ObjectMapper(); // create once, reuse
 
@@ -120,8 +120,8 @@ public class CommunityEntityLabelConfig {
 
         @Override
         public KeyValue<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> transform(
-                dev.projects.entity_label_config.Key key,
-                dev.projects.entity_label_config.Value value
+                ts.projects.entity_label_config.Key key,
+                ts.projects.entity_label_config.Value value
         ) {
 
             // ignore non community items

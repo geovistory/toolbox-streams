@@ -21,7 +21,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     @Inject
     public BuilderSingleton builderSingleton;
 
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String prefix;
 
     RegisterInputTopic() {
@@ -33,7 +33,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     }
 
 
-    public KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceStream() {
+    public KStream<ts.information.resource.Key, ts.information.resource.Value> infResourceStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_resource.getValue()),
@@ -43,7 +43,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     }
 
 
-    public KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream() {
+    public KStream<ts.information.language.Key, ts.information.language.Value> infLanguageStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_language.getValue()),
@@ -52,7 +52,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KStream<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationStream() {
+    public KStream<ts.information.appellation.Key, ts.information.appellation.Value> infAppellationStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_appellation.getValue()),
@@ -61,7 +61,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KStream<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringStream() {
+    public KStream<ts.information.lang_string.Key, ts.information.lang_string.Value> infLangStringStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_lang_string.getValue()),
@@ -70,7 +70,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KStream<dev.information.place.Key, dev.information.place.Value> infPlaceStream() {
+    public KStream<ts.information.place.Key, ts.information.place.Value> infPlaceStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_place.getValue()),
@@ -79,7 +79,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KStream<dev.information.time_primitive.Key, dev.information.time_primitive.Value> infTimePrimitiveStream() {
+    public KStream<ts.information.time_primitive.Key, ts.information.time_primitive.Value> infTimePrimitiveStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_time_primitive.getValue()),
@@ -88,7 +88,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KStream<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionStream() {
+    public KStream<ts.information.dimension.Key, ts.information.dimension.Value> infDimensionStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_dimension.getValue()),
@@ -98,7 +98,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     }
 
 
-    public KStream<dev.data.digital.Key, dev.data.digital.Value> datDigitalStream() {
+    public KStream<ts.data.digital.Key, ts.data.digital.Value> datDigitalStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.dat_digital.getValue()),
@@ -107,7 +107,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KStream<dev.tables.cell.Key, dev.tables.cell.Value> tabCellStream() {
+    public KStream<ts.tables.cell.Key, ts.tables.cell.Value> tabCellStream() {
         return getStream(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.tab_cell.getValue()),

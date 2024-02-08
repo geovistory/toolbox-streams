@@ -58,9 +58,9 @@ public class ProjectProfiles {
     }
 
     public ProjectProfilesReturnValue addProcessors(
-            KTable<dev.projects.project.Key, dev.projects.project.Value> proProjects,
-            KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> proDfhProfileProjRels,
-            KStream<dev.system.config.Key, dev.system.config.Value> sysConfig
+            KTable<ts.projects.project.Key, ts.projects.project.Value> proProjects,
+            KTable<ts.projects.dfh_profile_proj_rel.Key, ts.projects.dfh_profile_proj_rel.Value> proDfhProfileProjRels,
+            KStream<ts.system.config.Key, ts.system.config.Value> sysConfig
     ) {
         ObjectMapper mapper = new ObjectMapper(); // create once, reuse
         String SYS_CONFIG = "SYS_CONFIG";

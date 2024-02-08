@@ -1,6 +1,6 @@
 package org.geovistory.toolbox.streams.statement.subject.processors;
 
-import dev.information.statement.Value;
+import ts.information.statement.Value;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
@@ -33,7 +33,7 @@ public class StatementSubject {
     @Inject
     public BuilderSingleton builderSingleton;
 
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String inPrefix;
     @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
     public String outPrefix;
@@ -55,7 +55,7 @@ public class StatementSubject {
     }
 
     public void addProcessors(
-            KTable<dev.information.statement.Key, Value> infStatementTable,
+            KTable<ts.information.statement.Key, Value> infStatementTable,
             KTable<NodeKey, NodeValue> nodeTable
     ) {
 
@@ -79,7 +79,7 @@ public class StatementSubject {
                     return v.build();
                 },
                 TableJoined.as(outStatementWithSubject() + "-fk-join"),
-                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(outStatementWithSubject())
+                Materialized.<ts.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as(outStatementWithSubject())
                         .withKeySerde(avroSerdes.InfStatementKey())
                         .withValueSerde(avroSerdes.StatementEnrichedValue())
         );

@@ -1,6 +1,6 @@
 package org.geovistory.toolbox.streams.utilities;
 
-import dev.projects.project.Value;
+import ts.projects.project.Value;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;

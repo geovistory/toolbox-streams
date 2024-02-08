@@ -24,7 +24,7 @@ class HasTypePropertyTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
 
-    private TestInputTopic<dev.data_for_history.api_property.Key, dev.data_for_history.api_property.Value> apiPropertyTopic;
+    private TestInputTopic<ts.data_for_history.api_property.Key, ts.data_for_history.api_property.Value> apiPropertyTopic;
     private TestOutputTopic<HasTypePropertyKey, HasTypePropertyValue> ontomePropertyLabelTopic;
 
 
@@ -68,8 +68,8 @@ class HasTypePropertyTest {
     @Test
     void testAddingThreeProperties() {
         // add has type property for class 10
-        var apKey = new dev.data_for_history.api_property.Key(1);
-        var apVal = dev.data_for_history.api_property.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_property.Key(1);
+        var apVal = ts.data_for_history.api_property.Value.newBuilder()
                 .setDfhAncestorProperties(List.of(123, Prop.HAS_TYPE.get())) // <- remark !
                 .setDfhParentProperties(new ArrayList<>())
                 .setDfhFkProfile(97)
@@ -114,8 +114,8 @@ class HasTypePropertyTest {
     @Test
     void testDisableProperty() {
         // add has type property for class 10
-        var apKey = new dev.data_for_history.api_property.Key(1);
-        var apVal = dev.data_for_history.api_property.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_property.Key(1);
+        var apVal = ts.data_for_history.api_property.Value.newBuilder()
                 .setDfhAncestorProperties(List.of(123, Prop.HAS_TYPE.get())) // <- remark !
                 .setDfhParentProperties(new ArrayList<>())
                 .setDfhFkProfile(97)

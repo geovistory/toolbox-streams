@@ -25,100 +25,100 @@ public class AvroSerdes {
     }
 
 
-    public Serde<dev.information.resource.Key> InfResourceKey() {
-        Serde<dev.information.resource.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.resource.Key> InfResourceKey() {
+        Serde<ts.information.resource.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.information.resource.Value> InfResourceValue() {
-        Serde<dev.information.resource.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.resource.Value> InfResourceValue() {
+        Serde<ts.information.resource.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
 
-    public Serde<dev.information.language.Key> InfLanguageKey() {
-        Serde<dev.information.language.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.language.Key> InfLanguageKey() {
+        Serde<ts.information.language.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
 
-    public Serde<dev.information.language.Value> InfLanguageValue() {
-        Serde<dev.information.language.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.language.Value> InfLanguageValue() {
+        Serde<ts.information.language.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.information.appellation.Key> InfAppellationKey() {
-        Serde<dev.information.appellation.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.appellation.Key> InfAppellationKey() {
+        Serde<ts.information.appellation.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.information.appellation.Value> InfAppellationValue() {
-        Serde<dev.information.appellation.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.appellation.Value> InfAppellationValue() {
+        Serde<ts.information.appellation.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.information.lang_string.Key> InfLangStringKey() {
-        Serde<dev.information.lang_string.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.lang_string.Key> InfLangStringKey() {
+        Serde<ts.information.lang_string.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.information.lang_string.Value> InfLangStringValue() {
-        Serde<dev.information.lang_string.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.lang_string.Value> InfLangStringValue() {
+        Serde<ts.information.lang_string.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.information.place.Key> InfPlaceKey() {
-        Serde<dev.information.place.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.place.Key> InfPlaceKey() {
+        Serde<ts.information.place.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.information.place.Value> InfPlaceValue() {
-        Serde<dev.information.place.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.place.Value> InfPlaceValue() {
+        Serde<ts.information.place.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.information.time_primitive.Key> InfTimePrimitiveKey() {
-        Serde<dev.information.time_primitive.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.time_primitive.Key> InfTimePrimitiveKey() {
+        Serde<ts.information.time_primitive.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.information.time_primitive.Value> InfTimePrimitiveValue() {
-        Serde<dev.information.time_primitive.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.time_primitive.Value> InfTimePrimitiveValue() {
+        Serde<ts.information.time_primitive.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.information.dimension.Key> InfDimensionKey() {
-        Serde<dev.information.dimension.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.dimension.Key> InfDimensionKey() {
+        Serde<ts.information.dimension.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.information.dimension.Value> InfDimensionValue() {
-        Serde<dev.information.dimension.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.dimension.Value> InfDimensionValue() {
+        Serde<ts.information.dimension.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.information.statement.Key> InfStatementKey() {
-        Serde<dev.information.statement.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.statement.Key> InfStatementKey() {
+        Serde<ts.information.statement.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.information.statement.Value> InfStatementValue() {
-        Serde<dev.information.statement.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.statement.Value> InfStatementValue() {
+        Serde<ts.information.statement.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
@@ -135,26 +135,26 @@ public class AvroSerdes {
         return serdes;
     }
 
-    public Serde<dev.data.digital.Key> DatDigitalKey() {
-        Serde<dev.data.digital.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.data.digital.Key> DatDigitalKey() {
+        Serde<ts.data.digital.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.data.digital.Value> DatDigitalValue() {
-        Serde<dev.data.digital.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.data.digital.Value> DatDigitalValue() {
+        Serde<ts.data.digital.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.tables.cell.Key> TabCellKey() {
-        Serde<dev.tables.cell.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.tables.cell.Key> TabCellKey() {
+        Serde<ts.tables.cell.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.tables.cell.Value> TabCellValue() {
-        Serde<dev.tables.cell.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.tables.cell.Value> TabCellValue() {
+        Serde<ts.tables.cell.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }

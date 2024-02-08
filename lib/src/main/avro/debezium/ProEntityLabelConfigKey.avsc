@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.projects.entity_label_config",
+  "namespace": "ts.projects.entity_label_config",
   "fields": [
     {
       "name": "pk_entity",
@@ -12,5 +12,5 @@
       "default": 0
     }
   ],
-  "connect.name": "dev.projects.entity_label_config.Key"
+  "connect.name": "ts.projects.entity_label_config.Key"
 }

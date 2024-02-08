@@ -48,7 +48,7 @@ public class ProjectPropertyLabel {
     }
 
     public ProjectPropertyLabelReturnValue addProcessors(
-            KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable,
+            KTable<ts.projects.project.Key, ts.projects.project.Value> proProjectTable,
             KStream<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelStream,
             KStream<GeovPropertyLabelKey, GeovPropertyLabelValue> geovPropertyLabelStream,
             KStream<ProjectPropertyKey, ProjectPropertyValue> projectPropertyStream
@@ -81,7 +81,7 @@ public class ProjectPropertyLabel {
         // 2)
         var projectPropertyLanguage = projectPropertyTable.join(
                 proProjectTable,
-                projectPropertyValue -> dev.projects.project.Key.newBuilder().setPkEntity(projectPropertyValue.getProjectId()).build(),
+                projectPropertyValue -> ts.projects.project.Key.newBuilder().setPkEntity(projectPropertyValue.getProjectId()).build(),
                 (value1, value2) -> ProjectPropertyLanguageValue.newBuilder()
                         .setProjectId(value1.getProjectId())
                         .setDomainId(value1.getDomainId())

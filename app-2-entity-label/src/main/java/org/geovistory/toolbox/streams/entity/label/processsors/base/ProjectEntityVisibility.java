@@ -48,8 +48,8 @@ public class ProjectEntityVisibility {
     }
 
     public ProjectEntityVisibilityReturnValue addProcessors(
-            KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
-            KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable) {
+            KTable<ts.information.resource.Key, ts.information.resource.Value> infResourceTable,
+            KTable<ts.projects.info_proj_rel.Key, ts.projects.info_proj_rel.Value> proInfoProjRelTable) {
 
         var mapper = new ObjectMapper();
 
@@ -58,7 +58,7 @@ public class ProjectEntityVisibility {
         // https://stackoverflow.com/questions/62884230/ktable-ktable-foreign-key-join-not-producing-all-messages-when-topics-have-more
         var projectEntityJoin = proInfoProjRelTable.join(
                 infResourceTable,
-                value -> dev.information.resource.Key.newBuilder()
+                value -> ts.information.resource.Key.newBuilder()
                         .setPkEntity(value.getFkEntity())
                         .build(),
                 (value1, value2) -> {
@@ -92,7 +92,7 @@ public class ProjectEntityVisibility {
                             .build();
                 },
                 TableJoined.as(inner.TOPICS.project_entity_visibilty_join + "-fk-join"),
-                Materialized.<dev.projects.info_proj_rel.Key, ProjectEntityVisibilityValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_visibilty_join)
+                Materialized.<ts.projects.info_proj_rel.Key, ProjectEntityVisibilityValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_visibilty_join)
                         .withKeySerde(avroSerdes.ProInfoProjRelKey())
                         .withValueSerde(avroSerdes.ProjectEntityVisibilityValue())
         );

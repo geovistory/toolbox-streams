@@ -32,7 +32,7 @@ public class Nodes {
     @Inject
     public BuilderSingleton builderSingleton;
 
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String inPrefix;
     @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
     public String outPrefix;
@@ -60,16 +60,16 @@ public class Nodes {
     }
 
     public void addProcessors(
-            KStream<dev.information.resource.Key, dev.information.resource.Value> infResourceTable,
+            KStream<ts.information.resource.Key, ts.information.resource.Value> infResourceTable,
 
-            KStream<dev.information.language.Key, dev.information.language.Value> infLanguageStream,
-            KStream<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationStream,
-            KStream<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringStream,
-            KStream<dev.information.place.Key, dev.information.place.Value> infPlaceStream,
-            KStream<dev.information.time_primitive.Key, dev.information.time_primitive.Value> infTimePrimitiveStream,
-            KStream<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionStream,
-            KStream<dev.data.digital.Key, dev.data.digital.Value> datDigitalStream,
-            KStream<dev.tables.cell.Key, dev.tables.cell.Value> tabCellStream
+            KStream<ts.information.language.Key, ts.information.language.Value> infLanguageStream,
+            KStream<ts.information.appellation.Key, ts.information.appellation.Value> infAppellationStream,
+            KStream<ts.information.lang_string.Key, ts.information.lang_string.Value> infLangStringStream,
+            KStream<ts.information.place.Key, ts.information.place.Value> infPlaceStream,
+            KStream<ts.information.time_primitive.Key, ts.information.time_primitive.Value> infTimePrimitiveStream,
+            KStream<ts.information.dimension.Key, ts.information.dimension.Value> infDimensionStream,
+            KStream<ts.data.digital.Key, ts.data.digital.Value> datDigitalStream,
+            KStream<ts.tables.cell.Key, ts.tables.cell.Value> tabCellStream
 
 
     ) {
@@ -259,7 +259,7 @@ public class Nodes {
      * @param infEntity the value from the database
      * @return a projected, more lightweight, value
      */
-    private Entity tranformEntity(dev.information.resource.Value infEntity) {
+    private Entity tranformEntity(ts.information.resource.Value infEntity) {
         var communityCanSeeInToolbox = false;
         var communityCanSeeInDataApi = false;
         var communityCanSeeInWebsite = false;
@@ -287,7 +287,7 @@ public class Nodes {
      * @param infAppellation the value from the database
      * @return a projected, more lightweight, value
      */
-    private static Appellation tranformAppellation(dev.information.appellation.Value infAppellation) {
+    private static Appellation tranformAppellation(ts.information.appellation.Value infAppellation) {
         return Appellation.newBuilder()
                 .setPkEntity(infAppellation.getPkEntity())
                 .setFkClass(infAppellation.getFkClass())
@@ -300,7 +300,7 @@ public class Nodes {
      * @param tabCell the value from the database
      * @return a projected, more lightweight, value
      */
-    private static Cell tranformCell(dev.tables.cell.Value tabCell) {
+    private static Cell tranformCell(ts.tables.cell.Value tabCell) {
         return Cell.newBuilder()
                 .setPkCell(tabCell.getPkCell())
                 .setFkClass(tabCell.getFkClass())
@@ -317,7 +317,7 @@ public class Nodes {
      * @param datDigital the value from the database
      * @return a projected, more lightweight, value
      */
-    private static Digital tranformDigital(dev.data.digital.Value datDigital) {
+    private static Digital tranformDigital(ts.data.digital.Value datDigital) {
         return Digital.newBuilder()
                 .setPkEntity(datDigital.getPkEntity())
                 .setFkNamespace(datDigital.getFkNamespace())
@@ -329,7 +329,7 @@ public class Nodes {
      * @param infDimension the value from the database
      * @return a projected, more lightweight, value
      */
-    private static Dimension tranformDimension(dev.information.dimension.Value infDimension) {
+    private static Dimension tranformDimension(ts.information.dimension.Value infDimension) {
         return Dimension.newBuilder()
                 .setPkEntity(infDimension.getPkEntity())
                 .setFkClass(infDimension.getFkClass())
@@ -343,7 +343,7 @@ public class Nodes {
      * @param infLangString the value from the database
      * @return a projected, more lightweight, value
      */
-    private static LangString tranformLangString(dev.information.lang_string.Value infLangString) {
+    private static LangString tranformLangString(ts.information.lang_string.Value infLangString) {
         return LangString.newBuilder()
                 .setPkEntity(infLangString.getPkEntity())
                 .setFkClass(infLangString.getFkClass())
@@ -356,7 +356,7 @@ public class Nodes {
      * @param infLanguage the value from the database
      * @return a projected, more lightweight, value
      */
-    private static Language tranformLanguage(dev.information.language.Value infLanguage) {
+    private static Language tranformLanguage(ts.information.language.Value infLanguage) {
         return Language.newBuilder()
                 .setPkEntity(infLanguage.getPkEntity())
                 .setFkClass(infLanguage.getFkClass())
@@ -373,7 +373,7 @@ public class Nodes {
      * @param infPlace the value from the database
      * @return a projected, more lightweight, value
      */
-    private static Place tranformPlace(dev.information.place.Value infPlace) {
+    private static Place tranformPlace(ts.information.place.Value infPlace) {
         return Place.newBuilder()
                 .setPkEntity(infPlace.getPkEntity())
                 .setFkClass(infPlace.getFkClass())
@@ -385,7 +385,7 @@ public class Nodes {
      * @param infTimePrimitive the value from the database
      * @return a projected, more lightweight, value
      */
-    private static TimePrimitive tranformTimePrimitive(dev.information.time_primitive.Value infTimePrimitive) {
+    private static TimePrimitive tranformTimePrimitive(ts.information.time_primitive.Value infTimePrimitive) {
         return TimePrimitive.newBuilder()
                 .setPkEntity(infTimePrimitive.getPkEntity())
                 .setFkClass(infTimePrimitive.getFkClass())

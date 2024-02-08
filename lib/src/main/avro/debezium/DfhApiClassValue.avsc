@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Value",
-  "namespace": "dev.data_for_history.api_class",
+  "namespace": "ts.data_for_history.api_class",
   "fields": [
     {
       "name": "pk_entity",
@@ -288,5 +288,5 @@
       "default": null
     }
   ],
-  "connect.name": "dev.data_for_history.api_class.Value"
+  "connect.name": "ts.data_for_history.api_class.Value"
 }
