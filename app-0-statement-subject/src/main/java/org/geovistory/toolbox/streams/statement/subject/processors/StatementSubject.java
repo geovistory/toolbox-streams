@@ -35,7 +35,7 @@ public class StatementSubject {
 
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String inPrefix;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "ts")
     public String outPrefix;
     @ConfigProperty(name = "create.output.for.postgres", defaultValue = "false")
     public String createOutputForPostgres;

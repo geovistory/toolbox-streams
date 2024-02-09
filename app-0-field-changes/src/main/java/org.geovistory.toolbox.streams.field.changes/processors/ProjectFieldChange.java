@@ -28,7 +28,7 @@ public class ProjectFieldChange {
 
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String inPrefix;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "ts")
     public String outPrefix;
 
     public ProjectFieldChange(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic) {

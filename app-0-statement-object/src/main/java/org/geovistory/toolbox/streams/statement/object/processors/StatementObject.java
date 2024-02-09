@@ -31,7 +31,7 @@ public class StatementObject {
     RegisterInputTopic registerInputTopic;
     @Inject
     public BuilderSingleton builderSingleton;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "ts")
     public String outPrefix;
     @ConfigProperty(name = "create.output.for.postgres", defaultValue = "false")
     public String createOutputForPostgres;
