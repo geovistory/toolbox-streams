@@ -27,7 +27,7 @@ class OntomeClassMetadataTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
 
-    private TestInputTopic<dev.data_for_history.api_class.Key, dev.data_for_history.api_class.Value> apiClassTopic;
+    private TestInputTopic<ts.data_for_history.api_class.Key, ts.data_for_history.api_class.Value> apiClassTopic;
     private TestOutputTopic<OntomeClassKey, OntomeClassMetadataValue> outputTopic;
 
 
@@ -73,8 +73,8 @@ class OntomeClassMetadataTest {
         var ancestorClasses = List.of(4, 5, 6);
 
         // add class
-        var apKey = new dev.data_for_history.api_class.Key(1);
-        var apVal = dev.data_for_history.api_class.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_class.Key(1);
+        var apVal = ts.data_for_history.api_class.Value.newBuilder()
                 .setDfhPkClass(44)
                 .setDfhParentClasses(parentClasses)
                 .setDfhAncestorClasses(new ArrayList<>())
@@ -101,8 +101,8 @@ class OntomeClassMetadataTest {
         var ancestorClasses = List.of(4, 5, 6);
 
         // add class 1
-        var apKey = new dev.data_for_history.api_class.Key(1);
-        var apVal = dev.data_for_history.api_class.Value.newBuilder()
+        var apKey = new ts.data_for_history.api_class.Key(1);
+        var apVal = ts.data_for_history.api_class.Value.newBuilder()
                 .setDfhAncestorClasses(ancestorClasses)
                 .setDfhParentClasses(parentClasses)
                 .setDfhFkProfile(97)

@@ -29,7 +29,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         this.inputTopicNames = inputTopicNames;
     }
 
-    public KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable() {
+    public KTable<ts.projects.info_proj_rel.Key, ts.projects.info_proj_rel.Value> proInfoProjRelTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 inputTopicNames.proInfoProjRel(),
@@ -39,7 +39,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     }
 
 
-    public KTable<dev.information.resource.Key, dev.information.resource.Value> infResourceTable() {
+    public KTable<ts.information.resource.Key, ts.information.resource.Value> infResourceTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 inputTopicNames.infResource(),
@@ -49,14 +49,14 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     }
 
 
-    public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTable() {
+    public KTable<ts.information.statement.Key, StatementEnrichedValue> statementWithLiteralTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 inputTopicNames.getStatementWithLiteral(),
                 avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue());
     }
 
-    public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithEntityTable() {
+    public KTable<ts.information.statement.Key, StatementEnrichedValue> statementWithEntityTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 inputTopicNames.getStatementWithEntity(),

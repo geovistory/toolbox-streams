@@ -21,7 +21,7 @@ class CommuntiyEntityLabelConfigTest {
     private static final String SCHEMA_REGISTRY_SCOPE = CommuntiyEntityLabelConfigTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigTopic;
+    private TestInputTopic<ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value> proEntityLabelConfigTopic;
     private TestOutputTopic<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> outputTopic;
 
     @BeforeEach
@@ -68,7 +68,7 @@ class CommuntiyEntityLabelConfigTest {
     void testRecords() {
         var classId = 12;
         // add entity label configs of default project
-        var kR = dev.projects.entity_label_config.Key.newBuilder()
+        var kR = ts.projects.entity_label_config.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var config = EntityLabelConfig.newBuilder()
@@ -86,7 +86,7 @@ class CommuntiyEntityLabelConfigTest {
                 ))
                 .build()
                 .toString();
-        var vR = dev.projects.entity_label_config.Value.newBuilder()
+        var vR = ts.projects.entity_label_config.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -115,7 +115,7 @@ class CommuntiyEntityLabelConfigTest {
     void testDeleteRecord() {
         var classId = 12;
         // add entity label configs of default project
-        var kR = dev.projects.entity_label_config.Key.newBuilder()
+        var kR = ts.projects.entity_label_config.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var config = EntityLabelConfig.newBuilder()
@@ -133,7 +133,7 @@ class CommuntiyEntityLabelConfigTest {
                 ))
                 .build()
                 .toString();
-        var vR = dev.projects.entity_label_config.Value.newBuilder()
+        var vR = ts.projects.entity_label_config.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -145,7 +145,7 @@ class CommuntiyEntityLabelConfigTest {
         proEntityLabelConfigTopic.pipeInput(kR, vR);
 
         // mimic Debezium delete.handling.mode=rewrite
-        var vRewrite = dev.projects.entity_label_config.Value.newBuilder()
+        var vRewrite = ts.projects.entity_label_config.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(null)

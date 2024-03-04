@@ -1,7 +1,7 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
-import dev.projects.text_property.Key;
-import dev.projects.text_property.Value;
+import ts.projects.text_property.Key;
+import ts.projects.text_property.Value;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Named;

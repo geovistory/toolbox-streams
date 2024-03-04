@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.information.lang_string",
+  "namespace": "ts.information.lang_string",
   "fields": [
     {
       "name": "pk_entity",
@@ -12,5 +12,5 @@
       "default": 0
     }
   ],
-  "connect.name": "dev.information.lang_string.Key"
+  "connect.name": "ts.information.lang_string.Key"
 }

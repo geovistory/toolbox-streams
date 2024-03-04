@@ -7,7 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class OutputTopicNames {
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "ts")
     public String outPrefix;
 
     public final String projectProfile() {

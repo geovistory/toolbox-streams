@@ -23,8 +23,8 @@ class ProjectStatementWithEntityTest {
     private static final String SCHEMA_REGISTRY_SCOPE = ProjectStatementWithEntityTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> infStatementTopic;
-    private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
+    private TestInputTopic<ts.information.statement.Key, StatementEnrichedValue> infStatementTopic;
+    private TestInputTopic<ts.projects.info_proj_rel.Key, ts.projects.info_proj_rel.Value> proInfoProjRelTopic;
     private TestOutputTopic<ProjectStatementKey, ProjectStatementValue> outputTopic;
 
     @BeforeEach
@@ -76,11 +76,11 @@ class ProjectStatementWithEntityTest {
         var statementId = 20;
         var propertyId = 30;
         // add relation between project and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -91,7 +91,7 @@ class ProjectStatementWithEntityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement
-        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var kE = ts.information.statement.Key.newBuilder().setPkEntity(statementId).build();
         var vE = StatementEnrichedValue.newBuilder()
                 .setSubjectId("i" + 1)
                 .setPropertyId(propertyId)
@@ -117,11 +117,11 @@ class ProjectStatementWithEntityTest {
         var statementId = 20;
         var propertyId = 30;
         // add relation between project and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -132,7 +132,7 @@ class ProjectStatementWithEntityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement
-        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var kE = ts.information.statement.Key.newBuilder().setPkEntity(statementId).build();
         var vE = StatementEnrichedValue.newBuilder()
                 .setSubjectId("i" + 1)
                 .setPropertyId(propertyId)
@@ -162,11 +162,11 @@ class ProjectStatementWithEntityTest {
         var statementId = 20;
         var propertyId = 30;
         // add relation between project and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -177,7 +177,7 @@ class ProjectStatementWithEntityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement
-        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var kE = ts.information.statement.Key.newBuilder().setPkEntity(statementId).build();
         var vE = StatementEnrichedValue.newBuilder()
                 .setSubjectId("i" + 1)
                 .setPropertyId(propertyId)
@@ -206,11 +206,11 @@ class ProjectStatementWithEntityTest {
         var statementId = 20;
         var propertyId = 30;
         // add relation between project and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -221,7 +221,7 @@ class ProjectStatementWithEntityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement
-        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var kE = ts.information.statement.Key.newBuilder().setPkEntity(statementId).build();
         var vE = StatementEnrichedValue.newBuilder()
                 .setSubjectId("i" + 1)
                 .setPropertyId(propertyId)
@@ -252,11 +252,11 @@ class ProjectStatementWithEntityTest {
         var propertyId = 30;
 
         // add relation between project one and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectOneId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -267,11 +267,11 @@ class ProjectStatementWithEntityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add relation between project two and statement
-        kR = dev.projects.info_proj_rel.Key.newBuilder()
+        kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectTwoId)
                 .build();
-        vR = dev.projects.info_proj_rel.Value.newBuilder()
+        vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -282,7 +282,7 @@ class ProjectStatementWithEntityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement
-        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var kE = ts.information.statement.Key.newBuilder().setPkEntity(statementId).build();
         var vE = StatementEnrichedValue.newBuilder()
                 .setSubjectId("i" + 1)
                 .setPropertyId(propertyId)

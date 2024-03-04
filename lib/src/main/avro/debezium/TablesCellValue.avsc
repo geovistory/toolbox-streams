@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Value",
-  "namespace": "dev.tables.cell",
+  "namespace": "ts.tables.cell",
   "fields": [
     {
       "name": "pk_cell",
@@ -169,5 +169,5 @@
       "default": null
     }
   ],
-  "connect.name": "dev.tables.cell.Value"
+  "connect.name": "ts.tables.cell.Value"
 }

@@ -31,7 +31,7 @@ public class StatementObject {
     RegisterInputTopic registerInputTopic;
     @Inject
     public BuilderSingleton builderSingleton;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "ts")
     public String outPrefix;
     @ConfigProperty(name = "create.output.for.postgres", defaultValue = "false")
     public String createOutputForPostgres;
@@ -49,7 +49,7 @@ public class StatementObject {
     }
 
     public void addProcessors(
-            KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithSubject,
+            KTable<ts.information.statement.Key, StatementEnrichedValue> statementWithSubject,
             KTable<NodeKey, NodeValue> nodeTable
     ) {
 
@@ -68,7 +68,7 @@ public class StatementObject {
                     return statementEnrichedValue;
                 },
                 TableJoined.as("statement_with_object" + "-fk-join"),
-                Materialized.<dev.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as("statement_with_object")
+                Materialized.<ts.information.statement.Key, StatementEnrichedValue, KeyValueStore<Bytes, byte[]>>as("statement_with_object")
                         .withKeySerde(avroSerdes.InfStatementKey())
                         .withValueSerde(avroSerdes.StatementEnrichedValue())
         );
@@ -80,7 +80,7 @@ public class StatementObject {
                         avroSerdes.InfStatementKey(), avroSerdes.StatementEnrichedValue()
                 ));
 
-        Map<String, KStream<dev.information.statement.Key, StatementEnrichedValue>> branches =
+        Map<String, KStream<ts.information.statement.Key, StatementEnrichedValue>> branches =
                 stream.split(Named.as("Branch-"))
                         .branch((key, value) -> value != null && value.getObject().getEntity() != null,  /* first predicate  */
                                 Branched.as("Entity"))

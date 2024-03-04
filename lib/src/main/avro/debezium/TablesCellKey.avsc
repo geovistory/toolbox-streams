@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.tables.cell",
+  "namespace": "ts.tables.cell",
   "fields": [
     {
       "name": "pk_cell",
@@ -12,5 +12,5 @@
       "default": 0
     }
   ],
-  "connect.name": "dev.tables.cell.Key"
+  "connect.name": "ts.tables.cell.Key"
 }

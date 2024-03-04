@@ -44,7 +44,7 @@ public class ProjectCustomRdfsLabels {
     }
 
     public ProjectRdfReturnValue addProcessors(
-            KStream<dev.projects.project.Key, dev.projects.project.Value> projectStream
+            KStream<ts.projects.project.Key, ts.projects.project.Value> projectStream
     ) {
 
         /* STREAM PROCESSORS */

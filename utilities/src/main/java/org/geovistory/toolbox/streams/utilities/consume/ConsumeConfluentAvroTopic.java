@@ -1,7 +1,7 @@
 package org.geovistory.toolbox.streams.utilities.consume;
 
-import dev.information.place.Key;
-import dev.information.place.Value;
+import ts.information.place.Key;
+import ts.information.place.Value;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import org.apache.kafka.clients.CommonClientConfigs;

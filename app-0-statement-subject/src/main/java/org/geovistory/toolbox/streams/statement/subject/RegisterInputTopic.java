@@ -22,7 +22,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     @Inject
     public BuilderSingleton builderSingleton;
 
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String prefix;
     @ConfigProperty(name = "ts.topic.nodes")
     public String tsTopicNodes = "nodes";
@@ -35,7 +35,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         this.builderSingleton = builderSingleton;
     }
 
-    public KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable() {
+    public KTable<ts.information.statement.Key, ts.information.statement.Value> infStatementTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_statement.getValue()),

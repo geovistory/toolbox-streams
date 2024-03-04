@@ -48,15 +48,15 @@ public class ProjectStatementWithLiteral {
     }
 
     public ProjectStatementReturnValue addProcessors(
-            KTable<dev.information.statement.Key, StatementEnrichedValue> enrichedStatementTable,
-            KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable) {
+            KTable<ts.information.statement.Key, StatementEnrichedValue> enrichedStatementTable,
+            KTable<ts.projects.info_proj_rel.Key, ts.projects.info_proj_rel.Value> proInfoProjRelTable) {
 
 
         /* STREAM PROCESSORS */
         // 2)
         var projectStatementJoin = proInfoProjRelTable.join(
                 enrichedStatementTable,
-                value -> dev.information.statement.Key.newBuilder()
+                value -> ts.information.statement.Key.newBuilder()
                         .setPkEntity(value.getFkEntity())
                         .build(),
                 (projectRelation, statementEnriched) -> {
@@ -78,7 +78,7 @@ public class ProjectStatementWithLiteral {
                             .build();
                 },
                 TableJoined.as(inner.TOPICS.project_statement_with_literal_join + "-fk-join"),
-                Materialized.<dev.projects.info_proj_rel.Key, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_with_literal_join)
+                Materialized.<ts.projects.info_proj_rel.Key, ProjectStatementValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_with_literal_join)
                         .withKeySerde(avroSerdes.ProInfoProjRelKey())
                         .withValueSerde(avroSerdes.ProjectStatementValue())
         );

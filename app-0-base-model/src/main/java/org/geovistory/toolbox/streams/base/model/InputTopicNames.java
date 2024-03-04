@@ -9,7 +9,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class InputTopicNames {
 
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String prefix;
     public String dfhApiProperty() {
         return Utils.prefixedIn(prefix, TopicNameEnum.dfh_api_property.getValue());

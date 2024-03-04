@@ -84,8 +84,8 @@ private static void refactorAvroNamespaces(String directoryPath, String prefix) 
                     var myFile = new File(filePath.toString())
                     def fileText = myFile.text
 
-                    var newText = fileText.replace("\"namespace\": \"dev.", "\"namespace\": \"" + prefix + ".")
-                    newText = newText.replace("\"connect.name\": \"dev.", "\"connect.name\": \"" + prefix + ".")
+                    var newText = fileText.replace("\"namespace\": \"ts.", "\"namespace\": \"" + prefix + ".")
+                    newText = newText.replace("\"connect.name\": \"ts.", "\"connect.name\": \"" + prefix + ".")
 
                     myFile.write(newText)
                 })

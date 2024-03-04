@@ -34,7 +34,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     }
 
 
-    public KStream<dev.projects.text_property.Key, dev.projects.text_property.Value> proTextPropertyStream() {
+    public KStream<ts.projects.text_property.Key, ts.projects.text_property.Value> proTextPropertyStream() {
         return getRepartitionedStream(
                 builderSingleton.builder,
                 inputTopicNames.proTextProperty(),
@@ -43,7 +43,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KTable<dev.projects.dfh_profile_proj_rel.Key, dev.projects.dfh_profile_proj_rel.Value> proProfileProjRelTable() {
+    public KTable<ts.projects.dfh_profile_proj_rel.Key, ts.projects.dfh_profile_proj_rel.Value> proProfileProjRelTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 inputTopicNames.proProfileProjRel(),
@@ -53,7 +53,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     }
 
 
-    public KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable() {
+    public KTable<ts.projects.project.Key, ts.projects.project.Value> proProjectTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 inputTopicNames.proProject(),
@@ -62,7 +62,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KStream<dev.system.config.Key, dev.system.config.Value> sysConfigStream() {
+    public KStream<ts.system.config.Key, ts.system.config.Value> sysConfigStream() {
         return getRepartitionedStream(
                 builderSingleton.builder,
                 inputTopicNames.sysConfig(),
@@ -71,7 +71,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KStream<dev.projects.entity_label_config.Key, dev.projects.entity_label_config.Value> proEntityLabelConfigStream() {
+    public KStream<ts.projects.entity_label_config.Key, ts.projects.entity_label_config.Value> proEntityLabelConfigStream() {
         return getStream(
                 builderSingleton.builder,
                 inputTopicNames.proEntityLabelConfig(),

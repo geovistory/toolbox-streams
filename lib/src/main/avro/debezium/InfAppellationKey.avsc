@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.information.appellation",
+  "namespace": "ts.information.appellation",
   "fields": [
     {
       "name": "pk_entity",
@@ -12,5 +12,5 @@
       "default": 0
     }
   ],
-  "connect.name": "dev.information.appellation.Key"
+  "connect.name": "ts.information.appellation.Key"
 }

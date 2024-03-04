@@ -1,7 +1,7 @@
 package org.geovistory.toolbox.streams.field.changes;
 
-import dev.projects.info_proj_rel.Key;
-import dev.projects.info_proj_rel.Value;
+import ts.projects.info_proj_rel.Key;
+import ts.projects.info_proj_rel.Value;
 import org.apache.kafka.streams.kstream.KTable;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.lib.TopicNameEnum;
@@ -21,7 +21,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     @Inject
     public BuilderSingleton builderSingleton;
 
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String prefix;
 
     RegisterInputTopic() {
@@ -41,7 +41,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         );
     }
 
-    public KTable<dev.information.statement.Key, dev.information.statement.Value> infStatementTable() {
+    public KTable<ts.information.statement.Key, ts.information.statement.Value> infStatementTable() {
         return getRepartitionedTable(
                 builderSingleton.builder,
                 prefixedIn(prefix, TopicNameEnum.inf_statement.getValue()),

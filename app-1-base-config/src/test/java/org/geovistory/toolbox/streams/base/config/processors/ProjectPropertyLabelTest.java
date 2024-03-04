@@ -23,7 +23,7 @@ class ProjectPropertyLabelTest {
     private TestInputTopic<OntomePropertyLabelKey, OntomePropertyLabelValue> ontomePropertyLabelTopic;
     private TestInputTopic<GeovPropertyLabelKey, GeovPropertyLabelValue> geovPropertyLabelTopic;
     private TestInputTopic<ProjectPropertyKey, ProjectPropertyValue> projectPropertyTopic;
-    private TestInputTopic<dev.projects.project.Key, dev.projects.project.Value> projectTopic;
+    private TestInputTopic<ts.projects.project.Key, ts.projects.project.Value> projectTopic;
     private TestOutputTopic<ProjectFieldLabelKey, ProjectFieldLabelValue> outputTopic;
 
 
@@ -87,10 +87,10 @@ class ProjectPropertyLabelTest {
         int rangeId = 11;
         int projectId = 20;
         // add project
-        var kP = dev.projects.project.Key.newBuilder()
+        var kP = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var vP = dev.projects.project.Value.newBuilder()
+        var vP = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
@@ -234,10 +234,10 @@ class ProjectPropertyLabelTest {
         int rangeId = 11;
         int projectId = 20;
         // add project
-        var kP = dev.projects.project.Key.newBuilder()
+        var kP = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var vP = dev.projects.project.Value.newBuilder()
+        var vP = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
@@ -364,10 +364,10 @@ class ProjectPropertyLabelTest {
         int rangeId = 11;
         int projectId = 20;
         // add project
-        var kP = dev.projects.project.Key.newBuilder()
+        var kP = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var vP = dev.projects.project.Value.newBuilder()
+        var vP = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
@@ -475,10 +475,10 @@ class ProjectPropertyLabelTest {
         int rangeId = 11;
         int projectId = 20;
         // add project
-        var kP = dev.projects.project.Key.newBuilder()
+        var kP = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var vP = dev.projects.project.Value.newBuilder()
+        var vP = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
@@ -573,10 +573,10 @@ class ProjectPropertyLabelTest {
         int rangeId = 11;
         int projectId = 20;
         // add project
-        var kP = dev.projects.project.Key.newBuilder()
+        var kP = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var vP = dev.projects.project.Value.newBuilder()
+        var vP = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);
@@ -654,10 +654,10 @@ class ProjectPropertyLabelTest {
         int rangeId = 11;
         int projectId = 20;
         // add project
-        var kP = dev.projects.project.Key.newBuilder()
+        var kP = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var vP = dev.projects.project.Value.newBuilder()
+        var vP = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.DE.get())
                 .build();
         projectTopic.pipeInput(kP, vP);

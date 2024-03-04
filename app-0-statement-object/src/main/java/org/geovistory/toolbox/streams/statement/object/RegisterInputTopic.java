@@ -45,7 +45,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
                 avroSerdes.NodeValue()
         );
     }
-    public KTable<dev.information.statement.Key, StatementEnrichedValue> statementWithSubjectTable() {
+    public KTable<ts.information.statement.Key, StatementEnrichedValue> statementWithSubjectTable() {
         return getTable(
                 builderSingleton.builder,
                 tsTopicStatementWithSubject,

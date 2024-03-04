@@ -46,7 +46,7 @@ public class ProjectClassLabel {
     }
 
     public ProjectClassLabelReturnValue addProcessors(
-            KTable<dev.projects.project.Key, dev.projects.project.Value> proProjectTable,
+            KTable<ts.projects.project.Key, ts.projects.project.Value> proProjectTable,
             KStream<OntomeClassLabelKey, OntomeClassLabelValue> ontomeClassLabelStream,
             KStream<GeovClassLabelKey, GeovClassLabelValue> geovClassLabelStream,
             KStream<ProjectClassKey, ProjectClassValue> projectClassStream
@@ -70,7 +70,7 @@ public class ProjectClassLabel {
         // 2)
         var projectClassLanguage = projectClassTable.join(
                 proProjectTable,
-                projectClassValue -> dev.projects.project.Key.newBuilder().setPkEntity(projectClassValue.getProjectId()).build(),
+                projectClassValue -> ts.projects.project.Key.newBuilder().setPkEntity(projectClassValue.getProjectId()).build(),
                 (value1, value2) -> ProjectClassLanguageValue.newBuilder()
                         .setClassId(value1.getClassId())
                         .setProjectId(value1.getProjectId())
