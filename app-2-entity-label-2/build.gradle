@@ -12,10 +12,16 @@ plugins {
     id 'com.google.cloud.tools.jib' version '3.3.0'
 
     id 'io.quarkus'
+
+    // Used to build java class source code from avro schemas
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.5.0"
+
 }
 
-
 dependencies {
+
+    // For gradle-avro-plugin
+    implementation "org.apache.avro:avro:1.11.0"
     // for .env
     implementation 'io.github.cdimascio:dotenv-java:2.2.4'
 
@@ -28,6 +34,10 @@ dependencies {
 
     // Added for test with embedded redpanda broker
     testImplementation "org.testcontainers:redpanda:1.19.0"
+
+    // Added for testing rest endpoints
+    testImplementation "io.rest-assured:rest-assured"
+
 }
 
 application {

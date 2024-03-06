@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.entity.label2;
+package org.geovistory.toolbox.streams.entity.label2.names;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -14,4 +14,7 @@ public class InputTopicNames {
         return Utils.prefixedIn(prefix, TopicNameEnum.inf_resource.getValue());
     }
 
+    public String proInfProjRel() {
+        return Utils.prefixedIn(prefix, TopicNameEnum.pro_info_proj_rel.getValue());
+    }
 }

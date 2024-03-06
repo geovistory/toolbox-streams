@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.entity.label2;
+package org.geovistory.toolbox.streams.entity.label2.lib;
 
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import jakarta.enterprise.context.ApplicationScoped;

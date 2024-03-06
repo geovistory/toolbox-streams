@@ -1,3 +1,5 @@
+package lib;
+
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.testcontainers.redpanda.RedpandaContainer;
 

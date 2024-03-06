@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "IprJoinVal",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of joining info project rel with entity or statement",
+  "fields": [
+    {
+      "name": "ipr",
+      "type": "org.geovistory.toolbox.streams.avro.IprValue"
+    },
+    {
+      "name": "e",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityValue"
+      ],
+      "default": null
+    }
+  ]
+}
