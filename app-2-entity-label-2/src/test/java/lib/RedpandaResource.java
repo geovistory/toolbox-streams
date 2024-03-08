@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class RedpandaResource implements QuarkusTestResourceLifecycleManager {
 
-    final private RedpandaContainer container = new RedpandaContainer("docker.redpanda.com/redpandadata/redpanda:v23.1.2");
+    final public RedpandaContainer container = new RedpandaContainer("docker.redpanda.com/redpandadata/redpanda:v23.1.2");
 
     @Override
     public Map<String, String> start() {
@@ -16,11 +16,14 @@ public class RedpandaResource implements QuarkusTestResourceLifecycleManager {
         var props = new HashMap<String, String>();
         props.put("kafka.bootstrap.servers", container.getBootstrapServers());
         props.put("schema.registry.url", container.getSchemaRegistryAddress());
+
         return props;
     }
 
+
     @Override
     public void stop() {
+
         container.close();
     }
 

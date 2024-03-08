@@ -56,6 +56,14 @@
       "default": null
     },
     {
+      "name": "modified_at",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
       "name": "deleted",
       "type": "boolean",
       "default": false

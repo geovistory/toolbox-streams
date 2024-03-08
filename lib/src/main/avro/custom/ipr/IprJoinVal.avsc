@@ -12,7 +12,15 @@
       "name": "e",
       "type": [
         "null",
-        "org.geovistory.toolbox.streams.avro.EntityValue"
+        "org.geovistory.toolbox.streams.avro.EntityProjectedValue"
+      ],
+      "default": null
+    },
+    {
+      "name": "s",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.StatementEnrichedValue"
       ],
       "default": null
     }

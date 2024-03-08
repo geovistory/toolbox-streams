@@ -2,30 +2,39 @@
   "type": "record",
   "name": "EntityValue",
   "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of project entity",
   "fields": [
     {
-      "name": "pk_entity",
-      "type": {
-        "type": "int",
-        "connect.default": 0
-      },
-      "default": 0
-    },
-    {
-      "name": "fk_class",
+      "name": "project_id",
       "type": "int"
     },
     {
-      "name": "community_visibility",
-      "type": [
-        "null",
-        {
-          "type": "string",
-          "connect.version": 1,
-          "connect.name": "io.debezium.data.Json"
-        }
-      ],
-      "default": null
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "community_visibility_toolbox",
+      "type": "boolean"
+    },
+    {
+      "name": "community_visibility_data_api",
+      "type": "boolean"
+    },
+    {
+      "name": "community_visibility_website",
+      "type": "boolean"
+    },
+    {
+      "name": "project_visibility_data_api",
+      "type": "boolean"
+    },
+    {
+      "name": "project_visibility_website",
+      "type": "boolean"
     },
     {
       "name": "deleted",

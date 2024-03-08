@@ -13,8 +13,20 @@ public class OutputTopicNames {
         return p("project_entity");
     }
 
+    public final String projectStatement() {
+        return p("project_statement");
+    }
+
     public final String iprRepartitioned() {
         return p("ipr_repartitioned");
+    }
+
+    public final String sRepartitioned() {
+        return p("s_repartitioned");
+    }
+
+    public final String eRepartitioned() {
+        return p("e_repartitioned");
     }
 
     private String p(String n) {

@@ -9,6 +9,12 @@ import org.geovistory.toolbox.streams.lib.Utils;
 public class InputTopicNames {
     @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String prefix;
+    @ConfigProperty(name = "ts.topic.statement.with.literal", defaultValue = "")
+    String statementWithLiteral = "statement.with.literal";
+
+    public String getStatementWithLiteral() {
+        return statementWithLiteral;
+    }
 
     public String infResource() {
         return Utils.prefixedIn(prefix, TopicNameEnum.inf_resource.getValue());
