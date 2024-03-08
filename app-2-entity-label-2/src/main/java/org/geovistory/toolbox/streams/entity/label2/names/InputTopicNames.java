@@ -12,8 +12,15 @@ public class InputTopicNames {
     @ConfigProperty(name = "ts.topic.statement.with.literal", defaultValue = "")
     String statementWithLiteral = "statement.with.literal";
 
+    @ConfigProperty(name = "ts.topic.statement.with.entity", defaultValue = "")
+    String statementWithEntity = "statement.with.entity";
+
     public String getStatementWithLiteral() {
         return statementWithLiteral;
+    }
+
+    public String getStatementWithEntity() {
+        return statementWithEntity;
     }
 
     public String infResource() {

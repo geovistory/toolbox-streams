@@ -1,12 +1,17 @@
 package org.geovistory.toolbox.streams.entity.label2;
 
+import io.quarkus.runtime.ShutdownEvent;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.Topology;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.label2.docs.AsciiToMermaid;
 import org.geovistory.toolbox.streams.entity.label2.lib.ConfiguredAvroSerde;
+import org.geovistory.toolbox.streams.entity.label2.lib.FileWriter;
 import org.geovistory.toolbox.streams.entity.label2.lib.TopicsCreator;
 import org.geovistory.toolbox.streams.entity.label2.names.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.label2.names.OutputTopicNames;
@@ -21,6 +26,11 @@ import static org.geovistory.toolbox.streams.entity.label2.names.SourceNames.*;
 
 @ApplicationScoped
 public class TopologyProducer {
+    @ConfigProperty(name = "describe.topology")
+    public Boolean describeTopology;
+    @Inject
+    Event<ShutdownEvent> shutdownEvent;
+
     @Inject
     InputTopicNames inputTopicNames;
     @Inject
@@ -38,10 +48,15 @@ public class TopologyProducer {
 
     @Produces
     public Topology buildTopology() {
-
+        var topology = createTopology();
+        createTopologyDocumentation(topology);
         // create output topics in advance to ensure correct configuration (partition, compaction, ect.)
         topicsCreator.createOutputTopics();
+        return topology;
 
+    }
+
+    private Topology createTopology() {
         return new Topology()
                 .addSource(
                         inputTopicNames.infResource() + "-source",
@@ -59,7 +74,7 @@ public class TopologyProducer {
                         inputTopicNames.getStatementWithLiteral() + "-source",
                         as.<ts.information.statement.Key>key().deserializer(),
                         as.<StatementEnrichedValue>value().deserializer(),
-                        inputTopicNames.getStatementWithLiteral()
+                        inputTopicNames.getStatementWithLiteral(), inputTopicNames.getStatementWithEntity()
                 )
 
                 // -----------------------------------------
@@ -75,7 +90,6 @@ public class TopologyProducer {
                         outputTopicNames.iprRepartitioned(),
                         Serdes.Integer().serializer(), as.<ts.projects.info_proj_rel.Value>value().serializer(),
                         REPARTITION_IPR_BY_FKE)
-
                 // read from repartition topic
                 .addSource(REPARTITIONED_IPR_BY_FKE_SOURCE,
                         Serdes.Integer().deserializer(), as.<ts.projects.info_proj_rel.Value>value().deserializer(),
@@ -94,7 +108,6 @@ public class TopologyProducer {
                         outputTopicNames.eRepartitioned(),
                         Serdes.Integer().serializer(), as.<ts.projects.info_proj_rel.Value>value().serializer(),
                         REPARTITION_E_BY_PK)
-
                 // read from repartition topic
                 .addSource(REPARTITIONED_E_BY_PK_SOURCE,
                         Serdes.Integer().deserializer(), as.<ts.projects.info_proj_rel.Value>value().deserializer(),
@@ -113,7 +126,6 @@ public class TopologyProducer {
                         outputTopicNames.sRepartitioned(),
                         Serdes.Integer().serializer(), as.<StatementEnrichedValue>value().serializer(),
                         REPARTITION_S_BY_PK)
-
                 // read from repartition topic
                 .addSource(REPARTITIONED_S_BY_PK_SOURCE,
                         Serdes.Integer().deserializer(), as.<StatementEnrichedValue>value().deserializer(),
@@ -144,5 +156,12 @@ public class TopologyProducer {
                 .addStateStore(swlStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_SWL)
                 .addStateStore(iprStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_E, JOIN_SWL);
     }
+
+    private static void createTopologyDocumentation(Topology topology) {
+        var description = topology.describe();
+        var content = "```mermaid\n" + AsciiToMermaid.toMermaid(description.toString()) + "\n```";
+        FileWriter.write("topology.md", content);
+    }
+
 }
 
