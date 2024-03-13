@@ -1,13 +1,10 @@
 package org.geovistory.toolbox.streams.entity.label2;
 
-import io.quarkus.runtime.ShutdownEvent;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.Topology;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.label2.docs.AsciiToMermaid;
 import org.geovistory.toolbox.streams.entity.label2.lib.ConfiguredAvroSerde;
@@ -16,9 +13,7 @@ import org.geovistory.toolbox.streams.entity.label2.lib.TopicsCreator;
 import org.geovistory.toolbox.streams.entity.label2.names.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.label2.names.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label2.processors.*;
-import org.geovistory.toolbox.streams.entity.label2.stores.EStore;
-import org.geovistory.toolbox.streams.entity.label2.stores.IprStore;
-import org.geovistory.toolbox.streams.entity.label2.stores.SwlStore;
+import org.geovistory.toolbox.streams.entity.label2.stores.*;
 
 import static org.geovistory.toolbox.streams.entity.label2.names.ProcessorNames.*;
 import static org.geovistory.toolbox.streams.entity.label2.names.SinkNames.*;
@@ -26,11 +21,6 @@ import static org.geovistory.toolbox.streams.entity.label2.names.SourceNames.*;
 
 @ApplicationScoped
 public class TopologyProducer {
-    @ConfigProperty(name = "describe.topology")
-    public Boolean describeTopology;
-    @Inject
-    Event<ShutdownEvent> shutdownEvent;
-
     @Inject
     InputTopicNames inputTopicNames;
     @Inject
@@ -44,7 +34,17 @@ public class TopologyProducer {
     @Inject
     IprStore iprStore;
     @Inject
-    SwlStore swlStore;
+    SStore sStore;
+    @Inject
+    PEStore peStore;
+    @Inject
+    SSubStore sSubStore;
+    @Inject
+    SObStore sObStore;
+    @Inject
+    SCompleteStore sCompleteStore;
+    @Inject
+    ObByStmtStore obByStmtStore;
 
     @Produces
     public Topology buildTopology() {
@@ -135,26 +135,122 @@ public class TopologyProducer {
                 // Join ipr with entity and statements
                 // -----------------------------------------
 
-                .addProcessor(JOIN_E, JoinE::new, REPARTITIONED_E_BY_PK_SOURCE)
-                .addProcessor(JOIN_SWL, JoinSWL::new, REPARTITIONED_S_BY_PK_SOURCE)
-                .addProcessor(JOIN_IPR, JoinIPR::new, REPARTITIONED_IPR_BY_FKE_SOURCE)
+                .addProcessor(JOIN_IPR, JoinIPR_E::new, REPARTITIONED_IPR_BY_FKE_SOURCE)
+                .addProcessor(JOIN_E, JoinE_IPR::new, REPARTITIONED_E_BY_PK_SOURCE)
                 .addProcessor(IPR_TO_E, IPRtoE::new, JOIN_IPR)
+                .addProcessor(JOIN_S, JoinS_IPR::new, REPARTITIONED_S_BY_PK_SOURCE)
                 .addProcessor(IPR_TO_S, IPRtoS::new, JOIN_IPR)
+
+
                 .addSink(
                         PROJECT_ENTITY_SINK,
                         outputTopicNames.projectEntity(),
                         as.<ProjectEntityKey>key().serializer(), as.<EntityValue>value().serializer(),
                         JOIN_E, IPR_TO_E
                 )
-                .addSink(
-                        PROJECT_STATEMENT_SINK,
-                        outputTopicNames.projectStatement(),
-                        as.<ProjectStatementKey>key().serializer(), as.<StatementValue>value().serializer(),
-                        JOIN_SWL, IPR_TO_S
+                .addSource(
+                        PROJECT_ENTITY_SOURCE,
+                        as.<ProjectEntityKey>key().deserializer(), as.<EntityValue>value().deserializer(),
+                        outputTopicNames.projectEntity()
                 )
+
+                // ---------------------------------------------------
+                // Join project statement subject with project entity
+                // ---------------------------------------------------
+
+                // repartition project statements by subject
+                .addProcessor(REPARTITION_S_BY_SUBJECT, RepartitionSBySub::new, JOIN_S, IPR_TO_S)
+                .addSink(
+                        PROJECT_STATEMENT_REPARTITIONED_BY_SUB_SINK,
+                        outputTopicNames.projectStatementBySub(),
+                        as.<ProjectEntityKey>key().serializer(), as.<StatementValue>value().serializer(),
+                        REPARTITION_S_BY_SUBJECT
+                )
+                .addSource(
+                        PROJECT_STATEMENT_REPARTITIONED_BY_SUB_SOURCE,
+                        as.<ProjectEntityKey>key().deserializer(), as.<StatementValue>value().deserializer(),
+                        outputTopicNames.projectStatementBySub()
+                )
+
+                // join project statements with their subject project entity
+                .addProcessor(JOIN_S_SUB_PE, JoinSSub_PE::new, PROJECT_STATEMENT_REPARTITIONED_BY_SUB_SOURCE)
+                // stock project entity
+                .addProcessor(STOCK_PE, StockPE::new, PROJECT_ENTITY_SOURCE)
+                // join project entity being subject with project statements
+                .addProcessor(JOIN_PE_S_SUB, JoinPE_SSub::new, STOCK_PE)
+
+                // ---------------------------------------------------
+                // Create Edges from statements with literals
+                // ---------------------------------------------------
+                .addProcessor(CREATE_LITERAL_EDGES, CreateLiteralEdges::new, JOIN_S_SUB_PE, JOIN_PE_S_SUB)
+                .addSink(
+                        PROJECT_EDGE_LITERALS_SINK,
+                        outputTopicNames.projectEdges(),
+                        Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
+                        CREATE_LITERAL_EDGES
+                )
+
+                // ---------------------------------------------------
+                // Join projects statement object with project entity
+                // ---------------------------------------------------
+                .addProcessor(REPARTITION_S_BY_OBJECT, RepartitionSByOb::new, JOIN_S, IPR_TO_S)
+                .addSink(
+                        PROJECT_STATEMENT_REPARTITIONED_BY_OB_SINK,
+                        outputTopicNames.projectStatementByOb(),
+                        as.<ProjectEntityKey>key().serializer(), Serdes.Integer().serializer(),
+                        REPARTITION_S_BY_OBJECT
+                )
+                .addSource(
+                        PROJECT_STATEMENT_REPARTITIONED_BY_OB_SOURCE,
+                        as.<ProjectEntityKey>key().deserializer(), Serdes.Integer().deserializer(),
+                        outputTopicNames.projectStatementByOb()
+                )
+                // join project statements with their object project entity
+                .addProcessor(JOIN_S_OB_PE, JoinSOb_PE::new, PROJECT_STATEMENT_REPARTITIONED_BY_OB_SOURCE)
+                // join project entity being object with project statements
+                .addProcessor(JOIN_PE_S_OB, JoinPE_SOb::new, STOCK_PE)
+
+
+                // ---------------------------------------------------
+                // Join
+                // projects statement with subject and
+                // projects statement with object
+                // ---------------------------------------------------
+                .addProcessor(REPARTITION_PS_SUB_BY_PK, RepartitionSSubByPk::new, JOIN_S_SUB_PE, JOIN_PE_S_SUB)
+                .addSink(PROJECT_S_SUB_BY_PK_SINK,
+                        outputTopicNames.projectStatementWithSubByPk(),
+                        as.<ProjectStatementKey>key().serializer(), as.<StatementWithSubValue>value().serializer(),
+                        REPARTITION_PS_SUB_BY_PK
+                )
+                .addSource(
+                        PROJECT_S_SUB_BY_PK_SOURCE,
+                        as.<ProjectStatementKey>key().deserializer(), as.<StatementWithSubValue>value().deserializer(),
+                        outputTopicNames.projectStatementWithSubByPk()
+                )
+                // join project statements with subject with their object project entity
+                .addProcessor(JOIN_SUB_WITH_OB, JoinSub_Ob::new, PROJECT_S_SUB_BY_PK_SOURCE)
+                // join object project entity with the project statements with subject
+                .addProcessor(JOIN_OB_WITH_SUB, JoinOb_Sub::new, STOCK_PE)
+
+
+                // ---------------------------------------------------
+                // Create Edges from statements with entities
+                // ---------------------------------------------------
+
+
+                // ---------------------------------------------------
+                // Join project statement subject with project entity
+                // ---------------------------------------------------
+
+
                 .addStateStore(eStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_E)
-                .addStateStore(swlStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_SWL)
-                .addStateStore(iprStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_E, JOIN_SWL);
+                .addStateStore(sStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_S)
+                .addStateStore(iprStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_E, JOIN_S)
+                .addStateStore(peStore.createPersistentKeyValueStore(), STOCK_PE, JOIN_S_SUB_PE, JOIN_S_OB_PE, JOIN_OB_WITH_SUB)
+                .addStateStore(sSubStore.createPersistentKeyValueStore(), JOIN_PE_S_SUB, JOIN_S_SUB_PE)
+                .addStateStore(sObStore.createPersistentKeyValueStore(), JOIN_PE_S_OB, JOIN_S_OB_PE, JOIN_OB_WITH_SUB)
+                .addStateStore(sCompleteStore.createPersistentKeyValueStore(), JOIN_SUB_WITH_OB, JOIN_OB_WITH_SUB)
+                .addStateStore(obByStmtStore.createPersistentKeyValueStore(), JOIN_SUB_WITH_OB, JOIN_OB_WITH_SUB);
     }
 
     private static void createTopologyDocumentation(Topology topology) {

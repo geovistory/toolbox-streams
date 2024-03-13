@@ -3,19 +3,19 @@ package org.geovistory.toolbox.streams.entity.label2.stores;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
-import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
+import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
+import org.geovistory.toolbox.streams.avro.StatementJoinValue;
 import org.geovistory.toolbox.streams.entity.label2.lib.AbstractStore;
 import org.geovistory.toolbox.streams.entity.label2.lib.ConfiguredAvroSerde;
 
 /**
- * Store for statements with literal partitioned by pk_entity
+ * Store for statements partitioned by pk_entity
  * with key: original
  * with val: IprJoinValue
  */
 @ApplicationScoped
-public class SwlStore extends AbstractStore<Integer, StatementEnrichedValue> {
-    public static final String NAME = "swl-store";
+public class SCompleteStore extends AbstractStore<ProjectStatementKey, StatementJoinValue> {
+    public static final String NAME = "s-complete-store";
     @Inject
     ConfiguredAvroSerde as;
 
@@ -25,12 +25,12 @@ public class SwlStore extends AbstractStore<Integer, StatementEnrichedValue> {
     }
 
     @Override
-    public Serde<Integer> getKeySerde() {
-        return Serdes.Integer();
+    public Serde<ProjectStatementKey> getKeySerde() {
+        return as.key();
     }
 
     @Override
-    public Serde<StatementEnrichedValue> getValueSerde() {
+    public Serde<StatementJoinValue> getValueSerde() {
         return as.value();
     }
 

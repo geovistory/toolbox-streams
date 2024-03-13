@@ -10,7 +10,7 @@ import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.entity.label2.stores.EStore;
 import org.geovistory.toolbox.streams.entity.label2.stores.IprStore;
-import org.geovistory.toolbox.streams.entity.label2.stores.SwlStore;
+import org.geovistory.toolbox.streams.entity.label2.stores.SStore;
 import ts.projects.info_proj_rel.Key;
 import ts.projects.info_proj_rel.Value;
 
@@ -19,7 +19,7 @@ import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.createProjectE
 import static org.geovistory.toolbox.streams.entity.label2.names.ProcessorNames.IPR_TO_E;
 import static org.geovistory.toolbox.streams.entity.label2.names.ProcessorNames.IPR_TO_S;
 
-public class JoinIPR implements Processor<Key, Value, ProjectEntityKey, IprJoinVal> {
+public class JoinIPR_E implements Processor<Key, Value, ProjectEntityKey, IprJoinVal> {
     private KeyValueStore<String, IprJoinVal> iprStore;
     private KeyValueStore<Integer, EntityProjectedValue> eStore;
     private KeyValueStore<Integer, StatementEnrichedValue> sStore;
@@ -28,7 +28,7 @@ public class JoinIPR implements Processor<Key, Value, ProjectEntityKey, IprJoinV
     public void init(ProcessorContext<ProjectEntityKey, IprJoinVal> context) {
         iprStore = context.getStateStore(IprStore.NAME);
         eStore = context.getStateStore(EStore.NAME);
-        sStore = context.getStateStore(SwlStore.NAME);
+        sStore = context.getStateStore(SStore.NAME);
         this.context = context;
     }
 

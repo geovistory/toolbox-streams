@@ -10,20 +10,20 @@ import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.StatementEnrichedValue;
 import org.geovistory.toolbox.streams.avro.StatementValue;
 import org.geovistory.toolbox.streams.entity.label2.stores.IprStore;
-import org.geovistory.toolbox.streams.entity.label2.stores.SwlStore;
+import org.geovistory.toolbox.streams.entity.label2.stores.SStore;
 
 import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.createProjectStatementKey;
 import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.createStatementValue;
 
-public class JoinSWL implements Processor<Integer, StatementEnrichedValue, ProjectStatementKey, StatementValue> {
-    private KeyValueStore<Integer, StatementEnrichedValue> swlStore;
+public class JoinS_IPR implements Processor<Integer, StatementEnrichedValue, ProjectStatementKey, StatementValue> {
+    private KeyValueStore<Integer, StatementEnrichedValue> sStore;
     private KeyValueStore<String, IprJoinVal> iprStore;
 
     private ProcessorContext<ProjectStatementKey, StatementValue> context;
 
     @Override
     public void init(ProcessorContext<ProjectStatementKey, StatementValue> context) {
-        swlStore = context.getStateStore(SwlStore.NAME);
+        sStore = context.getStateStore(SStore.NAME);
         iprStore = context.getStateStore(IprStore.NAME);
         this.context = context;
     }
@@ -33,7 +33,7 @@ public class JoinSWL implements Processor<Integer, StatementEnrichedValue, Proje
         // get new statement value
         var newStatementValue = record.value();
 
-        this.swlStore.put(record.key(), newStatementValue);
+        this.sStore.put(record.key(), newStatementValue);
 
         // scan iprStore for keys starting with pk_entity
         var iterator = this.iprStore.prefixScan(record.key() + "_", Serdes.String().serializer());

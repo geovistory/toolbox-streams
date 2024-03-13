@@ -15,7 +15,7 @@ import ts.information.resource.Value;
 
 import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.*;
 
-public class JoinE implements Processor<Integer, Value, ProjectEntityKey, EntityValue> {
+public class JoinE_IPR implements Processor<Integer, Value, ProjectEntityKey, EntityValue> {
     private KeyValueStore<Integer, EntityProjectedValue> eStore;
     private KeyValueStore<String, IprJoinVal> iprStore;
 

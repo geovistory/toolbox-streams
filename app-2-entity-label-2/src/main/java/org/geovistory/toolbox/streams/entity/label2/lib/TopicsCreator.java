@@ -37,6 +37,7 @@ public class TopicsCreator {
         topics.add(inputTopicNames.proInfProjRel());
         topics.add(inputTopicNames.infResource());
         topics.add(inputTopicNames.getStatementWithLiteral());
+        topics.add(inputTopicNames.getStatementWithEntity());
         createTopics(topics);
     }
 
@@ -47,10 +48,13 @@ public class TopicsCreator {
     public void createOutputTopics() {
         var topics = new ArrayList<String>();
         topics.add(outputTopicNames.projectEntity());
-        topics.add(outputTopicNames.projectStatement());
         topics.add(outputTopicNames.iprRepartitioned());
         topics.add(outputTopicNames.eRepartitioned());
         topics.add(outputTopicNames.sRepartitioned());
+        topics.add(outputTopicNames.projectStatementBySub());
+        topics.add(outputTopicNames.projectStatementByOb());
+        topics.add(outputTopicNames.projectEdges());
+        topics.add(outputTopicNames.projectStatementWithSubByPk());
         createTopics(topics);
     }
 

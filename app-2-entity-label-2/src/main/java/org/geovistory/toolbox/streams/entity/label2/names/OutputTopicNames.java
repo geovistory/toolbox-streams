@@ -13,8 +13,12 @@ public class OutputTopicNames {
         return p("project_entity");
     }
 
-    public final String projectStatement() {
-        return p("project_statement");
+    public final String projectStatementBySub() {
+        return p("project_statement_repartitioned_by_subject");
+    }
+
+    public final String projectStatementByOb() {
+        return p("project_statement_repartitioned_by_object");
     }
 
     public final String iprRepartitioned() {
@@ -27,6 +31,14 @@ public class OutputTopicNames {
 
     public final String eRepartitioned() {
         return p("e_repartitioned");
+    }
+
+    public final String projectStatementWithSubByPk() {
+        return p("project_statement_with_sub_by_pk");
+    }
+
+    public final String projectEdges() {
+        return p("project_edges");
     }
 
     private String p(String n) {

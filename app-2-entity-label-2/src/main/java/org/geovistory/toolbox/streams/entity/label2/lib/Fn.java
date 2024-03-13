@@ -162,6 +162,172 @@ public class Fn {
     }
 
     /**
+     * Join StatementValue and EntityValue to StatementWithSubValue
+     *
+     * @param s StatementValue to join
+     * @param e EntityValue to join
+     * @return StatementWithSubValue
+     */
+    public static StatementWithSubValue createStatementWithSubValue(
+            StatementValue s,
+            EntityValue e
+    ) {
+        return StatementWithSubValue.newBuilder()
+                .setStatementId(s.getStatementId())
+                .setProjectId(s.getProjectId())
+                .setProjectCount(s.getProjectCount())
+                .setOrdNumOfDomain(s.getOrdNumOfDomain())
+                .setOrdNumOfRange(s.getOrdNumOfRange())
+                .setSubjectId(s.getSubjectId())
+                .setPropertyId(s.getPropertyId())
+                .setObjectId(s.getObjectId())
+                .setSubjectClassId(s.getSubjectClassId())
+                .setObjectClassId(s.getObjectClassId())
+                .setSubjectLabel(s.getSubjectLabel())
+                .setObjectLabel(s.getObjectLabel())
+                .setSubject(s.getSubject())
+                .setObject(s.getObject())
+                .setModifiedAt(s.getModifiedAt())
+                .setDeleted(s.getDeleted())
+                .setSubjectEntityValue(e)
+                .build();
+    }
+
+    /**
+     * Join StatementWithSubValue and EntityValue to StatementJoinValue
+     *
+     * @param s StatementWithSubValue to join
+     * @param e EntityValue to join
+     * @return StatementJoinValue
+     */
+    public static StatementJoinValue createStatementJoinValue(
+            StatementWithSubValue s,
+            EntityValue e
+    ) {
+        return StatementJoinValue.newBuilder()
+                .setStatementId(s.getStatementId())
+                .setProjectId(s.getProjectId())
+                .setProjectCount(s.getProjectCount())
+                .setOrdNumOfDomain(s.getOrdNumOfDomain())
+                .setOrdNumOfRange(s.getOrdNumOfRange())
+                .setSubjectId(s.getSubjectId())
+                .setPropertyId(s.getPropertyId())
+                .setObjectId(s.getObjectId())
+                .setSubjectClassId(s.getSubjectClassId())
+                .setObjectClassId(s.getObjectClassId())
+                .setSubjectLabel(s.getSubjectLabel())
+                .setObjectLabel(s.getObjectLabel())
+                .setSubject(s.getSubject())
+                .setObject(s.getObject())
+                .setModifiedAt(s.getModifiedAt())
+                .setDeleted(s.getDeleted())
+                .setSubjectEntityValue(s.getSubjectEntityValue())
+                .setObjectEntityValue(e)
+                .build();
+    }
+
+    /**
+     * Creates an outgoing EdgeValue from StatementWithSubValue.
+     *
+     * @param s StatementWithSubValue
+     * @return EdgeValue
+     */
+    public static EdgeValue createEdge(StatementWithSubValue s) {
+        return EdgeValue.newBuilder()
+                .setProjectId(s.getProjectId())
+                .setStatementId(s.getStatementId())
+                .setProjectCount(s.getProjectCount())
+                .setOrdNum(s.getOrdNumOfRange())
+                .setSourceId(s.getSubjectId())
+                .setSourceEntity(s.getSubject().getEntity())
+                .setSourceProjectEntity(s.getSubjectEntityValue())
+                .setPropertyId(s.getPropertyId())
+                .setIsOutgoing(true)
+                .setTargetId(s.getObjectId())
+                .setTargetNode(s.getObject())
+                .setTargetProjectEntity(null)
+                .setModifiedAt(s.getModifiedAt())
+                .setDeleted(s.getDeleted())
+                .build();
+    }
+
+    /**
+     * Creates an outgoing EdgeValue from StatementJoinValue.
+     *
+     * @param s StatementJoinValue
+     * @return EdgeValue
+     */
+    public static EdgeValue createOutgoingEdge(StatementJoinValue s) {
+        return EdgeValue.newBuilder()
+                .setProjectId(s.getProjectId())
+                .setStatementId(s.getStatementId())
+                .setProjectCount(s.getProjectCount())
+                .setOrdNum(s.getOrdNumOfRange())
+                .setSourceId(s.getSubjectId())
+                .setSourceEntity(s.getSubject().getEntity())
+                .setSourceProjectEntity(s.getSubjectEntityValue())
+                .setPropertyId(s.getPropertyId())
+                .setIsOutgoing(true)
+                .setTargetId(s.getObjectId())
+                .setTargetNode(s.getObject())
+                .setTargetProjectEntity(s.getObjectEntityValue())
+                .setModifiedAt(s.getModifiedAt())
+                .setDeleted(s.getDeleted())
+                .build();
+    }
+
+    /**
+     * Creates an incoming EdgeValue from StatementJoinValue.
+     *
+     * @param s StatementJoinValue
+     * @return EdgeValue
+     */
+    public static EdgeValue createIncomingEdge(StatementJoinValue s) {
+        return EdgeValue.newBuilder()
+                .setProjectId(s.getProjectId())
+                .setStatementId(s.getStatementId())
+                .setProjectCount(s.getProjectCount())
+                .setOrdNum(s.getOrdNumOfDomain())
+                .setSourceId(s.getObjectId())
+                .setSourceEntity(s.getObject().getEntity())
+                .setSourceProjectEntity(s.getObjectEntityValue())
+                .setPropertyId(s.getPropertyId())
+                .setIsOutgoing(false)
+                .setTargetId(s.getSubjectId())
+                .setTargetNode(s.getSubject())
+                .setTargetProjectEntity(s.getSubjectEntityValue())
+                .setModifiedAt(s.getModifiedAt())
+                .setDeleted(s.getDeleted())
+                .build();
+    }
+
+
+    /**
+     * Creates the key of an edge
+     *
+     * @param projectId  Id of project
+     * @param sourceId   Id of source entity
+     * @param propertyId Id of property
+     * @param targetId   Id of target entity
+     * @param isOutgoing True if source is subject
+     * @return key of edge
+     */
+    public static String createEdgeKey(int projectId, String sourceId, int propertyId, boolean isOutgoing, String targetId) {
+        var k = projectId + "_" + sourceId + "_" + propertyId + "_" + (isOutgoing ? "o" : "i") + "_" + targetId;
+        return k;
+    }
+
+    /**
+     * Creates the key of an edge
+     *
+     * @param e EdgeValue
+     * @return the key
+     */
+    public static String createEdgeKey(EdgeValue e) {
+        return createEdgeKey(e.getProjectId(), e.getSourceId(), e.getPropertyId(), e.getIsOutgoing(), e.getTargetId());
+    }
+
+    /**
      * Converts a float to its hexadecimal representation as a string.
      * This method can be used to create strings that can be lexicographically ordered,
      * as long as the input float is not negative.

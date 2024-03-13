@@ -1,0 +1,83 @@
+{
+  "type": "record",
+  "name": "EdgeValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "A project edge value is a directed statement with source and target instead of subject/target.",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "statement_id",
+      "type": "int"
+    },
+    {
+      "name": "project_count",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "ord_num",
+      "type": [
+        "null",
+        "float"
+      ],
+      "default": null
+    },
+    {
+      "name": "source_id",
+      "type": "string"
+    },
+    {
+      "name": "source_project_entity",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityValue"
+      ],
+      "default": null
+    },
+    {
+      "name": "source_entity",
+      "type": "org.geovistory.toolbox.streams.avro.Entity"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "is_outgoing",
+      "type": "boolean"
+    },
+    {
+      "name": "target_id",
+      "type": "string"
+    },
+    {
+      "name": "target_project_entity",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityValue"
+      ],
+      "default": null
+    },
+    {
+      "name": "target_node",
+      "type": "org.geovistory.toolbox.streams.avro.NodeValue"
+    },
+    {
+      "name": "modified_at",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "deleted",
+      "type": "boolean",
+      "default": false
+    }
+  ]
+}
