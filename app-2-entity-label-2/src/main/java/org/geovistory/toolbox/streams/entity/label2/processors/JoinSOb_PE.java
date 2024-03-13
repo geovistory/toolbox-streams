@@ -42,20 +42,24 @@ public class JoinSOb_PE implements Processor<ProjectEntityKey, Integer, ProjectS
 
 
         // if old and new differ
-        if (!Objects.equals(newJoinVal, oldJoinVal)) {
+        if (newJoinVal == null ||
+                !Objects.equals(newJoinVal, oldJoinVal)
+        ) {
 
             // update the sObStore
             this.sObStore.put(key, newJoinVal);
 
 
             // push downstream
-            this.context.forward(record
-                    .withKey(
-                            ProjectStatementKey.newBuilder().setStatementId(statementId).setProjectId(projectId).build()
-                    ).withValue(
-                            newJoinVal
-                    )
-            );
+            if (newJoinVal != null) {
+                this.context.forward(record
+                        .withKey(
+                                ProjectStatementKey.newBuilder().setStatementId(statementId).setProjectId(projectId).build()
+                        ).withValue(
+                                newJoinVal
+                        )
+                );
+            }
 
         }
     }

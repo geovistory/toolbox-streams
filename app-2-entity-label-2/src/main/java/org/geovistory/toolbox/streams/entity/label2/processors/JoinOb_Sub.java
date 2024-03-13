@@ -4,22 +4,23 @@ import org.apache.kafka.streams.processor.api.Processor;
 import org.apache.kafka.streams.processor.api.ProcessorContext;
 import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.geovistory.toolbox.streams.avro.EntityValue;
-import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.label2.stores.PEStore;
-import org.geovistory.toolbox.streams.entity.label2.stores.SObStore;
+import org.geovistory.toolbox.streams.entity.label2.stores.SCompleteStore;
 
 import java.util.Objects;
 
-public class JoinOb_Sub implements Processor<ProjectEntityKey, Integer, String, EntityValue> {
-    private KeyValueStore<String, EntityValue> sObStore;
+import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.*;
+
+public class JoinOb_Sub implements Processor<ProjectEntityKey, Integer, String, EdgeValue> {
+    private KeyValueStore<ProjectStatementKey, StatementJoinValue> sCompleteStore;
     private KeyValueStore<ProjectEntityKey, EntityValue> peStore;
 
-    private ProcessorContext<String, EntityValue> context;
+    private ProcessorContext<String, EdgeValue> context;
 
     @Override
-    public void init(ProcessorContext<String, EntityValue> context) {
-        sObStore = context.getStateStore(SObStore.NAME);
+    public void init(ProcessorContext<String, EdgeValue> context) {
+        sCompleteStore = context.getStateStore(SCompleteStore.NAME);
         peStore = context.getStateStore(PEStore.NAME);
         this.context = context;
     }
@@ -28,33 +29,50 @@ public class JoinOb_Sub implements Processor<ProjectEntityKey, Integer, String, 
     public void process(Record<ProjectEntityKey, Integer> record) {
         var statementId = record.value();
         var projectId = record.key().getProjectId();
-        var objectId = record.key().getEntityId();
 
-        // create key {objectId}_{project_id}_{statement_id}
-        var key = SObStore.createKey(objectId, projectId, statementId);
+        // create key
+        var key = ProjectStatementKey.newBuilder()
+                .setStatementId(statementId)
+                .setProjectId(projectId)
+                .build();
 
         // lookup project entity in peStore
-        var newJoinVal = peStore.get(record.key());
+        var pe = peStore.get(record.key());
 
-        // lookup old statement with sub
-        var oldJoinVal = this.sObStore.get(key);
-
+        // lookup old complete statement
+        var oldJoinVal = this.sCompleteStore.get(key);
+        var oldPe = oldJoinVal != null ? oldJoinVal.getObjectEntityValue() : null;
 
         // if old and new differ
-        if (!Objects.equals(newJoinVal, oldJoinVal)) {
+        if (!Objects.equals(pe, oldPe)) {
 
-            // update the sObStore
-            this.sObStore.put(key, newJoinVal);
+            StatementJoinValue newJoinVal;
 
+            // create new join value
+            if (oldJoinVal == null) {
+                newJoinVal = StatementJoinValue.newBuilder()
+                        .setStatementId(statementId)
+                        .setProjectId(projectId)
+                        .setObjectEntityValue(pe)
+                        .build();
+            } else {
+                oldJoinVal.setObjectEntityValue(pe);
+                newJoinVal = oldJoinVal;
+            }
 
-            // TODO push downstream
-    /*        this.context.forward(record
-                    .withKey(
-                            ProjectStatementKey.newBuilder().setStatementId(statementId).setProjectId(projectId).build()
-                    ).withValue(
-                            newJoinVal
-                    )
-            );*/
+            // update the sCompleteStore
+            this.sCompleteStore.put(key, newJoinVal);
+
+            var edgeOutV = createOutgoingEdge(newJoinVal);
+            var edgeOutK = createEdgeKey(edgeOutV);
+
+            var edgeInV = createIncomingEdge(newJoinVal);
+            var edgeInK = createEdgeKey(edgeInV);
+
+            // push downstream
+            this.context.forward(record.withKey(edgeOutK).withValue(edgeOutV));
+            this.context.forward(record.withKey(edgeInK).withValue(edgeInV));
+
 
         }
     }

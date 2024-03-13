@@ -209,7 +209,11 @@ public class TopologyProducer {
                 .addProcessor(JOIN_S_OB_PE, JoinSOb_PE::new, PROJECT_STATEMENT_REPARTITIONED_BY_OB_SOURCE)
                 // join project entity being object with project statements
                 .addProcessor(JOIN_PE_S_OB, JoinPE_SOb::new, STOCK_PE)
-
+                .addSink(PROJECT_S_OB_BY_PK_SINK,
+                        outputTopicNames.projectStatementWithObByPk(),
+                        as.<ProjectStatementKey>key().serializer(), as.<EntityValue>value().serializer(),
+                        JOIN_S_OB_PE, JOIN_PE_S_OB
+                )
 
                 // ---------------------------------------------------
                 // Join
@@ -232,10 +236,14 @@ public class TopologyProducer {
                 // join object project entity with the project statements with subject
                 .addProcessor(JOIN_OB_WITH_SUB, JoinOb_Sub::new, STOCK_PE)
 
-
                 // ---------------------------------------------------
                 // Create Edges from statements with entities
                 // ---------------------------------------------------
+                .addSink(PROJECT_EDGE_ENTITIES_SINK,
+                        outputTopicNames.projectEdges(),
+                        Serdes.String().serializer(), as.<ProjectEdgeValue>value().serializer(),
+                        JOIN_SUB_WITH_OB, JOIN_OB_WITH_SUB
+                )
 
 
                 // ---------------------------------------------------

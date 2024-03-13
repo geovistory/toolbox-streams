@@ -37,6 +37,10 @@ public class OutputTopicNames {
         return p("project_statement_with_sub_by_pk");
     }
 
+    public final String projectStatementWithObByPk() {
+        return p("project_statement_with_ob_by_pk");
+    }
+
     public final String projectEdges() {
         return p("project_edges");
     }

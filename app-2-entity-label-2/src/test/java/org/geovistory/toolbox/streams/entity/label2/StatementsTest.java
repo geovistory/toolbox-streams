@@ -78,6 +78,8 @@ public class StatementsTest {
     SSubStore sSubStore;
     @Inject
     PEStore peStore;
+    @Inject
+    SObStore sObStore;
 
     @Inject
     InputTopicNames inputTopicNames;
@@ -156,8 +158,8 @@ public class StatementsTest {
         sendSWithEntity(52, 33, "i20", "i21");
         // ... add to project
         sendIpr(52, 42, true);
-        // add statement
 
+        // add statement
         sendSWithEntity(53, 33, "i20", "i23");
         // ... add to projects
         sendIpr(53, 40, true);
@@ -186,7 +188,7 @@ public class StatementsTest {
 
         var iprRepart = poll(iprRepartConsumer, 6);
         var s = poll(sRepartConsumer, 4);
-        var edges = poll(pedgeConsumer, 3);
+        var edges = poll(pedgeConsumer, 9);
 
         // test partitioning
         var e50Partition = s.stream().filter((item) -> item.key() == 50).findFirst().get().partition();
@@ -229,10 +231,15 @@ public class StatementsTest {
         // ... assert that has 6 items
         assertEquals(6, countItems(sSubStore.all()));
 
+        // Test project statement by subject store ...
+        // var sObStore = StoreGetter.getStore(this.sObStore, kafkaStreams);
+        // ... assert that has 3 items
+        // TODO uncomment next line
+        // assertEquals(3, countItems(sObStore.all()));
+
         // Test edges
         var m = getKeyValueMap(edges.iterator());
-        // TODO increase 3 to 9
-        assertEquals(3, m.size());
+        assertEquals(9, m.size());
 
         var item = m.get(createEdgeKey(40, "i20", 30, true, "i7"));
 

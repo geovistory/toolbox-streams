@@ -28,7 +28,7 @@ public class JoinSub_Ob implements Processor<ProjectStatementKey, StatementWithS
         var k = record.key();
         var newV = record.value();
 
-        // lookup old statement with sub
+        // lookup old complete statement
         var oldJoinVal = this.sCompleteStore.get(k);
 
         // lookup object
@@ -46,8 +46,12 @@ public class JoinSub_Ob implements Processor<ProjectStatementKey, StatementWithS
             var edgeOutV = createOutgoingEdge(newJoinVal);
             var edgeOutK = createEdgeKey(edgeOutV);
 
+            var edgeInV = createIncomingEdge(newJoinVal);
+            var edgeInK = createEdgeKey(edgeInV);
+
             // push downstream
             this.context.forward(record.withKey(edgeOutK).withValue(edgeOutV));
+            this.context.forward(record.withKey(edgeInK).withValue(edgeInV));
 
         }
     }

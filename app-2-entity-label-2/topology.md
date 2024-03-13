@@ -37,7 +37,9 @@ s-complete-store[(s-<br>complete-<br>store)] --> JOIN_SUB_WITH_OB(JOIN_SUB_WITH_
 ob-by-s-store[(ob-<br>by-<br>s-<br>store)] --> JOIN_SUB_WITH_OB(JOIN_SUB_WITH_OB)
 pe-store[(pe-<br>store)] --> JOIN_S_OB_PE(JOIN_S_OB_PE)
 s-ob-store[(s-<br>ob-<br>store)] --> JOIN_S_OB_PE(JOIN_S_OB_PE)
+PROJECT_EDGE_ENTITIES_SINK(PROJECT_EDGE_ENTITIES_SINK) --> ts_project_edges[ts_project_edges]
 PROJECT_EDGE_LITERALS_SINK(PROJECT_EDGE_LITERALS_SINK) --> ts_project_edges[ts_project_edges]
+PROJECT_S_OB_BY_PK_SINK(PROJECT_S_OB_BY_PK_SINK) --> ts_project_statement_with_ob_by_pk[ts_project_statement_with_ob_by_pk]
 PROJECT_S_SUB_BY_PK_SINK(PROJECT_S_SUB_BY_PK_SINK) --> ts_project_statement_with_sub_by_pk[ts_project_statement_with_sub_by_pk]
 subgraph Sub-Topology: 0
 ts.information.resource-source(ts.information.resource-<br>source) --> REPARTITION_E_BY_PK(REPARTITION_E_BY_PK)
@@ -76,9 +78,13 @@ JOIN_PE_S_SUB(JOIN_PE_S_SUB) --> CREATE_LITERAL_EDGES(CREATE_LITERAL_EDGES)
 JOIN_PE_S_SUB(JOIN_PE_S_SUB) --> REPARTITION_PS_SUB_BY_PK(REPARTITION_PS_SUB_BY_PK)
 JOIN_S_SUB_PE(JOIN_S_SUB_PE) --> CREATE_LITERAL_EDGES(CREATE_LITERAL_EDGES)
 JOIN_S_SUB_PE(JOIN_S_SUB_PE) --> REPARTITION_PS_SUB_BY_PK(REPARTITION_PS_SUB_BY_PK)
-CREATE_LITERAL_EDGES(CREATE_LITERAL_EDGES) --> PROJECT_EDGE_LITERALS_SINK(PROJECT_EDGE_LITERALS_SINK)
 PROJECT_STATEMENT_REPARTITIONED_BY_OB_SOURCE(PROJECT_STATEMENT_REPARTITIONED_BY_OB_SOURCE) --> JOIN_S_OB_PE(JOIN_S_OB_PE)
 PROJECT_S_SUB_BY_PK_SOURCE(PROJECT_S_SUB_BY_PK_SOURCE) --> JOIN_SUB_WITH_OB(JOIN_SUB_WITH_OB)
+CREATE_LITERAL_EDGES(CREATE_LITERAL_EDGES) --> PROJECT_EDGE_LITERALS_SINK(PROJECT_EDGE_LITERALS_SINK)
+JOIN_OB_WITH_SUB(JOIN_OB_WITH_SUB) --> PROJECT_EDGE_ENTITIES_SINK(PROJECT_EDGE_ENTITIES_SINK)
+JOIN_PE_S_OB(JOIN_PE_S_OB) --> PROJECT_S_OB_BY_PK_SINK(PROJECT_S_OB_BY_PK_SINK)
+JOIN_SUB_WITH_OB(JOIN_SUB_WITH_OB) --> PROJECT_EDGE_ENTITIES_SINK(PROJECT_EDGE_ENTITIES_SINK)
+JOIN_S_OB_PE(JOIN_S_OB_PE) --> PROJECT_S_OB_BY_PK_SINK(PROJECT_S_OB_BY_PK_SINK)
 REPARTITION_PS_SUB_BY_PK(REPARTITION_PS_SUB_BY_PK) --> PROJECT_S_SUB_BY_PK_SINK(PROJECT_S_SUB_BY_PK_SINK)
 end
 ts.information.resource
@@ -99,6 +105,8 @@ ts_project_entity
 ts_project_statement_repartitioned_by_object
 ts_project_statement_repartitioned_by_subject
 ts_project_edges
+ts_project_edges
+ts_project_statement_with_ob_by_pk
 ts_project_statement_with_sub_by_pk
 e-store
 s-store

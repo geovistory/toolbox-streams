@@ -55,6 +55,7 @@ public class TopicsCreator {
         topics.add(outputTopicNames.projectStatementByOb());
         topics.add(outputTopicNames.projectEdges());
         topics.add(outputTopicNames.projectStatementWithSubByPk());
+        topics.add(outputTopicNames.projectStatementWithObByPk());
         createTopics(topics);
     }
 

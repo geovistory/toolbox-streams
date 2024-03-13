@@ -41,7 +41,11 @@
     },
     {
       "name": "property_id",
-      "type": "int"
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
     },
     {
       "name": "object_id",
