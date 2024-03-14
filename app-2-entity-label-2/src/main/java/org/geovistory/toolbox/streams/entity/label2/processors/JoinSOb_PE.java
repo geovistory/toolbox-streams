@@ -7,19 +7,18 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.EntityValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
+import org.geovistory.toolbox.streams.avro.StatementWithObValue;
 import org.geovistory.toolbox.streams.entity.label2.stores.PEStore;
 import org.geovistory.toolbox.streams.entity.label2.stores.SObStore;
 
-import java.util.Objects;
-
-public class JoinSOb_PE implements Processor<ProjectEntityKey, Integer, ProjectStatementKey, EntityValue> {
-    private KeyValueStore<String, EntityValue> sObStore;
+public class JoinSOb_PE implements Processor<ProjectEntityKey, Integer, ProjectStatementKey, StatementWithObValue> {
+    private KeyValueStore<String, StatementWithObValue> sObStore;
     private KeyValueStore<ProjectEntityKey, EntityValue> peStore;
 
-    private ProcessorContext<ProjectStatementKey, EntityValue> context;
+    private ProcessorContext<ProjectStatementKey, StatementWithObValue> context;
 
     @Override
-    public void init(ProcessorContext<ProjectStatementKey, EntityValue> context) {
+    public void init(ProcessorContext<ProjectStatementKey, StatementWithObValue> context) {
         sObStore = context.getStateStore(SObStore.NAME);
         peStore = context.getStateStore(PEStore.NAME);
         this.context = context;
@@ -35,23 +34,25 @@ public class JoinSOb_PE implements Processor<ProjectEntityKey, Integer, ProjectS
         var key = SObStore.createKey(objectId, projectId, statementId);
 
         // lookup project entity in peStore
-        var newJoinVal = peStore.get(record.key());
+        var pe = peStore.get(record.key());
+        var newJoinVal = StatementWithObValue.newBuilder()
+                .setStatementId(statementId)
+                .setObjectEntityValue(pe)
+                .build();
 
         // lookup old statement with sub
         var oldJoinVal = this.sObStore.get(key);
 
 
         // if old and new differ
-        if (newJoinVal == null ||
-                !Objects.equals(newJoinVal, oldJoinVal)
-        ) {
+        if (!newJoinVal.equals(oldJoinVal)) {
 
             // update the sObStore
             this.sObStore.put(key, newJoinVal);
 
 
             // push downstream
-            if (newJoinVal != null) {
+            if (newJoinVal.getObjectEntityValue() != null) {
                 this.context.forward(record
                         .withKey(
                                 ProjectStatementKey.newBuilder().setStatementId(statementId).setProjectId(projectId).build()

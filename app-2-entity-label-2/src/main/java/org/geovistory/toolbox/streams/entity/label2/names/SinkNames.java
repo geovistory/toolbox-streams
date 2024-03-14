@@ -14,6 +14,7 @@ public class SinkNames {
     public static final String PROJECT_S_SUB_BY_PK_SINK = "PROJECT_S_SUB_BY_PK_SINK";
     public static final String PROJECT_S_SUB_BY_PK_SOURCE = "PROJECT_S_SUB_BY_PK_SOURCE";
     public static final String PROJECT_S_OB_BY_PK_SINK = "PROJECT_S_OB_BY_PK_SINK";
+    public static final String PROJECT_S_OB_BY_PK_SOURCE = "PROJECT_S_OB_BY_PK_SOURCE";
 
 
 }

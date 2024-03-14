@@ -10,10 +10,12 @@ import org.geovistory.toolbox.streams.entity.label2.stores.PEStore;
 
 public class StockPE implements Processor<ProjectEntityKey, EntityValue, ProjectEntityKey, EntityValue> {
     private KeyValueStore<ProjectEntityKey, EntityValue> peStore;
+    private ProcessorContext<ProjectEntityKey, EntityValue> context;
 
     @Override
     public void init(ProcessorContext<ProjectEntityKey, EntityValue> context) {
         peStore = context.getStateStore(PEStore.NAME);
+        this.context = context;
     }
 
     @Override
@@ -23,6 +25,9 @@ public class StockPE implements Processor<ProjectEntityKey, EntityValue, Project
 
         // stock the project entity
         this.peStore.put(k, newV);
+
+        // push downstream
+        this.context.forward(record);
     }
 }
 

@@ -4,7 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.geovistory.toolbox.streams.avro.EntityValue;
+import org.geovistory.toolbox.streams.avro.StatementWithObValue;
 import org.geovistory.toolbox.streams.entity.label2.lib.AbstractStore;
 import org.geovistory.toolbox.streams.entity.label2.lib.ConfiguredAvroSerde;
 
@@ -14,7 +14,7 @@ import org.geovistory.toolbox.streams.entity.label2.lib.ConfiguredAvroSerde;
  * with val: StatementWithSubValue
  */
 @ApplicationScoped
-public class SObStore extends AbstractStore<String, EntityValue> {
+public class SObStore extends AbstractStore<String, StatementWithObValue> {
     public static final String NAME = "s-ob-store";
     @Inject
     ConfiguredAvroSerde as;
@@ -30,7 +30,7 @@ public class SObStore extends AbstractStore<String, EntityValue> {
     }
 
     @Override
-    public Serde<EntityValue> getValueSerde() {
+    public Serde<StatementWithObValue> getValueSerde() {
         return as.key();
     }
 

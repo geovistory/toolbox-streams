@@ -8,20 +8,16 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.EntityValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
-import org.geovistory.toolbox.streams.entity.label2.lib.FileWriter;
+import org.geovistory.toolbox.streams.avro.StatementWithObValue;
 import org.geovistory.toolbox.streams.entity.label2.stores.SObStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class JoinPE_SOb implements Processor<ProjectEntityKey, EntityValue, ProjectStatementKey, EntityValue> {
-    private static final Logger LOG = LoggerFactory.getLogger(FileWriter.class);
+public class JoinPE_SOb implements Processor<ProjectEntityKey, EntityValue, ProjectStatementKey, StatementWithObValue> {
+    private KeyValueStore<String, StatementWithObValue> sObStore;
 
-    private KeyValueStore<String, EntityValue> sObStore;
-
-    private ProcessorContext<ProjectStatementKey, EntityValue> context;
+    private ProcessorContext<ProjectStatementKey, StatementWithObValue> context;
 
     @Override
-    public void init(ProcessorContext<ProjectStatementKey, EntityValue> context) {
+    public void init(ProcessorContext<ProjectStatementKey, StatementWithObValue> context) {
         sObStore = context.getStateStore(SObStore.NAME);
         this.context = context;
     }
@@ -29,7 +25,9 @@ public class JoinPE_SOb implements Processor<ProjectEntityKey, EntityValue, Proj
     @Override
     public void process(Record<ProjectEntityKey, EntityValue> record) {
         var k = record.key();
-        var newV = record.value();
+        var newV = StatementWithObValue.newBuilder()
+                .setObjectEntityValue(record.value())
+                .build();
 
         // create prefix in form of {fk_entity}_{fk_project}_
         var prefix = k.getEntityId() + "_" + k.getProjectId() + "_";
@@ -45,24 +43,22 @@ public class JoinPE_SOb implements Processor<ProjectEntityKey, EntityValue, Proj
             // get old joined project entity
             var oldV = s.value;
 
+            // create new join value
+            if (oldV != null) newV.setStatementId(oldV.getStatementId());
+
             // if new differs old
             if (!newV.equals(oldV)) {
 
                 // update project entity in subject store
                 sObStore.put(s.key, newV);
 
-
                 // push downstream
-                try {
-                    var statementId = Integer.parseInt(s.key.replace(prefix, ""));
+                if (newV.getStatementId() != null) {
                     var outK = ProjectStatementKey.newBuilder()
                             .setProjectId(k.getProjectId())
-                            .setStatementId(statementId).build();
+                            .setStatementId(newV.getStatementId()).build();
                     this.context.forward(record.withKey(outK).withValue(newV));
-                } catch (NumberFormatException e) {
-                    LOG.warn("Unable to extract statementId from this key: {}", s.key);
                 }
-
             }
         }
     }

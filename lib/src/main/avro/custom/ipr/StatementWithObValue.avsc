@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "StatementWithObValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of a generic statement usable for project and community downstream processors",
+  "fields": [
+    {
+      "name": "statement_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "object_entity_value",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityValue"
+      ],
+      "default": null
+    }
+  ]
+}

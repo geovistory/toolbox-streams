@@ -257,7 +257,10 @@ public class Fn {
      * @param s StatementJoinValue
      * @return EdgeValue
      */
-    public static EdgeValue createOutgoingEdge(StatementJoinValue s) {
+    public static EdgeValue createOutgoingEdge(StatementJoinValue s) throws RuntimeException {
+        if (s.getSubject() == null || s.getSubject().getEntity() == null || s.getObject() == null) {
+            throw new RuntimeException("Could not transform StatementJoinValue to EdgeValue: subject.entity and object needed.");
+        }
         return EdgeValue.newBuilder()
                 .setProjectId(s.getProjectId())
                 .setStatementId(s.getStatementId())
@@ -282,7 +285,11 @@ public class Fn {
      * @param s StatementJoinValue
      * @return EdgeValue
      */
-    public static EdgeValue createIncomingEdge(StatementJoinValue s) {
+    public static EdgeValue createIncomingEdge(StatementJoinValue s) throws RuntimeException {
+        if (s.getObject() == null || s.getObject().getEntity() == null || s.getSubject() == null) {
+            throw new RuntimeException("Could not transform StatementJoinValue to EdgeValue: object.entity and subject needed.");
+        }
+
         return EdgeValue.newBuilder()
                 .setProjectId(s.getProjectId())
                 .setStatementId(s.getStatementId())
@@ -313,8 +320,7 @@ public class Fn {
      * @return key of edge
      */
     public static String createEdgeKey(int projectId, String sourceId, int propertyId, boolean isOutgoing, String targetId) {
-        var k = projectId + "_" + sourceId + "_" + propertyId + "_" + (isOutgoing ? "o" : "i") + "_" + targetId;
-        return k;
+        return projectId + "_" + sourceId + "_" + propertyId + "_" + (isOutgoing ? "o" : "i") + "_" + targetId;
     }
 
     /**

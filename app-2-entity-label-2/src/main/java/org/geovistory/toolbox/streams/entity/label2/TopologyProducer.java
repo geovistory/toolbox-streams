@@ -43,8 +43,6 @@ public class TopologyProducer {
     SObStore sObStore;
     @Inject
     SCompleteStore sCompleteStore;
-    @Inject
-    ObByStmtStore obByStmtStore;
 
     @Produces
     public Topology buildTopology() {
@@ -214,6 +212,11 @@ public class TopologyProducer {
                         as.<ProjectStatementKey>key().serializer(), as.<EntityValue>value().serializer(),
                         JOIN_S_OB_PE, JOIN_PE_S_OB
                 )
+                .addSource(
+                        PROJECT_S_OB_BY_PK_SOURCE,
+                        as.<ProjectStatementKey>key().deserializer(), as.<StatementWithObValue>value().deserializer(),
+                        outputTopicNames.projectStatementWithObByPk()
+                )
 
                 // ---------------------------------------------------
                 // Join
@@ -234,31 +237,27 @@ public class TopologyProducer {
                 // join project statements with subject with their object project entity
                 .addProcessor(JOIN_SUB_WITH_OB, JoinSub_Ob::new, PROJECT_S_SUB_BY_PK_SOURCE)
                 // join object project entity with the project statements with subject
-                .addProcessor(JOIN_OB_WITH_SUB, JoinOb_Sub::new, STOCK_PE)
+                .addProcessor(JOIN_OB_WITH_SUB, JoinOb_Sub::new, PROJECT_S_OB_BY_PK_SOURCE)
 
                 // ---------------------------------------------------
                 // Create Edges from statements with entities
                 // ---------------------------------------------------
                 .addSink(PROJECT_EDGE_ENTITIES_SINK,
                         outputTopicNames.projectEdges(),
-                        Serdes.String().serializer(), as.<ProjectEdgeValue>value().serializer(),
+                        Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         JOIN_SUB_WITH_OB, JOIN_OB_WITH_SUB
                 )
-
 
                 // ---------------------------------------------------
                 // Join project statement subject with project entity
                 // ---------------------------------------------------
-
-
                 .addStateStore(eStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_E)
                 .addStateStore(sStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_S)
                 .addStateStore(iprStore.createPersistentKeyValueStore(), JOIN_IPR, JOIN_E, JOIN_S)
-                .addStateStore(peStore.createPersistentKeyValueStore(), STOCK_PE, JOIN_S_SUB_PE, JOIN_S_OB_PE, JOIN_OB_WITH_SUB)
+                .addStateStore(peStore.createPersistentKeyValueStore(), STOCK_PE, JOIN_S_SUB_PE, JOIN_S_OB_PE)
                 .addStateStore(sSubStore.createPersistentKeyValueStore(), JOIN_PE_S_SUB, JOIN_S_SUB_PE)
                 .addStateStore(sObStore.createPersistentKeyValueStore(), JOIN_PE_S_OB, JOIN_S_OB_PE, JOIN_OB_WITH_SUB)
-                .addStateStore(sCompleteStore.createPersistentKeyValueStore(), JOIN_SUB_WITH_OB, JOIN_OB_WITH_SUB)
-                .addStateStore(obByStmtStore.createPersistentKeyValueStore(), JOIN_SUB_WITH_OB, JOIN_OB_WITH_SUB);
+                .addStateStore(sCompleteStore.createPersistentKeyValueStore(), JOIN_SUB_WITH_OB, JOIN_OB_WITH_SUB);
     }
 
     private static void createTopologyDocumentation(Topology topology) {

@@ -22,6 +22,7 @@ public class RepartitionSSubByPk implements Processor<ProjectEntityKey, Statemen
      */
     public void process(Record<ProjectEntityKey, StatementWithSubValue> record) {
 
+        // only take statements having an entity as object (not statements with literal)
         if (record.value().getObject() != null && record.value().getObject().getEntity() != null) {
             // push downstream
             this.context.forward(record.withKey(

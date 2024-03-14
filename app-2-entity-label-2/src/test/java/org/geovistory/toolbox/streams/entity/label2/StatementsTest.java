@@ -40,8 +40,7 @@ import java.time.Duration;
 import java.util.*;
 
 import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.createEdgeKey;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration testing of the application with an embedded broker.
@@ -97,8 +96,14 @@ public class StatementsTest {
 
     KafkaConsumer<Integer, ts.projects.info_proj_rel.Value> iprRepartConsumer;
     KafkaConsumer<Integer, StatementEnrichedValue> sRepartConsumer;
-    KafkaConsumer<ProjectStatementKey, StatementValue> spConsumer;
+    KafkaConsumer<ProjectStatementKey, StatementValue> psConsumer;
+    KafkaConsumer<ProjectStatementKey, StatementWithSubValue> psWithSubConsumer;
+    KafkaConsumer<ProjectStatementKey, EntityValue> psWithObConsumer;
     KafkaConsumer<String, EdgeValue> pedgeConsumer;
+
+    KafkaConsumer<ProjectEntityKey, EntityValue> peConsumer;
+    KafkaConsumer<ProjectEntityKey, Integer> psByObConsumer;
+    KafkaConsumer<ProjectEntityKey, StatementValue> psBySubConsumer;
 
 
     @BeforeEach
@@ -115,8 +120,13 @@ public class StatementsTest {
         iprRepartConsumer = new KafkaConsumer<>(consumerPropsWithIntegerKey("consumer-g-13"));
         sRepartConsumer = new KafkaConsumer<>(consumerPropsWithIntegerKey("consumer-g-15"));
 
-        spConsumer = new KafkaConsumer<>(consumerProps("consumer-g-16"));
-        pedgeConsumer = new KafkaConsumer<>(consumerPropsWithStringKey("consumer-g-2"));
+        psConsumer = new KafkaConsumer<>(consumerProps("consumer-g-16"));
+        peConsumer = new KafkaConsumer<>(consumerProps("consumer-g-4"));
+        psByObConsumer = new KafkaConsumer<>(consumerPropsWithIntegerVal("consumer-g-5"));
+        psBySubConsumer = new KafkaConsumer<>(consumerProps("consumer-g-6"));
+        psWithSubConsumer = new KafkaConsumer<>(consumerProps("consumer-g-1"));
+        psWithObConsumer = new KafkaConsumer<>(consumerProps("consumer-g-2"));
+        pedgeConsumer = new KafkaConsumer<>(consumerPropsWithStringKey("consumer-g-3"));
     }
 
     @AfterEach
@@ -125,9 +135,13 @@ public class StatementsTest {
         irpProducer.close();
 
         iprRepartConsumer.close();
-        spConsumer.close();
+        psConsumer.close();
+        peConsumer.close();
+        psByObConsumer.close();
+        psBySubConsumer.close();
+        psWithSubConsumer.close();
+        psWithObConsumer.close();
         pedgeConsumer.close();
-
         kafkaStreams.close();
         Log.info("clean up state directory");
         FileRemover.removeDir(this.stateDir);
@@ -135,11 +149,16 @@ public class StatementsTest {
 
 
     @Test
-    @Timeout(value = 300)
+    @Timeout(value = 60)
     public void testEdges() {
 
         sRepartConsumer.subscribe(Collections.singletonList(outputTopicNames.sRepartitioned()));
         iprRepartConsumer.subscribe(Collections.singletonList(outputTopicNames.iprRepartitioned()));
+        peConsumer.subscribe(Collections.singletonList(outputTopicNames.projectEntity()));
+        psBySubConsumer.subscribe(Collections.singletonList(outputTopicNames.projectStatementBySub()));
+        psByObConsumer.subscribe(Collections.singletonList(outputTopicNames.projectStatementByOb()));
+        psWithSubConsumer.subscribe(Collections.singletonList(outputTopicNames.projectStatementWithSubByPk()));
+        psWithObConsumer.subscribe(Collections.singletonList(outputTopicNames.projectStatementWithObByPk()));
         pedgeConsumer.subscribe(Collections.singletonList(outputTopicNames.projectEdges()));
 
 
@@ -201,6 +220,36 @@ public class StatementsTest {
                 .filter(i -> i.value().getFkEntity() == 53 && i.partition() == e53Partition).toList();
         assertEquals(2, repart53Partitions.size());
 
+        // test project entity
+        var pe = poll(peConsumer, 6);
+        assertEquals(6, pe.size());
+        assertEquals(6, getKeyValueMap(pe.iterator()).size());
+
+        // test project statement by sub
+        var psBySub = poll(psBySubConsumer, 6);
+        assertEquals(6, psBySub.size());
+        assertEquals(4, getKeyValueMap(psBySub.iterator()).size());
+
+        // test project statement by ob
+        var psByOb = poll(psByObConsumer, 3);
+        assertEquals(3, psByOb.size());
+        assertEquals(3, getKeyValueMap(psByOb.iterator()).size());
+
+        // test project statement with object (only i23 is in the project with the statement, i21 not)
+        var psWithOb = poll(psWithObConsumer, 2);
+        assertEquals(2, getKeyValueMap(psWithOb.iterator()).size());
+        for (var psW : psWithOb) {
+            assertNotNull(psW.value());
+        }
+
+        // test project statement with subject (only the ones with entity, not with literal)
+        var psWithSub = poll(psWithSubConsumer, 3);
+        var kvMap = getKeyValueMap(psWithSub.iterator());
+        assertEquals(3, kvMap.size());
+        for (var v : kvMap.values()) {
+            assertNotNull(v.getSubjectEntityValue());
+        }
+
 
         // Test statement store ...
         var sStore = StoreGetter.getStore(this.sStore, kafkaStreams);
@@ -232,10 +281,9 @@ public class StatementsTest {
         assertEquals(6, countItems(sSubStore.all()));
 
         // Test project statement by subject store ...
-        // var sObStore = StoreGetter.getStore(this.sObStore, kafkaStreams);
-        // ... assert that has 3 items
-        // TODO uncomment next line
-        // assertEquals(3, countItems(sObStore.all()));
+        var sObStore = StoreGetter.getStore(this.sObStore, kafkaStreams);
+        //  ... assert that has 3 items
+        assertEquals(3, countItems(sObStore.all()));
 
         // Test edges
         var m = getKeyValueMap(edges.iterator());
@@ -245,18 +293,27 @@ public class StatementsTest {
 
         // this item should exist
         assertNotNull(item);
-        // this item should have a have target project entity
-        // TODO uncomment following line
-        // assertNotNull(item.getTargetProjectEntity());
+        assertNotNull(item.getSourceProjectEntity());
+        // this item should have no target project entity because target is a literal
+        assertNull(item.getTargetProjectEntity());
 
-        // TODO uncomment following lines
-        // item = m.get(createEdgeKey(42, "i20", 33, true, "i21"));
-        // // item should exist
-        // assertNotNull(item);
-        // // item should have a target entity
-        // assertNotNull(item.getTargetNode().getEntity());
-        // // item should not have target project entity because i21 is not in project 42
-        // assertNull(item.getTargetProjectEntity());
+        item = m.get(createEdgeKey(40, "i20", 33, true, "i23"));
+        assertNotNull(item.getSourceProjectEntity());
+        // this item should have a target project entity because target is an entity in project 40
+        assertNotNull(item.getTargetProjectEntity());
+
+        item = m.get(createEdgeKey(40, "i23", 33, false, "i20"));
+        assertNotNull(item.getSourceProjectEntity());
+        // this item should have a target project entity because target is an entity in project 40
+        assertNotNull(item.getTargetProjectEntity());
+
+        item = m.get(createEdgeKey(42, "i20", 33, true, "i21"));
+        // item should exist
+        assertNotNull(item);
+        // item should have a target entity
+        assertNotNull(item.getTargetNode().getEntity());
+        // item should not have target project entity because i21 is not in project 42
+        assertNull(item.getTargetProjectEntity());
 
 
     }
@@ -357,6 +414,12 @@ public class StatementsTest {
         return props;
     }
 
+    private Properties consumerPropsWithIntegerVal(String groupId) {
+        var props = consumerProps(groupId);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
+        return props;
+    }
+
     private Properties consumerPropsWithStringKey(String groupId) {
         var props = consumerProps(groupId);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -378,7 +441,7 @@ public class StatementsTest {
         int fetched = 0;
         List<ConsumerRecord<K, V>> result = new ArrayList<>();
         while (fetched < expectedRecordCount) {
-            ConsumerRecords<K, V> records = consumer.poll(Duration.ofSeconds(1));
+            ConsumerRecords<K, V> records = consumer.poll(Duration.ofMillis(100));
             records.forEach(result::add);
             fetched = result.size();
         }
