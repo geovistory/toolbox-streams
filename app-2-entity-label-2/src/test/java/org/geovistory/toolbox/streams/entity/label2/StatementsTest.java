@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.util.*;
 
 import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.createEdgeKey;
+import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.createProjectEntityKeyOfSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -223,7 +224,8 @@ public class StatementsTest {
         // test project entity
         var pe = poll(peConsumer, 6);
         assertEquals(6, pe.size());
-        assertEquals(6, getKeyValueMap(pe.iterator()).size());
+        var peMap = getKeyRecordMap(pe.iterator());
+        assertEquals(6, peMap.size());
 
         // test project statement by sub
         var psBySub = poll(psBySubConsumer, 6);
@@ -286,34 +288,45 @@ public class StatementsTest {
         assertEquals(3, countItems(sObStore.all()));
 
         // Test edges
-        var m = getKeyValueMap(edges.iterator());
+        var m = getKeyRecordMap(edges.iterator());
         assertEquals(9, m.size());
+
+        // Ensure the edges are in the same partition as their source entities
+        for (var r : m.values()) {
+            var sourcePK = createProjectEntityKeyOfSource(r.value());
+            var e = peMap.get(sourcePK);
+            if (e == null) {
+                assertEquals("i21", sourcePK.getEntityId());
+            } else {
+                assertEquals(e.partition(), r.partition());
+            }
+        }
 
         var item = m.get(createEdgeKey(40, "i20", 30, true, "i7"));
 
         // this item should exist
         assertNotNull(item);
-        assertNotNull(item.getSourceProjectEntity());
+        assertNotNull(item.value().getSourceProjectEntity());
         // this item should have no target project entity because target is a literal
-        assertNull(item.getTargetProjectEntity());
+        assertNull(item.value().getTargetProjectEntity());
 
         item = m.get(createEdgeKey(40, "i20", 33, true, "i23"));
-        assertNotNull(item.getSourceProjectEntity());
+        assertNotNull(item.value().getSourceProjectEntity());
         // this item should have a target project entity because target is an entity in project 40
-        assertNotNull(item.getTargetProjectEntity());
+        assertNotNull(item.value().getTargetProjectEntity());
 
         item = m.get(createEdgeKey(40, "i23", 33, false, "i20"));
-        assertNotNull(item.getSourceProjectEntity());
+        assertNotNull(item.value().getSourceProjectEntity());
         // this item should have a target project entity because target is an entity in project 40
-        assertNotNull(item.getTargetProjectEntity());
+        assertNotNull(item.value().getTargetProjectEntity());
 
         item = m.get(createEdgeKey(42, "i20", 33, true, "i21"));
         // item should exist
         assertNotNull(item);
         // item should have a target entity
-        assertNotNull(item.getTargetNode().getEntity());
+        assertNotNull(item.value().getTargetNode().getEntity());
         // item should not have target project entity because i21 is not in project 42
-        assertNull(item.getTargetProjectEntity());
+        assertNull(item.value().getTargetProjectEntity());
 
 
     }
@@ -463,6 +476,16 @@ public class StatementsTest {
         while (iterator.hasNext()) {
             var i = iterator.next();
             m.put(i.key(), i.value());
+        }
+        return m;
+    }
+
+
+    public static <K, V> Map<K, ConsumerRecord<K, V>> getKeyRecordMap(Iterator<ConsumerRecord<K, V>> iterator) {
+        var m = new HashMap<K, ConsumerRecord<K, V>>();
+        while (iterator.hasNext()) {
+            var i = iterator.next();
+            m.put(i.key(), i);
         }
         return m;
     }

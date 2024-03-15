@@ -12,9 +12,11 @@ import org.geovistory.toolbox.streams.entity.label2.lib.FileWriter;
 import org.geovistory.toolbox.streams.entity.label2.lib.TopicsCreator;
 import org.geovistory.toolbox.streams.entity.label2.names.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.label2.names.OutputTopicNames;
+import org.geovistory.toolbox.streams.entity.label2.partitioner.CustomPartitioner;
 import org.geovistory.toolbox.streams.entity.label2.processors.*;
 import org.geovistory.toolbox.streams.entity.label2.stores.*;
 
+import static org.geovistory.toolbox.streams.entity.label2.lib.Fn.createProjectEntityKeyOfSource;
 import static org.geovistory.toolbox.streams.entity.label2.names.ProcessorNames.*;
 import static org.geovistory.toolbox.streams.entity.label2.names.SinkNames.*;
 import static org.geovistory.toolbox.streams.entity.label2.names.SourceNames.*;
@@ -185,6 +187,7 @@ public class TopologyProducer {
                         PROJECT_EDGE_LITERALS_SINK,
                         outputTopicNames.projectEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
+                        new CustomPartitioner<>(as, (kv) -> createProjectEntityKeyOfSource(kv.value)),
                         CREATE_LITERAL_EDGES
                 )
 
@@ -241,10 +244,15 @@ public class TopologyProducer {
 
                 // ---------------------------------------------------
                 // Create Edges from statements with entities
+                // Remark: The keys are unique per edge but
+                //         the edges are partitioned by ProjectEntityKey
+                //         created from sourceId and projectId
+                //         (see edgePartitioner)
                 // ---------------------------------------------------
                 .addSink(PROJECT_EDGE_ENTITIES_SINK,
                         outputTopicNames.projectEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
+                        new CustomPartitioner<>(as, (kv) -> createProjectEntityKeyOfSource(kv.value)),
                         JOIN_SUB_WITH_OB, JOIN_OB_WITH_SUB
                 )
 
@@ -264,7 +272,8 @@ public class TopologyProducer {
         var description = topology.describe();
         var content = "```mermaid\n" + AsciiToMermaid.toMermaid(description.toString()) + "\n```";
         FileWriter.write("topology.md", content);
-    }
+    }     // Define a custom partitioner
+
 
 }
 

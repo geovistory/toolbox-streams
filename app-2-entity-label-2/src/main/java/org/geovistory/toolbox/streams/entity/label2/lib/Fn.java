@@ -70,6 +70,18 @@ public class Fn {
                 .setEntityId("i" + ipr.getFkEntity()).build();
     }
 
+
+    /**
+     * Transform projectId and entityId to ProjectEntityKey
+     *
+     * @return ProjectEntityKey
+     */
+    public static ProjectEntityKey createProjectEntityKey(int projectId, String entityId) {
+        return ProjectEntityKey.newBuilder()
+                .setProjectId(projectId)
+                .setEntityId(entityId).build();
+    }
+
     /**
      * Transform IprValue to ProjectStatementKey
      *
@@ -331,6 +343,17 @@ public class Fn {
      */
     public static String createEdgeKey(EdgeValue e) {
         return createEdgeKey(e.getProjectId(), e.getSourceId(), e.getPropertyId(), e.getIsOutgoing(), e.getTargetId());
+    }
+
+
+    /**
+     * Creates the ProjectEntityKey of the source entity in the given edge
+     *
+     * @param value EdgeValue
+     * @return the ProjectEntityKey
+     */
+    public static ProjectEntityKey createProjectEntityKeyOfSource(EdgeValue value) {
+        return ProjectEntityKey.newBuilder().setEntityId(value.getSourceId()).setProjectId(value.getProjectId()).build();
     }
 
     /**

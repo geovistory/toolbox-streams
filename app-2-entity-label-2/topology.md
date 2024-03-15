@@ -30,11 +30,9 @@ ts_el4_project_statement_repartitioned_by_object[ts_el4_project_statement_repart
 ts_el4_project_statement_with_ob_by_pk[ts_el4_project_statement_with_ob_by_pk] --> PROJECT_S_OB_BY_PK_SOURCE(PROJECT_S_OB_BY_PK_SOURCE)
 ts_el4_project_statement_with_sub_by_pk[ts_el4_project_statement_with_sub_by_pk] --> PROJECT_S_SUB_BY_PK_SOURCE(PROJECT_S_SUB_BY_PK_SOURCE)
 s-complete-store[(s-<br>complete-<br>store)] --> JOIN_OB_WITH_SUB(JOIN_OB_WITH_SUB)
-ob-by-s-store[(ob-<br>by-<br>s-<br>store)] --> JOIN_OB_WITH_SUB(JOIN_OB_WITH_SUB)
 s-ob-store[(s-<br>ob-<br>store)] --> JOIN_OB_WITH_SUB(JOIN_OB_WITH_SUB)
 s-ob-store[(s-<br>ob-<br>store)] --> JOIN_PE_S_OB(JOIN_PE_S_OB)
 s-complete-store[(s-<br>complete-<br>store)] --> JOIN_SUB_WITH_OB(JOIN_SUB_WITH_OB)
-ob-by-s-store[(ob-<br>by-<br>s-<br>store)] --> JOIN_SUB_WITH_OB(JOIN_SUB_WITH_OB)
 pe-store[(pe-<br>store)] --> JOIN_S_OB_PE(JOIN_S_OB_PE)
 s-ob-store[(s-<br>ob-<br>store)] --> JOIN_S_OB_PE(JOIN_S_OB_PE)
 PROJECT_EDGE_ENTITIES_SINK(PROJECT_EDGE_ENTITIES_SINK) --> ts_el4_project_edges[ts_el4_project_edges]
@@ -121,11 +119,9 @@ s-sub-store
 pe-store
 s-sub-store
 s-complete-store
-ob-by-s-store
 s-ob-store
 s-ob-store
 s-complete-store
-ob-by-s-store
 pe-store
 s-ob-store
 ```
