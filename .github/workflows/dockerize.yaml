@@ -21,7 +21,7 @@ jobs:
       app-0-statement-subject: ${{ steps.filter.outputs.app-0-statement-subject }}
       app-1-base-config: ${{ steps.filter.outputs.app-1-base-config }}
       app-2-entity-label: ${{ steps.filter.outputs.app-2-entity-label }}
-      app-2-entity-label-2: ${{ steps.filter.outputs.app-2-entity-label-2 }}
+      app-2-project-items: ${{ steps.filter.outputs.app-2-project-items }}
       app-3-analysis-statements: ${{ steps.filter.outputs.app-3-analysis-statements }}
       app-3-entity: ${{ steps.filter.outputs.app-3-entity }}
       app-3-fulltext: ${{ steps.filter.outputs.app-3-fulltext }}
@@ -47,8 +47,8 @@ jobs:
               - 'app-1-base-config/**'
             app-2-entity-label:
               - 'app-2-entity-label/**'
-            app-2-entity-label-2:
-              - 'app-2-entity-label-2/**'
+            app-2-project-items:
+              - 'app-2-project-items/**'
             app-3-analysis-statements:
               - 'app-3-analysis-statements/**'
             app-3-entity:
@@ -651,9 +651,9 @@ jobs:
           color: 0x0000ff
           username: GitHub Actions
 
-  dockerize-app-2-entity-label-2:
+  dockerize-app-2-project-items:
     needs: [ detect-changes, pull-request-number ]
-    if: ${{ needs.detect-changes.outputs.app-2-entity-label-2 == 'true' }}
+    if: ${{ needs.detect-changes.outputs.app-2-project-items == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
@@ -661,7 +661,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Test and Dockerize 'app-2-entity-label-2'"
+          title: "Test and Dockerize 'app-2-project-items'"
           description: "PR: ${{ needs.pull-request-number.outputs.number }}"
           color: 0xffed2b
           username: GitHub Actions
@@ -695,7 +695,7 @@ jobs:
       - name: Extract docker tag suffix
         id: extract_docker_tag_suffix
         run: |
-          echo ::set-output name=value::$(./gradlew -q app-2-entity-label-2:printDockerTagSuffix)
+          echo ::set-output name=value::$(./gradlew -q app-2-project-items:printDockerTagSuffix)
 
       # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
       # the workflow execution time. For more information see:
@@ -714,12 +714,12 @@ jobs:
       # Create and push docker image
       - name: Create docker and push image
         run: |
-          ./gradlew app-2-entity-label-2:build \
+          ./gradlew app-2-project-items:build \
             -Dquarkus.package.type=native \
             -Dquarkus.container-image.push=true \
             -Dquarkus.container-image.registry="ghcr.io" \
             -Dquarkus.container-image.group="geovistory" \
-            -Dquarkus.container-image.name="toolbox-streams-entity-label-2-quarkus" \
+            -Dquarkus.container-image.name="toolbox-streams-project-items-quarkus" \
             -Dquarkus.container-image.tag="${{steps.extract_docker_tag_suffix.outputs.value}}"
 
 
@@ -728,7 +728,7 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
-          title: "Dockerize 'app-2-entity-label-2' > Done"
+          title: "Dockerize 'app-2-project-items' > Done"
           description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
           color: 0x0000ff
           username: GitHub Actions

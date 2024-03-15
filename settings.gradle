@@ -25,7 +25,7 @@ include(
         'app-0-statement-object',
         'app-1-base-config',
         'app-2-entity-label',
-        'app-2-entity-label-2',
+        'app-2-project-items',
         'app-3-analysis-statements',
         'app-3-entity',
         'app-3-fulltext',
