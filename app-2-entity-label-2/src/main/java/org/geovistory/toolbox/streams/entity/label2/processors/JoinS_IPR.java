@@ -36,31 +36,31 @@ public class JoinS_IPR implements Processor<Integer, StatementEnrichedValue, Pro
         this.sStore.put(record.key(), newStatementValue);
 
         // scan iprStore for keys starting with pk_entity
-        var iterator = this.iprStore.prefixScan(record.key() + "_", Serdes.String().serializer());
+        try (var iterator = this.iprStore.prefixScan(record.key() + "_", Serdes.String().serializer())) {
 
-        // iterate over all matches in iprStore
-        while (iterator.hasNext()) {
-            // get key-value record
-            var iprKV = iterator.next();
+            // iterate over all matches in iprStore
+            while (iterator.hasNext()) {
+                // get key-value record
+                var iprKV = iterator.next();
 
-            // get old statement value (joined in iprStore)
-            var oldStatementValue = iprKV.value.getS();
+                // get old statement value (joined in iprStore)
+                var oldStatementValue = iprKV.value.getS();
 
-            // if new differs old
-            if (!newStatementValue.equals(oldStatementValue)) {
+                // if new differs old
+                if (!newStatementValue.equals(oldStatementValue)) {
 
-                // update iprStore
-                iprKV.value.setS(newStatementValue);
-                iprStore.put(iprKV.key, iprKV.value);
+                    // update iprStore
+                    iprKV.value.setS(newStatementValue);
+                    iprStore.put(iprKV.key, iprKV.value);
 
-                // create key value
-                var ipr = iprKV.value.getIpr();
-                ProjectStatementKey k = createProjectStatementKey(ipr);
-                StatementValue v = createStatementValue(newStatementValue, ipr);
+                    // create key value
+                    var ipr = iprKV.value.getIpr();
+                    ProjectStatementKey k = createProjectStatementKey(ipr);
+                    StatementValue v = createStatementValue(newStatementValue, ipr);
 
-                // push downstream
-                this.context.forward(record.withKey(k).withValue(v));
-
+                    // push downstream
+                    this.context.forward(record.withKey(k).withValue(v));
+                }
             }
         }
     }

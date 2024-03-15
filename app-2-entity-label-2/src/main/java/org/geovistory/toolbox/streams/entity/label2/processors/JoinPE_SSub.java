@@ -31,27 +31,27 @@ public class JoinPE_SSub implements Processor<ProjectEntityKey, EntityValue, Pro
         var prefix = k.getEntityId() + "_" + k.getProjectId() + "_";
 
         // scan statements with subject store with prefix
-        var iterator = this.sSubStore.prefixScan(prefix, Serdes.String().serializer());
+        try (var iterator = this.sSubStore.prefixScan(prefix, Serdes.String().serializer())) {
 
-        // iterate over all matches in iprStore
-        while (iterator.hasNext()) {
-            // get key-value record of a statement with subject
-            var s = iterator.next();
+            // iterate over all matches in iprStore
+            while (iterator.hasNext()) {
+                // get key-value record of a statement with subject
+                var s = iterator.next();
 
-            // get old joined project entity
-            var oldV = s.value.getSubjectEntityValue();
+                // get old joined project entity
+                var oldV = s.value.getSubjectEntityValue();
 
-            // if new differs old
-            if (!newV.equals(oldV)) {
+                // if new differs old
+                if (!newV.equals(oldV)) {
 
-                // update statements with subject store
-                s.value.setSubjectEntityValue(newV);
-                sSubStore.put(s.key, s.value);
+                    // update statements with subject store
+                    s.value.setSubjectEntityValue(newV);
+                    sSubStore.put(s.key, s.value);
 
 
-                // push downstream
-                this.context.forward(record.withKey(k).withValue(s.value));
-
+                    // push downstream
+                    this.context.forward(record.withKey(k).withValue(s.value));
+                }
             }
         }
     }

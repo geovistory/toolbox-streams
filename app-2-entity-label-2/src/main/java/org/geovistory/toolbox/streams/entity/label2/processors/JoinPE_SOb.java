@@ -33,31 +33,32 @@ public class JoinPE_SOb implements Processor<ProjectEntityKey, EntityValue, Proj
         var prefix = k.getEntityId() + "_" + k.getProjectId() + "_";
 
         // scan statements with subject store with prefix
-        var iterator = this.sObStore.prefixScan(prefix, Serdes.String().serializer());
+        try (var iterator = this.sObStore.prefixScan(prefix, Serdes.String().serializer())) {
 
-        // iterate over all matches in iprStore
-        while (iterator.hasNext()) {
-            // get key-value record of a statement with subject
-            var s = iterator.next();
+            // iterate over all matches in iprStore
+            while (iterator.hasNext()) {
+                // get key-value record of a statement with subject
+                var s = iterator.next();
 
-            // get old joined project entity
-            var oldV = s.value;
+                // get old joined project entity
+                var oldV = s.value;
 
-            // create new join value
-            if (oldV != null) newV.setStatementId(oldV.getStatementId());
+                // create new join value
+                if (oldV != null) newV.setStatementId(oldV.getStatementId());
 
-            // if new differs old
-            if (!newV.equals(oldV)) {
+                // if new differs old
+                if (!newV.equals(oldV)) {
 
-                // update project entity in subject store
-                sObStore.put(s.key, newV);
+                    // update project entity in subject store
+                    sObStore.put(s.key, newV);
 
-                // push downstream
-                if (newV.getStatementId() != null) {
-                    var outK = ProjectStatementKey.newBuilder()
-                            .setProjectId(k.getProjectId())
-                            .setStatementId(newV.getStatementId()).build();
-                    this.context.forward(record.withKey(outK).withValue(newV));
+                    // push downstream
+                    if (newV.getStatementId() != null) {
+                        var outK = ProjectStatementKey.newBuilder()
+                                .setProjectId(k.getProjectId())
+                                .setStatementId(newV.getStatementId()).build();
+                        this.context.forward(record.withKey(outK).withValue(newV));
+                    }
                 }
             }
         }

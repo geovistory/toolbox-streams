@@ -39,31 +39,31 @@ public class JoinE_IPR implements Processor<Integer, Value, ProjectEntityKey, En
         this.eStore.put(record.key(), newEntityProjectedValue);
 
         // scan iprStore for keys starting with pk_entity
-        var iterator = this.iprStore.prefixScan(record.key() + "_", Serdes.String().serializer());
+        try (var iterator = this.iprStore.prefixScan(record.key() + "_", Serdes.String().serializer())) {
+            // iterate over all matches in iprStore
+            while (iterator.hasNext()) {
+                // get key-value record
+                var iprKV = iterator.next();
 
-        // iterate over all matches in iprStore
-        while (iterator.hasNext()) {
-            // get key-value record
-            var iprKV = iterator.next();
+                // get old entity value (joined in iprStore)
+                var oldEntityProjectedValue = iprKV.value.getE();
 
-            // get old entity value (joined in iprStore)
-            var oldEntityProjectedValue = iprKV.value.getE();
+                // if new differs old
+                if (!newEntityProjectedValue.equals(oldEntityProjectedValue)) {
 
-            // if new differs old
-            if (!newEntityProjectedValue.equals(oldEntityProjectedValue)) {
+                    // update iprStore
+                    iprKV.value.setE(newEntityProjectedValue);
+                    iprStore.put(iprKV.key, iprKV.value);
 
-                // update iprStore
-                iprKV.value.setE(newEntityProjectedValue);
-                iprStore.put(iprKV.key, iprKV.value);
+                    // validate entity value
+                    var ipr = iprKV.value.getIpr();
+                    ProjectEntityKey k = createProjectEntityKey(ipr);
+                    var v = createEntityValue(newEntityProjectedValue, ipr);
 
-                // validate entity value
-                var ipr = iprKV.value.getIpr();
-                ProjectEntityKey k = createProjectEntityKey(ipr);
-                var v = createEntityValue(newEntityProjectedValue, ipr);
+                    // push downstream
+                    this.context.forward(record.withKey(k).withValue(v));
 
-                // push downstream
-                this.context.forward(record.withKey(k).withValue(v));
-
+                }
             }
         }
     }
