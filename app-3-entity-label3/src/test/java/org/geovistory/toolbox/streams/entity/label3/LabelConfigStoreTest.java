@@ -12,7 +12,6 @@ import org.geovistory.toolbox.streams.avro.EntityLabelConfigPart;
 import org.geovistory.toolbox.streams.avro.EntityLabelConfigPartField;
 import org.geovistory.toolbox.streams.entity.label3.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.label3.names.InputTopicNames;
-import org.geovistory.toolbox.streams.entity.label3.names.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label3.stores.GlobalLabelConfigStore;
 import org.geovistory.toolbox.streams.testlib.FileRemover;
 import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
@@ -29,14 +28,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 @TestProfile(TopologyTestDriverProfile.class)
-public class CreateLabelConfigStoreTest {
+public class LabelConfigStoreTest {
 
     @Inject
     Topology topology;
     @Inject
     ConfiguredAvroSerde as;
-    @Inject
-    OutputTopicNames outputTopicNames;
     @Inject
     InputTopicNames inputTopicNames;
     @ConfigProperty(name = "kafka-streams.state.dir")

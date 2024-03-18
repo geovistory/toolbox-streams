@@ -4,5 +4,6 @@ public class Processor {
 
     public static final String CREATE_LABEL_EDGES = "PROCESSOR_CREATE_LABEL_EDGES";
     public static final String UPDATE_GLOBAL_STORE_LABEL_CONFIG = "PROCESSOR_UPDATE_GLOBAL_STORE_LABEL_CONFIG";
+    public static final String UPDATE_LABEL_EDGES_BY_SOURCE_STORE = "UPDATE_LABEL_EDGES_BY_SOURCE_STORE";
 
 }

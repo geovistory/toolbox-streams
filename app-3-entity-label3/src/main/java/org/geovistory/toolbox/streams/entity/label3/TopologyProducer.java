@@ -15,7 +15,9 @@ import org.geovistory.toolbox.streams.entity.label3.names.*;
 import org.geovistory.toolbox.streams.entity.label3.partitioner.CustomPartitioner;
 import org.geovistory.toolbox.streams.entity.label3.processors.CreateLabelEdges;
 import org.geovistory.toolbox.streams.entity.label3.processors.GlobalStoreUpdater;
+import org.geovistory.toolbox.streams.entity.label3.processors.LabelEdgeBySourceStoreUpdater;
 import org.geovistory.toolbox.streams.entity.label3.stores.GlobalLabelConfigStore;
+import org.geovistory.toolbox.streams.entity.label3.stores.LabelEdgeBySourceStore;
 
 import java.util.Objects;
 
@@ -34,6 +36,9 @@ public class TopologyProducer {
     @Inject
     GlobalLabelConfigStore globalLabelConfigStore;
 
+    @Inject
+    LabelEdgeBySourceStore labelEdgeBySourceStore;
+
     @Produces
     public Topology buildTopology() {
         var topology = createTopology();
@@ -47,8 +52,8 @@ public class TopologyProducer {
     private Topology createTopology() {
         var stringS = Serdes.String().serializer();
         var stringD = Serdes.String().deserializer();
-
-        var topology = new Topology()
+        
+        return new Topology()
                 // Source Edges
                 .addSource(Source.EDGE, stringD, as.vD(), inputTopicNames.getProjectEdges())
                 // Repartition and project edges to LabelEdge
@@ -69,23 +74,24 @@ public class TopologyProducer {
                         new CustomPartitioner<String, LabelEdge, String>(Serdes.String().serializer(), (kv) -> kv.value.getTargetId()),
                         Processor.CREATE_LABEL_EDGES
                 )
-
-
                 // Create Global LabelConfig Store
                 .addGlobalStore(
                         globalLabelConfigStore.createPersistentKeyValueStore().withLoggingDisabled(),
-                        Source.LABEL_EDGE,
+                        Source.LABEL_CONFIG,
                         as.<ts.projects.entity_label_config.Key>kD(),
                         as.<ts.projects.entity_label_config.Value>vD(),
                         inputTopicNames.proEntityLabelConfig(),
                         Processor.UPDATE_GLOBAL_STORE_LABEL_CONFIG,
                         () -> new GlobalStoreUpdater(GlobalLabelConfigStore.NAME)
-                );
-
-/*
-                .addProcessor("T", LabelConfigStoreUpdater::new, Processor.UPDATE_GLOBAL_STORE_LABEL_CONFIG);
-*/
-        return topology;
+                )
+                // Source label edges partitioned by source
+                .addSource(Source.LABEL_EDGE_BY_SOURCE, stringD, as.vD(), outputTopicNames.labelEdgeBySource())
+                .addProcessor(
+                        Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE,
+                        LabelEdgeBySourceStoreUpdater::new,
+                        Source.LABEL_EDGE_BY_SOURCE
+                )
+                .addStateStore(labelEdgeBySourceStore.createPersistentKeyValueStore(), Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE);
     }
 
     private static void createTopologyDocumentation(Topology topology) {
