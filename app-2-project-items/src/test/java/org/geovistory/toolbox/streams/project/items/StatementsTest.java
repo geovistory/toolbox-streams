@@ -8,9 +8,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
-import lib.FileRemover;
-import lib.InjectRedpandaResource;
-import lib.RedpandaResource;
 import lib.StoreGetter;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -28,6 +25,9 @@ import org.geovistory.toolbox.streams.project.items.lib.TopicsCreator;
 import org.geovistory.toolbox.streams.project.items.names.InputTopicNames;
 import org.geovistory.toolbox.streams.project.items.names.OutputTopicNames;
 import org.geovistory.toolbox.streams.project.items.stores.*;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
+import org.geovistory.toolbox.streams.testlib.InjectRedpandaResource;
+import org.geovistory.toolbox.streams.testlib.RedpandaResource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,12 +35,12 @@ import org.junit.jupiter.api.Timeout;
 import ts.information.resource.Key;
 import ts.information.resource.Value;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 
 import static org.geovistory.toolbox.streams.project.items.lib.Fn.createEdgeKey;
 import static org.geovistory.toolbox.streams.project.items.lib.Fn.createProjectEntityKeyOfSource;
+import static org.geovistory.toolbox.streams.testlib.StateStoreTestUtils.countItems;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * With multiple test in the same test class, test can affect each other.
  */
 @QuarkusTest
-@QuarkusTestResource(RedpandaResource.class)
+@QuarkusTestResource(restrictToAnnotatedClass = true, value = RedpandaResource.class)
 @TestProfile(StatementsTest.MyProfile.class)
 public class StatementsTest {
     public static class MyProfile implements QuarkusTestProfile {
@@ -108,10 +108,7 @@ public class StatementsTest {
 
 
     @BeforeEach
-    public void setUp() throws IOException, InterruptedException {
-        redpandaResource.container.execInContainer("sh", "-c", "rpk cluster config set group_min_session_timeout_ms 250");
-        redpandaResource.container.execInContainer("sh", "-c", "rpk group seek my-app-4 --to start");
-
+    public void setUp() {
         topicsCreator.createInputTopics();
 
         irpProducer = new KafkaProducer<>(producerProps());
@@ -414,8 +411,6 @@ public class StatementsTest {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
-        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "250");
-        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, "200");
         props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
         props.put("schema.registry.url", redpandaResource.getSchemaRegistryAddress());
         return props;
@@ -462,14 +457,6 @@ public class StatementsTest {
     }
 
 
-    public static <E> int countItems(Iterator<E> iterator) {
-        int count = 0;
-        while (iterator.hasNext()) {
-            iterator.next();
-            count++;
-        }
-        return count;
-    }
 
     public static <K, V> Map<K, V> getKeyValueMap(Iterator<ConsumerRecord<K, V>> iterator) {
         var m = new HashMap<K, V>();

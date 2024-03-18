@@ -5,7 +5,7 @@ import org.apache.kafka.streams.StoreQueryParameters;
 import org.apache.kafka.streams.errors.InvalidStateStoreException;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
-import org.geovistory.toolbox.streams.project.items.lib.AbstractStore;
+import org.geovistory.toolbox.streams.lib.processorapi.AbstractStore;
 
 public class StoreGetter {
     static public <K, V> ReadOnlyKeyValueStore<K, V> getStore(AbstractStore<K, V> storeHelper, KafkaStreams streams) {

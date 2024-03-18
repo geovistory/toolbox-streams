@@ -7,7 +7,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.StatementValue;
 import org.geovistory.toolbox.streams.avro.StatementWithSubValue;
-import org.geovistory.toolbox.streams.project.items.lib.AbstractStore;
+import org.geovistory.toolbox.streams.lib.processorapi.AbstractStore;
 import org.geovistory.toolbox.streams.project.items.lib.ConfiguredAvroSerde;
 
 /**

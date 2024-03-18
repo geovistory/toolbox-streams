@@ -1,8 +1,8 @@
 package org.geovistory.toolbox.streams.project.items;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
-import lib.FileRemover;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -11,6 +11,8 @@ import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.project.items.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.project.items.names.OutputTopicNames;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
+import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
+@TestProfile(TopologyTestDriverProfile.class)
 public class TestJoinProjectStatementsWithObject {
 
     @Inject
@@ -43,7 +46,7 @@ public class TestJoinProjectStatementsWithObject {
         Properties config = new Properties();
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "testApplicationId");
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        as.schemaRegistryUrl = "mock://" + TestJoinProjectStatementsWithObject.class;
+        //as.schemaRegistryUrl = "mock://" + TestJoinProjectStatementsWithObject.class;
 
         testDriver = new TopologyTestDriver(topology, config);
         peInputTopic = testDriver.createInputTopic(

@@ -5,7 +5,7 @@ import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.geovistory.toolbox.streams.avro.StatementWithObValue;
-import org.geovistory.toolbox.streams.project.items.lib.AbstractStore;
+import org.geovistory.toolbox.streams.lib.processorapi.AbstractStore;
 import org.geovistory.toolbox.streams.project.items.lib.ConfiguredAvroSerde;
 
 /**

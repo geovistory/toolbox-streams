@@ -8,9 +8,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
-import lib.FileRemover;
-import lib.InjectRedpandaResource;
-import lib.RedpandaResource;
 import lib.StoreGetter;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -28,6 +25,9 @@ import org.geovistory.toolbox.streams.project.items.lib.TopicsCreator;
 import org.geovistory.toolbox.streams.project.items.names.InputTopicNames;
 import org.geovistory.toolbox.streams.project.items.names.OutputTopicNames;
 import org.geovistory.toolbox.streams.project.items.stores.EStore;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
+import org.geovistory.toolbox.streams.testlib.InjectRedpandaResource;
+import org.geovistory.toolbox.streams.testlib.RedpandaResource;
 import org.junit.jupiter.api.*;
 import ts.information.resource.Key;
 import ts.information.resource.Value;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * With multiple test in the same test class, test can affect each other.
  */
 @QuarkusTest
-@QuarkusTestResource(RedpandaResource.class)
+@QuarkusTestResource(restrictToAnnotatedClass = true, value = RedpandaResource.class)
 @TestProfile(JoinIPRtoETest.MyProfile.class)
 public class JoinIPRtoETest {
     public static class MyProfile implements QuarkusTestProfile {

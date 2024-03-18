@@ -32,9 +32,6 @@ dependencies {
 
     implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'
 
-    // Added for test with embedded redpanda broker
-    testImplementation "org.testcontainers:redpanda:1.19.0"
-
     // Added for testing rest endpoints
     testImplementation "io.rest-assured:rest-assured"
 

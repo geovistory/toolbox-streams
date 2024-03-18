@@ -1,14 +1,16 @@
 package org.geovistory.toolbox.streams.project.items;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
-import lib.FileRemover;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.project.items.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.project.items.names.OutputTopicNames;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
+import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
+@TestProfile(TopologyTestDriverProfile.class)
 public class TestJoinCompleteStatement {
     @Inject
     Topology topology;

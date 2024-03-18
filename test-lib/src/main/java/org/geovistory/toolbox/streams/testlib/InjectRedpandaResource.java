@@ -1,4 +1,4 @@
-package lib;
+package org.geovistory.toolbox.streams.testlib;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

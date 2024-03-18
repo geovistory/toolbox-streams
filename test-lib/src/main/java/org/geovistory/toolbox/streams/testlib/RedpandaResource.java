@@ -1,4 +1,4 @@
-package lib;
+package org.geovistory.toolbox.streams.testlib;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.testcontainers.redpanda.RedpandaContainer;

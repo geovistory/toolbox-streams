@@ -5,6 +5,7 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.Topology;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.project.items.docs.AsciiToMermaid;
 import org.geovistory.toolbox.streams.project.items.lib.ConfiguredAvroSerde;
@@ -15,6 +16,8 @@ import org.geovistory.toolbox.streams.project.items.names.*;
 import org.geovistory.toolbox.streams.project.items.partitioner.CustomPartitioner;
 import org.geovistory.toolbox.streams.project.items.processors.*;
 import org.geovistory.toolbox.streams.project.items.stores.*;
+
+import java.util.Objects;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -40,13 +43,15 @@ public class TopologyProducer {
     SObStore sObStore;
     @Inject
     SCompleteStore sCompleteStore;
+    @ConfigProperty(name = "auto.create.output.topics")
+    String autoCreateOutputTopics;
 
     @Produces
     public Topology buildTopology() {
         var topology = createTopology();
         createTopologyDocumentation(topology);
         // create output topics in advance to ensure correct configuration (partition, compaction, ect.)
-        topicsCreator.createOutputTopics();
+        if (Objects.equals(autoCreateOutputTopics, "enabled")) topicsCreator.createOutputTopics();
         return topology;
 
     }

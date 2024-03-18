@@ -1,4 +1,4 @@
-package org.geovistory.toolbox.streams.project.items.lib;
+package org.geovistory.toolbox.streams.lib.processorapi;
 
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.state.KeyValueStore;

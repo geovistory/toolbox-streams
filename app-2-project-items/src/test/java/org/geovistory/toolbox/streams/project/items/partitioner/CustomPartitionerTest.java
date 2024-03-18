@@ -1,18 +1,21 @@
 package org.geovistory.toolbox.streams.project.items.partitioner;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
 import org.apache.kafka.clients.producer.internals.BuiltInPartitioner;
 import org.apache.kafka.streams.processor.internals.DefaultStreamPartitioner;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.project.items.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.project.items.lib.Fn;
+import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
+@TestProfile(TopologyTestDriverProfile.class)
 public class CustomPartitionerTest {
 
     @Inject
