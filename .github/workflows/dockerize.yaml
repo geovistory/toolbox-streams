@@ -49,6 +49,8 @@ jobs:
               - 'app-2-entity-label/**'
             app-2-project-items:
               - 'app-2-project-items/**'
+            app-3-entity-label3:
+              - 'app-3-entity-label3/**'
             app-3-analysis-statements:
               - 'app-3-analysis-statements/**'
             app-3-entity:
@@ -733,6 +735,88 @@ jobs:
           color: 0x0000ff
           username: GitHub Actions
 
+
+  dockerize-app-3-entity-label3:
+    needs: [ detect-changes, pull-request-number ]
+    if: ${{ needs.detect-changes.outputs.app-3-entity-label3 == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
+          title: "Test and Dockerize 'app-3-entity-label3'"
+          description: "PR: ${{ needs.pull-request-number.outputs.number }}"
+          color: 0xffed2b
+          username: GitHub Actions
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Git Identity
+        run: |
+          git config --global user.name 'geovbot'
+          git config --global user.email 'github.bot@geovistory.org'
+          git remote set-url origin https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      # this will update metadata about PR for the docker tag in /build.gradle
+      - name: Update pull request metadata in build.gradle
+        id: version
+        run: bash updatePRMetadata.bash ${{ needs.pull-request-number.outputs.number }}
+
+      # extract tag (e.g. 1.0.1-pr-32.0)
+      - name: Extract docker tag suffix
+        id: extract_docker_tag_suffix
+        run: |
+          echo ::set-output name=value::$(./gradlew -q app-3-entity-label3:printDockerTagSuffix)
+
+      # This step will build a Java project with Gradle and cache/restore any dependencies  to improve
+      # the workflow execution time. For more information see:
+      # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+
+      # login to ghcr.io
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Create and push docker image
+      - name: Create docker and push image
+        run: |
+          ./gradlew app-3-entity-label3:build \
+            -Dquarkus.package.type=native \
+            -Dquarkus.container-image.push=true \
+            -Dquarkus.container-image.registry="ghcr.io" \
+            -Dquarkus.container-image.group="geovistory" \
+            -Dquarkus.container-image.name="toolbox-streams-project-items-quarkus" \
+            -Dquarkus.container-image.tag="${{steps.extract_docker_tag_suffix.outputs.value}}"
+
+
+      - name: Send Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_GITHUB_CHANNEL_WEBHOOK }}
+          title: "Dockerize 'app-3-entity-label3' > Done"
+          description: "Image Tag: ${{steps.extract_docker_tag_suffix.outputs.value}}"
+          color: 0x0000ff
+          username: GitHub Actions
 
   dockerize-app-3-analysis-statements:
     needs: [ detect-changes, pull-request-number ]
