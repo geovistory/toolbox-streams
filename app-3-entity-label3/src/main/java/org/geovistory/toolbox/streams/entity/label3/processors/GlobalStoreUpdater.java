@@ -6,10 +6,9 @@ import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueStore;
 
 // Processor that keeps the global store updated.
-public class GlobalStoreUpdater<K, V> implements Processor<K, V, K, V> {
+public class GlobalStoreUpdater<K, V> implements Processor<K, V, Void, Void> {
 
     private final String storeName;
-    private ProcessorContext<K, V> context;
 
 
     public GlobalStoreUpdater(final String storeName) {
@@ -19,9 +18,8 @@ public class GlobalStoreUpdater<K, V> implements Processor<K, V, K, V> {
     private KeyValueStore<K, V> store;
 
     @Override
-    public void init(final ProcessorContext<K, V> processorContext) {
+    public void init(final ProcessorContext<Void, Void> processorContext) {
         store = processorContext.getStateStore(storeName);
-        this.context = processorContext;
     }
 
     @Override
@@ -31,8 +29,6 @@ public class GlobalStoreUpdater<K, V> implements Processor<K, V, K, V> {
         // Doing so would break fault-tolerance.
         // see https://issues.apache.org/jira/browse/KAFKA-7663
         store.put(record.key(), record.value());
-
-        context.forward(record);
     }
 
     @Override
