@@ -82,6 +82,8 @@ public class LabelConfigStoreTest {
                 .setConfig(config)
                 .setProjectId(pid)
                 .setClassId(classId)
+                .setRecordTimestamp(1l)
+                .setDeleted(false)
                 .build();
         this.labelConfigInputTopic.pipeInput(k, v);
     }

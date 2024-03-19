@@ -47,7 +47,10 @@
     },
     {
       "name": "target_label",
-      "type": "string"
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "target_label_language",

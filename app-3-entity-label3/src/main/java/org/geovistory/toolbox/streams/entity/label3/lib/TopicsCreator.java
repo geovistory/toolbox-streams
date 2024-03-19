@@ -36,6 +36,7 @@ public class TopicsCreator {
     public void createInputTopics() {
         var topics = new ArrayList<KeyValue<String, TsAdmin.CleanupConfig>>();
         topics.add(KeyValue.pair(inputTopicNames.getProjectEdges(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(inputTopicNames.proEntityLabelConfig(), TsAdmin.CleanupConfig.COMPACT));
         createTopics(topics);
     }
 
@@ -45,7 +46,10 @@ public class TopicsCreator {
      */
     public void createOutputTopics() {
         var topics = new ArrayList<KeyValue<String, TsAdmin.CleanupConfig>>();
+        topics.add(KeyValue.pair(outputTopicNames.labelConfigByProjectClass(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.entityLabels(), TsAdmin.CleanupConfig.COMPACT));
         topics.add(KeyValue.pair(outputTopicNames.labelEdgeBySource(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.labelEdgeByTarget(), TsAdmin.CleanupConfig.COMPACT));
         createTopics(topics);
     }
 

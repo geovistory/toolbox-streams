@@ -16,8 +16,12 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.avro.EdgeValue;
+import org.geovistory.toolbox.streams.avro.EntityLabel;
+import org.geovistory.toolbox.streams.avro.EntityLabelConfigPartField;
+import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.entity.label3.lib.TopicsCreator;
 import org.geovistory.toolbox.streams.entity.label3.names.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.label3.names.OutputTopicNames;
@@ -28,9 +32,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import ts.projects.entity_label_config.Key;
+import ts.projects.entity_label_config.Value;
 
 import java.time.Duration;
 import java.util.*;
+
+import static org.geovistory.toolbox.streams.entity.label3.testlib.MockConfig.createLabelConfig;
+import static org.geovistory.toolbox.streams.entity.label3.testlib.MockEdges.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @QuarkusTest
@@ -55,21 +65,24 @@ public class IntegrationTest {
     RedpandaResource redpandaResource;
 
     KafkaProducer<String, EdgeValue> edgeProducer;
-    KafkaConsumer<String, LabelEdge> labelEdgeConsumer;
+    KafkaProducer<Key, Value> configProducer;
+    KafkaConsumer<ProjectEntityKey, EntityLabel> entityLabelConsumer;
 
     @BeforeEach
     public void setUp() {
         topicsCreator.createInputTopics();
 
         edgeProducer = new KafkaProducer<>(producerProps());
-        labelEdgeConsumer = new KafkaConsumer<>(consumerPropsWithStringKey("consumer-g-1"));
+        configProducer = new KafkaProducer<>(producerProps());
+        entityLabelConsumer = new KafkaConsumer<>(consumerProps("consumer-g-1"));
 
     }
 
     @AfterEach
     public void tearDown() {
         edgeProducer.close();
-        labelEdgeConsumer.close();
+        configProducer.close();
+        entityLabelConsumer.close();
 
         kafkaStreams.close();
         Log.info("clean up state directory");
@@ -78,82 +91,55 @@ public class IntegrationTest {
 
 
     @Test
-    @Timeout(30)
+    @Timeout(300)
     public void createLabelEdgesTest() {
-        labelEdgeConsumer.subscribe(Collections.singletonList(outputTopicNames.labelEdgeByTarget()));
+        entityLabelConsumer.subscribe(Collections.singletonList(outputTopicNames.entityLabels()));
 
-        // Publish test input
-        sendEdge(1, "i1");
-        // Consume label edges
-        poll(labelEdgeConsumer, 1);
+        // test the propagation of the label from literal to entity(c365) to entity(c21)
 
+        // edges of appellation in a language
+        sendEdge(createEdgeWithoutProjectEntity(
+                1, 10, 365, 0.7f, 1113, true, nodeValueWithLabel(20, 40, "Abc"), "2021", false
+        ));
+
+        sendEdge(createEdgeWithoutProjectEntity(
+                1, 10, 365, 0.7f, 1112, true, nodeValueWithLanguage(18605), "2021", false
+        ));
+
+        // edges of person
+        sendEdge(createEdgeWithProjectEntity(
+                1, 11, 21, 0.7f, 1111, false, "i10", 365, 1, false, "2021", false
+        ));
+
+        // label config for appellation in language
+        sendLabelConfig(createLabelConfig(80, 1, 365, "false", new EntityLabelConfigPartField[]{
+                new EntityLabelConfigPartField(1113, true, 1)
+        }));
+
+        // label config for person
+        sendLabelConfig(createLabelConfig(81, 1, 21, "false", new EntityLabelConfigPartField[]{
+                new EntityLabelConfigPartField(1111, false, 1)
+        }));
+
+
+        // Consume entity labels
+        var el = poll(entityLabelConsumer, 2);
+        var elMap = getKeyRecordMap(el.iterator());
+        assertEquals("Abc", elMap.get(new ProjectEntityKey(1, "i10")).value().getLabel());
+        var i11 = elMap.get(new ProjectEntityKey(1, "i11")).value();
+        assertEquals("Abc", i11.getLabel());
+        assertEquals("de", i11.getLanguage());
 
     }
 
-    public void sendEdge(int pid, String sourceId) {
-        var v = createEdge(pid, sourceId);
+    public void sendEdge(EdgeValue v) {
         var k = createEdgeKey(v);
         edgeProducer.send(new ProducerRecord<>(inputTopicNames.getProjectEdges(), k, v));
     }
 
-    public static String createEdgeKey(EdgeValue e) {
-        return createEdgeKey(e.getProjectId(), e.getSourceId(), e.getPropertyId(), e.getIsOutgoing(), e.getTargetId());
-    }
 
-    public static String createEdgeKey(int projectId, String sourceId, int propertyId, boolean isOutgoing, String targetId) {
-        return projectId + "_" + sourceId + "_" + propertyId + "_" + (isOutgoing ? "o" : "i") + "_" + targetId;
-    }
-
-    private static EdgeValue createEdge(int pid, String sourceId) {
-        return EdgeValue.newBuilder()
-                .setProjectId(pid)
-                .setStatementId(0)
-                .setProjectCount(0)
-                .setOrdNum(0f)
-                .setSourceId(sourceId)
-                .setSourceEntity(Entity.newBuilder()
-                        .setFkClass(0)
-                        .setCommunityVisibilityWebsite(false)
-                        .setCommunityVisibilityDataApi(false)
-                        .setCommunityVisibilityToolbox(false)
-                        .build())
-                .setSourceProjectEntity(EntityValue.newBuilder()
-                        .setProjectId(0)
-                        .setEntityId("0")
-                        .setClassId(0)
-                        .setCommunityVisibilityToolbox(true)
-                        .setCommunityVisibilityDataApi(true)
-                        .setCommunityVisibilityWebsite(true)
-                        .setProjectVisibilityDataApi(true)
-                        .setProjectVisibilityWebsite(true)
-                        .setDeleted(false)
-                        .build())
-                .setPropertyId(0)
-                .setIsOutgoing(false)
-                .setTargetId("0")
-                .setTargetNode(NodeValue.newBuilder().setLabel("").setId("0").setClassId(0)
-                        .setEntity(
-                                Entity.newBuilder()
-                                        .setFkClass(0)
-                                        .setCommunityVisibilityWebsite(true)
-                                        .setCommunityVisibilityDataApi(true)
-                                        .setCommunityVisibilityToolbox(true)
-                                        .build())
-                        .build())
-                .setTargetProjectEntity(EntityValue.newBuilder()
-                        .setProjectId(0)
-                        .setEntityId("0")
-                        .setClassId(0)
-                        .setCommunityVisibilityToolbox(true)
-                        .setCommunityVisibilityDataApi(true)
-                        .setCommunityVisibilityWebsite(true)
-                        .setProjectVisibilityDataApi(true)
-                        .setProjectVisibilityWebsite(true)
-                        .setDeleted(false)
-                        .build())
-                .setModifiedAt("0")
-                .setDeleted(false)
-                .build();
+    public void sendLabelConfig(KeyValue<Key, Value> kv) {
+        configProducer.send(new ProducerRecord<>(inputTopicNames.proEntityLabelConfig(), kv.key, kv.value));
     }
 
 

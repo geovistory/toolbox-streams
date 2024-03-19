@@ -11,12 +11,14 @@ import org.geovistory.toolbox.streams.entity.label3.stores.EntityLabelStore;
 import org.geovistory.toolbox.streams.entity.label3.stores.GlobalLabelConfigStore;
 import org.geovistory.toolbox.streams.entity.label3.stores.LabelConfigTmstpStore;
 import org.geovistory.toolbox.streams.entity.label3.stores.LabelEdgeBySourceStore;
+import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 
+import static java.lang.Integer.parseInt;
 import static org.geovistory.toolbox.streams.entity.label3.lib.Fn.*;
 
 
@@ -27,6 +29,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
     private KeyValueStore<ProjectClassKey, EntityLabelConfigTmstp> labelConfigStore;
     private KeyValueStore<ProjectClassKey, Long> labelConfigTmspStore;
 
+    private Boolean punctuationProcessing = false;
+
     public void init(ProcessorContext<ProjectEntityKey, EntityLabel> context) {
         entityLabelStore = context.getStateStore(EntityLabelStore.NAME);
         labelEdgeBySourceStore = context.getStateStore(LabelEdgeBySourceStore.NAME);
@@ -35,23 +39,27 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
         this.context = context;
 
         context.schedule(Duration.ofSeconds(10), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
-            try (var iterator = labelConfigStore.all()) {
-                while (iterator.hasNext()) {
-                    var item = iterator.next();
-                    var oldT = labelConfigTmspStore.get(item.key);
-                    var newT = item.value.getRecordTimestamp();
-                    if (oldT == null || oldT < newT) {
-                        var defaultConfig = item.key.getClassId() == 375669;
+            if (!punctuationProcessing) {
+                punctuationProcessing = true;
+                try (var iterator = labelConfigStore.all()) {
+                    while (iterator.hasNext()) {
+                        var item = iterator.next();
+                        var oldT = labelConfigTmspStore.get(item.key);
+                        var newT = item.value.getRecordTimestamp();
+                        if (oldT == null || oldT < newT) {
+                            var defaultConfig = item.key.getClassId() == 375669;
 
-                        // create prefix
-                        var prefix = defaultConfig ?
-                                createLabelEdgePrefix1(item.key.getClassId()) :
-                                createLabelEdgePrefix2(item.key.getClassId(), item.key.getProjectId());
+                            // create prefix
+                            var prefix = defaultConfig ?
+                                    createLabelEdgePrefix1(item.key.getClassId()) :
+                                    createLabelEdgePrefix2(item.key.getClassId(), item.key.getProjectId());
 
-                        // update labels with the new config
-                        updateLabelsWithNewConfig(prefix, newT);
+                            // update labels with the new config
+                            updateLabelsWithNewConfig(prefix, newT);
+                        }
                     }
                 }
+                punctuationProcessing = false;
             }
         });
     }
@@ -114,13 +122,22 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
                 }
             }
         }
+
+        if (strings.size() == 0) return null;
+
         String lang;
-        if (languages.size() == 1) lang = languages.stream().toList().get(0);
+        if (isAppellationInLanguage(labelEdge)) lang = getLanguage(labelEdge);
+        else if (languages.size() == 1) lang = languages.stream().toList().get(0);
         else if (languages.size() > 1) lang = "mixed";
         else lang = "unknown";
 
         String label = String.join(", ", strings);
         return EntityLabel.newBuilder().setLabel(label).setLanguage(lang).build();
+    }
+
+    private Boolean isAppellationInLanguage(LabelEdge e) {
+        var sourceClass = e.getSourceClassId();
+        return (sourceClass == 365 || sourceClass == 868);
     }
 
     private EntityLabelConfigTmstp lookupEntityLabelConfig(Record<String, LabelEdge> record) {
@@ -170,6 +187,30 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
                 f.getFkProperty(),
                 f.getIsOutgoing());
     }
+
+    private String getLanguage(LabelEdge e) {
+        String langCode = "unknown";
+        try (var iterator = this.labelEdgeBySourceStore.prefixScan(createPrefixLanguageScan(e), Serdes.String().serializer())) {
+            if (iterator.hasNext()) {
+                var item = iterator.next();
+                try {
+                    var parsedLangCode = Utils.getLanguageFromId(parseInt(item.value.getTargetId().replace("i", "")));
+                    if (parsedLangCode != null) langCode = parsedLangCode;
+                } catch (Exception ignore) {
+                }
+            }
+        }
+        return langCode;
+    }
+
+    public static String createPrefixLanguageScan(LabelEdge e) {
+        return createLabelEdgePrefix3(e.getSourceClassId(),
+                e.getProjectId(),
+                e.getSourceId(),
+                1112,
+                true);
+    }
+
 
     private void updateLabelsWithNewConfig(String prefix, Long timestamp) {
         // iterate over edges
