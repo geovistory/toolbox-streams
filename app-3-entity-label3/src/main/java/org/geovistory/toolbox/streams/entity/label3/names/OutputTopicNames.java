@@ -17,6 +17,14 @@ public class OutputTopicNames {
         return p("label_edge_by_target");
     }
 
+    public final String labelConfigByProjectClass() {
+        return p("label_config_by_project_class_key");
+    }
+
+    public final String entityLabels() {
+        return p("entity_labels");
+    }
+
     private String p(String n) {
         return Utils.prefixedOut(outPrefix, n);
     }

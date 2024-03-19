@@ -1,0 +1,32 @@
+{
+  "type": "record",
+  "name": "EntityLabelConfigTmstp",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of a entity label config",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "config",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityLabelConfig"
+      ],
+      "default": null
+    },
+    {
+      "name": "record_timestamp",
+      "type": "long"
+    },
+    {
+      "name": "deleted",
+      "type": "boolean"
+    }
+  ]
+}

@@ -7,19 +7,15 @@ import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.geovistory.toolbox.streams.avro.EntityLabelConfig;
-import org.geovistory.toolbox.streams.avro.EntityLabelConfigPart;
-import org.geovistory.toolbox.streams.avro.EntityLabelConfigPartField;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.label3.lib.ConfiguredAvroSerde;
-import org.geovistory.toolbox.streams.entity.label3.names.InputTopicNames;
+import org.geovistory.toolbox.streams.entity.label3.names.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.label3.stores.GlobalLabelConfigStore;
 import org.geovistory.toolbox.streams.testlib.FileRemover;
 import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ts.projects.entity_label_config.Key;
-import ts.projects.entity_label_config.Value;
 
 import java.util.List;
 
@@ -35,18 +31,18 @@ public class LabelConfigStoreTest {
     @Inject
     ConfiguredAvroSerde as;
     @Inject
-    InputTopicNames inputTopicNames;
+    OutputTopicNames outputTopicNames;
     @ConfigProperty(name = "kafka-streams.state.dir")
     public String stateDir;
     TopologyTestDriver testDriver;
-    TestInputTopic<Key, Value> labelConfigInputTopic;
+    TestInputTopic<ProjectClassKey, EntityLabelConfigTmstp> labelConfigInputTopic;
 
     @BeforeEach
     public void setUp() {
         testDriver = new TopologyTestDriver(topology);
         labelConfigInputTopic = testDriver.createInputTopic(
-                inputTopicNames.proEntityLabelConfig(),
-                as.<Key>key().serializer(), as.<Value>value().serializer()
+                outputTopicNames.labelConfigByProjectClass(),
+                as.kS(), as.vS()
         );
 
 
@@ -67,8 +63,9 @@ public class LabelConfigStoreTest {
     }
 
     public void sendLabelConfig(int pid, int classId) {
-        var k = Key.newBuilder().setPkEntity(123).build();
-        var configJson = EntityLabelConfig.newBuilder()
+
+        var k = ProjectClassKey.newBuilder().setClassId(classId).setProjectId(pid).build();
+        var config = EntityLabelConfig.newBuilder()
                 .setLabelParts(List.of(
                         EntityLabelConfigPart.newBuilder()
                                 .setOrdNum(44)
@@ -80,11 +77,11 @@ public class LabelConfigStoreTest {
                                                 .build()
                                 )
                                 .build()
-                )).build().toString();
-        var v = Value.newBuilder()
-                .setConfig(configJson)
-                .setFkProject(pid)
-                .setFkClass(classId)
+                )).build();
+        var v = EntityLabelConfigTmstp.newBuilder()
+                .setConfig(config)
+                .setProjectId(pid)
+                .setClassId(classId)
                 .build();
         this.labelConfigInputTopic.pipeInput(k, v);
     }

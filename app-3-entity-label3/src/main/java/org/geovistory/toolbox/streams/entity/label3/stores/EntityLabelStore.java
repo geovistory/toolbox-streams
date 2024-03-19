@@ -3,17 +3,19 @@ package org.geovistory.toolbox.streams.entity.label3.stores;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serde;
-import org.geovistory.toolbox.streams.avro.EntityLabelConfigTmstp;
-import org.geovistory.toolbox.streams.avro.ProjectClassKey;
+import org.geovistory.toolbox.streams.avro.EntityLabel;
+import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.entity.label3.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.processorapi.AbstractStore;
 
 /**
- * Store for ts.projects.entity_label_config
+ * Store for EntityLabel.
+ * with key: ProjectEntityKey
+ * with val: EntityLabel
  */
 @ApplicationScoped
-public class GlobalLabelConfigStore extends AbstractStore<ProjectClassKey, EntityLabelConfigTmstp> {
-    public static final String NAME = "global-label-config-store";
+public class EntityLabelStore extends AbstractStore<ProjectEntityKey, EntityLabel> {
+    public static final String NAME = "entity-label-store";
     @Inject
     ConfiguredAvroSerde as;
 
@@ -23,12 +25,12 @@ public class GlobalLabelConfigStore extends AbstractStore<ProjectClassKey, Entit
     }
 
     @Override
-    public Serde<ProjectClassKey> getKeySerde() {
+    public Serde<ProjectEntityKey> getKeySerde() {
         return as.key();
     }
 
     @Override
-    public Serde<EntityLabelConfigTmstp> getValueSerde() {
+    public Serde<EntityLabel> getValueSerde() {
         return as.value();
     }
 

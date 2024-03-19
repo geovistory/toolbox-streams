@@ -6,17 +6,17 @@ import jakarta.inject.Inject;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.geovistory.toolbox.streams.avro.LabelEdge;
+import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.label3.docs.AsciiToMermaid;
 import org.geovistory.toolbox.streams.entity.label3.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.label3.lib.FileWriter;
 import org.geovistory.toolbox.streams.entity.label3.lib.TopicsCreator;
 import org.geovistory.toolbox.streams.entity.label3.names.*;
 import org.geovistory.toolbox.streams.entity.label3.partitioner.CustomPartitioner;
-import org.geovistory.toolbox.streams.entity.label3.processors.CreateLabelEdges;
-import org.geovistory.toolbox.streams.entity.label3.processors.GlobalStoreUpdater;
-import org.geovistory.toolbox.streams.entity.label3.processors.LabelEdgeBySourceStoreUpdater;
+import org.geovistory.toolbox.streams.entity.label3.processors.*;
+import org.geovistory.toolbox.streams.entity.label3.stores.EntityLabelStore;
 import org.geovistory.toolbox.streams.entity.label3.stores.GlobalLabelConfigStore;
+import org.geovistory.toolbox.streams.entity.label3.stores.LabelConfigTmstpStore;
 import org.geovistory.toolbox.streams.entity.label3.stores.LabelEdgeBySourceStore;
 
 import java.util.Objects;
@@ -35,9 +35,13 @@ public class TopologyProducer {
     String autoCreateOutputTopics;
     @Inject
     GlobalLabelConfigStore globalLabelConfigStore;
-
     @Inject
     LabelEdgeBySourceStore labelEdgeBySourceStore;
+    @Inject
+    EntityLabelStore entityLabelStore;
+    @Inject
+    LabelConfigTmstpStore labelConfigTmstpStore;
+
 
     @Produces
     public Topology buildTopology() {
@@ -52,7 +56,8 @@ public class TopologyProducer {
     private Topology createTopology() {
         var stringS = Serdes.String().serializer();
         var stringD = Serdes.String().deserializer();
-        
+        var globalConfigStore = globalLabelConfigStore.createPersistentKeyValueStore().withLoggingDisabled();
+
         return new Topology()
                 // Source Edges
                 .addSource(Source.EDGE, stringD, as.vD(), inputTopicNames.getProjectEdges())
@@ -74,24 +79,52 @@ public class TopologyProducer {
                         new CustomPartitioner<String, LabelEdge, String>(Serdes.String().serializer(), (kv) -> kv.value.getTargetId()),
                         Processor.CREATE_LABEL_EDGES
                 )
+                // Source entity label config
+                .addSource(Source.LABEL_CONFIG, as.kD(), as.vD(), inputTopicNames.proEntityLabelConfig())
+                .addProcessor(Processor.TRANSFORM_LABEL_CONFIG, LabelConfigTransformer::new, Source.LABEL_CONFIG)
+                .addSink(
+                        Sink.LABEL_CONFIG_BY_PROJECT_CLASS_KEY,
+                        outputTopicNames.labelConfigByProjectClass(),
+                        as.kS(), as.vS(),
+                        Processor.TRANSFORM_LABEL_CONFIG
+                )
                 // Create Global LabelConfig Store
                 .addGlobalStore(
-                        globalLabelConfigStore.createPersistentKeyValueStore().withLoggingDisabled(),
-                        Source.LABEL_CONFIG,
-                        as.<ts.projects.entity_label_config.Key>kD(),
-                        as.<ts.projects.entity_label_config.Value>vD(),
-                        inputTopicNames.proEntityLabelConfig(),
+                        globalConfigStore,
+                        Source.LABEL_CONFIG_BY_CLASS_KEY,
+                        as.<ProjectClassKey>kD(),
+                        as.<EntityLabelConfigTmstp>vD(),
+                        outputTopicNames.labelConfigByProjectClass(),
                         Processor.UPDATE_GLOBAL_STORE_LABEL_CONFIG,
                         () -> new GlobalStoreUpdater(GlobalLabelConfigStore.NAME)
                 )
                 // Source label edges partitioned by source
                 .addSource(Source.LABEL_EDGE_BY_SOURCE, stringD, as.vD(), outputTopicNames.labelEdgeBySource())
+                // Stock label edges by source in kv store
                 .addProcessor(
                         Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE,
                         LabelEdgeBySourceStoreUpdater::new,
                         Source.LABEL_EDGE_BY_SOURCE
                 )
-                .addStateStore(labelEdgeBySourceStore.createPersistentKeyValueStore(), Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE);
+                // Create entity labels on new edge
+                .addProcessor(
+                        Processor.CREATE_LABELS_ON_NEW_EDGE,
+                        CreateEntityLabel::new,
+                        Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE)
+                // Sink entity labels
+                .addSink(
+                        Sink.ENTITY_LABEL, outputTopicNames.entityLabels(), as.kS(), as.vS(),
+                        new CustomPartitioner<ProjectEntityKey, EntityLabel, String>(Serdes.String().serializer(), (kv) -> kv.key.getEntityId()),
+                        Processor.CREATE_LABELS_ON_NEW_EDGE
+                )
+                .addStateStore(labelEdgeBySourceStore.createPersistentKeyValueStore(),
+                        Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE,
+                        Processor.CREATE_LABELS_ON_NEW_EDGE
+                )
+                .addStateStore(entityLabelStore.createPersistentKeyValueStore(),
+                        Processor.CREATE_LABELS_ON_NEW_EDGE)
+                .addStateStore(labelConfigTmstpStore.createPersistentKeyValueStore(),
+                        Processor.CREATE_LABELS_ON_NEW_EDGE);
     }
 
     private static void createTopologyDocumentation(Topology topology) {

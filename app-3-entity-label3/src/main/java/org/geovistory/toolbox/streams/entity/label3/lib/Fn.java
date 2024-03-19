@@ -1,6 +1,7 @@
 package org.geovistory.toolbox.streams.entity.label3.lib;
 
 import org.geovistory.toolbox.streams.avro.LabelEdge;
+import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 
 /**
  * Class to collect static functions
@@ -23,8 +24,8 @@ public class Fn {
      */
     public static String createLabelEdgeSourceKey(
             Integer classId,
-            String sourceId,
             Integer projectId,
+            String sourceId,
             Integer propertyId,
             boolean isOutgoing,
             Float ordNum,
@@ -32,18 +33,35 @@ public class Fn {
             String targetId
     ) {
         String ordNumStr = (ordNum == null) ? "zzzzzzzz" : floatToHexString(ordNum);
-        String modifiedAtStr = modifiedAt == null ? "Z" : modifiedAt;
+        String modifiedAtStr = modifiedAt == null || modifiedAt.equals("") ? "Z" : modifiedAt;
         String[] strings = {
-                classId.toString(),
-                sourceId,
-                projectId.toString(),
-                propertyId.toString(),
-                isOutgoing ? "o" : "i",
                 ordNumStr,
                 modifiedAtStr,
                 targetId
         };
-        return String.join("_", strings);
+        return createLabelEdgePrefix3(classId, projectId, sourceId, propertyId, isOutgoing) + String.join("_", strings);
+    }
+
+    public static String createLabelEdgePrefix1(Integer classId) {
+
+        return classId + "_";
+    }
+
+    public static String createLabelEdgePrefix2(Integer classId, Integer projectId) {
+        return createLabelEdgePrefix1(classId) + projectId + "_";
+    }
+
+    public static String createLabelEdgePrefix3(Integer classId,
+                                                Integer projectId,
+                                                String sourceId,
+                                                Integer propertyId,
+                                                boolean isOutgoing) {
+        String[] strings = {
+                sourceId,
+                propertyId.toString(),
+                isOutgoing ? "o" : "i"
+        };
+        return createLabelEdgePrefix2(classId, projectId) + String.join("_", strings) + "_";
     }
 
     /**
@@ -55,14 +73,24 @@ public class Fn {
     public static String createLabelEdgeSourceKey(LabelEdge e) {
         return createLabelEdgeSourceKey(
                 e.getSourceClassId(),
-                e.getSourceId(),
                 e.getProjectId(),
+                e.getSourceId(),
                 e.getPropertyId(),
                 e.getIsOutgoing(),
                 e.getOrdNum(),
                 e.getModifiedAt(),
                 e.getTargetId()
         );
+    }
+
+    /**
+     * Creates the ProjectEntityKey based on the source and project of the given Label edge.
+     *
+     * @param e LabelEdge
+     * @return the ProjectEntityKey
+     */
+    public static ProjectEntityKey createProjectSourceEntityKey(LabelEdge e) {
+        return ProjectEntityKey.newBuilder().setProjectId(e.getProjectId()).setEntityId(e.getSourceId()).build();
     }
 
     /**
