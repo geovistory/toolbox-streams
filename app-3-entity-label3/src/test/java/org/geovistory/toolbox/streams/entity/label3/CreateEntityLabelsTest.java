@@ -88,6 +88,24 @@ public class CreateEntityLabelsTest {
     }
 
     @Test
+    public void trimSpaces() {
+        // Publish test input
+        sendConfig(1, 365, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(1113, true, 1)
+                });
+        sendLabelEdge(1, 365, "i1", 1113, true, 1f, "", "i2", " Foo ", "en", true, false);
+
+
+        var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(1, entityLabels.size());
+        assertEquals("Foo", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+
+    }
+
+    @Test
     public void createEntityLabelOtherWay() {
         // Publish test input
         sendLabelEdge(1, 365, "i1", 1113, true, 1f, "", "i2", "Foo", "en", true, false);

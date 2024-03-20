@@ -121,7 +121,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
                     var e = iterator.next();
                     var lab = e.value.getTargetLabel();
                     var lan = e.value.getTargetLabelLanguage();
-                    if (lab != null) strings.add(lab);
+                    if (lab != null) strings.add(lab.trim());
                     if (lan != null) languages.add(lan);
                 }
             }
