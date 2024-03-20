@@ -115,6 +115,7 @@ task generateReflectionConfiguration {
         classNames.add("StatementJoinValue.class")
         classNames.add("StatementValue.class")
         classNames.add("StatementWithSubValue.class")
+        classNames.add("StatementWithObValue.class")
         classNames.add("org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility.class")
         classNames.add("EntityLabelConfig.class")
         classNames.add("EntityLabelConfigPart.class")
