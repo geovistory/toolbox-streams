@@ -54,7 +54,10 @@
     },
     {
       "name": "target_label_language",
-      "type": "string"
+      "type": [
+        "null",
+        "string"
+      ]
     },
     {
       "name": "target_is_in_project",

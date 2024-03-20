@@ -11,15 +11,17 @@ import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.entity.label3.stores.EntityLabelStore;
 import org.geovistory.toolbox.streams.entity.label3.stores.LabelEdgeByTargetStore;
 
+import java.util.Objects;
+
 public class LabelWithEdgeJoiner implements Processor<ProjectEntityKey, EntityLabel, String, LabelEdge> {
 
-    private KeyValueStore<String, LabelEdge> edgeStore;
+    private KeyValueStore<String, LabelEdge> edgeByTargetStore;
     private KeyValueStore<ProjectEntityKey, EntityLabel> labelStore;
     private ProcessorContext<String, LabelEdge> context;
 
     @Override
     public void init(final ProcessorContext<String, LabelEdge> context) {
-        edgeStore = context.getStateStore(LabelEdgeByTargetStore.NAME);
+        edgeByTargetStore = context.getStateStore(LabelEdgeByTargetStore.NAME);
         labelStore = context.getStateStore(EntityLabelStore.NAME);
         this.context = context;
     }
@@ -33,25 +35,38 @@ public class LabelWithEdgeJoiner implements Processor<ProjectEntityKey, EntityLa
         labelStore.put(record.key(), record.value());
 
         // prefix scan entityId_projectId_ and iterate
-        try (var iterator = edgeStore.prefixScan(eId + "_" + pId + "_", Serdes.String().serializer())) {
+        try (var iterator = edgeByTargetStore.prefixScan(eId + "_" + pId + "_", Serdes.String().serializer())) {
             while (iterator.hasNext()) {
                 // for each item
                 var item = iterator.next();
-                var edgeOld = item.value;
-                if (edgeOld != null) {
+                var edge = item.value;
+                if (edge != null) {
                     // get old label
-                    var labelOld = new EntityLabel(edgeOld.getTargetLabel(), edgeOld.getTargetLabelLanguage());
-                    var labelNew = record.value();
+                    EntityLabel oldLabel = null;
+                    if (edge.getTargetLabel() != null && edge.getTargetLabelLanguage() != null) {
+                        oldLabel = EntityLabel.newBuilder()
+                                .setLabel(edge.getTargetLabel())
+                                .setLanguage(edge.getTargetLabelLanguage()).build();
+                    }
+                    EntityLabel newLabel = record.value();
+
                     // if new label differs from old...
-                    if (!labelOld.equals(labelNew)) {
-                        // create new join val
-                        edgeOld.setTargetLabel(labelNew.getLabel());
-                        edgeOld.setTargetLabelLanguage(labelNew.getLanguage());
-                        var edgeNew = edgeOld;
-                        // ...update store
-                        edgeStore.put(item.key, edgeNew);
+                    if (!Objects.equals(oldLabel, newLabel)) {
+
+                        // if new label exists
+                        if (newLabel != null) {
+                            // ... join the label
+                            edge.setTargetLabel(newLabel.getLabel());
+                            edge.setTargetLabelLanguage(newLabel.getLanguage());
+                        } else {
+                            // ... mark edge as deleted
+                            edge.setDeleted(true);
+                        }
+                        // ... update store
+                        edgeByTargetStore.put(item.key, edge);
+
                         // ...push downstream
-                        context.forward(record.withKey(item.key).withValue(edgeNew));
+                        context.forward(record.withKey(item.key).withValue(edge));
                     }
                 }
             }

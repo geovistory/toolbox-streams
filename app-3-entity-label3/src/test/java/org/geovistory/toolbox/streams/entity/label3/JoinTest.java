@@ -71,7 +71,7 @@ public class JoinTest {
         // Publish test input
 
         sendLabel(1, "i2", "Person 1", "de");
-        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", "", "", true, false);
+        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", true, false);
 
 
         var edgesBySource = outputTopic.readKeyValuesToMap();
@@ -86,7 +86,7 @@ public class JoinTest {
     public void joinLabelsTheOhterWay() {
         // Publish test input
 
-        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", "", "", true, false);
+        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", true, false);
         sendLabel(1, "i2", "Person 1", "de");
 
 
@@ -98,25 +98,96 @@ public class JoinTest {
 
     }
 
-    // TODO test deletion of Edge (with deleted=true and null)
-    // TODO test deletion of Label (with deleted=true and null)
+    @Test
+    public void joinLabelsEntityLabelTombstone() {
+        // Publish test input
+
+        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", true, false);
+        sendLabel(1, "i2", "Person 1", "de");
 
 
-    public void sendEdge(Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted) {
-        var v = new LabelEdge(project_id,
-                source_class_id,
-                source_id,
-                property_id,
-                is_outgoing,
-                ord_num,
-                modified_at,
-                target_id,
-                target_label,
-                target_label_language,
-                target_is_in_project,
-                deleted);
+        var edgesBySource = outputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(1, edgesBySource.size());
+        assertEquals("Person 1", edgesBySource.entrySet().stream().findFirst().get().getValue().getTargetLabel());
+
+        // send tombstone
+        sendLabelTombstone(1, "i2");
+
+        edgesBySource = outputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(1, edgesBySource.size());
+        assertEquals(true, edgesBySource.entrySet().stream().findFirst().get().getValue().getDeleted());
+
+    }
+
+    @Test
+    public void joinLabelsEdgeTombstone() {
+        // Publish test input
+
+        var k = sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", true, false);
+        sendLabel(1, "i2", "Person 1", "de");
+
+
+        var edgesBySource = outputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(1, edgesBySource.size());
+        assertEquals("Person 1", edgesBySource.entrySet().stream().findFirst().get().getValue().getTargetLabel());
+
+        // send edge tombstone
+        this.edgeInputTopic.pipeInput(k, null);
+
+        edgesBySource = outputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(0, edgesBySource.size());
+    }
+
+    @Test
+    public void joinLabelsEdgeDeleted() {
+        // Publish test input
+
+        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", true, false);
+        sendLabel(1, "i2", "Person 1", "de");
+
+
+        var edgesBySource = outputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(1, edgesBySource.size());
+        assertEquals("Person 1", edgesBySource.entrySet().stream().findFirst().get().getValue().getTargetLabel());
+
+        // send edge deleted
+        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", true, true);
+
+        edgesBySource = outputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(1, edgesBySource.size());
+        assertEquals(true, edgesBySource.entrySet().stream().findFirst().get().getValue().getDeleted());
+    }
+
+
+    public String sendEdge(Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted) {
+        var v = LabelEdge.newBuilder()
+                .setProjectId(project_id)
+                .setSourceClassId(source_class_id)
+                .setSourceId(source_id)
+                .setPropertyId(property_id)
+                .setIsOutgoing(is_outgoing)
+                .setOrdNum(ord_num)
+                .setModifiedAt(modified_at)
+                .setTargetId(target_id)
+                .setTargetLabel(target_label)
+                .setTargetLabelLanguage(target_label_language)
+                .setTargetIsInProject(target_is_in_project)
+                .setDeleted(deleted).build();
         var k = Fn.createLabelEdgeSourceKey(v);
         this.edgeInputTopic.pipeInput(k, v);
+        return k;
     }
 
 
@@ -124,6 +195,11 @@ public class JoinTest {
         var k = new ProjectEntityKey(project_id, entity_id);
         var v = new EntityLabel(label, language);
         this.labelInputTopic.pipeInput(k, v);
+    }
+
+    public void sendLabelTombstone(Integer project_id, String entity_id) {
+        var k = new ProjectEntityKey(project_id, entity_id);
+        this.labelInputTopic.pipeInput(k, null);
     }
 
 

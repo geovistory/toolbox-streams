@@ -12,14 +12,14 @@ import org.geovistory.toolbox.streams.entity.label3.stores.LabelEdgeByTargetStor
 
 public class EdgeWithLabelJoiner implements Processor<String, LabelEdge, String, LabelEdge> {
 
-    private KeyValueStore<String, LabelEdge> edgeStore;
+    private KeyValueStore<String, LabelEdge> edgeByTargetStore;
     private KeyValueStore<ProjectEntityKey, EntityLabel> labelStore;
 
     private ProcessorContext<String, LabelEdge> context;
 
     @Override
     public void init(final ProcessorContext<String, LabelEdge> context) {
-        edgeStore = context.getStateStore(LabelEdgeByTargetStore.NAME);
+        edgeByTargetStore = context.getStateStore(LabelEdgeByTargetStore.NAME);
         labelStore = context.getStateStore(EntityLabelStore.NAME);
         this.context = context;
     }
@@ -27,16 +27,17 @@ public class EdgeWithLabelJoiner implements Processor<String, LabelEdge, String,
     @Override
     public void process(final Record<String, LabelEdge> record) {
         if (record.value() == null) return;
+        var edge = record.value();
 
-        var eId = record.value().getTargetId();
-        var pId = record.value().getProjectId();
+        var eId = edge.getTargetId();
+        var pId = edge.getProjectId();
         var pKey = eId + "_" + pId + "_" + record.key();
         var cKey = eId + "_0_" + pId + "_" + record.key();
 
         // lookup old join val entityId_projectId_{edge_key} (-> oP)
-        var oP = edgeStore.get(pKey);
+        var oP = edgeByTargetStore.get(pKey);
         // lookup old join val entityId_0_projectId_{edge_key} (-> oC)
-        var oC = edgeStore.get(cKey);
+        var oC = edgeByTargetStore.get(cKey);
 
         var oldVal = oP == null ? oC : null;
 
@@ -45,15 +46,15 @@ public class EdgeWithLabelJoiner implements Processor<String, LabelEdge, String,
         String futureStoreKey;
 
         // if edge has target project entity ...
-        if (record.value().getTargetIsInProject()) {
+        if (edge.getTargetIsInProject()) {
             // define key this edge will have in edgeStore
             futureStoreKey = pKey;
             // ... lookup project entity label
             newLabel = labelStore.get(new ProjectEntityKey(pId, eId));
             // ... if oC not null, delete it from join store
             if (oC != null) {
-                edgeStore.delete(cKey);
-                edgeStore.put(futureStoreKey, oC);
+                edgeByTargetStore.delete(cKey);
+                edgeByTargetStore.put(futureStoreKey, oC);
             }
         }
 
@@ -65,8 +66,8 @@ public class EdgeWithLabelJoiner implements Processor<String, LabelEdge, String,
             newLabel = labelStore.get(new ProjectEntityKey(0, eId));
             // ... if oP not null, delete it from join store and add it with new key
             if (oP != null) {
-                edgeStore.delete(pKey);
-                edgeStore.put(futureStoreKey, oP);
+                edgeByTargetStore.delete(pKey);
+                edgeByTargetStore.put(futureStoreKey, oP);
             }
         }
 
@@ -80,26 +81,28 @@ public class EdgeWithLabelJoiner implements Processor<String, LabelEdge, String,
         // if old==null and new==null ...
         if (oldVal == null && newLabel == null) {
             // ... add the un-joined value to the store
-            edgeStore.put(futureStoreKey, record.value());
+            edgeByTargetStore.put(futureStoreKey, edge);
             // stop here
             return;
         }
 
-        // create new join val
-        record.value().setTargetLabel(newLabel.getLabel());
-        record.value().setTargetLabelLanguage(newLabel.getLanguage());
-        var newVal = record.value();
-
+        // if new label exists
+        if (newLabel != null) {
+            edge.setTargetLabel(newLabel.getLabel());
+            edge.setTargetLabelLanguage(newLabel.getLanguage());
+        } else {
+            // ... mark edge as deleted
+            edge.setDeleted(true);
+        }
 
         // if new value differs from old ...
-        if (!newVal.equals(oldVal)) {
+        if (!edge.equals(oldVal)) {
 
             // ... update join store
-            edgeStore.put(futureStoreKey, newVal);
-
+            edgeByTargetStore.put(futureStoreKey, edge);
 
             // push downstream
-            context.forward(record.withValue(newVal));
+            context.forward(record.withValue(edge));
         }
     }
 

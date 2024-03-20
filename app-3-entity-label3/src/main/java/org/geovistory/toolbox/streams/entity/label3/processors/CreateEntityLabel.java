@@ -20,6 +20,7 @@ import java.util.Objects;
 
 import static java.lang.Integer.parseInt;
 import static org.geovistory.toolbox.streams.entity.label3.lib.Fn.*;
+import static org.geovistory.toolbox.streams.entity.label3.names.Constants.DEFAULT_PROJECT;
 
 
 public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEntityKey, EntityLabel> {
@@ -38,16 +39,18 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
         labelConfigTmspStore = context.getStateStore(LabelConfigTmstpStore.NAME);
         this.context = context;
 
-        context.schedule(Duration.ofSeconds(10), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
+        context.schedule(Duration.ofSeconds(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
             if (!punctuationProcessing) {
                 punctuationProcessing = true;
                 try (var iterator = labelConfigStore.all()) {
                     while (iterator.hasNext()) {
                         var item = iterator.next();
                         var oldT = labelConfigTmspStore.get(item.key);
-                        var newT = item.value.getRecordTimestamp();
+                        var newVal = item.value;
+
+                        var newT = newVal.getRecordTimestamp();
                         if (oldT == null || oldT < newT) {
-                            var defaultConfig = item.key.getClassId() == 375669;
+                            var defaultConfig = item.key.getProjectId() == DEFAULT_PROJECT.get();
 
                             // create prefix
                             var prefix = defaultConfig ?
@@ -66,6 +69,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
 
 
     public void process(Record<String, LabelEdge> record) {
+        if (record.value() == null) return;
         EntityLabel newEntityLabel = null;
 
         // create source entity key based on edge
@@ -161,9 +165,9 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
                 return null;
             }
         } else {
-            projectClassKey.setProjectId(375669);
+            projectClassKey.setProjectId(DEFAULT_PROJECT.get());
             labelConfig = labelConfigStore.get(projectClassKey);
-            if (labelConfig != null) {
+            if (labelConfig != null && !labelConfig.getDeleted()) {
                 var oldT2 = labelConfigTmspStore.get(projectClassKey);
                 var newR2 = labelConfig.getRecordTimestamp();
                 if (oldT2 != null && oldT2 < newR2) {
@@ -177,7 +181,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
                 }
             }
         }
-        return labelConfig;
+        if (labelConfig != null && !labelConfig.getDeleted()) return labelConfig;
+        else return null;
     }
 
     public static String createPrefixForEdgeScan(LabelEdge e, EntityLabelConfigPartField f) {
