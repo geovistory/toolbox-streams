@@ -123,7 +123,7 @@ public class IntegrationTest {
 
 
         // Consume entity labels
-        var el = poll(entityLabelConsumer, 2);
+        var el = poll(entityLabelConsumer, 4);
         var elMap = getKeyRecordMap(el.iterator());
         assertEquals("Abc", elMap.get(new ProjectEntityKey(1, "i10")).value().getLabel());
         var i11 = elMap.get(new ProjectEntityKey(1, "i11")).value();

@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "ProjectEntityLangKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Key of project entity language label",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "language",
+      "type": "string"
+    }
+  ]
+}

@@ -83,7 +83,7 @@ public class JoinTest {
     }
 
     @Test
-    public void joinLabelsTheOhterWay() {
+    public void joinLabelsTheOtherWay() {
         // Publish test input
 
         sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", true, false);
@@ -168,6 +168,38 @@ public class JoinTest {
         // test label edge by source
         assertEquals(1, edgesBySource.size());
         assertEquals(true, edgesBySource.entrySet().stream().findFirst().get().getValue().getDeleted());
+    }
+
+    @Test
+    public void joinCommunityLabel() {
+        // Publish test input
+
+        sendLabel(0, "i2", "Person 1", "de");
+        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", false, false);
+
+
+        var edgesBySource = outputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(1, edgesBySource.size());
+        assertEquals("Person 1", edgesBySource.entrySet().stream().findFirst().get().getValue().getTargetLabel());
+
+    }
+
+
+    @Test
+    public void doNotJoinCommunityLabel() {
+        // Publish test input
+
+        sendLabel(0, "i2", "Person 1", "de");
+        sendEdge(1, 21, "i1", 1111, false, 1f, "", "i2", null, "", true, false);
+
+
+        var edgesBySource = outputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(0, edgesBySource.size());
+
     }
 
 

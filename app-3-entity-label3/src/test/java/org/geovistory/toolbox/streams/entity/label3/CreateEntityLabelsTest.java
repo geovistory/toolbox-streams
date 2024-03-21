@@ -11,7 +11,6 @@ import org.apache.kafka.streams.TopologyTestDriver;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.label3.lib.ConfiguredAvroSerde;
-import org.geovistory.toolbox.streams.entity.label3.lib.Fn;
 import org.geovistory.toolbox.streams.entity.label3.names.OutputTopicNames;
 import org.geovistory.toolbox.streams.testlib.FileRemover;
 import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
@@ -42,7 +41,9 @@ public class CreateEntityLabelsTest {
     TopologyTestDriver testDriver;
     TestInputTopic<ProjectClassKey, EntityLabelConfigTmstp> labelConfigByProjectClassInputTopic;
     TestInputTopic<String, LabelEdge> labelEdgeBySourceInputTopic;
+    TestInputTopic<String, LabelEdge> labelEdgeByTargetInputTopic;
     TestOutputTopic<ProjectEntityKey, EntityLabel> entityLabelsOutputTopic;
+    TestOutputTopic<ProjectEntityLangKey, EntityLabel> entityLanguageLabelsOutputTopic;
 
     @BeforeEach
     public void setUp() {
@@ -55,11 +56,18 @@ public class CreateEntityLabelsTest {
                 outputTopicNames.labelEdgeBySource(),
                 Serdes.String().serializer(), as.vS()
         );
+        labelEdgeByTargetInputTopic = testDriver.createInputTopic(
+                outputTopicNames.labelEdgeByTarget(),
+                Serdes.String().serializer(), as.vS()
+        );
         entityLabelsOutputTopic = testDriver.createOutputTopic(
                 outputTopicNames.entityLabels(),
                 as.kD(), as.vD()
         );
-
+        entityLanguageLabelsOutputTopic = testDriver.createOutputTopic(
+                outputTopicNames.entityLanguageLabels(),
+                as.kD(), as.vD()
+        );
     }
 
     @AfterEach
@@ -82,8 +90,136 @@ public class CreateEntityLabelsTest {
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Foo", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
+
+    }
+
+    // Assure, statement order is respected also with large ord nums (assert that 10 comes after 2)
+    @Test
+    public void test() {
+        // Publish test input
+        sendConfig(1, 365, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(1113, true, 3)
+                });
+        sendLabelEdge(1, 365, "i1", 1113, true, 10f, "", "i2", "Bar", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, 0.32f, "", "i2", "Foo", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, 11f, "", "i2", "Baz", "en", true, false);
+
+
+        var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo, Bar, Baz", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
+
+    }
+
+    // Assure, statement order is respected also with timestamps (assert that newest comes first)
+    @Test
+    public void testOrderByNewestFirst() {
+        // Publish test input
+        sendConfig(1, 365, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(1113, true, 6)
+                });
+        sendLabelEdge(1, 365, "i1", 1113, true, 10f, "2020-02-26T10:38:11.262940Z", "i2", "Bar", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, 0.32f, "2020-02-26T10:38:11.262940Z", "i2", "Foo", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, null, "2016-02-26T10:38:11.262940Z", "i2", "Baz", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, null, "2140-02-26T10:38:11.262940Z", "i2", "Li", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, null, "2024-02-26T10:38:11.262940Z", "i2", "La", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, null, "2023-02-26T10:38:11.262940Z", "i2", "Lo", "en", true, false);
+
+
+        var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo, Bar, Li, La, Lo, Baz", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
+
+    }
+
+
+    // Test join of community entity label
+    @Test
+    public void testJoinCommunityEntityLabel() {
+        // Publish test input
+        sendConfig(DEFAULT_PROJECT.get(), 2, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(3, true, 1)
+                });
+        sendConfig(DEFAULT_PROJECT.get(), 3, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(4, true, 1)
+                });
+        sendLabelEdge(1, 2, "i1", 3, true, 10f, "", "i2", null, null, false, false, false);
+        sendLabelEdge(2, 3, "i2", 4, true, 1f, "", "i3", "Foo", "en", true, false);
+
+
+        var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
+
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(0, "i2")).getLabel());
+
+        // test label edge by source
+        assertEquals(4, entityLabels.size());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
+
+        // test adding target entity to project
+        sendLabelEdge(1, 2, "i1", 3, true, 10f, "", "i2", null, null, true, false, false);
+
+        // assert the label is deleted (tombstone)
+        var list = entityLabelsOutputTopic.readRecordsToList();
+        assertEquals(2, list.size());
+        var firstTombstone = list.get(0);
+        assertEquals(new ProjectEntityKey(1, "i1"), firstTombstone.key());
+        assertNull(firstTombstone.value());
+        var secondTombstone = list.get(1);
+        assertEquals(new ProjectEntityKey(0, "i1"), secondTombstone.key());
+        assertNull(secondTombstone.value());
+    }
+
+    // Test community label is most frequently used label
+    @Test
+    public void testCommunityLabelIsMostFrequentLabel() {
+        // Publish test input
+        sendConfig(DEFAULT_PROJECT.get(), 3, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(4, true, 1)
+                });
+        sendLabelEdge(1, 3, "i2", 4, true, 1f, "", "i3", "Foo", "en", true, false);
+        sendLabelEdge(2, 3, "i2", 4, true, 1f, "", "i3", "Bar", "en", true, false);
+        sendLabelEdge(3, 3, "i2", 4, true, 1f, "", "i3", "Baz", "en", true, false);
+        sendLabelEdge(4, 3, "i2", 4, true, 1f, "", "i3", "Bar", "en", true, false);
+
+
+        var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
+
+        assertEquals("Bar", entityLabels.get(new ProjectEntityKey(0, "i2")).getLabel());
+
+    }
+
+    // Test entity language labels are created for community entities
+    @Test
+    public void testCommunityLanguageLabels() {
+        // Publish test input
+        sendConfig(DEFAULT_PROJECT.get(), 3, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(4, true, 1)
+                });
+        sendLabelEdge(1, 3, "i2", 4, true, 1f, "", "i3", "Foo", "en", true, false);
+        sendLabelEdge(2, 3, "i2", 4, true, 1f, "", "i3", "Bar", "fr", true, false);
+        sendLabelEdge(3, 3, "i2", 4, true, 1f, "", "i3", "Baz", "de", true, false);
+        sendLabelEdge(4, 3, "i2", 4, true, 1f, "", "i3", "Bar", "fr", true, false);
+        sendLabelEdge(4, 3, "i2", 4, true, 1f, "", "i3", "Bar 2", "fr", true, false);
+
+
+        var entityLabels = entityLanguageLabelsOutputTopic.readKeyValuesToMap();
+        assertEquals(3, entityLabels.size());
+
+        assertEquals("Foo", entityLabels.get(new ProjectEntityLangKey(0, "i2", "en")).getLabel());
+        assertEquals("Bar", entityLabels.get(new ProjectEntityLangKey(0, "i2", "fr")).getLabel());
+        assertEquals("Baz", entityLabels.get(new ProjectEntityLangKey(0, "i2", "de")).getLabel());
 
     }
 
@@ -100,8 +236,9 @@ public class CreateEntityLabelsTest {
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Foo", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
 
     }
 
@@ -119,8 +256,9 @@ public class CreateEntityLabelsTest {
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Foo", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
 
     }
 
@@ -139,8 +277,9 @@ public class CreateEntityLabelsTest {
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Foo, Bar", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo, Bar", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
+        assertEquals("Foo, Bar", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
         // mark Foo as deleted
         sendLabelEdge(1, 365, "i1", 1113, true, 1f, "", "i2", "Foo", "en", true, true);
@@ -148,21 +287,27 @@ public class CreateEntityLabelsTest {
         entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Bar", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Bar", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
+        assertEquals("Bar", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
         // mark Bar as deleted
         sendLabelEdge(1, 365, "i1", 1113, true, 1.2f, "", "i3", "Bar", "en", true, true);
 
         var list = entityLabelsOutputTopic.readRecordsToList();
 
-        // test label edge by source
-        assertEquals(1, list.size());
-        assertNull(list.get(0).value());
+        // test deletion
+        assertEquals(2, list.size());
+        var firstTombstone = list.get(0);
+        assertEquals(new ProjectEntityKey(1, "i1"), firstTombstone.key());
+        assertNull(firstTombstone.value());
+        var secondTombstone = list.get(1);
+        assertEquals(new ProjectEntityKey(0, "i1"), secondTombstone.key());
+        assertNull(secondTombstone.value());
     }
 
     /**
-     * This should never happen in reality
+     * This should never happen in reality but not throw an error
      */
     @Test
     public void createEntityLabelEdgeTombstone() {
@@ -178,8 +323,9 @@ public class CreateEntityLabelsTest {
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Foo", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
         // send tombstone
         this.labelEdgeBySourceInputTopic.pipeInput(k, null);
@@ -201,8 +347,9 @@ public class CreateEntityLabelsTest {
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Foo, Bar", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo, Bar", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
+        assertEquals("Foo, Bar", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
         sendConfig(1, 365, 1L,
                 new EntityLabelConfigPartField[]{
@@ -215,8 +362,9 @@ public class CreateEntityLabelsTest {
         entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Foo", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
     }
 
@@ -242,9 +390,9 @@ public class CreateEntityLabelsTest {
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Bar", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
-
+        assertEquals(2, entityLabels.size());
+        assertEquals("Bar", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
+        assertEquals("Bar", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
         // mark project config as deleted
         sendConfig(1, 365, 2L,
@@ -258,8 +406,9 @@ public class CreateEntityLabelsTest {
         entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Bar, Foo", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Bar, Foo", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
+        assertEquals("Bar, Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
     }
 
@@ -281,8 +430,9 @@ public class CreateEntityLabelsTest {
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
         // test label edge by source
-        assertEquals(1, entityLabels.size());
-        assertEquals("Bar, Foo", entityLabels.entrySet().stream().findFirst().get().getValue().getLabel());
+        assertEquals(2, entityLabels.size());
+        assertEquals("Bar, Foo", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
+        assertEquals("Bar, Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
 
         // mark default config as deleted
@@ -296,14 +446,33 @@ public class CreateEntityLabelsTest {
 
         var list = entityLabelsOutputTopic.readRecordsToList();
 
-        // test label is deleted
-        assertEquals(1, list.size());
-        assertEquals("i1", list.get(0).key().getEntityId());
-        assertNull(list.get(0).value());
+        // test deletion
+        assertEquals(2, list.size());
+        var firstTombstone = list.get(0);
+        assertEquals(new ProjectEntityKey(1, "i1"), firstTombstone.key());
+        assertNull(firstTombstone.value());
+        var secondTombstone = list.get(1);
+        assertEquals(new ProjectEntityKey(0, "i1"), secondTombstone.key());
+        assertNull(secondTombstone.value());
 
     }
 
     public String sendLabelEdge(Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted) {
+        return sendLabelEdge(project_id,
+                source_class_id,
+                source_id,
+                property_id,
+                is_outgoing,
+                ord_num,
+                modified_at,
+                target_id,
+                target_label,
+                target_label_language,
+                target_is_in_project,
+                deleted, true);
+    }
+
+    public String sendLabelEdge(Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted, Boolean targetIsLiteral) {
         var v = new LabelEdge(project_id,
                 source_class_id,
                 source_id,
@@ -316,8 +485,10 @@ public class CreateEntityLabelsTest {
                 target_label_language,
                 target_is_in_project,
                 deleted);
-        var k = Fn.createLabelEdgeSourceKey(v);
-        this.labelEdgeBySourceInputTopic.pipeInput(k, v);
+
+        var k = String.join("_", new String[]{project_id.toString(), source_id, property_id.toString(), is_outgoing ? "o" : "i", target_id});
+        if (targetIsLiteral) this.labelEdgeBySourceInputTopic.pipeInput(k, v);
+        else this.labelEdgeByTargetInputTopic.pipeInput(k, v);
         return k;
     }
 

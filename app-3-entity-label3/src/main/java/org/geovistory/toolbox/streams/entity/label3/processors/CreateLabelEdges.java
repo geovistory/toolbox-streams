@@ -6,7 +6,7 @@ import org.apache.kafka.streams.processor.api.Record;
 import org.geovistory.toolbox.streams.avro.EdgeValue;
 import org.geovistory.toolbox.streams.avro.LabelEdge;
 import org.geovistory.toolbox.streams.avro.NodeValue;
-import org.geovistory.toolbox.streams.entity.label3.names.Sink;
+import org.geovistory.toolbox.streams.entity.label3.names.Sinks;
 
 import static org.geovistory.toolbox.streams.lib.Utils.getLanguageFromId;
 
@@ -35,8 +35,8 @@ public class CreateLabelEdges implements Processor<String, EdgeValue, String, La
                 .build();
 
         var targetIsLiteral = record.value().getTargetNode().getEntity() == null;
-        if (targetIsLiteral) this.context.forward(record.withValue(newVal), Sink.LABEL_EDGE_BY_SOURCE);
-        else this.context.forward(record.withValue(newVal), Sink.LABEL_EDGE_BY_TARGET);
+        if (targetIsLiteral) this.context.forward(record.withValue(newVal), Sinks.LABEL_EDGE_BY_SOURCE);
+        else this.context.forward(record.withValue(newVal), Sinks.LABEL_EDGE_BY_TARGET);
     }
 
     private static String extractLabelLanguage(NodeValue n) {

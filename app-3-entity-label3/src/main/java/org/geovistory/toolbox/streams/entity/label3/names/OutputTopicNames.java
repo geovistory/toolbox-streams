@@ -25,6 +25,10 @@ public class OutputTopicNames {
         return p("entity_labels");
     }
 
+    public final String entityLanguageLabels() {
+        return p("entity_language_labels");
+    }
+
     private String p(String n) {
         return Utils.prefixedOut(outPrefix, n);
     }

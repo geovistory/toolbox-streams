@@ -22,6 +22,7 @@ jobs:
       app-1-base-config: ${{ steps.filter.outputs.app-1-base-config }}
       app-2-entity-label: ${{ steps.filter.outputs.app-2-entity-label }}
       app-2-project-items: ${{ steps.filter.outputs.app-2-project-items }}
+      app-3-entity-label3: ${{ steps.filter.outputs.app-3-entity-label3 }}
       app-3-analysis-statements: ${{ steps.filter.outputs.app-3-analysis-statements }}
       app-3-entity: ${{ steps.filter.outputs.app-3-entity }}
       app-3-fulltext: ${{ steps.filter.outputs.app-3-fulltext }}

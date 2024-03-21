@@ -33,6 +33,12 @@ public class TopologyProducer {
     @Inject
     GlobalLabelConfigStore globalLabelConfigStore;
     @Inject
+    ComLabelCountStore comLabelCountStore;
+    @Inject
+    ComLabelRankStore comLabelRankStore;
+    @Inject
+    ComLabelLangRankStore comLabelLangRankStore;
+    @Inject
     LabelEdgeBySourceStore labelEdgeBySourceStore;
     @Inject
     EntityLabelStore entityLabelStore;
@@ -59,90 +65,112 @@ public class TopologyProducer {
 
         return new Topology()
                 // Source Edges
-                .addSource(Source.EDGE, stringD, as.vD(), inputTopicNames.getProjectEdges())
+                .addSource(Sources.EDGE, stringD, as.vD(), inputTopicNames.getProjectEdges())
                 // Repartition and project edges to LabelEdge
-                .addProcessor(Processor.CREATE_LABEL_EDGES, CreateLabelEdges::new, Source.EDGE)
+                .addProcessor(Processors.CREATE_LABEL_EDGES, CreateLabelEdges::new, Sources.EDGE)
                 // Sink LabelEdge partitioned by Target ID
                 .addSink(
-                        Sink.LABEL_EDGE_BY_TARGET,
+                        Sinks.LABEL_EDGE_BY_TARGET,
                         outputTopicNames.labelEdgeByTarget(),
                         stringS, as.vS(),
                         new CustomPartitioner<String, LabelEdge, String>(Serdes.String().serializer(), (kv) -> kv.value.getTargetId()),
-                        Processor.CREATE_LABEL_EDGES
+                        Processors.CREATE_LABEL_EDGES
                 )
                 // Source entity label config
-                .addSource(Source.LABEL_CONFIG, as.kD(), as.vD(), inputTopicNames.proEntityLabelConfig())
-                .addProcessor(Processor.TRANSFORM_LABEL_CONFIG, LabelConfigTransformer::new, Source.LABEL_CONFIG)
+                .addSource(Sources.LABEL_CONFIG, as.kD(), as.vD(), inputTopicNames.proEntityLabelConfig())
+                .addProcessor(Processors.TRANSFORM_LABEL_CONFIG, LabelConfigTransformer::new, Sources.LABEL_CONFIG)
                 .addSink(
-                        Sink.LABEL_CONFIG_BY_PROJECT_CLASS_KEY,
+                        Sinks.LABEL_CONFIG_BY_PROJECT_CLASS_KEY,
                         outputTopicNames.labelConfigByProjectClass(),
                         as.kS(), as.vS(),
-                        Processor.TRANSFORM_LABEL_CONFIG
+                        Processors.TRANSFORM_LABEL_CONFIG
                 )
                 // Create Global LabelConfig Store
                 .addGlobalStore(
                         globalConfigStore,
-                        Source.LABEL_CONFIG_BY_CLASS_KEY,
+                        Sources.LABEL_CONFIG_BY_CLASS_KEY,
                         as.<ProjectClassKey>kD(),
                         as.<EntityLabelConfigTmstp>vD(),
                         outputTopicNames.labelConfigByProjectClass(),
-                        Processor.UPDATE_GLOBAL_STORE_LABEL_CONFIG,
+                        Processors.UPDATE_GLOBAL_STORE_LABEL_CONFIG,
                         () -> new GlobalStoreUpdater<>(GlobalLabelConfigStore.NAME)
                 )
                 // Source label edges partitioned by source
-                .addSource(Source.LABEL_EDGE_BY_SOURCE, stringD, as.vD(), outputTopicNames.labelEdgeBySource())
+                .addSource(Sources.LABEL_EDGE_BY_SOURCE, stringD, as.vD(), outputTopicNames.labelEdgeBySource())
                 // Stock label edges by source in kv store
                 .addProcessor(
-                        Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE,
+                        Processors.UPDATE_LABEL_EDGES_BY_SOURCE_STORE,
                         LabelEdgeBySourceStoreUpdater::new,
-                        Source.LABEL_EDGE_BY_SOURCE
+                        Sources.LABEL_EDGE_BY_SOURCE
                 )
                 // Create entity labels on new edge
                 .addProcessor(
-                        Processor.CREATE_LABELS_ON_NEW_EDGE,
+                        Processors.CREATE_ENTITY_LABELS,
                         CreateEntityLabel::new,
-                        Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE)
+                        Processors.UPDATE_LABEL_EDGES_BY_SOURCE_STORE)
+                // Re-key entity labels
+                .addProcessor(
+                        Processors.RE_KEY_ENTITY_LABELS,
+                        ReKeyEntityLabels::new,
+                        Processors.CREATE_ENTITY_LABELS)
                 // Sink entity labels
                 .addSink(
-                        Sink.ENTITY_LABEL, outputTopicNames.entityLabels(), as.kS(), as.vS(),
+                        Sinks.ENTITY_LABEL, outputTopicNames.entityLabels(), as.kS(), as.vS(),
                         new CustomPartitioner<ProjectEntityKey, EntityLabel, String>(Serdes.String().serializer(), (kv) -> kv.key.getEntityId()),
-                        Processor.CREATE_LABELS_ON_NEW_EDGE
+                        Processors.RE_KEY_ENTITY_LABELS
+                )
+                // Re-key entity language labels
+                .addProcessor(
+                        Processors.RE_KEY_ENTITY_LANG_LABELS,
+                        ReKeyEntityLangLabels::new,
+                        Processors.CREATE_ENTITY_LABELS)
+                // Sink entity language labels
+                .addSink(
+                        Sinks.ENTITY_LANG_LABELS, outputTopicNames.entityLanguageLabels(), as.kS(), as.vS(),
+                        new CustomPartitioner<ProjectEntityLangKey, EntityLabel, String>(Serdes.String().serializer(), (kv) -> kv.key.getEntityId()),
+                        Processors.RE_KEY_ENTITY_LANG_LABELS
                 )
                 // ---------
                 // Join
                 // --------
 
                 // Source label edges partitioned by target
-                .addSource(Source.LABEL_EDGE_BY_TARGET, stringD, as.vD(), outputTopicNames.labelEdgeByTarget())
+                .addSource(Sources.LABEL_EDGE_BY_TARGET, stringD, as.vD(), outputTopicNames.labelEdgeByTarget())
                 // Join edges with labels
-                .addProcessor(Processor.JOIN_ON_NEW_EDGE, EdgeWithLabelJoiner::new, Source.LABEL_EDGE_BY_TARGET)
+                .addProcessor(Processors.JOIN_ON_NEW_EDGE, EdgeWithLabelJoiner::new, Sources.LABEL_EDGE_BY_TARGET)
                 // Source labels
-                .addSource(Source.LABEL, as.kD(), as.vD(), outputTopicNames.entityLabels())
+                .addSource(Sources.LABEL, as.kD(), as.vD(), outputTopicNames.entityLabels())
                 // Join labels with edges
-                .addProcessor(Processor.JOIN_ON_NEW_LABEL, LabelWithEdgeJoiner::new, Source.LABEL)
+                .addProcessor(Processors.JOIN_ON_NEW_LABEL, LabelWithEdgeJoiner::new, Sources.LABEL)
                 // Sink LabelEdge partitioned by Source ID
                 .addSink(
-                        Sink.LABEL_EDGE_BY_SOURCE,
+                        Sinks.LABEL_EDGE_BY_SOURCE,
                         outputTopicNames.labelEdgeBySource(),
                         stringS, as.vS(),
                         new CustomPartitioner<String, LabelEdge, String>(Serdes.String().serializer(), (kv) -> kv.value.getSourceId()),
-                        Processor.CREATE_LABEL_EDGES,
-                        Processor.JOIN_ON_NEW_EDGE,
-                        Processor.JOIN_ON_NEW_LABEL
+                        Processors.CREATE_LABEL_EDGES,
+                        Processors.JOIN_ON_NEW_EDGE,
+                        Processors.JOIN_ON_NEW_LABEL
                 )
                 .addStateStore(labelEdgeBySourceStore.createPersistentKeyValueStore(),
-                        Processor.UPDATE_LABEL_EDGES_BY_SOURCE_STORE,
-                        Processor.CREATE_LABELS_ON_NEW_EDGE
+                        Processors.UPDATE_LABEL_EDGES_BY_SOURCE_STORE,
+                        Processors.CREATE_ENTITY_LABELS
                 )
                 .addStateStore(entityLabelStore.createPersistentKeyValueStore(),
-                        Processor.CREATE_LABELS_ON_NEW_EDGE,
-                        Processor.JOIN_ON_NEW_LABEL,
-                        Processor.JOIN_ON_NEW_EDGE)
+                        Processors.CREATE_ENTITY_LABELS,
+                        Processors.JOIN_ON_NEW_LABEL,
+                        Processors.JOIN_ON_NEW_EDGE)
                 .addStateStore(labelConfigTmstpStore.createPersistentKeyValueStore(),
-                        Processor.CREATE_LABELS_ON_NEW_EDGE)
+                        Processors.CREATE_ENTITY_LABELS)
                 .addStateStore(labelEdgeByTargetStore.createPersistentKeyValueStore(),
-                        Processor.JOIN_ON_NEW_LABEL,
-                        Processor.JOIN_ON_NEW_EDGE);
+                        Processors.JOIN_ON_NEW_LABEL,
+                        Processors.JOIN_ON_NEW_EDGE)
+                .addStateStore(comLabelCountStore.createPersistentKeyValueStore(),
+                        Processors.CREATE_ENTITY_LABELS)
+                .addStateStore(comLabelRankStore.createPersistentKeyValueStore(),
+                        Processors.CREATE_ENTITY_LABELS)
+                .addStateStore(comLabelLangRankStore.createPersistentKeyValueStore(),
+                        Processors.CREATE_ENTITY_LABELS);
 
     }
 

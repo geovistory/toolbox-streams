@@ -7,10 +7,8 @@ import org.apache.kafka.streams.processor.api.ProcessorContext;
 import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.label3.stores.EntityLabelStore;
-import org.geovistory.toolbox.streams.entity.label3.stores.GlobalLabelConfigStore;
-import org.geovistory.toolbox.streams.entity.label3.stores.LabelConfigTmstpStore;
-import org.geovistory.toolbox.streams.entity.label3.stores.LabelEdgeBySourceStore;
+import org.geovistory.toolbox.streams.entity.label3.names.Processors;
+import org.geovistory.toolbox.streams.entity.label3.stores.*;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 import java.time.Duration;
@@ -23,20 +21,25 @@ import static org.geovistory.toolbox.streams.entity.label3.lib.Fn.*;
 import static org.geovistory.toolbox.streams.entity.label3.names.Constants.DEFAULT_PROJECT;
 
 
-public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEntityKey, EntityLabel> {
-    private ProcessorContext<ProjectEntityKey, EntityLabel> context;
+public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLabelGroupKey, EntityLabel> {
+    private ProcessorContext<ProjectLabelGroupKey, EntityLabel> context;
     private KeyValueStore<ProjectEntityKey, EntityLabel> entityLabelStore;
     private KeyValueStore<String, LabelEdge> labelEdgeBySourceStore;
     private KeyValueStore<ProjectClassKey, EntityLabelConfigTmstp> labelConfigStore;
     private KeyValueStore<ProjectClassKey, Long> labelConfigTmspStore;
-
+    private KeyValueStore<String, EntityLabel> comLabelRankStore;
+    private KeyValueStore<String, EntityLabel> comLabelLangRankStore;
+    private KeyValueStore<ComLabelGroupKey, Integer> comLabelCountStore;
     private Boolean punctuationProcessing = false;
 
-    public void init(ProcessorContext<ProjectEntityKey, EntityLabel> context) {
+    public void init(ProcessorContext<ProjectLabelGroupKey, EntityLabel> context) {
         entityLabelStore = context.getStateStore(EntityLabelStore.NAME);
         labelEdgeBySourceStore = context.getStateStore(LabelEdgeBySourceStore.NAME);
         labelConfigStore = context.getStateStore(GlobalLabelConfigStore.NAME);
         labelConfigTmspStore = context.getStateStore(LabelConfigTmstpStore.NAME);
+        comLabelRankStore = context.getStateStore(ComLabelRankStore.NAME);
+        comLabelLangRankStore = context.getStateStore(ComLabelLangRankStore.NAME);
+        comLabelCountStore = context.getStateStore(ComLabelCountStore.NAME);
         this.context = context;
 
         context.schedule(Duration.ofSeconds(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
@@ -91,7 +94,15 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
             entityLabelStore.put(projectEntityKey, newEntityLabel);
 
             // ... push downstream
-            context.forward(record.withKey(projectEntityKey).withValue(newEntityLabel));
+            context.forward(
+                    record.withKey(createProjectLabelGroupKey(projectEntityKey)).withValue(newEntityLabel),
+                    Processors.RE_KEY_ENTITY_LABELS
+            );
+
+            // create community entity label
+            if (projectEntityKey.getProjectId() != 0) {
+                createCommunityLabels(projectEntityKey, newEntityLabel, oldEntityLabeL, record);
+            }
         }
 
     }
@@ -259,4 +270,219 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectEn
     }
 
 
+    public void createCommunityLabels(
+            ProjectEntityKey key,
+            EntityLabel newEl,
+            EntityLabel oldEl,
+            Record<String, LabelEdge> record
+    ) {
+        // get old preferred label
+        var oldPrefLabel = getPreferredLabel(key.getEntityId());
+
+
+        var comEntityKey = createComEntityKey(key.getEntityId());
+
+        // if oldEl not null and different from newEl ...
+        if (oldEl != null && !oldEl.equals(newEl)) {
+
+            // get old preferred language label
+            var oldPrefLangLabel = getPreferredLangLabel(key.getEntityId(), oldEl.getLanguage());
+
+            // generate old group key {entity_id}_{label}_{language}
+            var oldGroupKey = entityLabelToGroupKey(key.getEntityId(), oldEl);
+
+            // ... decrease count of oldGroupKey
+            var oldGroupCount = comLabelCountStore.get(oldGroupKey);
+
+            // if oldGroupCount not null and bigger 0
+            if (oldGroupCount != null && oldGroupCount > 0) {
+
+                // generate rank key
+                var rankKey = createRankKey(key.getEntityId(), oldEl, oldGroupCount);
+                // delete this rank, since it will be replaced by the rank of newEl
+                comLabelRankStore.delete(rankKey);
+
+                // generate rank-in-lang-key
+                var rankInLangKey = createRankInLangKey(key.getEntityId(), oldEl, oldGroupCount);
+                // delete this rank-in-lang, since it will be replaced by the rank-in-lang-key of newEl
+                comLabelLangRankStore.delete(rankInLangKey);
+
+                // Decrease the count of the old group
+                var c = oldGroupCount - 1;
+                comLabelCountStore.put(oldGroupKey, c);
+
+                // Generate the language label
+                var newPrefLangLabel = getPreferredLangLabel(key.getEntityId(), oldEl.getLanguage());
+                compareAndPushLangLabel(record, oldGroupKey, oldPrefLangLabel, newPrefLangLabel);
+            }
+
+
+        }
+        // if newEl not null and different from oldEl
+        if (newEl != null && !newEl.equals(oldEl)) {
+
+            // get old preferred language label
+            var oldPrefLangLabel = getPreferredLangLabel(key.getEntityId(), newEl.getLanguage());
+
+
+            // generate new group key {entity_id}_{label}_{language}
+            var newGroupKey = entityLabelToGroupKey(key.getEntityId(), newEl);
+
+            // get count of new group
+            var newGroupCount = comLabelCountStore.get(newGroupKey);
+
+            // increase count of newGroupKey
+            newGroupCount = newGroupCount != null ? (newGroupCount + 1) : 1;
+            comLabelCountStore.put(newGroupKey, newGroupCount);
+
+            // generate rank key
+            var rankKey = createRankKey(key.getEntityId(), newEl, newGroupCount);
+            // add this rank
+            comLabelRankStore.put(rankKey, newEl);
+
+            // generate rank-in-lang-key
+            var rankInLangKey = createRankInLangKey(key.getEntityId(), newEl, newGroupCount);
+            // delete this rank-in-lang, since it will be replaced by the rank-in-lang-key of newEl
+            comLabelLangRankStore.put(rankInLangKey, newEl);
+
+            // Generate the language label
+            var newPrefLangLabel = getPreferredLangLabel(key.getEntityId(), newEl.getLanguage());
+            compareAndPushLangLabel(record, newGroupKey, oldPrefLangLabel, newPrefLangLabel);
+        }
+
+        // Generate the preferred label
+        var newPrefLabel = getPreferredLabel(key.getEntityId());
+
+        // if oldPrefLabel and newPrefLabel distinct
+        if (!Objects.equals(oldPrefLabel, newPrefLabel)) {
+            context.forward(
+                    record.withKey(createProjectLabelGroupKey(comEntityKey)).withValue(newEl),
+                    Processors.RE_KEY_ENTITY_LABELS);
+        }
+
+    }
+
+    private void compareAndPushLangLabel(
+            Record<String, LabelEdge> record,
+            ComLabelGroupKey groupKey,
+            EntityLabel oldLabel,
+            EntityLabel newLabel) {
+        if (!Objects.equals(oldLabel, newLabel))
+            context.forward(
+                    record.withKey(createProjectLabelGroupKey(groupKey))
+                            .withValue(newLabel),
+                    Processors.RE_KEY_ENTITY_LANG_LABELS);
+    }
+
+    /**
+     * Retrieves the preferred label associated with the specified {@code entityId}.
+     * The preferred label is obtained through a prefix scan of the provided entity ID in the {@code comLabelRankStore}.
+     *
+     * @param entityId The ID of the entity for which the preferred label is to be retrieved.
+     * @return A {@code EntityLabel} representing the preferred label.
+     * If no preferred label is found, {@code null} is returned.
+     * @throws NullPointerException if the {@code entityId} is {@code null}.
+     */
+    private EntityLabel getPreferredLabel(String entityId) {
+        EntityLabel l = null;
+        try (var iterator = comLabelRankStore.prefixScan(entityId + "_", Serdes.String().serializer())) {
+            if (iterator.hasNext()) {
+                var item = iterator.next();
+                if (item != null) l = item.value;
+            }
+        }
+        return l;
+    }
+
+    /**
+     * Retrieves the preferred language label associated with the specified {@code entityId}.
+     * The preferred language label is obtained through a prefix scan of the provided entity ID in the {@code comLabelLangRankStore}.
+     *
+     * @param entityId The ID of the entity for which the preferred language label is to be retrieved.
+     * @return A {@code EntityLabel} representing the preferred language label.
+     * If no preferred language label is found, {@code null} is returned.
+     * @throws NullPointerException if the {@code entityId} is {@code null}.
+     */
+    private EntityLabel getPreferredLangLabel(String entityId, String language) {
+        EntityLabel l = null;
+        try (var iterator = comLabelLangRankStore.prefixScan(entityId + "_" + language + "_", Serdes.String().serializer())) {
+            if (iterator.hasNext()) {
+                var item = iterator.next();
+                if (item != null) l = item.value;
+            }
+        }
+        return l;
+    }
+
+    /**
+     * Converts an entity ID and an entity label into a {@code ComLabelGroupKey}.
+     *
+     * @param entityId    The ID of the entity.
+     * @param entityLabel The label and language of the entity.
+     * @return A {@code ComLabelGroupKey} representing the combination of the entity ID, label, and language.
+     * @throws NullPointerException if either {@code entityId} or {@code entityLabel} is {@code null}.
+     */
+    private ComLabelGroupKey entityLabelToGroupKey(String entityId, EntityLabel entityLabel) {
+        if (entityId == null) throw new NullPointerException("entityId must not be null");
+        if (entityLabel == null) throw new NullPointerException("entityLabel must not be null");
+        return ComLabelGroupKey.newBuilder()
+                .setEntityId(entityId)
+                .setLabel(entityLabel.getLabel())
+                .setLanguage(entityLabel.getLanguage()).build();
+    }
+
+    /**
+     * Creates a rank key based on the provided entity ID, entity label, and count.
+     * The generated string has this form:
+     * {entity_id}_{1/count}_{label}_{language}
+     * <p>
+     * This allows lexicographical sorting, where higher counts come first.
+     *
+     * @param entityId    The ID of the entity.
+     * @param entityLabel The label and language of the entity.
+     * @param count       The count associated with the entity.
+     * @return A {@code String} representing the rank key.
+     * @throws NullPointerException if either {@code entityId} or {@code entityLabel} is {@code null}.
+     */
+    private String createRankKey(String entityId, EntityLabel entityLabel, int count) {
+        if (entityId == null) throw new NullPointerException("entityId must not be null");
+        if (entityLabel == null) throw new NullPointerException("entityLabel must not be null");
+        if (count < 1) throw new RuntimeException("Count must be bigger than 0");
+        return entityId + "_" + (1f / count) + "_" + entityLabel.getLabel() + "_" + entityLabel.getLanguage();
+    }
+
+
+    /**
+     * Creates a rank-in-lang-key based on the provided entity ID, entity label, and count.
+     * The generated string has this form:
+     * {entity_id}_{language}_{1/count}_{label}
+     * <p>
+     * This allows lexicographical sorting, where higher counts come first.
+     *
+     * @param entityId    The ID of the entity.
+     * @param entityLabel The label and language of the entity.
+     * @param count       The count associated with the entity.
+     * @return A {@code String} representing the rank key.
+     * @throws NullPointerException if either {@code entityId} or {@code entityLabel} is {@code null}.
+     */
+    private String createRankInLangKey(String entityId, EntityLabel entityLabel, int count) {
+        if (entityId == null) throw new NullPointerException("entityId must not be null");
+        if (entityLabel == null) throw new NullPointerException("entityLabel must not be null");
+        if (count < 1) throw new RuntimeException("Count must be bigger than 0");
+        return entityId + "_" + entityLabel.getLanguage() + "_" + (1f / count) + "_" + entityLabel.getLabel();
+    }
+
+    /**
+     * Creates a {@code ProjectEntityKey} based on the provided entity ID
+     * with project ID = 0.
+     *
+     * @param entityId The ID of the entity.
+     * @return A {@code ProjectEntityKey} representing the entity with the provided ID and a default project ID of 0.
+     * @throws NullPointerException if {@code entityId} is {@code null}.
+     */
+    private ProjectEntityKey createComEntityKey(String entityId) {
+        return ProjectEntityKey.newBuilder()
+                .setEntityId(entityId)
+                .setProjectId(0).build();
+    }
 }
