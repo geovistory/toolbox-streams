@@ -10,11 +10,13 @@ import org.geovistory.toolbox.streams.avro.LabelEdge;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.entity.label3.stores.EntityLabelStore;
 import org.geovistory.toolbox.streams.entity.label3.stores.LabelEdgeByTargetStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 public class LabelWithEdgeJoiner implements Processor<ProjectEntityKey, EntityLabel, String, LabelEdge> {
-
+    private static final Logger LOG = LoggerFactory.getLogger(LabelWithEdgeJoiner.class);
     private KeyValueStore<String, LabelEdge> edgeByTargetStore;
     private KeyValueStore<ProjectEntityKey, EntityLabel> labelStore;
     private ProcessorContext<String, LabelEdge> context;
@@ -28,6 +30,7 @@ public class LabelWithEdgeJoiner implements Processor<ProjectEntityKey, EntityLa
 
     @Override
     public void process(final Record<ProjectEntityKey, EntityLabel> record) {
+        LOG.debug("process() called with record: {}", record);
         var eId = record.key().getEntityId();
         var pId = record.key().getProjectId();
 

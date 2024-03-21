@@ -8,10 +8,13 @@ import org.geovistory.toolbox.streams.avro.EntityLabelConfig;
 import org.geovistory.toolbox.streams.avro.EntityLabelConfigTmstp;
 import org.geovistory.toolbox.streams.avro.ProjectClassKey;
 import org.geovistory.toolbox.streams.lib.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ts.projects.entity_label_config.Key;
 import ts.projects.entity_label_config.Value;
 
 public class LabelConfigTransformer implements Processor<Key, Value, ProjectClassKey, EntityLabelConfigTmstp> {
+    private static final Logger LOG = LoggerFactory.getLogger(LabelConfigTransformer.class);
     private ProcessorContext<ProjectClassKey, EntityLabelConfigTmstp> context;
     private final ObjectMapper mapper = new ObjectMapper(); // create once, reuse
 
@@ -20,6 +23,7 @@ public class LabelConfigTransformer implements Processor<Key, Value, ProjectClas
     }
 
     public void process(Record<Key, Value> record) {
+        LOG.debug("process() called with record: {}", record);
         var value = record.value();
         try {
             EntityLabelConfig config = mapper.readValue(value.getConfig(), EntityLabelConfig.class);

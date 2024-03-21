@@ -10,6 +10,8 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.label3.names.Processors;
 import org.geovistory.toolbox.streams.entity.label3.stores.*;
 import org.geovistory.toolbox.streams.lib.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -22,6 +24,8 @@ import static org.geovistory.toolbox.streams.entity.label3.names.Constants.DEFAU
 
 
 public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLabelGroupKey, EntityLabel> {
+    private static final Logger LOG = LoggerFactory.getLogger(CreateEntityLabel.class);
+
     private ProcessorContext<ProjectLabelGroupKey, EntityLabel> context;
     private KeyValueStore<ProjectEntityKey, EntityLabel> entityLabelStore;
     private KeyValueStore<String, LabelEdge> labelEdgeBySourceStore;
@@ -44,6 +48,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
         context.schedule(Duration.ofSeconds(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
             if (!punctuationProcessing) {
+                LOG.debug("Punctuation called");
                 punctuationProcessing = true;
                 try (var iterator = labelConfigStore.all()) {
                     while (iterator.hasNext()) {
@@ -72,6 +77,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
 
     public void process(Record<String, LabelEdge> record) {
+        LOG.debug("process() called with record: {}", record);
+
         if (record.value() == null) return;
         EntityLabel newEntityLabel = null;
 
@@ -276,9 +283,10 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             EntityLabel oldEl,
             Record<String, LabelEdge> record
     ) {
+        LOG.debug("createCommunityLabels() called");
+
         // get old preferred label
         var oldPrefLabel = getPreferredLabel(key.getEntityId());
-
 
         var comEntityKey = createComEntityKey(key.getEntityId());
 

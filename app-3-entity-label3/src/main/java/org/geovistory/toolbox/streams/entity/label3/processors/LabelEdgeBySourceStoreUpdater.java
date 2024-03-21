@@ -7,9 +7,12 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.LabelEdge;
 import org.geovistory.toolbox.streams.entity.label3.lib.Fn;
 import org.geovistory.toolbox.streams.entity.label3.stores.LabelEdgeBySourceStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // Processor that keeps the label edges by source store updated.
 public class LabelEdgeBySourceStoreUpdater implements Processor<String, LabelEdge, String, LabelEdge> {
+    private static final Logger LOG = LoggerFactory.getLogger(LabelEdgeBySourceStoreUpdater.class);
 
     private KeyValueStore<String, LabelEdge> store;
 
@@ -23,6 +26,7 @@ public class LabelEdgeBySourceStoreUpdater implements Processor<String, LabelEdg
 
     @Override
     public void process(final Record<String, LabelEdge> record) {
+        LOG.debug("process() called with record: {}", record);
         if (record.value() == null) return;
         var newK = Fn.createLabelEdgeSourceKey(record.value());
         // if deleted, delete from store

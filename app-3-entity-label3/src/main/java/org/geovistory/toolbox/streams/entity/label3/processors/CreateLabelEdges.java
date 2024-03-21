@@ -7,10 +7,13 @@ import org.geovistory.toolbox.streams.avro.EdgeValue;
 import org.geovistory.toolbox.streams.avro.LabelEdge;
 import org.geovistory.toolbox.streams.avro.NodeValue;
 import org.geovistory.toolbox.streams.entity.label3.names.Sinks;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.geovistory.toolbox.streams.lib.Utils.getLanguageFromId;
 
 public class CreateLabelEdges implements Processor<String, EdgeValue, String, LabelEdge> {
+    private static final Logger LOG = LoggerFactory.getLogger(CreateLabelEdges.class);
     private ProcessorContext<String, LabelEdge> context;
 
     public void init(ProcessorContext<String, LabelEdge> context) {
@@ -18,6 +21,7 @@ public class CreateLabelEdges implements Processor<String, EdgeValue, String, La
     }
 
     public void process(Record<String, EdgeValue> record) {
+        LOG.debug("process() called with record: {}", record);
         var inVal = record.value();
         var newVal = LabelEdge.newBuilder()
                 .setProjectId(inVal.getProjectId())
