@@ -110,6 +110,7 @@ task generateReflectionConfiguration {
         classNames.add("ts.projects.entity_label_config.Key.class")
         classNames.add("ts.projects.entity_label_config.Value.class")
         classNames.add("ProjectEntityKey.class")
+        classNames.add("ProjectClassKey.class")
         classNames.add("EdgeValue.class")
         classNames.add("EntityValue.class")
         classNames.add("ComLabelGroupKey.class")
