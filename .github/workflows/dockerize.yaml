@@ -805,7 +805,7 @@ jobs:
             -Dquarkus.container-image.push=true \
             -Dquarkus.container-image.registry="ghcr.io" \
             -Dquarkus.container-image.group="geovistory" \
-            -Dquarkus.container-image.name="toolbox-streams-project-items-quarkus" \
+            -Dquarkus.container-image.name="toolbox-streams-entity-label3" \
             -Dquarkus.container-image.tag="${{steps.extract_docker_tag_suffix.outputs.value}}"
 
 
