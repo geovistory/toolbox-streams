@@ -77,7 +77,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
 
     public void process(Record<String, LabelEdge> record) {
-        LOG.info("process() called with record: {}", record);
+        LOG.info("process() called for record with key: {}, target label {}", record.key(), record.value().getTargetLabel());
 
         if (record.value() == null) return;
         EntityLabel newEntityLabel = null;
@@ -87,6 +87,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
         // get old entity label
         EntityLabel oldEntityLabeL = entityLabelStore.get(projectEntityKey);
+        LOG.info("projectEntityKey: {}, old entity label {}", projectEntityKey, oldEntityLabeL);
 
         // lookup entity label config
         var conf = lookupEntityLabelConfig(record);
@@ -94,9 +95,14 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             // create entity label
             newEntityLabel = createEntityLabel(record.value(), conf);
         }
+        LOG.info("projectEntityKey: {}, config.project_id {}, new entity label: {}",
+                projectEntityKey, conf == null ? "null" : conf.getProjectId(), newEntityLabel);
+
 
         // if old and new are different...
         if (!Objects.equals(oldEntityLabeL, newEntityLabel)) {
+            LOG.info("projectEntityKey: {}, old and new labels are different. old: {}, new: {}", projectEntityKey, oldEntityLabeL, newEntityLabel);
+
             // ... update store
             entityLabelStore.put(projectEntityKey, newEntityLabel);
 
@@ -110,6 +116,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             if (projectEntityKey.getProjectId() != 0) {
                 createCommunityLabels(projectEntityKey, newEntityLabel, oldEntityLabeL, record);
             }
+        } else {
+            LOG.info("projectEntityKey: {}, old and new labels are equal.  old: {}, new: {}", projectEntityKey, oldEntityLabeL, newEntityLabel);
         }
 
     }
