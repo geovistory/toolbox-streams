@@ -49,8 +49,9 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         context.schedule(Duration.ofSeconds(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
             if (!punctuationProcessing) {
                 LOG.debug("Punctuation called");
-                punctuationProcessing = true;
-                try (var iterator = labelConfigStore.all()) {
+                //TODO uncomment the following
+               /* punctuationProcessing = true;
+               try (var iterator = labelConfigStore.all()) {
                     while (iterator.hasNext()) {
                         var item = iterator.next();
                         var oldT = labelConfigTmspStore.get(item.key);
@@ -69,7 +70,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                             updateLabelsWithNewConfig(prefix, newT);
                         }
                     }
-                }
+                }*/
                 punctuationProcessing = false;
             }
         });
