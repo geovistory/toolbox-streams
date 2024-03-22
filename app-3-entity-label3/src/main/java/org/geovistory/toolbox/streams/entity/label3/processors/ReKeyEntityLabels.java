@@ -18,7 +18,7 @@ public class ReKeyEntityLabels implements Processor<ProjectLabelGroupKey, Entity
     }
 
     public void process(Record<ProjectLabelGroupKey, EntityLabel> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called with record: {}", record);
         var k = ProjectEntityKey.newBuilder().setEntityId(record.key().getEntityId())
                 .setProjectId(record.key().getProjectId()).build();
         this.context.forward(record.withKey(k));

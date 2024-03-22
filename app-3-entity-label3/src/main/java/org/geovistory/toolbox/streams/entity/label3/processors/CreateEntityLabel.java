@@ -77,7 +77,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
 
     public void process(Record<String, LabelEdge> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called with record: {}", record);
 
         if (record.value() == null) return;
         EntityLabel newEntityLabel = null;

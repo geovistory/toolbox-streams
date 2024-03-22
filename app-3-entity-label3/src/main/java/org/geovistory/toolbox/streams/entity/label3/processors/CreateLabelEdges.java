@@ -21,7 +21,7 @@ public class CreateLabelEdges implements Processor<String, EdgeValue, String, La
     }
 
     public void process(Record<String, EdgeValue> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called with record: {}", record);
         var inVal = record.value();
         var newVal = LabelEdge.newBuilder()
                 .setProjectId(inVal.getProjectId())

@@ -18,7 +18,7 @@ public class ReKeyEntityLangLabels implements Processor<ProjectLabelGroupKey, En
     }
 
     public void process(Record<ProjectLabelGroupKey, EntityLabel> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called with record: {}", record);
         var k = ProjectEntityLangKey.newBuilder()
                 .setEntityId(record.key().getEntityId())
                 .setProjectId(record.key().getProjectId())

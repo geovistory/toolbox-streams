@@ -30,7 +30,7 @@ public class EdgeWithLabelJoiner implements Processor<String, LabelEdge, String,
 
     @Override
     public void process(final Record<String, LabelEdge> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called with record: {}", record);
         if (record.value() == null) return;
         var edge = record.value();
 

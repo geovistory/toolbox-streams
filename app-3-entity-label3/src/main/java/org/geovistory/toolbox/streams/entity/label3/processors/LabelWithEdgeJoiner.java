@@ -30,7 +30,7 @@ public class LabelWithEdgeJoiner implements Processor<ProjectEntityKey, EntityLa
 
     @Override
     public void process(final Record<ProjectEntityKey, EntityLabel> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called with record: {}", record);
         var eId = record.key().getEntityId();
         var pId = record.key().getProjectId();
 

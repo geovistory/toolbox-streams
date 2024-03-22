@@ -23,7 +23,7 @@ public class LabelConfigTransformer implements Processor<Key, Value, ProjectClas
     }
 
     public void process(Record<Key, Value> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called with record: {}", record);
         var value = record.value();
         try {
             EntityLabelConfig config = mapper.readValue(value.getConfig(), EntityLabelConfig.class);

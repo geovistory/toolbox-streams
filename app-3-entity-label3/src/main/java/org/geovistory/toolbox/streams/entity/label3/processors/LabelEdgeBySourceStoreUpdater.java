@@ -26,7 +26,7 @@ public class LabelEdgeBySourceStoreUpdater implements Processor<String, LabelEdg
 
     @Override
     public void process(final Record<String, LabelEdge> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called with record: {}", record);
         if (record.value() == null) return;
         var newK = Fn.createLabelEdgeSourceKey(record.value());
         // if deleted, delete from store
