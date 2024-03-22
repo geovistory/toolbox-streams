@@ -89,7 +89,14 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         EntityLabel oldEntityLabeL = entityLabelStore.get(projectEntityKey);
 
         // lookup entity label config
-        var conf = lookupEntityLabelConfig(record);
+        EntityLabelConfigTmstp conf;
+        try {
+            conf = lookupEntityLabelConfig(record);
+        } catch (NewLabelConfigFoundException ignore) {
+            // in case a new label config has been found, we return here, since the label
+            // will be created in batch mode
+            return;
+        }
         if (conf != null) {
             // create entity label
             newEntityLabel = createEntityLabel(record.value(), conf);
@@ -111,6 +118,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                 createCommunityLabels(projectEntityKey, newEntityLabel, oldEntityLabeL, record);
             }
         }
+
 
     }
 
@@ -162,7 +170,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         return (sourceClass == 365 || sourceClass == 868);
     }
 
-    private EntityLabelConfigTmstp lookupEntityLabelConfig(Record<String, LabelEdge> record) {
+    private EntityLabelConfigTmstp lookupEntityLabelConfig(Record<String, LabelEdge> record) throws NewLabelConfigFoundException {
         var labelEdge = record.value();
         var projectClassKey = ProjectClassKey.newBuilder()
                 .setProjectId(labelEdge.getProjectId())
@@ -173,14 +181,14 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             // lookup old timestamp
             var oldT = labelConfigTmspStore.get(projectClassKey);
             var newR = labelConfig.getRecordTimestamp();
-            if (oldT != null && oldT < newR) {
+            if (oldT == null || oldT < newR) {
                 labelConfigTmspStore.put(projectClassKey, newR);
                 // update labels of all entities of this class and project
                 updateLabelsWithNewConfig(
                         createLabelEdgePrefix2(projectClassKey.getClassId(), projectClassKey.getProjectId()),
                         record.timestamp()
                 );
-                return null;
+                throw new NewLabelConfigFoundException();
             }
         } else {
             projectClassKey.setProjectId(DEFAULT_PROJECT.get());
@@ -188,14 +196,14 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             if (labelConfig != null && !labelConfig.getDeleted()) {
                 var oldT2 = labelConfigTmspStore.get(projectClassKey);
                 var newR2 = labelConfig.getRecordTimestamp();
-                if (oldT2 != null && oldT2 < newR2) {
+                if (oldT2 == null || oldT2 < newR2) {
                     labelConfigTmspStore.put(projectClassKey, newR2);
                     // update labels of all entities of this class
                     updateLabelsWithNewConfig(
                             createLabelEdgePrefix1(projectClassKey.getClassId()),
                             record.timestamp()
                     );
-                    return null;
+                    throw new NewLabelConfigFoundException();
                 }
             }
         }
@@ -364,7 +372,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         // if oldPrefLabel and newPrefLabel distinct
         if (!Objects.equals(oldPrefLabel, newPrefLabel)) {
             context.forward(
-                    record.withKey(createProjectLabelGroupKey(comEntityKey)).withValue(newEl),
+                    record.withKey(createProjectLabelGroupKey(comEntityKey)).withValue(newPrefLabel),
                     Processors.RE_KEY_ENTITY_LABELS);
         }
 
@@ -492,5 +500,11 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         return ProjectEntityKey.newBuilder()
                 .setEntityId(entityId)
                 .setProjectId(0).build();
+    }
+
+    /**
+     * Thrown if the label config has been updated meanwhile.
+     */
+    private static class NewLabelConfigFoundException extends RuntimeException {
     }
 }

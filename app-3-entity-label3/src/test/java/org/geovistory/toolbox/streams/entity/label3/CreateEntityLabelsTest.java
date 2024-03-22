@@ -50,7 +50,7 @@ public class CreateEntityLabelsTest {
         testDriver = new TopologyTestDriver(topology);
         labelConfigByProjectClassInputTopic = testDriver.createInputTopic(
                 outputTopicNames.labelConfigByProjectClass(),
-                as.<ProjectClassKey>key().serializer(), as.vS()
+                as.kS(), as.vS()
         );
         labelEdgeBySourceInputTopic = testDriver.createInputTopic(
                 outputTopicNames.labelEdgeBySource(),
@@ -159,10 +159,11 @@ public class CreateEntityLabelsTest {
 
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
 
-        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(0, "i2")).getLabel());
-
         // test label edge by source
         assertEquals(4, entityLabels.size());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(0, "i2")).getLabel());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(2, "i2")).getLabel());
+        assertEquals("Foo", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
         assertEquals("Foo", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
         // test adding target entity to project
@@ -351,7 +352,7 @@ public class CreateEntityLabelsTest {
         assertEquals("Foo, Bar", entityLabels.get(new ProjectEntityKey(0, "i1")).getLabel());
         assertEquals("Foo, Bar", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
 
-        sendConfig(1, 365, 1L,
+        sendConfig(1, 365, 2L,
                 new EntityLabelConfigPartField[]{
                         new EntityLabelConfigPartField(1113, true, 1)
                 });
