@@ -106,10 +106,11 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                     Processors.RE_KEY_ENTITY_LABELS
             );
 
-            // create community entity label
+            // TODO uncomment the following
+           /* // create community entity label
             if (projectEntityKey.getProjectId() != 0) {
                 createCommunityLabels(projectEntityKey, newEntityLabel, oldEntityLabeL, record);
-            }
+            }*/
         }
 
     }
@@ -175,12 +176,13 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             var newR = labelConfig.getRecordTimestamp();
             if (oldT != null && oldT < newR) {
                 labelConfigTmspStore.put(projectClassKey, newR);
+                // TODO uncomment the following
                 // update labels of all entities of this class and project
-                updateLabelsWithNewConfig(
+              /*  updateLabelsWithNewConfig(
                         createLabelEdgePrefix2(projectClassKey.getClassId(), projectClassKey.getProjectId()),
                         record.timestamp()
-                );
                 return null;
+                );*/
             }
         } else {
             projectClassKey.setProjectId(DEFAULT_PROJECT.get());
@@ -190,12 +192,15 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                 var newR2 = labelConfig.getRecordTimestamp();
                 if (oldT2 != null && oldT2 < newR2) {
                     labelConfigTmspStore.put(projectClassKey, newR2);
-                    // update labels of all entities of this class
+                    // TODO uncomment the following
+                  /*
+                   // update labels of all entities of this class
                     updateLabelsWithNewConfig(
                             createLabelEdgePrefix1(projectClassKey.getClassId()),
                             record.timestamp()
                     );
                     return null;
+                    */
                 }
             }
         }
