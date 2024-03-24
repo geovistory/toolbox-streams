@@ -186,7 +186,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                 // update labels of all entities of this class and project
                 updateLabelsWithNewConfig(
                         createLabelEdgePrefix2(projectClassKey.getClassId(), projectClassKey.getProjectId()),
-                        record.timestamp()
+                        newR
                 );
                 throw new NewLabelConfigFoundException();
             }
@@ -201,7 +201,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                     // update labels of all entities of this class
                     updateLabelsWithNewConfig(
                             createLabelEdgePrefix1(projectClassKey.getClassId()),
-                            record.timestamp()
+                            newR2
                     );
                     throw new NewLabelConfigFoundException();
                 }
