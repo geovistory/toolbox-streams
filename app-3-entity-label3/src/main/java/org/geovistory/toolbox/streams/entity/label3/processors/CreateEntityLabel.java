@@ -48,7 +48,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         comLabelCountStore = context.getStateStore(ComLabelCountStore.NAME);
         this.context = context;
 
-        context.schedule(Duration.ofSeconds(10), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
+        context.schedule(Duration.ofSeconds(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
             if (!punctuationProcessing) {
                 LOG.info("Punctuation called, nr {}", punctuationCounter);
                 punctuationProcessing = true;
