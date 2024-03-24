@@ -162,6 +162,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         else lang = "unknown";
 
         String label = String.join(", ", strings);
+        if (label.length() >= 100) label = label.substring(0, 100);
         return EntityLabel.newBuilder().setLabel(label).setLanguage(lang).build();
     }
 

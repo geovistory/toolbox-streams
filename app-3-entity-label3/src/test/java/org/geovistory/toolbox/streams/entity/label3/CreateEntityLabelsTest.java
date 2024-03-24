@@ -458,6 +458,39 @@ public class CreateEntityLabelsTest {
 
     }
 
+    // If a project configures the labels of two classes to depend on each other, we create an infinite
+    // label. Assure, this is prevented by a max length of 100 chars per entity label.
+    @Test
+    public void testMaxLengthForSelfReferencingLabels() {
+        // Publish test input
+        sendConfig(1, 1, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(1, true, 1)
+                });
+        sendConfig(1, 2, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(2, true, 1),
+                        new EntityLabelConfigPartField(3, false, 1)
+                });
+        sendConfig(1, 3, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(3, true, 1)
+                });
+        sendLabelEdge(1, 1, "i2", 1, true, 1f, "", "i1", "Foo Bar Baz Baa Boo Bee", "en", true, false);
+        sendLabelEdge(1, 2, "i3", 2, true, 1f, "", "i2", null, null, true, false, false);
+        sendLabelEdge(1, 2, "i3", 3, false, 1f, "", "i4", null, null, true, false, false);
+        sendLabelEdge(1, 3, "i4", 3, true, 1f, "", "i3", null, null, true, false, false);
+
+
+        var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
+
+        // test label edge by source
+        assertEquals(6, entityLabels.size());
+        assertEquals(100, entityLabels.get(new ProjectEntityKey(1, "i3")).getLabel().length());
+
+    }
+
+
     public String sendLabelEdge(Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted) {
         return sendLabelEdge(project_id,
                 source_class_id,
