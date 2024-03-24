@@ -36,6 +36,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
     private KeyValueStore<ComLabelGroupKey, Integer> comLabelCountStore;
     private Boolean punctuationProcessing = false;
 
+    private int punctuationCounter = 1;
+
     public void init(ProcessorContext<ProjectLabelGroupKey, EntityLabel> context) {
         entityLabelStore = context.getStateStore(EntityLabelStore.NAME);
         labelEdgeBySourceStore = context.getStateStore(LabelEdgeBySourceStore.NAME);
@@ -46,9 +48,9 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         comLabelCountStore = context.getStateStore(ComLabelCountStore.NAME);
         this.context = context;
 
-        context.schedule(Duration.ofSeconds(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
+        context.schedule(Duration.ofSeconds(10), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
             if (!punctuationProcessing) {
-                LOG.debug("Punctuation called");
+                LOG.info("Punctuation called, nr {}", punctuationCounter);
                 punctuationProcessing = true;
                 try (var iterator = labelConfigStore.all()) {
                     while (iterator.hasNext()) {
@@ -70,6 +72,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                         }
                     }
                 }
+                LOG.info("Punctuation done, nr {}", punctuationCounter);
+                punctuationCounter++;
                 punctuationProcessing = false;
             }
         });
@@ -77,7 +81,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
 
     public void process(Record<String, LabelEdge> record) {
-        LOG.debug("process() called with record: {}", record);
+        LOG.info("process() called for record with key: {}, target label {}", record.key(), record.value().getTargetLabel());
 
         if (record.value() == null) return;
         EntityLabel newEntityLabel = null;
@@ -87,6 +91,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
         // get old entity label
         EntityLabel oldEntityLabeL = entityLabelStore.get(projectEntityKey);
+        LOG.info("projectEntityKey: {}, old entity label {}", projectEntityKey, oldEntityLabeL);
 
         // lookup entity label config
         EntityLabelConfigTmstp conf;
@@ -101,9 +106,12 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             // create entity label
             newEntityLabel = createEntityLabel(record.value(), conf);
         }
+        LOG.info("projectEntityKey: {}, config.project_id {}, new entity label: {}",
+                projectEntityKey, conf == null ? "null" : conf.getProjectId(), newEntityLabel);
 
         // if old and new are different...
         if (!Objects.equals(oldEntityLabeL, newEntityLabel)) {
+            LOG.info("projectEntityKey: {}, old and new labels are different. old: {}, new: {}", projectEntityKey, oldEntityLabeL, newEntityLabel);
             // ... update store
             entityLabelStore.put(projectEntityKey, newEntityLabel);
 
@@ -117,6 +125,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             if (projectEntityKey.getProjectId() != 0) {
                 createCommunityLabels(projectEntityKey, newEntityLabel, oldEntityLabeL, record);
             }
+        } else {
+            LOG.info("projectEntityKey: {}, old and new labels are equal.  old: {}, new: {}", projectEntityKey, oldEntityLabeL, newEntityLabel);
         }
 
 
@@ -244,6 +254,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
 
     private void updateLabelsWithNewConfig(String prefix, Long timestamp) {
+        LOG.info("updateLabelsWithNewConfig for prefix {} and t {}", prefix, timestamp);
+
         // iterate over edges
         try (var iterator = this.labelEdgeBySourceStore.prefixScan(prefix, Serdes.String().serializer())) {
 
