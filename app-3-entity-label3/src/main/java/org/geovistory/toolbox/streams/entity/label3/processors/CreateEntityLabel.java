@@ -105,7 +105,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
 
     public void process(Record<String, LabelEdge> record) {
-        LOG.info("process() called with record: {}", record);
+        LOG.debug("process() called with record: {}", record);
 
         if (record.value() == null) return;
         EntityLabel newEntityLabel = null;
@@ -142,7 +142,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                     Processors.RE_KEY_ENTITY_LABELS
             );
 
-            LOG.info("new label for {}: {}", projectEntityKey, newEntityLabel);
+            LOG.debug("new label for {}: {}", projectEntityKey, newEntityLabel);
 
             // create community entity label
             if (projectEntityKey.getProjectId() != 0) {
@@ -150,7 +150,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             }
         }
         {
-            LOG.info("no new label for {}: {}", projectEntityKey, oldEntityLabeL);
+            LOG.debug("no new label for {}: {}", projectEntityKey, oldEntityLabeL);
         }
 
 
@@ -280,7 +280,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             EntityLabel oldEl,
             Record<String, LabelEdge> record
     ) {
-        LOG.info("createCommunityLabels() called for {} with old label: '{}' and new label '{}'", key, oldEl, newEl);
+        LOG.debug("createCommunityLabels() called for {} with old label: '{}' and new label '{}'", key, oldEl, newEl);
 
         // get old preferred label
         var oldPrefLabel = getPreferredLabel(key.getEntityId());
@@ -360,7 +360,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
         // if oldPrefLabel and newPrefLabel distinct
         if (!Objects.equals(oldPrefLabel, newPrefLabel)) {
-            LOG.info("update community label for {} with old label: '{}' and new label '{}'", key, oldPrefLabel, newPrefLabel);
+            LOG.debug("update community label for {} with old label: '{}' and new label '{}'", key, oldPrefLabel, newPrefLabel);
             context.forward(
                     record.withKey(createProjectLabelGroupKey(comEntityKey)).withValue(newPrefLabel),
                     Processors.RE_KEY_ENTITY_LABELS);
