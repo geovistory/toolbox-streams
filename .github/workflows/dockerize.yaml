@@ -1247,6 +1247,7 @@ jobs:
       dockerize-app-0-statement-object,
       dockerize-app-1-base-config,
       dockerize-app-2-entity-label,
+      dockerize-app-3-entity-label3,
       dockerize-app-3-analysis-statements,
       dockerize-app-3-entity,
       dockerize-app-3-fulltext,
