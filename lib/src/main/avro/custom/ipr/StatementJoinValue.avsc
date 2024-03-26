@@ -1,0 +1,133 @@
+{
+  "type": "record",
+  "name": "StatementJoinValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of a project statement with subject and object",
+  "fields": [
+    {
+      "name": "statement_id",
+      "type": "int"
+    },
+    {
+      "name": "project_id",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "project_count",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "ord_num_of_domain",
+      "type": [
+        "null",
+        "float"
+      ],
+      "default": null
+    },
+    {
+      "name": "ord_num_of_range",
+      "type": [
+        "null",
+        "float"
+      ],
+      "default": null
+    },
+    {
+      "name": "subject_id",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "property_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "object_id",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "subject_class_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "object_class_id",
+      "type": [
+        "null",
+        "int"
+      ],
+      "default": null
+    },
+    {
+      "name": "subject_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "object_label",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "subject_entity_value",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityValue"
+      ],
+      "default": null
+    },
+    {
+      "name": "subject",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NodeValue"
+      ],
+      "default": null
+    },
+    {
+      "name": "object",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.NodeValue"
+      ],
+      "default": null
+    },
+    {
+      "name": "object_entity_value",
+      "type": [
+        "null",
+        "org.geovistory.toolbox.streams.avro.EntityValue"
+      ],
+      "default": null
+    },
+    {
+      "name": "modified_at",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "deleted",
+      "type": "boolean",
+      "default": false
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "type": "record",
+  "name": "EntityValue",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value of project entity",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "class_id",
+      "type": "int"
+    },
+    {
+      "name": "community_visibility_toolbox",
+      "type": "boolean"
+    },
+    {
+      "name": "community_visibility_data_api",
+      "type": "boolean"
+    },
+    {
+      "name": "community_visibility_website",
+      "type": "boolean"
+    },
+    {
+      "name": "project_visibility_data_api",
+      "type": "boolean"
+    },
+    {
+      "name": "project_visibility_website",
+      "type": "boolean"
+    },
+    {
+      "name": "deleted",
+      "type": "boolean",
+      "default": false
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "type": "record",
+  "name": "LabelEdge",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "An edge with the target label.",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "source_class_id",
+      "type": "int"
+    },
+    {
+      "name": "source_id",
+      "type": "string"
+    },
+    {
+      "name": "property_id",
+      "type": "int"
+    },
+    {
+      "name": "is_outgoing",
+      "type": "boolean"
+    },
+    {
+      "name": "ord_num",
+      "type": [
+        "null",
+        "float"
+      ],
+      "default": null
+    },
+    {
+      "name": "modified_at",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "target_id",
+      "type": "string"
+    },
+    {
+      "name": "target_label",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "target_label_language",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "target_is_in_project",
+      "type": "boolean"
+    },
+    {
+      "name": "deleted",
+      "type": "boolean",
+      "default": false
+    }
+  ]
+}
