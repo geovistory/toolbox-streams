@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "InProjectOrdNum",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Value to store the ord num of a project and if it is in the project.",
+  "fields": [
+    {
+      "name": "inProject",
+      "type": "boolean"
+    },
+    {
+      "name": "ord_num",
+      "type": [
+        "null",
+        "float"
+      ],
+      "default": null
+    }
+  ]
+}
