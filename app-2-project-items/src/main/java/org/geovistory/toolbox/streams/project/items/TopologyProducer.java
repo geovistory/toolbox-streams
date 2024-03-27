@@ -43,6 +43,14 @@ public class TopologyProducer {
     SObStore sObStore;
     @Inject
     SCompleteStore sCompleteStore;
+    @Inject
+    EdgeVisibilityStore edgeVisibilityStore;
+    @Inject
+    EdgeCountStore edgeCountStore;
+    @Inject
+    EdgeOrdNumStore edgeOrdNumStore;
+    @Inject
+    EdgeSumStore edgeSumStore;
     @ConfigProperty(name = "auto.create.output.topics")
     String autoCreateOutputTopics;
 
@@ -183,13 +191,6 @@ public class TopologyProducer {
                 // Create Edges from statements with literals
                 // ---------------------------------------------------
                 .addProcessor(ProcessorNames.CREATE_LITERAL_EDGES, CreateLiteralEdges::new, ProcessorNames.JOIN_S_SUB_PE, ProcessorNames.JOIN_PE_S_SUB)
-                .addSink(
-                        SinkNames.PROJECT_EDGE_LITERALS_SINK,
-                        outputTopicNames.projectEdges(),
-                        Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
-                        new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
-                        ProcessorNames.CREATE_LITERAL_EDGES
-                )
 
                 // ---------------------------------------------------
                 // Join projects statement object with project entity
@@ -241,19 +242,73 @@ public class TopologyProducer {
                 .addProcessor(ProcessorNames.JOIN_SUB_WITH_OB, JoinSub_Ob::new, SinkNames.PROJECT_S_SUB_BY_PK_SOURCE)
                 // join object project entity with the project statements with subject
                 .addProcessor(ProcessorNames.JOIN_OB_WITH_SUB, JoinOb_Sub::new, SinkNames.PROJECT_S_OB_BY_PK_SOURCE)
+                // fork edges into toolbox (all) and public (some)
+                .addProcessor(ProcessorNames.FORK_EDGES, ForkEdges::new,
+                        ProcessorNames.JOIN_SUB_WITH_OB,
+                        ProcessorNames.JOIN_OB_WITH_SUB,
+                        ProcessorNames.CREATE_LITERAL_EDGES
+                )
+                .addProcessor(ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES, () -> new CreateCommunityEdges("toolbox"),
+                        ProcessorNames.FORK_EDGES
+                )
+                .addProcessor(ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES, () -> new CreateCommunityEdges("public"),
+                        ProcessorNames.FORK_EDGES
+                )
 
                 // ---------------------------------------------------
-                // Create Edges from statements with entities
+                // Create Edges for project toolbox rdf
                 // Remark: The keys are unique per edge but
                 //         the edges are partitioned by ProjectEntityKey
                 //         created from sourceId and projectId
                 //         (see edgePartitioner)
                 // ---------------------------------------------------
-                .addSink(SinkNames.PROJECT_EDGE_ENTITIES_SINK,
-                        outputTopicNames.projectEdges(),
+                .addSink(SinkNames.PROJECT_EDGE_TOOLBOX_SINK,
+                        outputTopicNames.projectEdgesToolbox(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
-                        ProcessorNames.JOIN_SUB_WITH_OB, ProcessorNames.JOIN_OB_WITH_SUB
+                        ProcessorNames.FORK_EDGES
+                )
+                // ---------------------------------------------------
+                // Create Edges for project public rdf
+                // Remark: The keys are unique per edge but
+                //         the edges are partitioned by ProjectEntityKey
+                //         created from sourceId and projectId
+                //         (see edgePartitioner)
+                // ---------------------------------------------------
+                .addSink(
+                        SinkNames.PROJECT_EDGE_PUBLIC_SINK,
+                        outputTopicNames.projectEdgesPublic(),
+                        Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
+                        new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
+                        ProcessorNames.FORK_EDGES
+                )
+                // ---------------------------------------------------
+                // Create Edges for community toolbox rdf
+                // Remark: The keys are unique per edge but
+                //         the edges are partitioned by ProjectEntityKey
+                //         created from sourceId and projectId
+                //         (see edgePartitioner)
+                // ---------------------------------------------------
+                .addSink(
+                        SinkNames.COMMUNITY_EDGE_TOOLBOX_SINK,
+                        outputTopicNames.communityEdgesToolbox(),
+                        Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
+                        new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
+                        ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES
+                )
+                // ---------------------------------------------------
+                // Create Edges for community public rdf
+                // Remark: The keys are unique per edge but
+                //         the edges are partitioned by ProjectEntityKey
+                //         created from sourceId and projectId
+                //         (see edgePartitioner)
+                // ---------------------------------------------------
+                .addSink(
+                        SinkNames.COMMUNITY_EDGE_PUBLIC_SINK,
+                        outputTopicNames.communityEdgesPublic(),
+                        Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
+                        new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
+                        ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES
                 )
 
                 // ---------------------------------------------------
@@ -265,7 +320,12 @@ public class TopologyProducer {
                 .addStateStore(peStore.createPersistentKeyValueStore(), ProcessorNames.STOCK_PE, ProcessorNames.JOIN_S_SUB_PE, ProcessorNames.JOIN_S_OB_PE)
                 .addStateStore(sSubStore.createPersistentKeyValueStore(), ProcessorNames.JOIN_PE_S_SUB, ProcessorNames.JOIN_S_SUB_PE)
                 .addStateStore(sObStore.createPersistentKeyValueStore(), ProcessorNames.JOIN_PE_S_OB, ProcessorNames.JOIN_S_OB_PE, ProcessorNames.JOIN_OB_WITH_SUB)
-                .addStateStore(sCompleteStore.createPersistentKeyValueStore(), ProcessorNames.JOIN_SUB_WITH_OB, ProcessorNames.JOIN_OB_WITH_SUB);
+                .addStateStore(sCompleteStore.createPersistentKeyValueStore(), ProcessorNames.JOIN_SUB_WITH_OB, ProcessorNames.JOIN_OB_WITH_SUB)
+                .addStateStore(edgeVisibilityStore.createPersistentKeyValueStore(), ProcessorNames.FORK_EDGES)
+                .addStateStore(edgeOrdNumStore.createPersistentKeyValueStore(), ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES, ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES)
+                .addStateStore(edgeCountStore.createPersistentKeyValueStore(), ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES, ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES)
+                .addStateStore(edgeSumStore.createPersistentKeyValueStore(), ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES, ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES)
+                ;
     }
 
     private static void createTopologyDocumentation(Topology topology) {

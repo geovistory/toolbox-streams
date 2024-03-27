@@ -169,7 +169,7 @@ public class Fn {
                 .setSubject(s.getSubject())
                 .setObject(s.getObject())
                 .setModifiedAt(ipr.getModifiedAt())
-                .setDeleted(Utils.booleanIsEqualTrue(s.getDeleted$1()))
+                .setDeleted(Utils.booleanIsEqualTrue(s.getDeleted$1()) || !ipr.getIsInProject())
                 .build();
     }
 
@@ -238,14 +238,18 @@ public class Fn {
                 .build();
     }
 
+
     /**
-     * Creates an outgoing EdgeValue from StatementWithSubValue.
+     * Creates an outgoing EdgeVisibilityValue from StatementWithSubValue.
      *
      * @param s StatementWithSubValue
-     * @return EdgeValue
+     * @return EdgeVisibilityValue
      */
-    public static EdgeValue createEdge(StatementWithSubValue s) {
-        return EdgeValue.newBuilder()
+    public static EdgeVisibilityValue createEdgeVisibility(StatementWithSubValue s) {
+        return EdgeVisibilityValue.newBuilder()
+                .setProjectPublic(visibleInProjectPublic(s))
+                .setCommunityPublic(visibleInCommunityPublic(s))
+                .setCommunityToolbox(visibleInCommunityToolbox(s))
                 .setProjectId(s.getProjectId())
                 .setStatementId(s.getStatementId())
                 .setProjectCount(s.getProjectCount())
@@ -264,16 +268,90 @@ public class Fn {
     }
 
     /**
-     * Creates an outgoing EdgeValue from StatementJoinValue.
+     * Determines if the given statement can be published
+     * in project rdf, based on the subject entity.
      *
-     * @param s StatementJoinValue
+     * @param s The StatementWithSubValue object representing the statement.
+     * @return {@code true} if the subject entity is public; {@code false} otherwise.
+     */
+    private static boolean visibleInProjectPublic(StatementWithSubValue s) {
+        boolean isPublic = false;
+        if (s.getSubjectEntityValue() != null) {
+            isPublic = s.getSubjectEntityValue().getProjectVisibilityDataApi();
+        }
+        return isPublic;
+    }
+
+    /**
+     * Determines if the given statement can be published
+     * in community public rdf, based on the subject entity.
+     *
+     * @param s The StatementWithSubValue object representing the statement.
+     * @return {@code true} if the subject entity is public; {@code false} otherwise.
+     */
+    private static boolean visibleInCommunityPublic(StatementWithSubValue s) {
+        boolean isPublic = false;
+        if (s.getSubject() != null && s.getSubject().getEntity() != null) {
+            isPublic = s.getSubject().getEntity().getCommunityVisibilityDataApi();
+        }
+        return isPublic;
+    }
+
+    /**
+     * Determines if the given statement can be published
+     * in community toolbox rdf, based on the subject entity.
+     *
+     * @param s The StatementWithSubValue object representing the statement.
+     * @return {@code true} if the subject entity is public; {@code false} otherwise.
+     */
+    private static boolean visibleInCommunityToolbox(StatementWithSubValue s) {
+        boolean isPublic = false;
+        if (s.getSubject() != null && s.getSubject().getEntity() != null) {
+            isPublic = s.getSubject().getEntity().getCommunityVisibilityToolbox();
+        }
+        return isPublic;
+    }
+
+    /**
+     * Creates an outgoing EdgeValue from EdgeVisibilityValue.
+     *
+     * @param e EdgeVisibilityValue
      * @return EdgeValue
      */
-    public static EdgeValue createOutgoingEdge(StatementJoinValue s) throws RuntimeException {
-        if (s.getSubject() == null || s.getSubject().getEntity() == null || s.getObject() == null) {
-            throw new RuntimeException("Could not transform StatementJoinValue to EdgeValue: subject.entity and object needed.");
-        }
+    public static EdgeValue createEdge(EdgeVisibilityValue e) {
         return EdgeValue.newBuilder()
+                .setProjectId(e.getProjectId())
+                .setStatementId(e.getStatementId())
+                .setProjectCount(e.getProjectCount())
+                .setOrdNum(e.getOrdNum())
+                .setSourceId(e.getSourceId())
+                .setSourceEntity(e.getSourceEntity())
+                .setSourceProjectEntity(e.getSourceProjectEntity())
+                .setPropertyId(e.getPropertyId())
+                .setIsOutgoing(e.getIsOutgoing())
+                .setTargetId(e.getTargetId())
+                .setTargetNode(e.getTargetNode())
+                .setTargetProjectEntity(e.getTargetProjectEntity())
+                .setModifiedAt(e.getModifiedAt())
+                .setDeleted(e.getDeleted())
+                .build();
+    }
+
+    /**
+     * Creates an outgoing EdgeVisibilityValue from StatementJoinValue.
+     *
+     * @param s StatementJoinValue
+     * @return EdgeVisibilityValue
+     */
+    public static EdgeVisibilityValue createOutgoingEdge(StatementJoinValue s) throws RuntimeException {
+        if (s.getSubject() == null || s.getSubject().getEntity() == null || s.getObject() == null) {
+            throw new RuntimeException("Could not transform StatementJoinValue to EdgeVisibilityValue: subject.entity and object needed.");
+        }
+
+        return EdgeVisibilityValue.newBuilder()
+                .setProjectPublic(visibleInProjectPublic(s))
+                .setCommunityPublic(visibleInCommunityPublic(s))
+                .setCommunityToolbox(visibleInCommunityToolbox(s))
                 .setProjectId(s.getProjectId())
                 .setStatementId(s.getStatementId())
                 .setProjectCount(s.getProjectCount())
@@ -292,17 +370,20 @@ public class Fn {
     }
 
     /**
-     * Creates an incoming EdgeValue from StatementJoinValue.
+     * Creates an incoming EdgeVisibilityValue from StatementJoinValue.
      *
      * @param s StatementJoinValue
-     * @return EdgeValue
+     * @return EdgeVisibilityValue
      */
-    public static EdgeValue createIncomingEdge(StatementJoinValue s) throws RuntimeException {
+    public static EdgeVisibilityValue createIncomingEdge(StatementJoinValue s) throws RuntimeException {
         if (s.getObject() == null || s.getObject().getEntity() == null || s.getSubject() == null) {
             throw new RuntimeException("Could not transform StatementJoinValue to EdgeValue: object.entity and subject needed.");
         }
 
-        return EdgeValue.newBuilder()
+        return EdgeVisibilityValue.newBuilder()
+                .setProjectPublic(visibleInProjectPublic(s))
+                .setCommunityPublic(visibleInCommunityPublic(s))
+                .setCommunityToolbox(visibleInCommunityToolbox(s))
                 .setProjectId(s.getProjectId())
                 .setStatementId(s.getStatementId())
                 .setProjectCount(s.getProjectCount())
@@ -318,6 +399,68 @@ public class Fn {
                 .setModifiedAt(s.getModifiedAt())
                 .setDeleted(s.getDeleted())
                 .build();
+    }
+
+
+    /**
+     * Determines if the given statement can be published
+     * project public rdf, based on both the subject and object entities
+     *
+     * @param s The StatementJoinValue object representing the statement.
+     * @return {@code true} if both the subject and object entities are public;
+     * {@code false} otherwise.
+     */
+    private static boolean visibleInProjectPublic(StatementJoinValue s) {
+        boolean subjectIsPublic = false;
+        if (s.getSubjectEntityValue() != null) {
+            subjectIsPublic = s.getSubjectEntityValue().getProjectVisibilityDataApi();
+        }
+
+        boolean objectIsPublic = false;
+        if (s.getSubjectEntityValue() != null) {
+            objectIsPublic = s.getObjectEntityValue().getProjectVisibilityDataApi();
+        }
+
+        return subjectIsPublic && objectIsPublic;
+    }
+
+
+    /**
+     * Determines if the given statement can be published
+     * in community public rdf, based on both the subject and object entities.
+     *
+     * @param s The StatementJoinValue object representing the statement.
+     * @return {@code true} if both entities are public; {@code false} otherwise.
+     */
+    private static boolean visibleInCommunityPublic(StatementJoinValue s) {
+        boolean subjectIsPublic = false;
+        if (s.getSubject() != null && s.getSubject().getEntity() != null) {
+            subjectIsPublic = s.getSubject().getEntity().getCommunityVisibilityDataApi();
+        }
+        boolean objectIsPublic = false;
+        if (s.getObject() != null && s.getObject().getEntity() != null) {
+            objectIsPublic = s.getSubject().getEntity().getCommunityVisibilityDataApi();
+        }
+        return subjectIsPublic && objectIsPublic;
+    }
+
+    /**
+     * Determines if the given statement can be published
+     * in community toolbox rdf, based on both the subject and object entities.
+     *
+     * @param s The StatementJoinValue object representing the statement.
+     * @return {@code true} if both entities are public; {@code false} otherwise.
+     */
+    private static boolean visibleInCommunityToolbox(StatementJoinValue s) {
+        boolean subjectIsPublic = false;
+        if (s.getSubject() != null && s.getSubject().getEntity() != null) {
+            subjectIsPublic = s.getSubject().getEntity().getCommunityVisibilityToolbox();
+        }
+        boolean objectIsPublic = false;
+        if (s.getObject() != null && s.getObject().getEntity() != null) {
+            objectIsPublic = s.getSubject().getEntity().getCommunityVisibilityToolbox();
+        }
+        return subjectIsPublic && objectIsPublic;
     }
 
 
@@ -342,6 +485,16 @@ public class Fn {
      * @return the key
      */
     public static String createEdgeKey(EdgeValue e) {
+        return createEdgeKey(e.getProjectId(), e.getSourceId(), e.getPropertyId(), e.getIsOutgoing(), e.getTargetId());
+    }
+
+    /**
+     * Creates the key of an edge
+     *
+     * @param e EdgeVisibilityValue
+     * @return the key
+     */
+    public static String createEdgeKey(EdgeVisibilityValue e) {
         return createEdgeKey(e.getProjectId(), e.getSourceId(), e.getPropertyId(), e.getIsOutgoing(), e.getTargetId());
     }
 

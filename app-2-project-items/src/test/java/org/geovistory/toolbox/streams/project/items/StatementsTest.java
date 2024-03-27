@@ -157,7 +157,7 @@ public class StatementsTest {
         psByObConsumer.subscribe(Collections.singletonList(outputTopicNames.projectStatementByOb()));
         psWithSubConsumer.subscribe(Collections.singletonList(outputTopicNames.projectStatementWithSubByPk()));
         psWithObConsumer.subscribe(Collections.singletonList(outputTopicNames.projectStatementWithObByPk()));
-        pedgeConsumer.subscribe(Collections.singletonList(outputTopicNames.projectEdges()));
+        pedgeConsumer.subscribe(Collections.singletonList(outputTopicNames.projectEdgesToolbox()));
 
 
         // add statement
