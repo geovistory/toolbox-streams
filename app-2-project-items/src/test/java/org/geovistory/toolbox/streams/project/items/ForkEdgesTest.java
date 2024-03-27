@@ -173,15 +173,16 @@ public class ForkEdgesTest {
         assertEquals(true, ppubList.get(0).value().getDeleted());
 
         e1 = sendE(1, 1, false, true);
+        var ctbxList = communityEdgesToolbox.readRecordsToList();
         sendSWithLiteral(2, 1, e1, "i99");
 
-        var ctbxList = communityEdgesToolbox.readRecordsToList();
+        ctbxList = communityEdgesToolbox.readRecordsToList();
         assertEquals(true, ctbxList.get(0).value().getDeleted());
 
         e1 = sendE(1, 1, false, false);
-        sendSWithLiteral(2, 1, e1, "i99");
-
         var cpubList = communityEdgesPublic.readRecordsToList();
+        sendSWithLiteral(2, 1, e1, "i99");
+        cpubList = communityEdgesPublic.readRecordsToList();
         assertEquals(true, cpubList.get(0).value().getDeleted());
         assertEquals(0, cpubList.get(0).value().getProjectCount());
 
