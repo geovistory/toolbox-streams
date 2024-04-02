@@ -12,5 +12,6 @@ public class Processors {
 
     public static final String JOIN_ON_NEW_EDGE = "JOIN_ON_NEW_EDGE";
     public static final String JOIN_ON_NEW_LABEL = "JOIN_ON_NEW_LABEL";
+    public static final String CREATE_COMMUNITY_TOOLBOX_EDGES = "CREATE_COMMUNITY_TOOLBOX_EDGES";
 
 }

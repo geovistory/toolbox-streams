@@ -205,6 +205,9 @@ public class JoinTest {
 
     public String sendEdge(Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted) {
         var v = LabelEdge.newBuilder()
+                .setCommunityToolbox(true)
+                .setCommunityPublic(true)
+                .setProjectPublic(true)
                 .setProjectId(project_id)
                 .setSourceClassId(source_class_id)
                 .setSourceId(source_id)

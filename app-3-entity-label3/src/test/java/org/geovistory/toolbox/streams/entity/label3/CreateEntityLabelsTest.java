@@ -97,7 +97,7 @@ public class CreateEntityLabelsTest {
 
     // Assure, statement order is respected also with large ord nums (assert that 10 comes after 2)
     @Test
-    public void test() {
+    public void testOrdNum() {
         // Publish test input
         sendConfig(1, 365, 1L,
                 new EntityLabelConfigPartField[]{
@@ -492,7 +492,11 @@ public class CreateEntityLabelsTest {
 
 
     public String sendLabelEdge(Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted) {
-        return sendLabelEdge(project_id,
+        return sendLabelEdge(
+                true,
+                true,
+                true,
+                project_id,
                 source_class_id,
                 source_id,
                 property_id,
@@ -507,7 +511,30 @@ public class CreateEntityLabelsTest {
     }
 
     public String sendLabelEdge(Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted, Boolean targetIsLiteral) {
-        var v = new LabelEdge(project_id,
+        return sendLabelEdge(
+                true,
+                true,
+                true,
+                project_id,
+                source_class_id,
+                source_id,
+                property_id,
+                is_outgoing,
+                ord_num,
+                modified_at,
+                target_id,
+                target_label,
+                target_label_language,
+                target_is_in_project,
+                deleted, targetIsLiteral);
+    }
+
+    public String sendLabelEdge(Boolean project_public, Boolean community_public, Boolean community_toolbox, Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted, Boolean targetIsLiteral) {
+        var v = new LabelEdge(
+                project_public,
+                community_public,
+                community_toolbox,
+                project_id,
                 source_class_id,
                 source_id,
                 property_id,

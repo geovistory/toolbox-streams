@@ -7,6 +7,6 @@ public class Sinks {
     public static final String LABEL_CONFIG_BY_PROJECT_CLASS_KEY = "SINK_LABEL_CONFIG_BY_PROJECT_CLASS_KEY";
     public static final String ENTITY_LABEL = "SINK_ENTITY_LABEL";
     public static final String ENTITY_LANG_LABELS = "SINK_ENTITY_LANG_LABELS";
-
+    public static final String COMMUNITY_TOOLBOX_EDGES = "SINK_COMMUNITY_TOOLBOX_EDGES";
 
 }

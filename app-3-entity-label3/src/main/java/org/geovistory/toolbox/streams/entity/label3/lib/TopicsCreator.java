@@ -51,6 +51,7 @@ public class TopicsCreator {
         topics.add(KeyValue.pair(outputTopicNames.labelEdgeBySource(), TsAdmin.CleanupConfig.COMPACT));
         topics.add(KeyValue.pair(outputTopicNames.labelEdgeByTarget(), TsAdmin.CleanupConfig.COMPACT));
         topics.add(KeyValue.pair(outputTopicNames.entityLanguageLabels(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.labelEdgesToolboxCommunityBySource(), TsAdmin.CleanupConfig.COMPACT));
         createTopics(topics);
     }
 
