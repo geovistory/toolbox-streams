@@ -110,6 +110,8 @@ task generateReflectionConfiguration {
         classNames.add("EdgeValue.class")
         classNames.add("EntityProjectedValue.class")
         classNames.add("EntityValue.class")
+        classNames.add("EdgeVisibilityValue.class")
+        classNames.add("InProjectOrdNum.class")
         classNames.add("IprJoinVal.class")
         classNames.add("IprValue.class")
         classNames.add("StatementJoinValue.class")

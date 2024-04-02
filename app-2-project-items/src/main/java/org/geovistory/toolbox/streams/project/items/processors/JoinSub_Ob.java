@@ -4,20 +4,20 @@ import org.apache.kafka.streams.processor.api.Processor;
 import org.apache.kafka.streams.processor.api.ProcessorContext;
 import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.geovistory.toolbox.streams.avro.EdgeValue;
+import org.geovistory.toolbox.streams.avro.EdgeVisibilityValue;
 import org.geovistory.toolbox.streams.avro.ProjectStatementKey;
 import org.geovistory.toolbox.streams.avro.StatementJoinValue;
 import org.geovistory.toolbox.streams.avro.StatementWithSubValue;
 import org.geovistory.toolbox.streams.project.items.lib.Fn;
 import org.geovistory.toolbox.streams.project.items.stores.SCompleteStore;
 
-public class JoinSub_Ob implements Processor<ProjectStatementKey, StatementWithSubValue, String, EdgeValue> {
+public class JoinSub_Ob implements Processor<ProjectStatementKey, StatementWithSubValue, String, EdgeVisibilityValue> {
     private KeyValueStore<ProjectStatementKey, StatementJoinValue> sCompleteStore;
 
-    private ProcessorContext<String, EdgeValue> context;
+    private ProcessorContext<String, EdgeVisibilityValue> context;
 
     @Override
-    public void init(ProcessorContext<String, EdgeValue> context) {
+    public void init(ProcessorContext<String, EdgeVisibilityValue> context) {
         sCompleteStore = context.getStateStore(SCompleteStore.NAME);
         this.context = context;
     }

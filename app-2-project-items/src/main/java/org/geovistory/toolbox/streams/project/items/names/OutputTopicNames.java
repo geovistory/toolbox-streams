@@ -41,8 +41,20 @@ public class OutputTopicNames {
         return p("project_statement_with_ob_by_pk");
     }
 
-    public final String projectEdges() {
-        return p("project_edges");
+    public final String projectEdgesToolbox() {
+        return p("project_edges_toolbox");
+    }
+
+    public final String projectEdgesPublic() {
+        return p("project_edges_public");
+    }
+
+    public final String communityEdgesToolbox() {
+        return p("community_edges_toolbox");
+    }
+
+    public final String communityEdgesPublic() {
+        return p("community_edges_public");
     }
 
     private String p(String n) {
