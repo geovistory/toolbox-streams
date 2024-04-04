@@ -174,17 +174,30 @@ public class TopologyProducer {
                         Processors.CREATE_LABEL_PUBLIC_COMMUNITY
                 )
 
-                // Re-key entity language labels
+
+                // Output for entity language labels for public community rdf
                 .addProcessor(
-                        Processors.RE_KEY_ENTITY_LANG_LABELS,
-                        ReKeyEntityLangLabels::new,
+                        Processors.CREATE_LANG_LABEL_PUBLIC_COMMUNITY,
+                        CreateRdfOutput::new,
                         Processors.CREATE_ENTITY_LABELS)
-                // Sink entity language labels
                 .addSink(
-                        Sinks.ENTITY_LANG_LABELS, outputTopicNames.entityLanguageLabels(), as.kS(), as.vS(),
-                        new CustomPartitioner<ProjectEntityLangKey, EntityLabel, String>(Serdes.String().serializer(), (kv) -> kv.key.getEntityId()),
-                        Processors.RE_KEY_ENTITY_LANG_LABELS
+                        Sinks.ENTITY_LANG_LABEL_PUBLIC_COMMUNITY,
+                        outputTopicNames.entityLanguageLabelsPublicCommunity(), as.kS(), as.vS(),
+                        Processors.CREATE_LANG_LABEL_PUBLIC_COMMUNITY
                 )
+
+
+                // Output for entity language labels for public community rdf
+                .addProcessor(
+                        Processors.CREATE_LANG_LABEL_TOOLBOX_COMMUNITY,
+                        CreateRdfOutput::new,
+                        Processors.CREATE_ENTITY_LABELS)
+                .addSink(
+                        Sinks.ENTITY_LANG_LABEL_TOOLBOX_COMMUNITY,
+                        outputTopicNames.entityLanguageLabelsToolboxCommunity(), as.kS(), as.vS(),
+                        Processors.CREATE_LANG_LABEL_TOOLBOX_COMMUNITY
+                )
+
                 // ---------
                 // Join
                 // --------

@@ -25,8 +25,12 @@ public class OutputTopicNames {
         return p("entity_labels");
     }
 
-    public final String entityLanguageLabels() {
-        return p("entity_language_labels");
+    public final String entityLanguageLabelsToolboxCommunity() {
+        return p("entity_language_labels_toolbox_community");
+    }
+
+    public final String entityLanguageLabelsPublicCommunity() {
+        return p("entity_language_labels_public_community");
     }
 
     public final String labelEdgesToolboxCommunityBySource() {

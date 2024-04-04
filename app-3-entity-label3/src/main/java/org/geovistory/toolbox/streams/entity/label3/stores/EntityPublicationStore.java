@@ -9,7 +9,9 @@ import org.geovistory.toolbox.streams.lib.processorapi.AbstractStore;
 /**
  * Store for storing if an entity labels is published on a publication target
  * <p>
- * with key: {project-id}_{entity-id}_{pub-target}
+ * with key: {project-id}_{entity-id}_{pub-target} for entity labels
+ * {project-id}_{entity-id}_{lang}_{pub-target} for entity language labels
+ * <p>
  * with val: true, if published, false or null if not
  *
  * <p>
@@ -39,8 +41,13 @@ public class EntityPublicationStore extends AbstractStore<String, Boolean> {
         return Serdes.Boolean();
     }
 
-    public static String createKey(PubTargets pubTarget, int projectId, String entityId) {
-        return String.join("_", new String[]{Integer.toString(projectId), entityId, pubTarget.name()});
+    public static String createKey(PubTargets pubTarget, String projectId, String entityId) {
+        return String.join("_", new String[]{projectId, entityId, pubTarget.name()});
     }
+
+    public static String createKey(PubTargets pubTarget, String projectId, String entityId, String language) {
+        return String.join("_", new String[]{projectId, entityId, language, pubTarget.name()});
+    }
+
 
 }

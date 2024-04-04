@@ -45,7 +45,12 @@ public class Fn {
      * {@code language}, and {@code label} fields set as described.
      */
     public static ProjectLabelGroupKey createProjectLabelGroupKey(LabelEdge labelEdge, EntityLabel entityLabel, PubTargets pubTarget) {
-        var projectId = pubTarget == PubTargets.PC || pubTarget == PubTargets.TC ? 0 : labelEdge.getProjectId();
+        var projectId =
+                pubTarget == PubTargets.PC
+                        || pubTarget == PubTargets.TC
+                        || pubTarget == PubTargets.TCL
+                        || pubTarget == PubTargets.PCL
+                        ? 0 : labelEdge.getProjectId();
         return ProjectLabelGroupKey.newBuilder()
                 .setProjectId(projectId)
                 .setEntityId(labelEdge.getSourceId())
@@ -94,23 +99,6 @@ public class Fn {
                 .setLanguage(e.getLanguage())
                 .build();
     }
-
-    /**
-     * Creates a {@code ProjectLabelGroupKey} based on the provided {@code ComLabelGroupKey}.
-     *
-     * @param k The {@code ComLabelGroupKey} used to create the {@code ProjectLabelGroupKey}.
-     * @return A {@code ProjectLabelGroupKey} representing the combination of project ID (defaulted to 0),
-     * entity ID, language, and label from the provided {@code ComLabelGroupKey}.
-     * @throws NullPointerException if {@code k} is {@code null}.
-     */
-    public static ProjectLabelGroupKey createProjectLabelGroupKey(ComLabelGroupKey k) {
-        return ProjectLabelGroupKey.newBuilder()
-                .setProjectId(0)
-                .setEntityId(k.getEntityId())
-                .setLanguage(k.getLanguage())
-                .setLabel(k.getLabel()).build();
-    }
-
 
     /**
      * Creates a key used in state store of label-edges-by-source based on the provided parameters.
@@ -347,8 +335,8 @@ public class Fn {
     public static boolean sourceVisibleInPublicationTarget(LabelEdge e, PubTargets p) {
         return switch (p) {
             case TP -> true;
-            case TC -> e.getSourceCommunityToolbox();
-            case PC -> e.getSourceCommunityPublic();
+            case TC, TCL -> e.getSourceCommunityToolbox();
+            case PC, PCL -> e.getSourceCommunityPublic();
             case PP -> e.getSourceProjectPublic();
         };
     }
@@ -365,6 +353,8 @@ public class Fn {
             case TC -> Processors.CREATE_LABEL_TOOLBOX_COMMUNITY;
             case PC -> Processors.CREATE_LABEL_PUBLIC_COMMUNITY;
             case PP -> Processors.CREATE_LABEL_PUBLIC_PROJECT;
+            case PCL -> Processors.CREATE_LANG_LABEL_PUBLIC_COMMUNITY;
+            case TCL -> Processors.CREATE_LANG_LABEL_TOOLBOX_COMMUNITY;
         };
     }
 }

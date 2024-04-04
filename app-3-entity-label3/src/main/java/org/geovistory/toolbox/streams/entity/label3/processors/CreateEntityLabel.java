@@ -167,15 +167,24 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
     }
 
-
     public void createOutputForRdf(
             Record<String, LabelEdge> record,
             PubTargets pubTarget,
             EntityLabel oldLabel,
             EntityLabel newLabel
     ) {
+        createOutputForRdf(record, pubTarget, oldLabel, newLabel, null);
+    }
+
+    public void createOutputForRdf(
+            Record<String, LabelEdge> record,
+            PubTargets pubTarget,
+            EntityLabel oldLabel,
+            EntityLabel newLabel,
+            String language
+    ) {
         var visibleInPubTarget = sourceVisibleInPublicationTarget(record.value(), pubTarget);
-        var publishedKey = getPublishedKey(record.value(), pubTarget);
+        var publishedKey = getPublishedKey(record.value(), pubTarget, language);
         Boolean published = entityPublicationStore.get(publishedKey);
         published = published != null ? published : false;
         String childName = getChildName(pubTarget);
@@ -204,7 +213,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
                     .withValue(createEntityLabelOperation(newLabel, false)), childName);
         }
         // do insert
-        else if (visibleInPubTarget && newLabel != null) {
+        else if (!published && visibleInPubTarget && newLabel != null) {
             // track as published
             entityPublicationStore.put(publishedKey, true);
 
@@ -217,8 +226,17 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
     }
 
-    private static String getPublishedKey(LabelEdge l, PubTargets pubTarget) {
-        return EntityPublicationStore.createKey(pubTarget, l.getProjectId(), l.getSourceId());
+    private static String getPublishedKey(LabelEdge l, PubTargets pubTarget, String language) {
+        String projectId;
+        if (pubTarget.name().contains("C")) {
+            projectId = "0";
+        } else {
+            projectId = Integer.toString(l.getProjectId());
+        }
+        if (language == null)
+            return EntityPublicationStore.createKey(pubTarget, projectId, l.getSourceId());
+        else
+            return EntityPublicationStore.createKey(pubTarget, projectId, l.getSourceId(), language);
     }
 
 
@@ -446,11 +464,10 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             ComLabelGroupKey groupKey,
             EntityLabel oldLabel,
             EntityLabel newLabel) {
-            /* TODO        if (!Objects.equals(oldLabel, newLabel))
-            context.forward(
-                    record.withKey(createProjectLabelGroupKey(groupKey))
-                            .withValue(newLabel),
-                    Processors.RE_KEY_ENTITY_LANG_LABELS);*/
+
+        //createOutputForRdf(record,PubTargets.PCL,oldLabel,newLabel);
+        createOutputForRdf(record, PubTargets.TCL, oldLabel, newLabel, groupKey.getLanguage());
+
     }
 
     /**

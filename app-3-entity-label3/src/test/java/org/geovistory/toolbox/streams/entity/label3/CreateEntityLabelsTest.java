@@ -43,7 +43,6 @@ public class CreateEntityLabelsTest {
     TestInputTopic<String, LabelEdge> labelEdgeBySourceInputTopic;
     TestInputTopic<String, LabelEdge> labelEdgeByTargetInputTopic;
     TestOutputTopic<ProjectEntityKey, EntityLabel> entityLabelsOutputTopic;
-    TestOutputTopic<ProjectEntityLangKey, EntityLabel> entityLanguageLabelsOutputTopic;
 
     @BeforeEach
     public void setUp() {
@@ -64,10 +63,7 @@ public class CreateEntityLabelsTest {
                 outputTopicNames.entityLabels(),
                 as.kD(), as.vD()
         );
-        entityLanguageLabelsOutputTopic = testDriver.createOutputTopic(
-                outputTopicNames.entityLanguageLabels(),
-                as.kD(), as.vD()
-        );
+
     }
 
     @AfterEach
@@ -200,29 +196,6 @@ public class CreateEntityLabelsTest {
 
     }
 
-    // Test entity language labels are created for community entities
-    @Test
-    public void testCommunityLanguageLabels() {
-        // Publish test input
-        sendConfig(DEFAULT_PROJECT.get(), 3, 1L,
-                new EntityLabelConfigPartField[]{
-                        new EntityLabelConfigPartField(4, true, 1)
-                });
-        sendLabelEdge(1, 3, "i2", 4, true, 1f, "", "i3", "Foo", "en", true, false);
-        sendLabelEdge(2, 3, "i2", 4, true, 1f, "", "i3", "Bar", "fr", true, false);
-        sendLabelEdge(3, 3, "i2", 4, true, 1f, "", "i3", "Baz", "de", true, false);
-        sendLabelEdge(4, 3, "i2", 4, true, 1f, "", "i3", "Bar", "fr", true, false);
-        sendLabelEdge(4, 3, "i2", 4, true, 1f, "", "i3", "Bar 2", "fr", true, false);
-
-
-        var entityLabels = entityLanguageLabelsOutputTopic.readKeyValuesToMap();
-        assertEquals(3, entityLabels.size());
-
-        assertEquals("Foo", entityLabels.get(new ProjectEntityLangKey(0, "i2", "en")).getLabel());
-        assertEquals("Bar", entityLabels.get(new ProjectEntityLangKey(0, "i2", "fr")).getLabel());
-        assertEquals("Baz", entityLabels.get(new ProjectEntityLangKey(0, "i2", "de")).getLabel());
-
-    }
 
     @Test
     public void trimSpaces() {
