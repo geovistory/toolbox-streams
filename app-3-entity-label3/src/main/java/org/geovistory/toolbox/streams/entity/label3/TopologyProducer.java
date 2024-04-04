@@ -54,6 +54,8 @@ public class TopologyProducer {
     EdgeSumStore edgeSumStore;
     @Inject
     EdgeVisibilityStore edgeVisibilityStore;
+    @Inject
+    EntityPublicationStore entityPublicationStore;
 
 
     @Produces
@@ -127,6 +129,51 @@ public class TopologyProducer {
                         new CustomPartitioner<ProjectEntityKey, EntityLabel, String>(Serdes.String().serializer(), (kv) -> kv.key.getEntityId()),
                         Processors.RE_KEY_ENTITY_LABELS
                 )
+
+                // Output for entity labels for toolbox project rdf
+                .addProcessor(
+                        Processors.CREATE_LABEL_TOOLBOX_PROJECT,
+                        CreateRdfOutput::new,
+                        Processors.CREATE_ENTITY_LABELS)
+                .addSink(
+                        Sinks.ENTITY_LABEL_TOOLBOX_PROJECT,
+                        outputTopicNames.entityLabelsToolboxProject(), as.kS(), as.vS(),
+                        Processors.CREATE_LABEL_TOOLBOX_PROJECT
+                )
+
+                // Output for entity labels for toolbox community rdf
+                .addProcessor(
+                        Processors.CREATE_LABEL_TOOLBOX_COMMUNITY,
+                        CreateRdfOutput::new,
+                        Processors.CREATE_ENTITY_LABELS)
+                .addSink(
+                        Sinks.ENTITY_LABEL_TOOLBOX_COMMUNITY,
+                        outputTopicNames.entityLabelsToolboxCommunity(), as.kS(), as.vS(),
+                        Processors.CREATE_LABEL_TOOLBOX_COMMUNITY
+                )
+
+                // Output for entity labels for public project rdf
+                .addProcessor(
+                        Processors.CREATE_LABEL_PUBLIC_PROJECT,
+                        CreateRdfOutput::new,
+                        Processors.CREATE_ENTITY_LABELS)
+                .addSink(
+                        Sinks.ENTITY_LABEL_PUBLIC_PROJECT,
+                        outputTopicNames.entityLabelsPublicProject(), as.kS(), as.vS(),
+                        Processors.CREATE_LABEL_PUBLIC_PROJECT
+                )
+
+                // Output for entity labels for public community rdf
+                .addProcessor(
+                        Processors.CREATE_LABEL_PUBLIC_COMMUNITY,
+                        CreateRdfOutput::new,
+                        Processors.CREATE_ENTITY_LABELS)
+                .addSink(
+                        Sinks.ENTITY_LABEL_PUBLIC_COMMUNITY,
+                        outputTopicNames.entityLabelsPublicCommunity(), as.kS(), as.vS(),
+                        Processors.CREATE_LABEL_PUBLIC_COMMUNITY
+                )
+
                 // Re-key entity language labels
                 .addProcessor(
                         Processors.RE_KEY_ENTITY_LANG_LABELS,
@@ -163,7 +210,7 @@ public class TopologyProducer {
                 // Create community toolbox label edges
                 .addProcessor(Processors.CREATE_COMMUNITY_TOOLBOX_EDGES, CreateCommunityToolboxEdges::new, Sources.LABEL_EDGE_BY_SOURCE)
                 .addSink(
-                        Sinks.COMMUNITY_TOOLBOX_EDGES,
+                        Sinks.EDGES_TOOLBOX_COMMUNITY,
                         outputTopicNames.labelEdgesToolboxCommunityBySource(),
                         stringS, as.vS(),
                         new CustomPartitioner<String, LabelEdge, String>(Serdes.String().serializer(), (kv) -> kv.value.getSourceId()),
@@ -195,7 +242,9 @@ public class TopologyProducer {
                 .addStateStore(edgeSumStore.createPersistentKeyValueStore(),
                         Processors.CREATE_COMMUNITY_TOOLBOX_EDGES)
                 .addStateStore(edgeVisibilityStore.createPersistentKeyValueStore(),
-                        Processors.CREATE_COMMUNITY_TOOLBOX_EDGES);
+                        Processors.CREATE_COMMUNITY_TOOLBOX_EDGES)
+                .addStateStore(entityPublicationStore.createPersistentKeyValueStore(),
+                        Processors.CREATE_ENTITY_LABELS);
 
     }
 

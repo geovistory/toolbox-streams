@@ -33,6 +33,22 @@ public class OutputTopicNames {
         return p("label_edges_toolbox_community_by_source");
     }
 
+    public final String entityLabelsToolboxCommunity() {
+        return p("entity_labels_toolbox_community");
+    }
+
+    public final String entityLabelsToolboxProject() {
+        return p("entity_labels_toolbox_project");
+    }
+
+    public final String entityLabelsPublicCommunity() {
+        return p("entity_labels_public_community");
+    }
+
+    public final String entityLabelsPublicProject() {
+        return p("entity_labels_public_project");
+    }
+
     private String p(String n) {
         return Utils.prefixedOut(outPrefix, n);
     }

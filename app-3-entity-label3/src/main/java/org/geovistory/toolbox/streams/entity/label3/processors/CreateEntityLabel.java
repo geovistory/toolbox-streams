@@ -8,6 +8,7 @@ import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.label3.names.Processors;
+import org.geovistory.toolbox.streams.entity.label3.names.PubTargets;
 import org.geovistory.toolbox.streams.entity.label3.stores.*;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.slf4j.Logger;
@@ -23,10 +24,10 @@ import static org.geovistory.toolbox.streams.entity.label3.lib.Fn.*;
 import static org.geovistory.toolbox.streams.entity.label3.names.Constants.DEFAULT_PROJECT;
 
 
-public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLabelGroupKey, EntityLabel> {
+public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLabelGroupKey, EntityLabelOperation> {
     private static final Logger LOG = LoggerFactory.getLogger(CreateEntityLabel.class);
 
-    private ProcessorContext<ProjectLabelGroupKey, EntityLabel> context;
+    private ProcessorContext<ProjectLabelGroupKey, EntityLabelOperation> context;
     private KeyValueStore<ProjectEntityKey, EntityLabel> entityLabelStore;
     private KeyValueStore<String, LabelEdge> labelEdgeBySourceStore;
     private KeyValueStore<ProjectClassKey, EntityLabelConfigTmstp> labelConfigStore;
@@ -34,11 +35,14 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
     private KeyValueStore<String, EntityLabel> comLabelRankStore;
     private KeyValueStore<String, EntityLabel> comLabelLangRankStore;
     private KeyValueStore<ComLabelGroupKey, Integer> comLabelCountStore;
+
+    private KeyValueStore<String, Boolean> entityPublicationStore;
+
     private Boolean punctuationProcessing = false;
 
     private int punctuationCount = 0;
 
-    public void init(ProcessorContext<ProjectLabelGroupKey, EntityLabel> context) {
+    public void init(ProcessorContext<ProjectLabelGroupKey, EntityLabelOperation> context) {
         entityLabelStore = context.getStateStore(EntityLabelStore.NAME);
         labelEdgeBySourceStore = context.getStateStore(LabelEdgeBySourceStore.NAME);
         labelConfigStore = context.getStateStore(GlobalLabelConfigStore.NAME);
@@ -46,6 +50,8 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         comLabelRankStore = context.getStateStore(ComLabelRankStore.NAME);
         comLabelLangRankStore = context.getStateStore(ComLabelLangRankStore.NAME);
         comLabelCountStore = context.getStateStore(ComLabelCountStore.NAME);
+        entityPublicationStore = context.getStateStore(EntityPublicationStore.NAME);
+
         this.context = context;
 
         context.schedule(Duration.ofSeconds(1), PunctuationType.WALL_CLOCK_TIME, timestamp -> {
@@ -130,7 +136,6 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             newEntityLabel = createEntityLabel(record.value(), conf);
         }
 
-
         // if old and new are different...
         if (!Objects.equals(oldEntityLabeL, newEntityLabel)) {
             // ... update store
@@ -138,7 +143,9 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
 
             // ... push downstream
             context.forward(
-                    record.withKey(createProjectLabelGroupKey(projectEntityKey)).withValue(newEntityLabel),
+                    record
+                            .withKey(createProjectLabelGroupKey(projectEntityKey))
+                            .withValue(createEntityLabelOperation(newEntityLabel, false)),
                     Processors.RE_KEY_ENTITY_LABELS
             );
 
@@ -148,13 +155,72 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             if (projectEntityKey.getProjectId() != 0) {
                 createCommunityLabels(projectEntityKey, newEntityLabel, oldEntityLabeL, record);
             }
-        }
-        {
+        } else {
             LOG.debug("no new label for {}: {}", projectEntityKey, oldEntityLabeL);
+        }
+
+        // create output for toolbox project rdfs:label
+        createOutputForRdf(record, PubTargets.TP, oldEntityLabeL, newEntityLabel);
+
+        // create output for public project rdfs:label
+        createOutputForRdf(record, PubTargets.PP, oldEntityLabeL, newEntityLabel);
+
+    }
+
+
+    public void createOutputForRdf(
+            Record<String, LabelEdge> record,
+            PubTargets pubTarget,
+            EntityLabel oldLabel,
+            EntityLabel newLabel
+    ) {
+        var visibleInPubTarget = visibleInPublicationTarget(record.value(), pubTarget);
+        var publishedKey = getPublishedKey(record.value(), pubTarget);
+        Boolean published = entityPublicationStore.get(publishedKey);
+        published = published != null ? published : false;
+        String childName = getChildName(pubTarget);
+
+        // do delete
+        if (published && (!visibleInPubTarget || newLabel == null) && oldLabel != null) {
+            // track as not published
+            entityPublicationStore.delete(publishedKey);
+
+            // send delete message for old label
+            context.forward(record
+                    .withKey(createProjectLabelGroupKey(record.value(), oldLabel, pubTarget))
+                    .withValue(createEntityLabelOperation(oldLabel, true)), childName);
+
+        }
+        // do update
+        else if (published && !Objects.equals(oldLabel, newLabel) && oldLabel != null) {
+            // send delete message for old label
+            context.forward(record
+                    .withKey(createProjectLabelGroupKey(record.value(), oldLabel, pubTarget))
+                    .withValue(createEntityLabelOperation(oldLabel, true)), childName);
+
+            // send insert message for new label
+            context.forward(record
+                    .withKey(createProjectLabelGroupKey(record.value(), newLabel, pubTarget))
+                    .withValue(createEntityLabelOperation(newLabel, false)), childName);
+        }
+        // do insert
+        else if (visibleInPubTarget && newLabel != null) {
+            // track as published
+            entityPublicationStore.put(publishedKey, true);
+
+            // send insert message for new label
+            context.forward(record
+                    .withKey(createProjectLabelGroupKey(record.value(), newLabel, pubTarget))
+                    .withValue(createEntityLabelOperation(newLabel, false)), childName);
         }
 
 
     }
+
+    private static String getPublishedKey(LabelEdge l, PubTargets pubTarget) {
+        return EntityPublicationStore.createKey(pubTarget, l.getProjectId(), l.getSourceId());
+    }
+
 
     /**
      * Creates an EntityLabel based on the given record and configuration by looking up the
@@ -362,10 +428,17 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
         if (!Objects.equals(oldPrefLabel, newPrefLabel)) {
             LOG.debug("update community label for {} with old label: '{}' and new label '{}'", key, oldPrefLabel, newPrefLabel);
             context.forward(
-                    record.withKey(createProjectLabelGroupKey(comEntityKey)).withValue(newPrefLabel),
+                    record
+                            .withKey(createProjectLabelGroupKey(comEntityKey))
+                            .withValue(createEntityLabelOperation(newPrefLabel, false)),
                     Processors.RE_KEY_ENTITY_LABELS);
         }
 
+        // Generate output for toolbox community rdf
+        createOutputForRdf(record, PubTargets.TC, oldPrefLabel, newPrefLabel);
+
+        // Generate output for public community rdf
+        createOutputForRdf(record, PubTargets.PC, oldPrefLabel, newPrefLabel);
     }
 
     private void compareAndPushLangLabel(
@@ -373,11 +446,11 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             ComLabelGroupKey groupKey,
             EntityLabel oldLabel,
             EntityLabel newLabel) {
-        if (!Objects.equals(oldLabel, newLabel))
+            /* TODO        if (!Objects.equals(oldLabel, newLabel))
             context.forward(
                     record.withKey(createProjectLabelGroupKey(groupKey))
                             .withValue(newLabel),
-                    Processors.RE_KEY_ENTITY_LANG_LABELS);
+                    Processors.RE_KEY_ENTITY_LANG_LABELS);*/
     }
 
     /**

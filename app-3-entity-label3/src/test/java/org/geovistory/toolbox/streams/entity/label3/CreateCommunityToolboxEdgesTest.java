@@ -77,6 +77,9 @@ public class CreateCommunityToolboxEdgesTest {
 
     @Test
     public void testAddEdgesVisibility() {
+
+        // TODO test that edges with hidden target entity are not passing through!!
+
         // Publish test input
         sendConfig(DEFAULT_PROJECT.get(), 21, 1L,
                 new EntityLabelConfigPartField[]{

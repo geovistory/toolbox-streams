@@ -115,6 +115,8 @@ task generateReflectionConfiguration {
         classNames.add("EntityValue.class")
         classNames.add("ComLabelGroupKey.class")
         classNames.add("EntityLabel.class")
+        classNames.add("EntityLabelOperation.class")
+        classNames.add("Operation.class")
         classNames.add("EntityLabelConfigTmstp.class")
         classNames.add("LabelEdge.class")
         classNames.add("ProjectEntityLangKey.class")

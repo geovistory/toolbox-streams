@@ -14,4 +14,8 @@ public class Processors {
     public static final String JOIN_ON_NEW_LABEL = "JOIN_ON_NEW_LABEL";
     public static final String CREATE_COMMUNITY_TOOLBOX_EDGES = "CREATE_COMMUNITY_TOOLBOX_EDGES";
 
+    public static final String CREATE_LABEL_TOOLBOX_PROJECT = "CREATE_LABEL_TOOLBOX_PROJECT";
+    public static final String CREATE_LABEL_TOOLBOX_COMMUNITY = "CREATE_LABEL_TOOLBOX_COMMUNITY";
+    public static final String CREATE_LABEL_PUBLIC_COMMUNITY = "CREATE_LABEL_PUBLIC_COMMUNITY";
+    public static final String CREATE_LABEL_PUBLIC_PROJECT = "CREATE_LABEL_PUBLIC_PROJECT";
 }

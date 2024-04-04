@@ -52,6 +52,10 @@ public class TopicsCreator {
         topics.add(KeyValue.pair(outputTopicNames.labelEdgeByTarget(), TsAdmin.CleanupConfig.COMPACT));
         topics.add(KeyValue.pair(outputTopicNames.entityLanguageLabels(), TsAdmin.CleanupConfig.COMPACT));
         topics.add(KeyValue.pair(outputTopicNames.labelEdgesToolboxCommunityBySource(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.entityLabelsToolboxCommunity(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.entityLabelsToolboxProject(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.entityLabelsPublicCommunity(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.entityLabelsPublicProject(), TsAdmin.CleanupConfig.COMPACT));
         createTopics(topics);
     }
 
