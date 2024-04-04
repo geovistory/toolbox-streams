@@ -174,7 +174,7 @@ public class CreateEntityLabel implements Processor<String, LabelEdge, ProjectLa
             EntityLabel oldLabel,
             EntityLabel newLabel
     ) {
-        var visibleInPubTarget = visibleInPublicationTarget(record.value(), pubTarget);
+        var visibleInPubTarget = sourceVisibleInPublicationTarget(record.value(), pubTarget);
         var publishedKey = getPublishedKey(record.value(), pubTarget);
         Boolean published = entityPublicationStore.get(publishedKey);
         published = published != null ? published : false;

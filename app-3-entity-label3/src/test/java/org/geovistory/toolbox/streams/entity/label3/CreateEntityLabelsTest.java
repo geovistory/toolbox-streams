@@ -496,6 +496,7 @@ public class CreateEntityLabelsTest {
                 true,
                 true,
                 true,
+                true,
                 project_id,
                 source_class_id,
                 source_id,
@@ -515,6 +516,7 @@ public class CreateEntityLabelsTest {
                 true,
                 true,
                 true,
+                true,
                 project_id,
                 source_class_id,
                 source_id,
@@ -529,11 +531,15 @@ public class CreateEntityLabelsTest {
                 deleted, targetIsLiteral);
     }
 
-    public String sendLabelEdge(Boolean project_public, Boolean community_public, Boolean community_toolbox, Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted, Boolean targetIsLiteral) {
+    public String sendLabelEdge(boolean source_project_public,
+                                boolean source_community_public,
+                                boolean source_community_toolbox,
+                                boolean edge_community_toolbox, Integer project_id, Integer source_class_id, String source_id, Integer property_id, Boolean is_outgoing, Float ord_num, String modified_at, String target_id, String target_label, String target_label_language, Boolean target_is_in_project, Boolean deleted, Boolean targetIsLiteral) {
         var v = new LabelEdge(
-                project_public,
-                community_public,
-                community_toolbox,
+                source_project_public,
+                source_community_public,
+                source_community_toolbox,
+                edge_community_toolbox,
                 project_id,
                 source_class_id,
                 source_id,

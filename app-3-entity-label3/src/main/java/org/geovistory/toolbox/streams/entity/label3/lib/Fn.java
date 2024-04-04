@@ -237,10 +237,14 @@ public class Fn {
      */
     public static LabelEdge createLabelEdge(EdgeValue edge) {
         return LabelEdge.newBuilder()
+                // set visibility of source entity
+                .setSourceProjectPublic(sourceVisibleInProjectPublic(edge))
+                .setSourceCommunityPublic(sourceVisibleInCommunityPublic(edge))
+                .setSourceCommunityToolbox(sourceVisibleInCommunityToolbox(edge))
+                // set visibility of edge
+                .setEdgeCommunityToolbox(edgeVisibleInCommunityToolbox(edge))
+                // set other props
                 .setProjectId(edge.getProjectId())
-                .setProjectPublic(visibleInProjectPublic(edge))
-                .setCommunityPublic(visibleInCommunityPublic(edge))
-                .setCommunityToolbox(visibleInCommunityToolbox(edge))
                 .setSourceClassId(edge.getSourceEntity().getFkClass())
                 .setSourceId(edge.getSourceId())
                 .setPropertyId(edge.getPropertyId())
@@ -270,12 +274,34 @@ public class Fn {
     }
 
     /**
-     * Determines if the EdgeValue is visible in the project's public context.
+     * Determines if the EdgeValue is visible in the community's toolbox context.
+     *
+     * @param s The EdgeValue object to check visibility.
+     * @return True if the EdgeValue is visible in the community's toolbox context, false otherwise.
+     */
+    private static boolean edgeVisibleInCommunityToolbox(EdgeValue s) {
+        boolean sourceIsPublic = false;
+        if (s.getSourceEntity() != null) {
+            sourceIsPublic = s.getSourceEntity().getCommunityVisibilityToolbox();
+        }
+        boolean targetIsPublic;
+        if (s.getTargetNode() != null && s.getTargetNode().getEntity() != null) {
+            targetIsPublic = s.getTargetNode().getEntity().getCommunityVisibilityToolbox();
+        } else {
+            targetIsPublic = true;
+        }
+
+        return sourceIsPublic && targetIsPublic;
+    }
+
+
+    /**
+     * Determines if the source entity of EdgeValue is visible in the project's public context.
      *
      * @param s The EdgeValue object to check visibility.
      * @return True if the EdgeValue is visible in the project's public context, false otherwise.
      */
-    private static boolean visibleInProjectPublic(EdgeValue s) {
+    private static boolean sourceVisibleInProjectPublic(EdgeValue s) {
         boolean isPublic = false;
         if (s.getSourceProjectEntity() != null) {
             isPublic = s.getSourceProjectEntity().getProjectVisibilityDataApi();
@@ -284,12 +310,12 @@ public class Fn {
     }
 
     /**
-     * Determines if the EdgeValue is visible in the community's public context.
+     * Determines if the source entity of EdgeValue is visible in the community's public context.
      *
      * @param s The EdgeValue object to check visibility.
      * @return True if the EdgeValue is visible in the community's public context, false otherwise.
      */
-    private static boolean visibleInCommunityPublic(EdgeValue s) {
+    private static boolean sourceVisibleInCommunityPublic(EdgeValue s) {
         boolean isPublic = false;
         if (s.getSourceEntity() != null) {
             isPublic = s.getSourceEntity().getCommunityVisibilityDataApi();
@@ -298,12 +324,12 @@ public class Fn {
     }
 
     /**
-     * Determines if the EdgeValue is visible in the community's toolbox context.
+     * Determines if the source entity of EdgeValue is visible in the community's toolbox context.
      *
      * @param s The EdgeValue object to check visibility.
      * @return True if the EdgeValue is visible in the community's toolbox context, false otherwise.
      */
-    private static boolean visibleInCommunityToolbox(EdgeValue s) {
+    private static boolean sourceVisibleInCommunityToolbox(EdgeValue s) {
         boolean isPublic = false;
         if (s.getSourceEntity() != null) {
             isPublic = s.getSourceEntity().getCommunityVisibilityToolbox();
@@ -318,12 +344,12 @@ public class Fn {
      * @param p PubTargets
      * @return true, if visible, else false;
      */
-    public static boolean visibleInPublicationTarget(LabelEdge e, PubTargets p) {
+    public static boolean sourceVisibleInPublicationTarget(LabelEdge e, PubTargets p) {
         return switch (p) {
             case TP -> true;
-            case TC -> e.getCommunityToolbox();
-            case PC -> e.getCommunityPublic();
-            case PP -> e.getProjectPublic();
+            case TC -> e.getSourceCommunityToolbox();
+            case PC -> e.getSourceCommunityPublic();
+            case PP -> e.getSourceProjectPublic();
         };
     }
 

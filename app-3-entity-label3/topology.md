@@ -2,7 +2,7 @@
 graph TD
 ts_3el4_label_edge_by_source[ts_3el4_label_edge_by_source] --> SOURCE_LABEL_EDGE_BY_SOURCE(SOURCE_LABEL_EDGE_BY_SOURCE)
 UPDATE_LABEL_EDGES_BY_SOURCE_STORE(UPDATE_LABEL_EDGES_BY_SOURCE_STORE) --> label-edge-by-source-store[(label-<br>edge-<br>by-<br>source-<br>store)]
-CREATE_ENTITY_LABELS(CREATE_ENTITY_LABELS) --> entity-visibility-store[(entity-<br>visibility-<br>store)]
+CREATE_ENTITY_LABELS(CREATE_ENTITY_LABELS) --> entity-publication-store[(entity-<br>publication-<br>store)]
 CREATE_ENTITY_LABELS(CREATE_ENTITY_LABELS) --> com-label-count-store[(com-<br>label-<br>count-<br>store)]
 CREATE_ENTITY_LABELS(CREATE_ENTITY_LABELS) --> entity-label-store[(entity-<br>label-<br>store)]
 CREATE_ENTITY_LABELS(CREATE_ENTITY_LABELS) --> com-label-rank-store[(com-<br>label-<br>rank-<br>store)]
@@ -82,7 +82,7 @@ ts_3el4_label_edge_by_source
 ts_3el4_label_edge_by_target
 ts_3el4_label_config_by_project_class_key
 label-edge-by-source-store
-entity-visibility-store
+entity-publication-store
 com-label-count-store
 entity-label-store
 com-label-rank-store

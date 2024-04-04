@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import static org.geovistory.toolbox.streams.entity.label3.names.Constants.DEFAULT_PROJECT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 @QuarkusTest
@@ -89,7 +90,7 @@ public class CreateCommunityToolboxEdgesTest {
                 new EntityLabelConfigPartField[]{
                         new EntityLabelConfigPartField(234, true, 1)
                 });
-        sendEdgeWithEntity(true, 1, 1, 1, "i1", 21, 123, true, "i2", false);
+        sendEdgeWithEntity(true, true, 1, 1, 1, "i1", 21, 123, true, "i2", false);
         sendEdgeWithLiteral(true, 2, 3, 1, "i2", 22, 234, true, "i3", false);
 
         sendEdgeWithLiteral(true, 2, 7, 2, "i2", 22, 234, true, "i3", false);
@@ -121,7 +122,7 @@ public class CreateCommunityToolboxEdgesTest {
                 new EntityLabelConfigPartField[]{
                         new EntityLabelConfigPartField(234, true, 1)
                 });
-        sendEdgeWithEntity(true, 1, 1, 1, "i1", 21, 123, true, "i2", false);
+        sendEdgeWithEntity(true, true, 1, 1, 1, "i1", 21, 123, true, "i2", false);
         sendEdgeWithLiteral(true, 2, 3, 1, "i2", 22, 234, true, "i3", false);
 
         sendEdgeWithLiteral(true, 2, 7, 2, "i2", 22, 234, true, "i3", false);
@@ -151,14 +152,50 @@ public class CreateCommunityToolboxEdgesTest {
     }
 
 
-    public void sendEdgeWithEntity(boolean communityToolbox, int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
-        var v = createEdgeWithEntity(communityToolbox, statementId, ordNum, pid, sourceId, sourceClassId, propertyId, isOutgoing, targetId, deleted);
+    @Test
+    // test that edges with hidden target entity are not published to toolbox community
+    public void testEdgeWithHiddenTargetEntity() {
+
+
+        // Publish test input
+        sendConfig(DEFAULT_PROJECT.get(), 21, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(123, true, 1)
+                });
+        sendConfig(DEFAULT_PROJECT.get(), 22, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(234, true, 1)
+                });
+
+        // add edge that should be visible to toolbox community
+        sendEdgeWithLiteral(true, 2, 3, 1, "i2", 22, 234, true, "i3", false);
+
+        // add edge with hidden target entity (should not be visible to toolbox community)
+        sendEdgeWithEntity(true, false, 1, 1, 1, "i1", 21, 123, true, "i2", false);
+
+        // assure only the label edge with literal is added
+        var edgesToolboxCommunity = labelEdgesToolboxCommunityTopic.readKeyValuesToMap();
+        assertEquals(1, edgesToolboxCommunity.size());
+        assertNotNull(edgesToolboxCommunity.get("i2_234_true_i3"));
+
+        // make the hidden edge visible
+        sendEdgeWithEntity(true, true, 1, 1, 1, "i1", 21, 123, true, "i2", false);
+
+        // assure the edge is added
+        edgesToolboxCommunity = labelEdgesToolboxCommunityTopic.readKeyValuesToMap();
+        assertEquals(1, edgesToolboxCommunity.size());
+        assertNotNull(edgesToolboxCommunity.get("i1_123_true_i2"));
+    }
+
+
+    public void sendEdgeWithEntity(boolean sourceCommunityToolbox, boolean targetCommunityToolbox, int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
+        var v = createEdgeWithEntity(sourceCommunityToolbox, targetCommunityToolbox, statementId, ordNum, pid, sourceId, sourceClassId, propertyId, isOutgoing, targetId, deleted);
         var k = createEdgeKey(v);
         this.projectEdgesInputTopic.pipeInput(k, v);
     }
 
-    public void sendEdgeWithLiteral(boolean communityToolbox, int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
-        var v = createEdgeWithLiteral(communityToolbox, statementId, ordNum, pid, sourceId, sourceClassId, propertyId, isOutgoing, targetId, deleted);
+    public void sendEdgeWithLiteral(boolean sourceCommunityToolbox, int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
+        var v = createEdgeWithLiteral(sourceCommunityToolbox, statementId, ordNum, pid, sourceId, sourceClassId, propertyId, isOutgoing, targetId, deleted);
         var k = createEdgeKey(v);
         this.projectEdgesInputTopic.pipeInput(k, v);
     }
@@ -171,20 +208,22 @@ public class CreateCommunityToolboxEdgesTest {
         return projectId + "_" + sourceId + "_" + propertyId + "_" + (isOutgoing ? "o" : "i") + "_" + targetId;
     }
 
-    private static EdgeValue createEdgeWithEntity(boolean communityToolbox, int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
-        var e = createEdge(communityToolbox, statementId, ordNum, pid, sourceId, sourceClassId, propertyId, isOutgoing, targetId, deleted);
+    private static EdgeValue createEdgeWithEntity(boolean sourceCommunityToolbox,
+                                                  boolean targetCommunityToolbox,
+                                                  int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
+        var e = createEdge(sourceCommunityToolbox, statementId, ordNum, pid, sourceId, sourceClassId, propertyId, isOutgoing, targetId, deleted);
         e.getTargetNode().setEntity(
                 Entity.newBuilder()
                         .setFkClass(0)
                         .setCommunityVisibilityWebsite(true)
                         .setCommunityVisibilityDataApi(true)
-                        .setCommunityVisibilityToolbox(communityToolbox)
+                        .setCommunityVisibilityToolbox(targetCommunityToolbox)
                         .build());
         return e;
     }
 
-    private static EdgeValue createEdgeWithLiteral(boolean communityToolbox, int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
-        var e = createEdge(communityToolbox, statementId, ordNum, pid, sourceId, sourceClassId, propertyId, isOutgoing, targetId, deleted);
+    private static EdgeValue createEdgeWithLiteral(boolean sourceCommunityToolbox, int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
+        var e = createEdge(sourceCommunityToolbox, statementId, ordNum, pid, sourceId, sourceClassId, propertyId, isOutgoing, targetId, deleted);
         e.getTargetNode().setLabel("Foo");
         e.getTargetNode().setLangString(
                 LangString.newBuilder()
@@ -197,7 +236,8 @@ public class CreateCommunityToolboxEdgesTest {
         return e;
     }
 
-    private static EdgeValue createEdge(boolean communityToolbox, int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
+    private static EdgeValue createEdge(boolean sourceCommunityToolbox,
+                                        int statementId, float ordNum, int pid, String sourceId, int sourceClassId, int propertyId, boolean isOutgoing, String targetId, boolean deleted) {
         return EdgeValue.newBuilder()
                 .setProjectId(pid)
                 .setStatementId(statementId)
@@ -208,13 +248,13 @@ public class CreateCommunityToolboxEdgesTest {
                         .setFkClass(sourceClassId)
                         .setCommunityVisibilityWebsite(false)
                         .setCommunityVisibilityDataApi(false)
-                        .setCommunityVisibilityToolbox(communityToolbox)
+                        .setCommunityVisibilityToolbox(sourceCommunityToolbox)
                         .build())
                 .setSourceProjectEntity(EntityValue.newBuilder()
                         .setProjectId(0)
                         .setEntityId("0")
                         .setClassId(sourceClassId)
-                        .setCommunityVisibilityToolbox(communityToolbox)
+                        .setCommunityVisibilityToolbox(sourceCommunityToolbox)
                         .setCommunityVisibilityDataApi(true)
                         .setCommunityVisibilityWebsite(true)
                         .setProjectVisibilityDataApi(true)
