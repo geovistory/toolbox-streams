@@ -46,6 +46,14 @@ public class TopologyProducer {
     LabelConfigTmstpStore labelConfigTmstpStore;
     @Inject
     LabelEdgeByTargetStore labelEdgeByTargetStore;
+    @Inject
+    EdgeCountStore edgeCountStore;
+    @Inject
+    EdgeOrdNumStore edgeOrdNumStore;
+    @Inject
+    EdgeSumStore edgeSumStore;
+    @Inject
+    EdgeVisibilityStore edgeVisibilityStore;
 
 
     @Produces
@@ -152,6 +160,15 @@ public class TopologyProducer {
                         Processors.JOIN_ON_NEW_EDGE,
                         Processors.JOIN_ON_NEW_LABEL
                 )
+                // Create community toolbox label edges
+                .addProcessor(Processors.CREATE_COMMUNITY_TOOLBOX_EDGES, CreateCommunityToolboxEdges::new, Sources.LABEL_EDGE_BY_SOURCE)
+                .addSink(
+                        Sinks.COMMUNITY_TOOLBOX_EDGES,
+                        outputTopicNames.labelEdgesToolboxCommunityBySource(),
+                        stringS, as.vS(),
+                        new CustomPartitioner<String, LabelEdge, String>(Serdes.String().serializer(), (kv) -> kv.value.getSourceId()),
+                        Processors.CREATE_COMMUNITY_TOOLBOX_EDGES
+                )
                 .addStateStore(labelEdgeBySourceStore.createPersistentKeyValueStore(),
                         Processors.UPDATE_LABEL_EDGES_BY_SOURCE_STORE,
                         Processors.CREATE_ENTITY_LABELS
@@ -170,7 +187,15 @@ public class TopologyProducer {
                 .addStateStore(comLabelRankStore.createPersistentKeyValueStore(),
                         Processors.CREATE_ENTITY_LABELS)
                 .addStateStore(comLabelLangRankStore.createPersistentKeyValueStore(),
-                        Processors.CREATE_ENTITY_LABELS);
+                        Processors.CREATE_ENTITY_LABELS)
+                .addStateStore(edgeCountStore.createPersistentKeyValueStore(),
+                        Processors.CREATE_COMMUNITY_TOOLBOX_EDGES)
+                .addStateStore(edgeOrdNumStore.createPersistentKeyValueStore(),
+                        Processors.CREATE_COMMUNITY_TOOLBOX_EDGES)
+                .addStateStore(edgeSumStore.createPersistentKeyValueStore(),
+                        Processors.CREATE_COMMUNITY_TOOLBOX_EDGES)
+                .addStateStore(edgeVisibilityStore.createPersistentKeyValueStore(),
+                        Processors.CREATE_COMMUNITY_TOOLBOX_EDGES);
 
     }
 

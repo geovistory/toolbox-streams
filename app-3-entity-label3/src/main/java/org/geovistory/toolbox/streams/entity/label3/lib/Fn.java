@@ -1,11 +1,10 @@
 package org.geovistory.toolbox.streams.entity.label3.lib;
 
-import org.geovistory.toolbox.streams.avro.ComLabelGroupKey;
-import org.geovistory.toolbox.streams.avro.LabelEdge;
-import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
-import org.geovistory.toolbox.streams.avro.ProjectLabelGroupKey;
+import org.geovistory.toolbox.streams.avro.*;
 
 import java.time.Instant;
+
+import static org.geovistory.toolbox.streams.lib.Utils.getLanguageFromId;
 
 /**
  * Class to collect static functions
@@ -160,6 +159,88 @@ public class Fn {
         // Pad the hexadecimal string with zeros to ensure it has 8 characters
         hexString = String.format("%8s", hexString).replace(' ', '0');
         return hexString;
+    }
+
+    /**
+     * Creates a LabelEdge object based on the provided EdgeValue.
+     *
+     * @param edge The EdgeValue object to create LabelEdge from.
+     * @return A LabelEdge object with properties extracted from the EdgeValue.
+     */
+    public static LabelEdge createLabelEdge(EdgeValue edge) {
+        return LabelEdge.newBuilder()
+                .setProjectId(edge.getProjectId())
+                .setProjectPublic(visibleInProjectPublic(edge))
+                .setCommunityPublic(visibleInCommunityPublic(edge))
+                .setCommunityToolbox(visibleInCommunityToolbox(edge))
+                .setSourceClassId(edge.getSourceEntity().getFkClass())
+                .setSourceId(edge.getSourceId())
+                .setPropertyId(edge.getPropertyId())
+                .setIsOutgoing(edge.getIsOutgoing())
+                .setOrdNum(edge.getOrdNum())
+                .setModifiedAt(edge.getModifiedAt())
+                .setTargetId(edge.getTargetId())
+                .setTargetLabel(edge.getTargetNode().getLabel())
+                .setTargetLabelLanguage(extractLabelLanguage(edge.getTargetNode()))
+                .setTargetIsInProject(edge.getTargetProjectEntity() != null)
+                .setDeleted(edge.getDeleted())
+                .build();
+    }
+
+    /**
+     * Extracts the language code from the provided NodeValue's language string.
+     *
+     * @param n The NodeValue object to extract language from.
+     * @return The language code extracted from the NodeValue's language string, or "unknown" if not found.
+     */
+    private static String extractLabelLanguage(NodeValue n) {
+        if (n.getLangString() != null) {
+            var langCode = getLanguageFromId(n.getLangString().getFkLanguage());
+            if (langCode != null) return langCode;
+        }
+        return "unknown";
+    }
+
+    /**
+     * Determines if the EdgeValue is visible in the project's public context.
+     *
+     * @param s The EdgeValue object to check visibility.
+     * @return True if the EdgeValue is visible in the project's public context, false otherwise.
+     */
+    private static boolean visibleInProjectPublic(EdgeValue s) {
+        boolean isPublic = false;
+        if (s.getSourceProjectEntity() != null) {
+            isPublic = s.getSourceProjectEntity().getProjectVisibilityDataApi();
+        }
+        return isPublic;
+    }
+
+    /**
+     * Determines if the EdgeValue is visible in the community's public context.
+     *
+     * @param s The EdgeValue object to check visibility.
+     * @return True if the EdgeValue is visible in the community's public context, false otherwise.
+     */
+    private static boolean visibleInCommunityPublic(EdgeValue s) {
+        boolean isPublic = false;
+        if (s.getSourceEntity() != null) {
+            isPublic = s.getSourceEntity().getCommunityVisibilityDataApi();
+        }
+        return isPublic;
+    }
+
+    /**
+     * Determines if the EdgeValue is visible in the community's toolbox context.
+     *
+     * @param s The EdgeValue object to check visibility.
+     * @return True if the EdgeValue is visible in the community's toolbox context, false otherwise.
+     */
+    private static boolean visibleInCommunityToolbox(EdgeValue s) {
+        boolean isPublic = false;
+        if (s.getSourceEntity() != null) {
+            isPublic = s.getSourceEntity().getCommunityVisibilityToolbox();
+        }
+        return isPublic;
     }
 
 }

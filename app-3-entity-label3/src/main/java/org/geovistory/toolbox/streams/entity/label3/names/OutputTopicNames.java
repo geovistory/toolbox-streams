@@ -29,6 +29,10 @@ public class OutputTopicNames {
         return p("entity_language_labels");
     }
 
+    public final String labelEdgesToolboxCommunityBySource() {
+        return p("label_edges_toolbox_community_by_source");
+    }
+
     private String p(String n) {
         return Utils.prefixedOut(outPrefix, n);
     }

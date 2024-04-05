@@ -74,6 +74,9 @@ public class LabelEdgeBySourceStoreTest {
     public void sendLabelEdge() {
         String k = "k";
         var v = LabelEdge.newBuilder()
+                .setCommunityToolbox(true)
+                .setCommunityPublic(true)
+                .setProjectPublic(true)
                 .setProjectId(0)
                 .setSourceClassId(0)
                 .setSourceId("0")

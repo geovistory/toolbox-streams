@@ -5,6 +5,18 @@
   "doc": "An edge with the target label.",
   "fields": [
     {
+      "name": "project_public",
+      "type": "boolean"
+    },
+    {
+      "name": "community_public",
+      "type": "boolean"
+    },
+    {
+      "name": "community_toolbox",
+      "type": "boolean"
+    },
+    {
       "name": "project_id",
       "type": "int",
       "default": 0
