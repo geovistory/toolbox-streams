@@ -263,7 +263,7 @@ public class TopologyProducer {
                 //         (see edgePartitioner)
                 // ---------------------------------------------------
                 .addSink(SinkNames.PROJECT_EDGE_TOOLBOX_SINK,
-                        outputTopicNames.projectEdgesToolbox(),
+                        outputTopicNames.toolboxProjectEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
                         ProcessorNames.FORK_EDGES
@@ -277,7 +277,7 @@ public class TopologyProducer {
                 // ---------------------------------------------------
                 .addSink(
                         SinkNames.PROJECT_EDGE_PUBLIC_SINK,
-                        outputTopicNames.projectEdgesPublic(),
+                        outputTopicNames.publicProjectEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
                         ProcessorNames.FORK_EDGES
@@ -291,7 +291,7 @@ public class TopologyProducer {
                 // ---------------------------------------------------
                 .addSink(
                         SinkNames.COMMUNITY_EDGE_TOOLBOX_SINK,
-                        outputTopicNames.communityEdgesToolbox(),
+                        outputTopicNames.toolboxCommunityEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
                         ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES
@@ -305,7 +305,7 @@ public class TopologyProducer {
                 // ---------------------------------------------------
                 .addSink(
                         SinkNames.COMMUNITY_EDGE_PUBLIC_SINK,
-                        outputTopicNames.communityEdgesPublic(),
+                        outputTopicNames.publicCommunityEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
                         ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES

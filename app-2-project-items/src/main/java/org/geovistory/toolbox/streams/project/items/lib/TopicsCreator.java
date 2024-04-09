@@ -54,12 +54,12 @@ public class TopicsCreator {
         topics.add(KeyValue.pair(outputTopicNames.sRepartitioned(), TsAdmin.CleanupConfig.COMPACT));
         topics.add(KeyValue.pair(outputTopicNames.projectStatementBySub(), TsAdmin.CleanupConfig.DELETE));
         topics.add(KeyValue.pair(outputTopicNames.projectStatementByOb(), TsAdmin.CleanupConfig.DELETE));
-        topics.add(KeyValue.pair(outputTopicNames.projectEdgesToolbox(), TsAdmin.CleanupConfig.COMPACT));
-        topics.add(KeyValue.pair(outputTopicNames.projectEdgesPublic(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.toolboxProjectEdges(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.publicProjectEdges(), TsAdmin.CleanupConfig.COMPACT));
         topics.add(KeyValue.pair(outputTopicNames.projectStatementWithSubByPk(), TsAdmin.CleanupConfig.COMPACT));
         topics.add(KeyValue.pair(outputTopicNames.projectStatementWithObByPk(), TsAdmin.CleanupConfig.COMPACT));
-        topics.add(KeyValue.pair(outputTopicNames.communityEdgesToolbox(), TsAdmin.CleanupConfig.COMPACT));
-        topics.add(KeyValue.pair(outputTopicNames.communityEdgesPublic(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.toolboxCommunityEdges(), TsAdmin.CleanupConfig.COMPACT));
+        topics.add(KeyValue.pair(outputTopicNames.publicCommunityEdges(), TsAdmin.CleanupConfig.COMPACT));
         createTopics(topics);
     }
 

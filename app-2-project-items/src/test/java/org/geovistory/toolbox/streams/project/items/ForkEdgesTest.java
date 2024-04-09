@@ -79,20 +79,20 @@ public class ForkEdgesTest {
         );
 
         projectEdgesPublic = testDriver.createOutputTopic(
-                outputTopicNames.projectEdgesPublic(),
+                outputTopicNames.publicProjectEdges(),
                 Serdes.String().deserializer(), as.vD()
         );
 
         projectEdgesToolbox = testDriver.createOutputTopic(
-                outputTopicNames.projectEdgesToolbox(),
+                outputTopicNames.toolboxProjectEdges(),
                 Serdes.String().deserializer(), as.vD()
         );
         communityEdgesToolbox = testDriver.createOutputTopic(
-                outputTopicNames.communityEdgesToolbox(),
+                outputTopicNames.toolboxCommunityEdges(),
                 Serdes.String().deserializer(), as.vD()
         );
         communityEdgesPublic = testDriver.createOutputTopic(
-                outputTopicNames.communityEdgesPublic(),
+                outputTopicNames.publicCommunityEdges(),
                 Serdes.String().deserializer(), as.vD()
         );
     }
