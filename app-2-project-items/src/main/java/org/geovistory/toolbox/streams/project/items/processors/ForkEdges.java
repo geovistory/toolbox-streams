@@ -33,32 +33,32 @@ public class ForkEdges implements Processor<String, EdgeVisibilityValue, String,
         var newEdge = createEdge(newEdgeVis);
 
         // forward to project toolbox
-        context.forward(record.withValue(newEdge), SinkNames.PROJECT_EDGE_TOOLBOX_SINK);
+        context.forward(record.withValue(newEdge), SinkNames.TOOLBOX_PROJECT_EDGE_SINK);
 
         // if oldEdge null, forward where visible
         if (oldEdgeVis == null) {
 
             if (newEdgeVis.getProjectPublic())
-                context.forward(record.withValue(newEdge), SinkNames.PROJECT_EDGE_PUBLIC_SINK);
+                context.forward(record.withValue(newEdge), SinkNames.PUBLIC_PROJECT_EDGE_SINK);
 
             if (newEdgeVis.getCommunityToolbox())
-                context.forward(record.withValue(newEdge), ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES);
+                context.forward(record.withValue(newEdge), ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES);
 
             if (newEdgeVis.getCommunityPublic())
-                context.forward(record.withValue(newEdge), ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES);
+                context.forward(record.withValue(newEdge), ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES);
 
         } else {
 
             forwardToTarget(record, oldEdgeVis, newEdgeVis, newEdge,
-                    EdgeVisibilityValue::getProjectPublic, SinkNames.PROJECT_EDGE_PUBLIC_SINK
+                    EdgeVisibilityValue::getProjectPublic, SinkNames.PUBLIC_PROJECT_EDGE_SINK
             );
 
             forwardToTarget(record, oldEdgeVis, newEdgeVis, newEdge,
-                    EdgeVisibilityValue::getCommunityToolbox, ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES
+                    EdgeVisibilityValue::getCommunityToolbox, ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES
             );
 
             forwardToTarget(record, oldEdgeVis, newEdgeVis, newEdge,
-                    EdgeVisibilityValue::getCommunityPublic, ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES
+                    EdgeVisibilityValue::getCommunityPublic, ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES
             );
 
 
