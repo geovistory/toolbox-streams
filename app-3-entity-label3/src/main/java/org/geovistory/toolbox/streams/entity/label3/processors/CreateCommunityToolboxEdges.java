@@ -39,7 +39,7 @@ public class CreateCommunityToolboxEdges implements Processor<String, LabelEdge,
         // if oldEdge null
         if (oldEdge == null) {
             // continue processing where visible
-            if (newEdge.getCommunityToolbox())
+            if (newEdge.getEdgeCommunityToolbox())
                 // continue process
                 count(record.withValue(newEdge));
         } else {
@@ -57,8 +57,8 @@ public class CreateCommunityToolboxEdges implements Processor<String, LabelEdge,
             LabelEdge oldEdgeVis,
             LabelEdge newEdgeVis
     ) {
-        var turnedVisible = !oldEdgeVis.getCommunityToolbox() && newEdgeVis.getCommunityToolbox();
-        var turnedHidden = oldEdgeVis.getCommunityToolbox() && !newEdgeVis.getCommunityToolbox();
+        var turnedVisible = !oldEdgeVis.getEdgeCommunityToolbox() && newEdgeVis.getEdgeCommunityToolbox();
+        var turnedHidden = oldEdgeVis.getEdgeCommunityToolbox() && !newEdgeVis.getEdgeCommunityToolbox();
         var addedToProject = oldEdgeVis.getDeleted() && !newEdgeVis.getDeleted();
         var removedFromProject = !oldEdgeVis.getDeleted() && newEdgeVis.getDeleted();
         var res = LabelEdge.newBuilder(newEdgeVis).build();

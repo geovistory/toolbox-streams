@@ -1,6 +1,8 @@
 package org.geovistory.toolbox.streams.entity.label3.lib;
 
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.label3.names.Processors;
+import org.geovistory.toolbox.streams.entity.label3.names.PubTargets;
 
 import java.time.Instant;
 
@@ -10,6 +12,7 @@ import static org.geovistory.toolbox.streams.lib.Utils.getLanguageFromId;
  * Class to collect static functions
  */
 public class Fn {
+
 
     /**
      * Creates a {@code ProjectLabelGroupKey} based on the provided {@code ProjectEntityKey}.
@@ -28,21 +31,74 @@ public class Fn {
     }
 
     /**
-     * Creates a {@code ProjectLabelGroupKey} based on the provided {@code ComLabelGroupKey}.
+     * Creates a {@code ProjectLabelGroupKey} object based on the provided {@code LabelEdge} and {@code PubTargets}.
      *
-     * @param k The {@code ComLabelGroupKey} used to create the {@code ProjectLabelGroupKey}.
-     * @return A {@code ProjectLabelGroupKey} representing the combination of project ID (defaulted to 0),
-     * entity ID, language, and label from the provided {@code ComLabelGroupKey}.
-     * @throws NullPointerException if {@code k} is {@code null}.
+     * <p>This method constructs a {@code ProjectLabelGroupKey} object using the attributes of the given {@code LabelEdge}
+     * object and the {@code PubTargets}. The {@code projectId} is determined based on the {@code pubTarget} value. If the
+     * {@code pubTarget} is {@code PubTargets.PC} or {@code PubTargets.TC}, the {@code projectId} is set to 0; otherwise, it
+     * is set to the projectId of the given {@code LabelEdge}. The {@code language}, and {@code label} fields
+     * of the {@code ProjectLabelGroupKey} are set to empty strings.</p>
+     *
+     * @param labelEdge The {@code LabelEdge} object representing the label edge.
+     * @param pubTarget The {@code PubTargets} enum representing the publishing target.
+     * @return The constructed {@code ProjectLabelGroupKey} object with the {@code projectId}, {@code entityId},
+     * {@code language}, and {@code label} fields set as described.
      */
-    public static ProjectLabelGroupKey createProjectLabelGroupKey(ComLabelGroupKey k) {
+    public static ProjectLabelGroupKey createProjectLabelGroupKey(LabelEdge labelEdge, EntityLabel entityLabel, PubTargets pubTarget) {
+        var projectId =
+                pubTarget == PubTargets.PC
+                        || pubTarget == PubTargets.TC
+                        || pubTarget == PubTargets.TCL
+                        || pubTarget == PubTargets.PCL
+                        ? 0 : labelEdge.getProjectId();
         return ProjectLabelGroupKey.newBuilder()
-                .setProjectId(0)
-                .setEntityId(k.getEntityId())
-                .setLanguage(k.getLanguage())
-                .setLabel(k.getLabel()).build();
+                .setProjectId(projectId)
+                .setEntityId(labelEdge.getSourceId())
+                .setLanguage(entityLabel.getLanguage())
+                .setLabel(entityLabel.getLabel()).build();
     }
 
+
+    /**
+     * Creates an {@code EntityLabelOperation} object based on the provided {@code EntityLabel} and deleted flag.
+     * <p>
+     * This method constructs an {@code EntityLabelOperation} object using the attributes of the given {@code EntityLabel}
+     * object and a boolean flag indicating whether the entity label has been deleted or not. If the provided {@code EntityLabel}
+     * is {@code null}, this method returns {@code null}.
+     *
+     * @param e       The {@code EntityLabel} object from which the label and language will be retrieved to construct the
+     *                {@code EntityLabelOperation}.
+     * @param deleted A boolean flag indicating whether the entity label has been deleted ({@code true}) or not ({@code false}).
+     * @return The constructed {@code EntityLabelOperation} object with the label, language, and deleted status set as
+     * provided, or {@code null} if the provided {@code EntityLabel} is {@code null}.
+     */
+    public static EntityLabelOperation createEntityLabelOperation(EntityLabel e, boolean deleted) {
+        if (e == null) return null;
+        return EntityLabelOperation.newBuilder()
+                .setLabel(e.getLabel())
+                .setLanguage(e.getLanguage())
+                .setDeleted(deleted)
+                .build();
+    }
+
+    /**
+     * Creates an {@code EntityLabel} object based on the provided {@code EntityLabelOperation}.
+     * <p>
+     * This method constructs an {@code EntityLabel} object using the attributes of the given {@code EntityLabelOperation}
+     * object. If the provided {@code EntityLabelOperation} is {@code null}, this method returns {@code null}.
+     *
+     * @param e The {@code EntityLabelOperation} object from which the label and language will be retrieved to construct the
+     *          {@code EntityLabel}.
+     * @return The constructed {@code EntityLabel} object with the label and language set as provided, or {@code null} if
+     * the provided {@code EntityLabelOperation} is {@code null}.
+     */
+    public static EntityLabel createEntityLabel(EntityLabelOperation e) {
+        if (e == null) return null;
+        return EntityLabel.newBuilder()
+                .setLabel(e.getLabel())
+                .setLanguage(e.getLanguage())
+                .build();
+    }
 
     /**
      * Creates a key used in state store of label-edges-by-source based on the provided parameters.
@@ -169,10 +225,14 @@ public class Fn {
      */
     public static LabelEdge createLabelEdge(EdgeValue edge) {
         return LabelEdge.newBuilder()
+                // set visibility of source entity
+                .setSourceProjectPublic(sourceVisibleInProjectPublic(edge))
+                .setSourceCommunityPublic(sourceVisibleInCommunityPublic(edge))
+                .setSourceCommunityToolbox(sourceVisibleInCommunityToolbox(edge))
+                // set visibility of edge
+                .setEdgeCommunityToolbox(edgeVisibleInCommunityToolbox(edge))
+                // set other props
                 .setProjectId(edge.getProjectId())
-                .setProjectPublic(visibleInProjectPublic(edge))
-                .setCommunityPublic(visibleInCommunityPublic(edge))
-                .setCommunityToolbox(visibleInCommunityToolbox(edge))
                 .setSourceClassId(edge.getSourceEntity().getFkClass())
                 .setSourceId(edge.getSourceId())
                 .setPropertyId(edge.getPropertyId())
@@ -202,12 +262,34 @@ public class Fn {
     }
 
     /**
-     * Determines if the EdgeValue is visible in the project's public context.
+     * Determines if the EdgeValue is visible in the community's toolbox context.
+     *
+     * @param s The EdgeValue object to check visibility.
+     * @return True if the EdgeValue is visible in the community's toolbox context, false otherwise.
+     */
+    private static boolean edgeVisibleInCommunityToolbox(EdgeValue s) {
+        boolean sourceIsPublic = false;
+        if (s.getSourceEntity() != null) {
+            sourceIsPublic = s.getSourceEntity().getCommunityVisibilityToolbox();
+        }
+        boolean targetIsPublic;
+        if (s.getTargetNode() != null && s.getTargetNode().getEntity() != null) {
+            targetIsPublic = s.getTargetNode().getEntity().getCommunityVisibilityToolbox();
+        } else {
+            targetIsPublic = true;
+        }
+
+        return sourceIsPublic && targetIsPublic;
+    }
+
+
+    /**
+     * Determines if the source entity of EdgeValue is visible in the project's public context.
      *
      * @param s The EdgeValue object to check visibility.
      * @return True if the EdgeValue is visible in the project's public context, false otherwise.
      */
-    private static boolean visibleInProjectPublic(EdgeValue s) {
+    private static boolean sourceVisibleInProjectPublic(EdgeValue s) {
         boolean isPublic = false;
         if (s.getSourceProjectEntity() != null) {
             isPublic = s.getSourceProjectEntity().getProjectVisibilityDataApi();
@@ -216,12 +298,12 @@ public class Fn {
     }
 
     /**
-     * Determines if the EdgeValue is visible in the community's public context.
+     * Determines if the source entity of EdgeValue is visible in the community's public context.
      *
      * @param s The EdgeValue object to check visibility.
      * @return True if the EdgeValue is visible in the community's public context, false otherwise.
      */
-    private static boolean visibleInCommunityPublic(EdgeValue s) {
+    private static boolean sourceVisibleInCommunityPublic(EdgeValue s) {
         boolean isPublic = false;
         if (s.getSourceEntity() != null) {
             isPublic = s.getSourceEntity().getCommunityVisibilityDataApi();
@@ -230,12 +312,12 @@ public class Fn {
     }
 
     /**
-     * Determines if the EdgeValue is visible in the community's toolbox context.
+     * Determines if the source entity of EdgeValue is visible in the community's toolbox context.
      *
      * @param s The EdgeValue object to check visibility.
      * @return True if the EdgeValue is visible in the community's toolbox context, false otherwise.
      */
-    private static boolean visibleInCommunityToolbox(EdgeValue s) {
+    private static boolean sourceVisibleInCommunityToolbox(EdgeValue s) {
         boolean isPublic = false;
         if (s.getSourceEntity() != null) {
             isPublic = s.getSourceEntity().getCommunityVisibilityToolbox();
@@ -243,4 +325,36 @@ public class Fn {
         return isPublic;
     }
 
+    /**
+     * Extracts visibility of the source entity of a LabelEdge for the given PubTarget
+     *
+     * @param e LabelEdge
+     * @param p PubTargets
+     * @return true, if visible, else false;
+     */
+    public static boolean sourceVisibleInPublicationTarget(LabelEdge e, PubTargets p) {
+        return switch (p) {
+            case TP -> true;
+            case TC, TCL -> e.getSourceCommunityToolbox();
+            case PC, PCL -> e.getSourceCommunityPublic();
+            case PP -> e.getSourceProjectPublic();
+        };
+    }
+
+    /**
+     * Extracts entity label operation childName for the given PubTarget
+     *
+     * @param p PubTargets
+     * @return the child processor name
+     */
+    public static String getChildName(PubTargets p) {
+        return switch (p) {
+            case TP -> Processors.CREATE_LABEL_TOOLBOX_PROJECT;
+            case TC -> Processors.CREATE_LABEL_TOOLBOX_COMMUNITY;
+            case PC -> Processors.CREATE_LABEL_PUBLIC_COMMUNITY;
+            case PP -> Processors.CREATE_LABEL_PUBLIC_PROJECT;
+            case PCL -> Processors.CREATE_LANG_LABEL_PUBLIC_COMMUNITY;
+            case TCL -> Processors.CREATE_LANG_LABEL_TOOLBOX_COMMUNITY;
+        };
+    }
 }
