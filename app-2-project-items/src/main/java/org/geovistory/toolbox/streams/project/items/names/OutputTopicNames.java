@@ -57,6 +57,14 @@ public class OutputTopicNames {
         return p("public_community_edges");
     }
 
+    public final String toolboxProjectEntities() {
+        return p("toolbox_project_entities");
+    }
+
+    public final String toolboxCommunityEntities() {
+        return p("toolbox_community_entities");
+    }
+
     private String p(String n) {
         return Utils.prefixedOut(outPrefix, n);
     }

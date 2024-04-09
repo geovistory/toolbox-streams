@@ -26,8 +26,8 @@ public class ProcessorNames {
     public static final String JOIN_SUB_WITH_OB = "JOIN_SUB_WITH_OB";
     public static final String JOIN_OB_WITH_SUB = "JOIN_OB_WITH_SUB";
     public static final String FORK_EDGES = "FORK_EDGES";
-    public static final String CREATE_COMMUNITY_TOOLBOX_EDGES = "CREATE_COMMUNITY_TOOLBOX_EDGES";
-    public static final String CREATE_COMMUNITY_PUBLIC_EDGES = "CREATE_COMMUNITY_PUBLIC_EDGES";
+    public static final String TOOLBOX_CREATE_COMMUNITY_EDGES = "TOOLBOX_CREATE_COMMUNITY_EDGES";
+    public static final String PUBLIC_CREATE_COMMUNITY_EDGES = "PUBLIC_CREATE_COMMUNITY_EDGES";
 
 
 }
