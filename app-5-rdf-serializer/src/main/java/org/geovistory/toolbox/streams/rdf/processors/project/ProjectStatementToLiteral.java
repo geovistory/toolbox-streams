@@ -97,9 +97,11 @@ public class ProjectStatementToLiteral {
                     } else if (langString != null) {
                         var lng = "";
                         lng = getLanguageFromId(langString.getFkLanguage());
-                        if (lng == null) lng = "" + langString.getFkLanguage();
+                        if (lng == null) {
+                            turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeJava(langString.getString()) + "\"^^<" + XSD_STRING.getUri() + "> .");
+                        }
                         //example: <http://geovistory.org/resource/i1761647> <https://ontome.net/ontology/p1113> "Bar"@it .
-                        turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeJava(langString.getString()) + "\"@" + lng + " .");
+                        else turtles.add("<" + GEOVISTORY_RESOURCE.getUrl() + subjectId + "> <" + ONTOME_PROPERTY.getUrl() + propertyId + "> \"" + StringSanitizer.escapeJava(langString.getString()) + "\"@" + lng + " .");
                     } else if (place != null) {
                         var wkb = place.getGeoPoint().getWkb();
                         var point = GeoUtils.bytesToPoint(wkb);
