@@ -26,9 +26,9 @@ class ProjectTopStatementsRecursionTest {
     private TopologyTestDriver testDriver;
 
     // input topics of ProjectStatement
-    private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWitEntityTopic;
-    private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;
-    private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
+    private TestInputTopic<ts.information.statement.Key, StatementEnrichedValue> statementWitEntityTopic;
+    private TestInputTopic<ts.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;
+    private TestInputTopic<ts.projects.info_proj_rel.Key, ts.projects.info_proj_rel.Value> proInfoProjRelTopic;
 
     // input topics of ProjectTopOutgoingStatements
     // -> output of Topology ProjectStatement
@@ -181,54 +181,54 @@ class ProjectTopStatementsRecursionTest {
         var entityName2 = "name2";
 
         // add statement one
-        var kS = dev.information.statement.Key.newBuilder().setPkEntity(statementOneId).build();
+        var kS = ts.information.statement.Key.newBuilder().setPkEntity(statementOneId).build();
         var vS = StatementEnrichedValue.newBuilder().setSubjectId(entityPerson).setPropertyId(propertyId).setObjectId(entityName1).build();
         statementWitEntityTopic.pipeInput(kS, vS);
 
         // add relation between project and statement one
-        var kR = dev.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementOneId).setFkProject(projectId).build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
+        var kR = ts.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementOneId).setFkProject(projectId).build();
+        var vR = ts.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
                 .setTmspLastModification("2021-01-01T12:59:50.716896Z")
                 .setFkEntity(statementOneId).setFkProject(projectId).setIsInProject(true).build();
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement two
-        kS = dev.information.statement.Key.newBuilder().setPkEntity(statementTwoId).build();
+        kS = ts.information.statement.Key.newBuilder().setPkEntity(statementTwoId).build();
         vS = StatementEnrichedValue.newBuilder().setSubjectId(entityPerson).setPropertyId(propertyId).setObjectId(entityName2)
                 .build();
         statementWitEntityTopic.pipeInput(kS, vS);
 
         // add relation between project and statement two
-        kR = dev.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementTwoId).setFkProject(projectId).build();
-        vR = dev.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
+        kR = ts.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementTwoId).setFkProject(projectId).build();
+        vR = ts.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
                 .setTmspLastModification("2020-01-01T12:59:50.716896Z")
                 .setFkEntity(statementTwoId).setFkProject(projectId).setIsInProject(true).build();
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement three
-        kS = dev.information.statement.Key.newBuilder().setPkEntity(statementThreeId).build();
+        kS = ts.information.statement.Key.newBuilder().setPkEntity(statementThreeId).build();
         vS = StatementEnrichedValue.newBuilder().setSubjectId(entityName1).setPropertyId(propertyHasStringId)
                 .setObjectLabel("Name 1")
                 .setObject(NodeValue.newBuilder().setLabel("Name 1").setId("").setClassId(0).build()).build();
         statementWithLiteralTopic.pipeInput(kS, vS);
 
         // add relation between project and statement three
-        kR = dev.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementThreeId).setFkProject(projectId).build();
-        vR = dev.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
+        kR = ts.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementThreeId).setFkProject(projectId).build();
+        vR = ts.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
                 .setFkEntity(statementThreeId).setFkProject(projectId).setIsInProject(true).build();
         proInfoProjRelTopic.pipeInput(kR, vR);
 
 
         // add statement four
-        kS = dev.information.statement.Key.newBuilder().setPkEntity(statementFourId).build();
+        kS = ts.information.statement.Key.newBuilder().setPkEntity(statementFourId).build();
         vS = StatementEnrichedValue.newBuilder().setSubjectId(entityName2).setPropertyId(propertyHasStringId)
                 .setObjectLabel("Name 2")
                 .setObject(NodeValue.newBuilder().setLabel("Name 2").setId("").setClassId(0).build()).build();
         statementWithLiteralTopic.pipeInput(kS, vS);
 
         // add relation between project and statement four
-        kR = dev.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementFourId).setFkProject(projectId).build();
-        vR = dev.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
+        kR = ts.projects.info_proj_rel.Key.newBuilder().setFkEntity(statementFourId).setFkProject(projectId).build();
+        vR = ts.projects.info_proj_rel.Value.newBuilder().setSchemaName("").setTableName("").setEntityVersion(1)
                 .setFkEntity(statementFourId).setFkProject(projectId).setIsInProject(true).build();
         proInfoProjRelTopic.pipeInput(kR, vR);
 

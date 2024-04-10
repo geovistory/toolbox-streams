@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "EntityLabelOperation",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Label and with language and deleted flag.",
+  "fields": [
+    {
+      "name": "label",
+      "type": "string"
+    },
+    {
+      "name": "language",
+      "type": "string"
+    },
+    {
+      "name": "deleted",
+      "type": "boolean"
+    }
+  ]
+}

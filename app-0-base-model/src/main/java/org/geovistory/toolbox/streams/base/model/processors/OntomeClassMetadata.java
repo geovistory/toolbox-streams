@@ -26,7 +26,7 @@ public class OntomeClassMetadata {
     @Inject
     AvroSerdes avroSerdes;
 
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String inPrefix;
 
     @Inject

@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "ProjectLabelGroupKey",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Intermediate key to be transformed into ProjectEntityLangKey or ProjectEntityKey",
+  "fields": [
+    {
+      "name": "project_id",
+      "type": "int"
+    },
+    {
+      "name": "entity_id",
+      "type": "string"
+    },
+    {
+      "name": "label",
+      "type": "string"
+    },
+    {
+      "name": "language",
+      "type": "string"
+    }
+  ]
+}

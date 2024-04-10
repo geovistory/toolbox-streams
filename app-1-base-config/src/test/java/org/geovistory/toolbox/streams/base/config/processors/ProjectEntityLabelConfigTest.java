@@ -1,7 +1,7 @@
 package org.geovistory.toolbox.streams.base.config.processors;
 
 
-import dev.projects.entity_label_config.Value;
+import ts.projects.entity_label_config.Value;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TestOutputTopic;
@@ -22,7 +22,7 @@ class ProjectEntityLabelConfigTest {
     private static final String SCHEMA_REGISTRY_SCOPE = ProjectEntityLabelConfigTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.projects.entity_label_config.Key, Value> proEntityLabelConfigTopic;
+    private TestInputTopic<ts.projects.entity_label_config.Key, Value> proEntityLabelConfigTopic;
     private TestInputTopic<ProjectClassKey, ProjectClassValue> projectClassTopic;
     private TestInputTopic<CommunityEntityLabelConfigKey, CommunityEntityLabelConfigValue> communityEntityLabelTopic;
     private TestOutputTopic<ProjectClassKey, ProjectEntityLabelConfigValue> outputTopic;
@@ -92,7 +92,7 @@ class ProjectEntityLabelConfigTest {
 
 
         // add entity label configs of project 12
-        var kR = dev.projects.entity_label_config.Key.newBuilder()
+        var kR = ts.projects.entity_label_config.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var config = EntityLabelConfig.newBuilder()
@@ -278,7 +278,7 @@ class ProjectEntityLabelConfigTest {
 
 
         // add entity label configs of project 12
-        var kR = dev.projects.entity_label_config.Key.newBuilder()
+        var kR = ts.projects.entity_label_config.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var config = EntityLabelConfig.newBuilder()
@@ -338,7 +338,7 @@ class ProjectEntityLabelConfigTest {
 
 
         // add entity label configs of project 12
-        var kR = dev.projects.entity_label_config.Key.newBuilder()
+        var kR = ts.projects.entity_label_config.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var config = EntityLabelConfig.newBuilder()
@@ -369,7 +369,7 @@ class ProjectEntityLabelConfigTest {
 
 
         // mimic Debezium delete.handling.mode=rewrite
-        var vRewrite = dev.projects.entity_label_config.Value.newBuilder()
+        var vRewrite = ts.projects.entity_label_config.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(null)

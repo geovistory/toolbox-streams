@@ -20,26 +20,26 @@ public class AvroSerdes {
         this.properties.put("schema.registry.url", QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL);
         return properties;
     }
-    public Serde<dev.projects.info_proj_rel.Key> ProInfoProjRelKey() {
-        Serde<dev.projects.info_proj_rel.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.info_proj_rel.Key> ProInfoProjRelKey() {
+        Serde<ts.projects.info_proj_rel.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.projects.info_proj_rel.Value> ProInfoProjRelValue() {
-        Serde<dev.projects.info_proj_rel.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.projects.info_proj_rel.Value> ProInfoProjRelValue() {
+        Serde<ts.projects.info_proj_rel.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.information.resource.Key> InfResourceKey() {
-        Serde<dev.information.resource.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.resource.Key> InfResourceKey() {
+        Serde<ts.information.resource.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.information.resource.Value> InfResourceValue() {
-        Serde<dev.information.resource.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.resource.Value> InfResourceValue() {
+        Serde<ts.information.resource.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
@@ -71,8 +71,8 @@ public class AvroSerdes {
         return serdes;
     }
 
-    public Serde<dev.information.statement.Key> InfStatementKey() {
-        Serde<dev.information.statement.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.information.statement.Key> InfStatementKey() {
+        Serde<ts.information.statement.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }

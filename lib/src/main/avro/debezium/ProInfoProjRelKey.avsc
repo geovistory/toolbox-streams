@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.projects.info_proj_rel",
+  "namespace": "ts.projects.info_proj_rel",
   "fields": [
     {
       "name": "fk_entity",
@@ -12,5 +12,5 @@
       "type": "int"
     }
   ],
-  "connect.name": "dev.projects.info_proj_rel.Key"
+  "connect.name": "ts.projects.info_proj_rel.Key"
 }

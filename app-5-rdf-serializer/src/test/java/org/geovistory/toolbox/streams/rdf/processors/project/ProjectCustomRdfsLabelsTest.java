@@ -20,7 +20,7 @@ class ProjectCustomRdfsLabelsTest {
     private static final String SCHEMA_REGISTRY_SCOPE = ProjectCustomRdfsLabelsTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.projects.project.Key, dev.projects.project.Value> projectTopic;
+    private TestInputTopic<ts.projects.project.Key, ts.projects.project.Value> projectTopic;
     private TestOutputTopic<ProjectRdfKey, ProjectRdfValue> outputTopic;
 
     @BeforeEach
@@ -66,10 +66,10 @@ class ProjectCustomRdfsLabelsTest {
     void testLanguageOutputIsNotEmpty() {
         var projectId = 1;
 
-        var k = dev.projects.project.Key.newBuilder()
+        var k = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var v = dev.projects.project.Value.newBuilder()
+        var v = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.EN.get())
                 .build();
 
@@ -86,10 +86,10 @@ class ProjectCustomRdfsLabelsTest {
     void testSizeOfLanguageOutput() {
         var projectId = 1;
 
-        var k = dev.projects.project.Key.newBuilder()
+        var k = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var v = dev.projects.project.Value.newBuilder()
+        var v = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.EN.get())
                 .build();
         projectTopic.pipeInput(k, v);
@@ -105,10 +105,10 @@ class ProjectCustomRdfsLabelsTest {
     void testTurtleAndOperationValue() {
         var projectId = 1;
 
-        var k = dev.projects.project.Key.newBuilder()
+        var k = ts.projects.project.Key.newBuilder()
                 .setPkEntity(projectId)
                 .build();
-        var v = dev.projects.project.Value.newBuilder()
+        var v = ts.projects.project.Value.newBuilder()
                 .setFkLanguage(I.EN.get())
                 .build();
         projectTopic.pipeInput(k, v);

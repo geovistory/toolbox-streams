@@ -23,26 +23,26 @@ public class AvroSerdes {
     }
 
 
-    public Serde<dev.data_for_history.api_property.Key> DfhApiPropertyKey() {
-        Serde<dev.data_for_history.api_property.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.data_for_history.api_property.Key> DfhApiPropertyKey() {
+        Serde<ts.data_for_history.api_property.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.data_for_history.api_property.Value> DfhApiPropertyValue() {
-        Serde<dev.data_for_history.api_property.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.data_for_history.api_property.Value> DfhApiPropertyValue() {
+        Serde<ts.data_for_history.api_property.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }
 
-    public Serde<dev.data_for_history.api_class.Key> DfhApiClassKey() {
-        Serde<dev.data_for_history.api_class.Key> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.data_for_history.api_class.Key> DfhApiClassKey() {
+        Serde<ts.data_for_history.api_class.Key> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), true);
         return serdes;
     }
 
-    public Serde<dev.data_for_history.api_class.Value> DfhApiClassValue() {
-        Serde<dev.data_for_history.api_class.Value> serdes = new SpecificAvroSerde<>();
+    public Serde<ts.data_for_history.api_class.Value> DfhApiClassValue() {
+        Serde<ts.data_for_history.api_class.Value> serdes = new SpecificAvroSerde<>();
         serdes.configure(getProperties(), false);
         return serdes;
     }

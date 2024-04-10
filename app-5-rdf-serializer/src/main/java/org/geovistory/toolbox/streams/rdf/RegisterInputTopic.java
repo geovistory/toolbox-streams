@@ -81,7 +81,7 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
                 avroSerdes.OntomePropertyLabelKey(), avroSerdes.OntomePropertyLabelValue());
     }
 
-    public KStream<dev.projects.project.Key, dev.projects.project.Value> projectStream() {
+    public KStream<ts.projects.project.Key, ts.projects.project.Value> projectStream() {
         return getStream(
                 builderSingleton.builder,
                 inputTopicNames.getProject(),

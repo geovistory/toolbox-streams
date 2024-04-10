@@ -25,9 +25,9 @@ class StatementSubjectTest {
     private static final String SCHEMA_REGISTRY_SCOPE = StatementSubjectTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.information.statement.Key, dev.information.statement.Value> infStatementTopic;
+    private TestInputTopic<ts.information.statement.Key, ts.information.statement.Value> infStatementTopic;
     private TestInputTopic<NodeKey, NodeValue> nodeTopic;
-    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithSubjectTopic;
+    private TestOutputTopic<ts.information.statement.Key, StatementEnrichedValue> statementWithSubjectTopic;
 
 
     @BeforeEach
@@ -79,10 +79,10 @@ class StatementSubjectTest {
         int objectId = 30;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
-        var vS = dev.information.statement.Value.newBuilder()
+        var vS = ts.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setFkSubjectInfo(subjectId)
@@ -103,10 +103,10 @@ class StatementSubjectTest {
         int classId = 40;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
-        var vS = dev.information.statement.Value.newBuilder()
+        var vS = ts.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setFkSubjectInfo(subjectId)

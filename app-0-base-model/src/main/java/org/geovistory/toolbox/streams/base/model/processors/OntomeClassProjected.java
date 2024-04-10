@@ -26,15 +26,15 @@ public class OntomeClassProjected {
     OutputTopicNames outputTopicNames;
 
     private ProjectedTableRegistrar<
-            dev.data_for_history.api_class.Key,
-            dev.data_for_history.api_class.Value,
+            ts.data_for_history.api_class.Key,
+            ts.data_for_history.api_class.Value,
             OntomeClassKey,
             OntomeClassValue
             > registrar;
 
     public ProjectedTableRegistrar<
-            dev.data_for_history.api_class.Key,
-            dev.data_for_history.api_class.Value,
+            ts.data_for_history.api_class.Key,
+            ts.data_for_history.api_class.Value,
             OntomeClassKey,
             OntomeClassValue
             > getRegistrar(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
@@ -46,8 +46,8 @@ public class OntomeClassProjected {
     }
 
     public ProjectedTableRegistrar<
-            dev.data_for_history.api_class.Key,
-            dev.data_for_history.api_class.Value,
+            ts.data_for_history.api_class.Key,
+            ts.data_for_history.api_class.Value,
             OntomeClassKey,
             OntomeClassValue
             > getRegistrar() {

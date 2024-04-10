@@ -22,8 +22,8 @@ class ProjectEntityVisibilityTest {
     private static final String SCHEMA_REGISTRY_SCOPE = ProjectEntityVisibilityTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.information.resource.Key, dev.information.resource.Value> infResourceTopic;
-    private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
+    private TestInputTopic<ts.information.resource.Key, ts.information.resource.Value> infResourceTopic;
+    private TestInputTopic<ts.projects.info_proj_rel.Key, ts.projects.info_proj_rel.Value> proInfoProjRelTopic;
     private TestOutputTopic<ProjectEntityKey, ProjectEntityVisibilityValue> outputTopic;
 
     @BeforeEach
@@ -75,11 +75,11 @@ class ProjectEntityVisibilityTest {
         var entityId = 20;
         var classId = 30;
         // add relation between project and entity
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -90,8 +90,8 @@ class ProjectEntityVisibilityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add entity
-        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
-        var vE = dev.information.resource.Value.newBuilder()
+        var kE = ts.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = ts.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(entityId)
@@ -121,11 +121,11 @@ class ProjectEntityVisibilityTest {
         var entityId = 20;
         var classId = 30;
         // add relation between project and entity
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -136,8 +136,8 @@ class ProjectEntityVisibilityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add entity
-        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
-        var vE = dev.information.resource.Value.newBuilder()
+        var kE = ts.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = ts.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(entityId)
@@ -167,11 +167,11 @@ class ProjectEntityVisibilityTest {
         var entityId = 20;
         var classId = 30;
         // add relation between project and entity
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -182,8 +182,8 @@ class ProjectEntityVisibilityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add entity
-        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
-        var vE = dev.information.resource.Value.newBuilder()
+        var kE = ts.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = ts.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(entityId)
@@ -213,11 +213,11 @@ class ProjectEntityVisibilityTest {
         var entityId = 20;
         var classId = 30;
         // add relation between project and entity
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -228,8 +228,8 @@ class ProjectEntityVisibilityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add entity
-        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
-        var vE = dev.information.resource.Value.newBuilder()
+        var kE = ts.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = ts.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(entityId)
@@ -260,11 +260,11 @@ class ProjectEntityVisibilityTest {
         var entityId = 20;
         var classId = 30;
         // add relation between project and entity
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -275,8 +275,8 @@ class ProjectEntityVisibilityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add entity
-        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
-        var vE = dev.information.resource.Value.newBuilder()
+        var kE = ts.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = ts.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(entityId)
@@ -285,7 +285,7 @@ class ProjectEntityVisibilityTest {
                 .build();
         infResourceTopic.pipeInput(kE, vE);
 
-        var vRDeleted = dev.projects.info_proj_rel.Value.newBuilder()
+        var vRDeleted = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(0)
@@ -315,11 +315,11 @@ class ProjectEntityVisibilityTest {
         var classId = 30;
 
         // add relation between project one and entity
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
                 .setFkProject(projectOneId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -330,11 +330,11 @@ class ProjectEntityVisibilityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add relation between project two and entity
-        kR = dev.projects.info_proj_rel.Key.newBuilder()
+        kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
                 .setFkProject(projectTwoId)
                 .build();
-        vR = dev.projects.info_proj_rel.Value.newBuilder()
+        vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -345,8 +345,8 @@ class ProjectEntityVisibilityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add entity
-        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
-        var vE = dev.information.resource.Value.newBuilder()
+        var kE = ts.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = ts.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(entityId)
@@ -376,11 +376,11 @@ class ProjectEntityVisibilityTest {
         var projectId = 10;
         var entityId = 20;
         // add relation between project and entity
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(entityId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -391,8 +391,8 @@ class ProjectEntityVisibilityTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add entity
-        var kE = dev.information.resource.Key.newBuilder().setPkEntity(entityId).build();
-        var vE = dev.information.resource.Value.newBuilder()
+        var kE = ts.information.resource.Key.newBuilder().setPkEntity(entityId).build();
+        var vE = ts.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(entityId)

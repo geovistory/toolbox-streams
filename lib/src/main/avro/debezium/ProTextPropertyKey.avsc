@@ -1,7 +1,7 @@
 {
 	"type": "record",
 	"name": "Key",
-	"namespace": "dev.projects.text_property",
+	"namespace": "ts.projects.text_property",
 	"fields": [
 		{
 			"name": "pk_entity",
@@ -12,5 +12,5 @@
 			"default": 0
 		}
 	],
-	"connect.name": "dev.projects.text_property.Key"
+	"connect.name": "ts.projects.text_property.Key"
 }

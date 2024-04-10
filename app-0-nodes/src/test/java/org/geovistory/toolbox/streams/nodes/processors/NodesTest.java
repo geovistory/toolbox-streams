@@ -25,15 +25,15 @@ class NodesTest {
     private static final String SCHEMA_REGISTRY_SCOPE = NodesTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.information.resource.Key, dev.information.resource.Value> infResourceTopic;
-    private TestInputTopic<dev.information.language.Key, dev.information.language.Value> infLanguageTopic;
-    private TestInputTopic<dev.information.appellation.Key, dev.information.appellation.Value> infAppellationTopic;
-    private TestInputTopic<dev.information.lang_string.Key, dev.information.lang_string.Value> infLangStringTopic;
-    private TestInputTopic<dev.information.place.Key, dev.information.place.Value> infPlaceTopic;
-    private TestInputTopic<dev.information.time_primitive.Key, dev.information.time_primitive.Value> infTimePrimitiveTopic;
-    private TestInputTopic<dev.information.dimension.Key, dev.information.dimension.Value> infDimensionTopic;
-    private TestInputTopic<dev.data.digital.Key, dev.data.digital.Value> datDigitalTopic;
-    private TestInputTopic<dev.tables.cell.Key, dev.tables.cell.Value> tabCellTopic;
+    private TestInputTopic<ts.information.resource.Key, ts.information.resource.Value> infResourceTopic;
+    private TestInputTopic<ts.information.language.Key, ts.information.language.Value> infLanguageTopic;
+    private TestInputTopic<ts.information.appellation.Key, ts.information.appellation.Value> infAppellationTopic;
+    private TestInputTopic<ts.information.lang_string.Key, ts.information.lang_string.Value> infLangStringTopic;
+    private TestInputTopic<ts.information.place.Key, ts.information.place.Value> infPlaceTopic;
+    private TestInputTopic<ts.information.time_primitive.Key, ts.information.time_primitive.Value> infTimePrimitiveTopic;
+    private TestInputTopic<ts.information.dimension.Key, ts.information.dimension.Value> infDimensionTopic;
+    private TestInputTopic<ts.data.digital.Key, ts.data.digital.Value> datDigitalTopic;
+    private TestInputTopic<ts.tables.cell.Key, ts.tables.cell.Value> tabCellTopic;
     private TestOutputTopic<NodeKey, NodeValue> nodeTopic;
 
     @BeforeEach
@@ -121,8 +121,8 @@ class NodesTest {
 
 
         // add entity
-        var k2 = dev.information.resource.Key.newBuilder().setPkEntity(id).build();
-        var v2 = dev.information.resource.Value.newBuilder()
+        var k2 = ts.information.resource.Key.newBuilder().setPkEntity(id).build();
+        var v2 = ts.information.resource.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(id)
@@ -155,8 +155,8 @@ class NodesTest {
 
 
         // add appellation
-        var k = dev.information.appellation.Key.newBuilder().setPkEntity(id).build();
-        var v = dev.information.appellation.Value.newBuilder()
+        var k = ts.information.appellation.Key.newBuilder().setPkEntity(id).build();
+        var v = ts.information.appellation.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(0)
@@ -182,8 +182,8 @@ class NodesTest {
         String label = "English";
 
         // add language
-        var k = dev.information.language.Key.newBuilder().setPkLanguage("en").build();
-        var v = dev.information.language.Value.newBuilder()
+        var k = ts.information.language.Key.newBuilder().setPkLanguage("en").build();
+        var v = ts.information.language.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkLanguage("en")
@@ -207,8 +207,8 @@ class NodesTest {
         String label = "Label";
 
         // add lang_string
-        var k = dev.information.lang_string.Key.newBuilder().setPkEntity(id).build();
-        var v = dev.information.lang_string.Value.newBuilder()
+        var k = ts.information.lang_string.Key.newBuilder().setPkEntity(id).build();
+        var v = ts.information.lang_string.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(id)
@@ -232,8 +232,8 @@ class NodesTest {
         String label = null;
 
         // add lang_string
-        var k = dev.information.lang_string.Key.newBuilder().setPkEntity(id).build();
-        var v = dev.information.lang_string.Value.newBuilder()
+        var k = ts.information.lang_string.Key.newBuilder().setPkEntity(id).build();
+        var v = ts.information.lang_string.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(id)
@@ -259,8 +259,8 @@ class NodesTest {
         double y = 2;
 
         // add place
-        var k = dev.information.place.Key.newBuilder().setPkEntity(id).build();
-        var v = dev.information.place.Value.newBuilder()
+        var k = ts.information.place.Key.newBuilder().setPkEntity(id).build();
+        var v = ts.information.place.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(id)
@@ -285,8 +285,8 @@ class NodesTest {
         int id = 30;
 
         // add place
-        var k = dev.information.place.Key.newBuilder().setPkEntity(id).build();
-        var v = dev.information.place.Value.newBuilder()
+        var k = ts.information.place.Key.newBuilder().setPkEntity(id).build();
+        var v = ts.information.place.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(id)
@@ -309,8 +309,8 @@ class NodesTest {
         int id = 30;
 
         // add place
-        var k = dev.information.time_primitive.Key.newBuilder().setPkEntity(id).build();
-        var v = dev.information.time_primitive.Value.newBuilder()
+        var k = ts.information.time_primitive.Key.newBuilder().setPkEntity(id).build();
+        var v = ts.information.time_primitive.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(id)
@@ -335,8 +335,8 @@ class NodesTest {
         double num = 111;
 
         // add dimension
-        var k = dev.information.dimension.Key.newBuilder().setPkEntity(id).build();
-        var v = dev.information.dimension.Value.newBuilder()
+        var k = ts.information.dimension.Key.newBuilder().setPkEntity(id).build();
+        var v = ts.information.dimension.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(id)
@@ -361,8 +361,8 @@ class NodesTest {
 
 
         // add cell
-        var k = dev.tables.cell.Key.newBuilder().setPkCell(id).build();
-        var v = dev.tables.cell.Value.newBuilder()
+        var k = ts.tables.cell.Key.newBuilder().setPkCell(id).build();
+        var v = ts.tables.cell.Value.newBuilder()
                 .setEntityVersion(0)
                 .setPkCell(id)
                 .setFkColumn(0)
@@ -386,8 +386,8 @@ class NodesTest {
 
 
         // add cell
-        var k = dev.data.digital.Key.newBuilder().setPkEntity(id).build();
-        var v = dev.data.digital.Value.newBuilder()
+        var k = ts.data.digital.Key.newBuilder().setPkEntity(id).build();
+        var v = ts.data.digital.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setQuillDoc("")

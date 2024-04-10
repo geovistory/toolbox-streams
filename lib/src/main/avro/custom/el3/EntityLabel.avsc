@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "EntityLabel",
+  "namespace": "org.geovistory.toolbox.streams.avro",
+  "doc": "Label and with language.",
+  "fields": [
+    {
+      "name": "label",
+      "type": "string"
+    },
+    {
+      "name": "language",
+      "type": "string"
+    }
+  ]
+}

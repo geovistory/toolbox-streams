@@ -26,10 +26,10 @@ class StatementObjectTest {
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
     private TestInputTopic<NodeKey, NodeValue> nodeTopic;
-    private TestInputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithSubjectTopic;
-    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithEntityTopic;
-    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;
-    private TestOutputTopic<dev.information.statement.Key, StatementEnrichedValue> statementOtherTopic;
+    private TestInputTopic<ts.information.statement.Key, StatementEnrichedValue> statementWithSubjectTopic;
+    private TestOutputTopic<ts.information.statement.Key, StatementEnrichedValue> statementWithEntityTopic;
+    private TestOutputTopic<ts.information.statement.Key, StatementEnrichedValue> statementWithLiteralTopic;
+    private TestOutputTopic<ts.information.statement.Key, StatementEnrichedValue> statementOtherTopic;
 
     @BeforeEach
     void setup() {
@@ -93,7 +93,7 @@ class StatementObjectTest {
         var objectId = "i30";
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -117,7 +117,7 @@ class StatementObjectTest {
         int classId = 40;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -167,7 +167,7 @@ class StatementObjectTest {
         String expected = "Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_Ten_Chars_";
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -208,7 +208,7 @@ class StatementObjectTest {
         int classId = 40;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -253,7 +253,7 @@ class StatementObjectTest {
 
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -294,7 +294,7 @@ class StatementObjectTest {
         int classId = 40;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -334,7 +334,7 @@ class StatementObjectTest {
         int classId = 40;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -381,7 +381,7 @@ class StatementObjectTest {
         int classId = 40;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -422,7 +422,7 @@ class StatementObjectTest {
         int classId = 40;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -463,7 +463,7 @@ class StatementObjectTest {
         int propertyId = 20;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()
@@ -504,7 +504,7 @@ class StatementObjectTest {
         int classId = 40;
 
         // add statement
-        var kS = dev.information.statement.Key.newBuilder()
+        var kS = ts.information.statement.Key.newBuilder()
                 .setPkEntity(1)
                 .build();
         var vS = StatementEnrichedValue.newBuilder()

@@ -24,8 +24,8 @@ class ProjectFieldChangeTest {
     private static final String SCHEMA_REGISTRY_SCOPE = ProjectFieldChangeTest.class.getName();
     private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<dev.information.statement.Key, dev.information.statement.Value> infStatementTopic;
-    private TestInputTopic<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTopic;
+    private TestInputTopic<ts.information.statement.Key, ts.information.statement.Value> infStatementTopic;
+    private TestInputTopic<ts.projects.info_proj_rel.Key, ts.projects.info_proj_rel.Value> proInfoProjRelTopic;
     private TestOutputTopic<FieldChangeKey, FieldChangeValue> outputTopic;
 
 
@@ -75,11 +75,11 @@ class ProjectFieldChangeTest {
         var propertyId = 30;
         var t1 = "2020-01-02T12:15:00Z";
         // add relation between project and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -91,8 +91,8 @@ class ProjectFieldChangeTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement
-        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
-        var vE = dev.information.statement.Value.newBuilder()
+        var kE = ts.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var vE = ts.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(statementId)
@@ -132,11 +132,11 @@ class ProjectFieldChangeTest {
         var t2 = "2021-01-02T12:15:00Z";
         var t3 = "2022-01-02T12:15:00Z";
         // add relation between project and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -148,8 +148,8 @@ class ProjectFieldChangeTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement
-        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
-        var vE = dev.information.statement.Value.newBuilder()
+        var kE = ts.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var vE = ts.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(statementId)
@@ -188,11 +188,11 @@ class ProjectFieldChangeTest {
         var t1 = "2020-01-02T12:15:00Z";
         var t2 = Instant.now();
         // add relation between project and statement
-        var kR = dev.projects.info_proj_rel.Key.newBuilder()
+        var kR = ts.projects.info_proj_rel.Key.newBuilder()
                 .setFkEntity(statementId)
                 .setFkProject(projectId)
                 .build();
-        var vR = dev.projects.info_proj_rel.Value.newBuilder()
+        var vR = ts.projects.info_proj_rel.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setEntityVersion(1)
@@ -204,8 +204,8 @@ class ProjectFieldChangeTest {
         proInfoProjRelTopic.pipeInput(kR, vR);
 
         // add statement
-        var kE = dev.information.statement.Key.newBuilder().setPkEntity(statementId).build();
-        var vE = dev.information.statement.Value.newBuilder()
+        var kE = ts.information.statement.Key.newBuilder().setPkEntity(statementId).build();
+        var vE = ts.information.statement.Value.newBuilder()
                 .setSchemaName("")
                 .setTableName("")
                 .setPkEntity(statementId)

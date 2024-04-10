@@ -25,11 +25,16 @@ include(
         'app-0-statement-object',
         'app-1-base-config',
         'app-2-entity-label',
+        'app-2-project-items',
+        'app-3-entity-label3',
         'app-3-analysis-statements',
         'app-3-entity',
         'app-3-fulltext',
         'app-4-entity-preview',
         'app-5-rdf-serializer',
         'lib',
+        'test-lib',
         'utilities'
 )
+include 'test-lib'
+

@@ -26,9 +26,9 @@ public class ProjectFieldChange {
     RegisterInputTopic registerInputTopic;
 
 
-    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.input.topic.name.prefix", defaultValue = "ts")
     String inPrefix;
-    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "")
+    @ConfigProperty(name = "ts.output.topic.name.prefix", defaultValue = "ts")
     public String outPrefix;
 
     public ProjectFieldChange(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic) {
@@ -46,14 +46,14 @@ public class ProjectFieldChange {
     }
 
     public void addProcessors(
-            KTable<dev.information.statement.Key, dev.information.statement.Value> statementTable,
-            KTable<dev.projects.info_proj_rel.Key, dev.projects.info_proj_rel.Value> proInfoProjRelTable) {
+            KTable<ts.information.statement.Key, ts.information.statement.Value> statementTable,
+            KTable<ts.projects.info_proj_rel.Key, ts.projects.info_proj_rel.Value> proInfoProjRelTable) {
 
         /* STREAM PROCESSORS */
         // 2)
         var statementWithDateTable = proInfoProjRelTable.join(
                 statementTable,
-                value -> dev.information.statement.Key.newBuilder()
+                value -> ts.information.statement.Key.newBuilder()
                         .setPkEntity(value.getFkEntity())
                         .build(),
                 (projectRelation, statement) -> FieldChangeJoin.newBuilder()
@@ -73,7 +73,7 @@ public class ProjectFieldChange {
                         )
                         .build(),
                 TableJoined.as(inner.TOPICS.project_statement_modification_date_join + "-fk-join"),
-                Materialized.<dev.projects.info_proj_rel.Key, FieldChangeJoin, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_modification_date_join)
+                Materialized.<ts.projects.info_proj_rel.Key, FieldChangeJoin, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_statement_modification_date_join)
                         .withKeySerde(avroSerdes.ProInfoProjRelKey())
                         .withValueSerde(avroSerdes.FieldChangeJoin())
         );

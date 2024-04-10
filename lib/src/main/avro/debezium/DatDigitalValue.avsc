@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Value",
-  "namespace": "dev.data.digital",
+  "namespace": "ts.data.digital",
   "fields": [
     {
       "name": "pk_entity",
@@ -173,5 +173,5 @@
       "default": null
     }
   ],
-  "connect.name": "dev.data.digital.Value"
+  "connect.name": "ts.data.digital.Value"
 }

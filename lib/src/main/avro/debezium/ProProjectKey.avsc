@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Key",
-  "namespace": "dev.projects.project",
+  "namespace": "ts.projects.project",
   "fields": [
     {
       "name": "pk_entity",
@@ -12,5 +12,5 @@
       "default": 0
     }
   ],
-  "connect.name": "dev.projects.project.Key"
+  "connect.name": "ts.projects.project.Key"
 }
