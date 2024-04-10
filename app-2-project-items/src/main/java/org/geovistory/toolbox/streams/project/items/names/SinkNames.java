@@ -18,4 +18,9 @@ public class SinkNames {
     public static final String TOOLBOX_COMMUNITY_EDGE_SINK = "TOOLBOX_COMMUNITY_EDGE_SINK";
     public static final String PUBLIC_COMMUNITY_EDGE_SINK = "PUBLIC_COMMUNITY_EDGE_SINK";
 
+    public static final String TOOLBOX_PROJECT_ENTITY_SINK = "TOOLBOX_PROJECT_ENTITY_SINK";
+    public static final String TOOLBOX_COMMUNITY_ENTITY_SINK = "TOOLBOX_COMMUNITY_ENTITY_SINK";
+    public static final String PUBLIC_PROJECT_ENTITY_SINK = "PUBLIC_PROJECT_ENTITY_SINK";
+    public static final String PUBLIC_COMMUNITY_ENTITY_SINK = "PUBLIC_COMMUNITY_ENTITY_SINK";
+
 }

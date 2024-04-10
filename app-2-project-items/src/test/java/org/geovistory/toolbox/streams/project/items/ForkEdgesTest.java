@@ -239,6 +239,36 @@ public class ForkEdgesTest {
     }
 
     @Test
+    public void testRemoveEntityFromProject() {
+
+        var e1 = sendE(1, 1, false, false);
+        sendSWithLiteral(2, 1, e1, "i99");
+        sendIpr(2, 1, true, true);
+
+        sendIpr(1, 1, true, false);
+        sendIpr(1, 1, false, false);
+
+        var pp = projectEdgesPublic.readRecordsToList();
+        assertEquals(0, pp.size());
+
+    }
+
+    @Test
+    public void testRemoveEdgeFromProject() {
+
+        var e1 = sendE(1, 1, false, false);
+        sendSWithLiteral(2, 1, e1, "i99");
+        sendIpr(2, 1, true, true);
+
+        sendIpr(1, 1, true, false);
+        sendIpr(2, 1, false, false);
+
+        var pp = projectEdgesPublic.readRecordsToList();
+        assertEquals(0, pp.size());
+
+    }
+
+    @Test
     public void testCountDownAndDeletion() {
 
 

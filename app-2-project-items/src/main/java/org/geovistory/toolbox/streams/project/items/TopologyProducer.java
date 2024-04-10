@@ -51,6 +51,10 @@ public class TopologyProducer {
     EdgeOrdNumStore edgeOrdNumStore;
     @Inject
     EdgeSumStore edgeSumStore;
+    @Inject
+    EntityIntStore entityIntStore;
+    @Inject
+    EntityBoolStore entityBoolStore;
     @ConfigProperty(name = "auto.create.output.topics")
     String autoCreateOutputTopics;
 
@@ -104,7 +108,7 @@ public class TopologyProducer {
                         outputTopicNames.iprRepartitioned())
 
                 // -----------------------------------------
-                // Repartition entity (inf resource) rel by pk_entity
+                // Repartition entity (inf resource) by pk_entity
                 // -----------------------------------------
 
                 // add node to re-key the original event
@@ -156,6 +160,21 @@ public class TopologyProducer {
                         as.<ProjectEntityKey>key().serializer(), as.<EntityValue>value().serializer(),
                         ProcessorNames.JOIN_E, ProcessorNames.IPR_TO_E
                 )
+                .addProcessor(ProcessorNames.FORK_ENTITIES, ForkEntities::new, ProcessorNames.JOIN_E, ProcessorNames.IPR_TO_E)
+                // publish entities for toolbox project
+                .addSink(SinkNames.TOOLBOX_PROJECT_ENTITY_SINK, outputTopicNames.toolboxProjectEntities(),
+                        as.kS(), as.vS(), ProcessorNames.FORK_ENTITIES)
+                // publish entities for public community
+                .addSink(SinkNames.TOOLBOX_COMMUNITY_ENTITY_SINK, outputTopicNames.toolboxCommunityEntities(),
+                        as.kS(), as.vS(), ProcessorNames.FORK_ENTITIES)
+                // publish entities for public community
+                .addSink(SinkNames.PUBLIC_PROJECT_ENTITY_SINK, outputTopicNames.publicProjectEntities(),
+                        as.kS(), as.vS(), ProcessorNames.FORK_ENTITIES)
+
+                // publish entities for public community
+                .addSink(SinkNames.PUBLIC_COMMUNITY_ENTITY_SINK, outputTopicNames.publicCommunityEntities(),
+                        as.kS(), as.vS(), ProcessorNames.FORK_ENTITIES)
+
                 .addSource(
                         SinkNames.PROJECT_ENTITY_SOURCE,
                         as.<ProjectEntityKey>key().deserializer(), as.<EntityValue>value().deserializer(),
@@ -325,7 +344,8 @@ public class TopologyProducer {
                 .addStateStore(edgeOrdNumStore.createPersistentKeyValueStore(), ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES, ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES)
                 .addStateStore(edgeCountStore.createPersistentKeyValueStore(), ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES, ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES)
                 .addStateStore(edgeSumStore.createPersistentKeyValueStore(), ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES, ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES)
-                ;
+                .addStateStore(entityIntStore.createPersistentKeyValueStore(), ProcessorNames.FORK_ENTITIES)
+                .addStateStore(entityBoolStore.createPersistentKeyValueStore(), ProcessorNames.FORK_ENTITIES, ProcessorNames.FORK_EDGES);
     }
 
     private static void createTopologyDocumentation(Topology topology) {
