@@ -1,17 +1,16 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.AvroSerdes;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
+import org.geovistory.toolbox.streams.entity.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.Utils;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 
 @ApplicationScoped
@@ -19,7 +18,7 @@ public class CommunityEntityType {
 
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde avroSerdes;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -32,12 +31,6 @@ public class CommunityEntityType {
     private String communitySlug;
 
 
-    public CommunityEntityType(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
-        this.registerInputTopic = registerInputTopic;
-        this.outputTopicNames = outputTopicNames;
-    }
-
     public void addProcessorsStandalone() {
         addProcessors(
                 registerInputTopic.communityEntityTable(),
@@ -47,10 +40,10 @@ public class CommunityEntityType {
     }
 
     public CommunityEntityTypeReturnValue addProcessors(
-            KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable,
+            KTable<ProjectEntityKey, ProjectEntityValue> communityEntityTable,
             KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
             KTable<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsTable
-            ) {
+    ) {
 
         String communityEntityWithHasTypeProperty = "community_" + communitySlug + "entity_with_has_type_property";
         String communityEntityWithHasTypeStatement = "community_" + communitySlug + "entity_with_has_type_statement";
@@ -63,16 +56,16 @@ public class CommunityEntityType {
                 communityEntityValue -> HasTypePropertyKey.newBuilder()
                         .setClassId(communityEntityValue.getClassId())
                         .build(),
-                (value1, value2) -> CommunityEntityHasTypePropValue.newBuilder()
-                        .setHasTypePropertyId(value2.getPropertyId())
+                (value1, value2) -> ProjectEntityHasTypePropValue.newBuilder()
                         .setEntityId(value1.getEntityId())
-                        .setProjectCount(value1.getProjectCount())
+                        .setProjectId(value1.getProjectId())
+                        .setHasTypePropertyId(value2.getPropertyId())
                         .setDeleted$1(value2.getDeleted$1())
                         .build(),
                 TableJoined.as(communityEntityWithHasTypeProperty + "-fk-join"),
-                Materialized.<CommunityEntityKey, CommunityEntityHasTypePropValue, KeyValueStore<Bytes, byte[]>>as(communityEntityWithHasTypeProperty)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.CommunityEntityHasTypePropValue())
+                Materialized.<ProjectEntityKey, ProjectEntityHasTypePropValue, KeyValueStore<Bytes, byte[]>>as(communityEntityWithHasTypeProperty)
+                        .withKeySerde(avroSerdes.<ProjectEntityKey>key())
+                        .withValueSerde(avroSerdes.<ProjectEntityHasTypePropValue>value())
         );
 
         // 2)
@@ -88,29 +81,29 @@ public class CommunityEntityType {
                     var statements = value2.getStatements();
                     var hasTypeStatement = statements.size() == 0 ? null : value2.getStatements().get(0);
                     var deleted = hasTypeStatement == null || Utils.booleanIsEqualTrue(value1.getDeleted$1());
-                    var newVal = CommunityEntityTypeValue.newBuilder()
-                            .setEntityId(value1.getEntityId());
+                    var newVal = ProjectEntityTypeValue.newBuilder()
+                            .setEntityId(value1.getEntityId())
+                            .setProjectId(value1.getProjectId());
+
                     if (deleted) {
                         return newVal
                                 .setTypeId("")
                                 .setTypeLabel(null)
-                                .setProjectCount(value1.getProjectCount())
                                 .setDeleted$1(true)
                                 .build();
                     } else {
                         return newVal
                                 .setTypeId(hasTypeStatement.getStatement().getObjectId())
                                 .setTypeLabel(hasTypeStatement.getStatement().getObjectLabel())
-                                .setProjectCount(value1.getProjectCount())
                                 .setDeleted$1(false)
                                 .build();
                     }
 
                 },
                 TableJoined.as(communityEntityWithHasTypeStatement + "-fk-join"),
-                Materialized.<CommunityEntityKey, CommunityEntityTypeValue, KeyValueStore<Bytes, byte[]>>as(communityEntityWithHasTypeStatement)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.CommunityEntityTypeValue())
+                Materialized.<ProjectEntityKey, ProjectEntityTypeValue, KeyValueStore<Bytes, byte[]>>as(communityEntityWithHasTypeStatement)
+                        .withKeySerde(avroSerdes.<ProjectEntityKey>key())
+                        .withValueSerde(avroSerdes.<ProjectEntityTypeValue>value())
         );
 
         var communityEntityTypeStream = communityEntityTypeTable.toStream(
@@ -119,7 +112,7 @@ public class CommunityEntityType {
         /* SINK PROCESSORS */
 
         communityEntityTypeStream.to(outputTopicNames.communityEntityType(),
-                Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityTypeValue())
+                Produced.with(avroSerdes.<ProjectEntityKey>key(), avroSerdes.<ProjectEntityTypeValue>value())
                         .withName(outputTopicNames.communityEntityType() + "-producer")
         );
 

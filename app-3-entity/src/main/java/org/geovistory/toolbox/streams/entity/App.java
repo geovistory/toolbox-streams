@@ -3,6 +3,9 @@
  */
 package org.geovistory.toolbox.streams.entity;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Named;
@@ -21,10 +24,8 @@ import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityTim
 import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityType;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
-import jakarta.inject.Inject;
 import java.util.ArrayList;
+import java.util.Objects;
 
 
 @ApplicationScoped
@@ -61,6 +62,10 @@ public class App {
     @Inject
     OutputTopicNames outputTopicNames;
 
+    @ConfigProperty(name = "auto.create.output.topics")
+    String autoCreateOutputTopics;
+
+
     Boolean buildTopologyCalled = false;
 
 
@@ -74,8 +79,8 @@ public class App {
             // add processors of sub-topologies
             addSubTopologies();
 
-            // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-            createTopics();
+            // create output topics in advance to ensure correct configuration (partition, compaction, ect.)
+            if (Objects.equals(autoCreateOutputTopics, "enabled")) createTopics();
         }
 
         // build the topology
