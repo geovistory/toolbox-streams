@@ -1,6 +1,8 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
 
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
 import org.apache.kafka.streams.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -10,6 +12,7 @@ import org.geovistory.toolbox.streams.entity.I;
 import org.geovistory.toolbox.streams.entity.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.testlib.FileRemover;
+import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,8 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@QuarkusTest
+@TestProfile(TopologyTestDriverProfile.class)
 class CommunityEntityClassLabelTest {
     @Inject
     Topology topology;
@@ -32,9 +37,9 @@ class CommunityEntityClassLabelTest {
     @ConfigProperty(name = "kafka-streams.state.dir")
     public String stateDir;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<CommunityEntityKey, CommunityEntityValue> communityEntityTopic;
+    private TestInputTopic<ProjectEntityKey, ProjectEntityValue> communityEntityTopic;
     private TestInputTopic<OntomeClassLabelKey, CommunityClassLabelValue> communityClassLabelTopic;
-    private TestOutputTopic<CommunityEntityKey, CommunityEntityClassLabelValue> outputTopic;
+    private TestOutputTopic<ProjectEntityKey, ProjectEntityClassLabelValue> outputTopic;
 
     @BeforeEach
     void setup() {
@@ -78,12 +83,13 @@ class CommunityEntityClassLabelTest {
         var classLabel = "my_class";
 
         // add an entity
-        var kE = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
-        var vE = CommunityEntityValue.newBuilder().setEntityId(entityId).setProjectCount(1).setClassId(3).build();
+        var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(0).build();
+        var vE = ProjectEntityValue.newBuilder().setEntityId(entityId).setProjectId(0).setDeleted$1(false).setClassId(3).build();
         communityEntityTopic.pipeInput(kE, vE);
 
         // add a class label
-        var kS = OntomeClassLabelKey.newBuilder().setClassId(classId)
+        var kS = OntomeClassLabelKey.newBuilder()
+                .setClassId(classId)
                 .setLanguageId(I.EN.get())
                 .build();
         var vS = CommunityClassLabelValue.newBuilder()
@@ -101,17 +107,17 @@ class CommunityEntityClassLabelTest {
 
 
     @Test
-    void testProjectCount() {
+    void testDeletion() {
 
         var entityId = "i1";
         var classId = 3;
         var classLabel = "my_class";
 
         // add an entity
-        var kE = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
-        var vE = CommunityEntityValue.newBuilder().setEntityId(entityId).setProjectCount(1).setClassId(3).build();
+        var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(0).build();
+        var vE = ProjectEntityValue.newBuilder().setEntityId(entityId).setProjectId(0).setDeleted$1(false).setClassId(3).build();
         communityEntityTopic.pipeInput(kE, vE);
-        vE.setProjectCount(0);
+        vE.setDeleted$1(true);
         communityEntityTopic.pipeInput(kE, vE);
 
         // add a class label
@@ -127,7 +133,7 @@ class CommunityEntityClassLabelTest {
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
         var record = outRecords.get(kE);
-        assertThat(record.getProjectCount()).isEqualTo(0);
+        assertThat(record.getDeleted$1()).isEqualTo(true);
 
     }
 }
