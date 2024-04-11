@@ -10,6 +10,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
 import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,30 +56,30 @@ class CommunityEntityTypeTest {
 
         hasTypePropertyTopic = testDriver.createInputTopic(
                 inputTopicNames.getHasTypeProperty(),
-                avroSerdes.HasTypePropertyKey().serializer(),
-                avroSerdes.HasTypePropertyValue().serializer());
+                as.kS(),
+                as.vS());
 
         communityTopOutgoingStatements = testDriver.createInputTopic(
                 inputTopicNames.getCommunityTopOutgoingStatements(),
-                avroSerdes.CommunityTopStatementsKey().serializer(),
-                avroSerdes.CommunityTopStatementsValue().serializer());
+                as.kS(),
+                as.vS());
 
         communityEntityTopic = testDriver.createInputTopic(
                 inputTopicNames.getCommunityEntity(),
-                avroSerdes.CommunityEntityKey().serializer(),
-                avroSerdes.CommunityEntityValue().serializer());
+                as.kS(),
+                as.vS());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.communityEntityType(),
-                avroSerdes.CommunityEntityKey().deserializer(),
-                avroSerdes.CommunityEntityTypeValue().deserializer());
+                as.kD(),
+                as.vD());
     }
 
     @AfterEach
     void teardown() {
         testDriver.close();
+        FileRemover.removeDir(this.stateDir);
     }
-
 
     @Test
     void testCommunityEntityType() {

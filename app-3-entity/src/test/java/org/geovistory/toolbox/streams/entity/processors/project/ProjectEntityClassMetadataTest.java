@@ -10,6 +10,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
 import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,25 +55,25 @@ class ProjectEntityClassMetadataTest {
 
         projectEntityTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntity(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityValue().serializer());
+                as.kS(),
+                as.vS());
 
         ontomeClassMetadataTopic = testDriver.createInputTopic(
                 inputTopicNames.getOntomeClassMetadata(),
-                avroSerdes.OntomeClassKey().serializer(),
-                avroSerdes.OntomeClassMetadataValue().serializer());
+                as.kS(),
+                as.vS());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectEntityClassMetadata(),
-                avroSerdes.ProjectEntityKey().deserializer(),
-                avroSerdes.ProjectEntityClassMetadataValue().deserializer());
+                as.kD(),
+                as.vD());
     }
 
     @AfterEach
     void teardown() {
         testDriver.close();
+        FileRemover.removeDir(this.stateDir);
     }
-
 
     @Test
     void testProjectEntityMetadata() {

@@ -10,6 +10,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
 import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,21 +57,21 @@ class CommunityEntityTimeSpanTest {
 
         communityTopOutgoingStatementsTopic = testDriver.createInputTopic(
                 inputTopicNames.getCommunityTopOutgoingStatements(),
-                avroSerdes.CommunityTopStatementsKey().serializer(),
-                avroSerdes.CommunityTopStatementsValue().serializer());
+                as.kS(),
+                as.vS());
 
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.communityEntityTimeSpan(),
-                avroSerdes.CommunityEntityKey().deserializer(),
-                avroSerdes.TimeSpanValue().deserializer());
+                as.kD(),
+                as.vD());
     }
 
     @AfterEach
     void teardown() {
         testDriver.close();
+        FileRemover.removeDir(this.stateDir);
     }
-
     @Test
     void testTopology() {
         var classId = 2;

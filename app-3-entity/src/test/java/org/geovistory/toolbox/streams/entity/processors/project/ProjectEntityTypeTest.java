@@ -10,6 +10,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
 import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,30 +56,30 @@ class ProjectEntityTypeTest {
 
         hasTypePropertyTopic = testDriver.createInputTopic(
                 inputTopicNames.getHasTypeProperty(),
-                avroSerdes.HasTypePropertyKey().serializer(),
-                avroSerdes.HasTypePropertyValue().serializer());
+                as.kS(),
+                as.vS());
 
         projectTopOutgoingStatements = testDriver.createInputTopic(
                 inputTopicNames.getProjectTopOutgoingStatements(),
-                avroSerdes.ProjectTopStatementsKey().serializer(),
-                avroSerdes.ProjectTopStatementsValue().serializer());
+                as.kS(),
+                as.vS());
 
         projectEntityTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntity(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityValue().serializer());
+                as.kS(),
+                as.vS());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectEntityType(),
-                avroSerdes.ProjectEntityKey().deserializer(),
-                avroSerdes.ProjectEntityTypeValue().deserializer());
+                as.kD(),
+                as.vD());
     }
 
     @AfterEach
     void teardown() {
         testDriver.close();
+        FileRemover.removeDir(this.stateDir);
     }
-
 
     @Test
     void testProjectEntityType() {

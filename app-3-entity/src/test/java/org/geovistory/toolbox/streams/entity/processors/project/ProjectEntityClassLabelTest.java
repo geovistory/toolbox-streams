@@ -11,6 +11,7 @@ import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.I;
 import org.geovistory.toolbox.streams.entity.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
 import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,25 +55,25 @@ class ProjectEntityClassLabelTest {
 
         projectClassLabelTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectClassLabel(),
-                avroSerdes.ProjectClassLabelKey().serializer(),
-                avroSerdes.ProjectClassLabelValue().serializer());
+                as.kS(),
+                as.vS());
 
         projectEntityTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntity(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityValue().serializer());
+                as.kS(),
+                as.vS());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectEntityClassLabel(),
-                avroSerdes.ProjectEntityKey().deserializer(),
-                avroSerdes.ProjectEntityClassLabelValue().deserializer());
+                as.kD(),
+                as.vD());
     }
 
     @AfterEach
     void teardown() {
         testDriver.close();
+        FileRemover.removeDir(this.stateDir);
     }
-
 
     @Test
     void testProjectEntityClassLabel() {
