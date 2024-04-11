@@ -1,17 +1,18 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.I;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityClassLabelReturnValue;
+import org.geovistory.toolbox.streams.lib.Utils;
 
 
 @ApplicationScoped
@@ -19,7 +20,7 @@ public class CommunityEntityClassLabel {
 
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde avroSerdes;
 
     @Inject
     RegisterInputTopic registerInputTopic;
@@ -32,21 +33,8 @@ public class CommunityEntityClassLabel {
     private String communitySlug;
 
 
-    public CommunityEntityClassLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
-        this.registerInputTopic = registerInputTopic;
-        this.outputTopicNames = outputTopicNames;
-    }
-
-    public void addProcessorsStandalone() {
-        addProcessors(
-                registerInputTopic.communityEntityTable(),
-                registerInputTopic.communityClassLabelTable()
-        );
-    }
-
-    public CommunityEntityClassLabelReturnValue addProcessors(
-            KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable,
+    public ProjectEntityClassLabelReturnValue addProcessors(
+            KTable<ProjectEntityKey, ProjectEntityValue> communityEntityTable,
             KTable<OntomeClassLabelKey, CommunityClassLabelValue> communityClassLabelTable
     ) {
 
@@ -61,15 +49,17 @@ public class CommunityEntityClassLabel {
                         .setClassId(communityEntityValue.getClassId())
                         .setLanguageId(I.EN.get())
                         .build(),
-                (value1, value2) -> CommunityEntityClassLabelValue.newBuilder()
+                (value1, value2) -> ProjectEntityClassLabelValue.newBuilder()
+                        .setEntityId(value1.getEntityId())
+                        .setProjectId(value1.getProjectId())
                         .setClassId(value1.getClassId())
                         .setClassLabel(value2.getLabel())
-                        .setProjectCount(value1.getProjectCount())
+                        .setDeleted$1(Utils.includesTrue(value1.getDeleted$1(), value2.getDeleted$1()))
                         .build(),
                 TableJoined.as(joinName + "-fk-join"),
-                Materialized.<CommunityEntityKey, CommunityEntityClassLabelValue, KeyValueStore<Bytes, byte[]>>as(joinName)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.CommunityEntityClassLabelValue())
+                Materialized.<ProjectEntityKey, ProjectEntityClassLabelValue, KeyValueStore<Bytes, byte[]>>as(joinName)
+                        .withKeySerde(avroSerdes.<ProjectEntityKey>key())
+                        .withValueSerde(avroSerdes.<ProjectEntityClassLabelValue>value())
         );
 
 
@@ -81,11 +71,11 @@ public class CommunityEntityClassLabel {
         var outputTopic = outputTopicNames.communityEntityClassLabel();
 
         communityEntityClassLabelStream.to(outputTopic,
-                Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityClassLabelValue())
+                Produced.with(avroSerdes.<ProjectEntityKey>key(), avroSerdes.<ProjectEntityClassLabelValue>value())
                         .withName(outputTopic + "-producer")
         );
 
-        return new CommunityEntityClassLabelReturnValue( communityEntityClassLabelTable, communityEntityClassLabelStream);
+        return new ProjectEntityClassLabelReturnValue(communityEntityClassLabelTable, communityEntityClassLabelStream);
 
     }
 

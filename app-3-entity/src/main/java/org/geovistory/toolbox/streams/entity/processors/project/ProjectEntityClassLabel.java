@@ -1,42 +1,28 @@
 package org.geovistory.toolbox.streams.entity.processors.project;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 @ApplicationScoped
 
 public class ProjectEntityClassLabel {
 
 
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde avroSerdes;
 
     @Inject
     RegisterInputTopic registerInputTopic;
 
     @Inject
     OutputTopicNames outputTopicNames;
-
-    public ProjectEntityClassLabel(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
-        this.registerInputTopic = registerInputTopic;
-        this.outputTopicNames = outputTopicNames;
-    }
-
-    public void addProcessorsStandalone() {
-        addProcessors(
-                registerInputTopic.projectEntityTable(),
-                registerInputTopic.projectClassLabelTable()
-        );
-    }
 
     public ProjectEntityClassLabelReturnValue addProcessors(
             KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,
@@ -61,8 +47,8 @@ public class ProjectEntityClassLabel {
                         .build(),
                 TableJoined.as(inner.TOPICS.project_entity_with_class_label + "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityClassLabelValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_class_label)
-                        .withKeySerde(avroSerdes.ProjectEntityKey())
-                        .withValueSerde(avroSerdes.ProjectEntityClassLabelValue())
+                        .withKeySerde(avroSerdes.<ProjectEntityKey>key())
+                        .withValueSerde(avroSerdes.<ProjectEntityClassLabelValue>value())
         );
 
 
@@ -72,7 +58,7 @@ public class ProjectEntityClassLabel {
         /* SINK PROCESSORS */
 
         projectEntityClassLabelStream.to(outputTopicNames.projectEntityClassLabel(),
-                Produced.with(avroSerdes.ProjectEntityKey(), avroSerdes.ProjectEntityClassLabelValue())
+                Produced.with(avroSerdes.<ProjectEntityKey>key(), avroSerdes.<ProjectEntityClassLabelValue>value())
                         .withName(outputTopicNames.projectEntityClassLabel() + "-producer")
         );
 
