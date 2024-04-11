@@ -41,20 +41,37 @@ public class OutputTopicNames {
         return p("project_statement_with_ob_by_pk");
     }
 
-    public final String projectEdgesToolbox() {
-        return p("project_edges_toolbox");
+    public final String toolboxProjectEdges() {
+        return p("toolbox_project_edges");
     }
 
-    public final String projectEdgesPublic() {
-        return p("project_edges_public");
+    public final String toolboxCommunityEdges() {
+        return p("toolbox_community_edges");
     }
 
-    public final String communityEdgesToolbox() {
-        return p("community_edges_toolbox");
+    public final String publicProjectEdges() {
+        return p("public_project_edges");
     }
 
-    public final String communityEdgesPublic() {
-        return p("community_edges_public");
+    public final String publicCommunityEdges() {
+        return p("public_community_edges");
+    }
+
+    public final String toolboxProjectEntities() {
+        return p("toolbox_project_entities");
+    }
+
+    public final String toolboxCommunityEntities() {
+        return p("toolbox_community_entities");
+    }
+
+
+    public final String publicProjectEntities() {
+        return p("public_project_entities");
+    }
+
+    public final String publicCommunityEntities() {
+        return p("public_community_entities");
     }
 
     private String p(String n) {

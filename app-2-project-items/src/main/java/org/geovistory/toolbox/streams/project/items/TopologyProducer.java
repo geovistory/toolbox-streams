@@ -51,6 +51,10 @@ public class TopologyProducer {
     EdgeOrdNumStore edgeOrdNumStore;
     @Inject
     EdgeSumStore edgeSumStore;
+    @Inject
+    EntityIntStore entityIntStore;
+    @Inject
+    EntityBoolStore entityBoolStore;
     @ConfigProperty(name = "auto.create.output.topics")
     String autoCreateOutputTopics;
 
@@ -104,7 +108,7 @@ public class TopologyProducer {
                         outputTopicNames.iprRepartitioned())
 
                 // -----------------------------------------
-                // Repartition entity (inf resource) rel by pk_entity
+                // Repartition entity (inf resource) by pk_entity
                 // -----------------------------------------
 
                 // add node to re-key the original event
@@ -156,6 +160,21 @@ public class TopologyProducer {
                         as.<ProjectEntityKey>key().serializer(), as.<EntityValue>value().serializer(),
                         ProcessorNames.JOIN_E, ProcessorNames.IPR_TO_E
                 )
+                .addProcessor(ProcessorNames.FORK_ENTITIES, ForkEntities::new, ProcessorNames.JOIN_E, ProcessorNames.IPR_TO_E)
+                // publish entities for toolbox project
+                .addSink(SinkNames.TOOLBOX_PROJECT_ENTITY_SINK, outputTopicNames.toolboxProjectEntities(),
+                        as.kS(), as.vS(), ProcessorNames.FORK_ENTITIES)
+                // publish entities for public community
+                .addSink(SinkNames.TOOLBOX_COMMUNITY_ENTITY_SINK, outputTopicNames.toolboxCommunityEntities(),
+                        as.kS(), as.vS(), ProcessorNames.FORK_ENTITIES)
+                // publish entities for public community
+                .addSink(SinkNames.PUBLIC_PROJECT_ENTITY_SINK, outputTopicNames.publicProjectEntities(),
+                        as.kS(), as.vS(), ProcessorNames.FORK_ENTITIES)
+
+                // publish entities for public community
+                .addSink(SinkNames.PUBLIC_COMMUNITY_ENTITY_SINK, outputTopicNames.publicCommunityEntities(),
+                        as.kS(), as.vS(), ProcessorNames.FORK_ENTITIES)
+
                 .addSource(
                         SinkNames.PROJECT_ENTITY_SOURCE,
                         as.<ProjectEntityKey>key().deserializer(), as.<EntityValue>value().deserializer(),
@@ -248,10 +267,10 @@ public class TopologyProducer {
                         ProcessorNames.JOIN_OB_WITH_SUB,
                         ProcessorNames.CREATE_LITERAL_EDGES
                 )
-                .addProcessor(ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES, () -> new CreateCommunityEdges("toolbox"),
+                .addProcessor(ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES, () -> new CreateCommunityEdges("toolbox"),
                         ProcessorNames.FORK_EDGES
                 )
-                .addProcessor(ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES, () -> new CreateCommunityEdges("public"),
+                .addProcessor(ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES, () -> new CreateCommunityEdges("public"),
                         ProcessorNames.FORK_EDGES
                 )
 
@@ -262,8 +281,8 @@ public class TopologyProducer {
                 //         created from sourceId and projectId
                 //         (see edgePartitioner)
                 // ---------------------------------------------------
-                .addSink(SinkNames.PROJECT_EDGE_TOOLBOX_SINK,
-                        outputTopicNames.projectEdgesToolbox(),
+                .addSink(SinkNames.TOOLBOX_PROJECT_EDGE_SINK,
+                        outputTopicNames.toolboxProjectEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
                         ProcessorNames.FORK_EDGES
@@ -276,8 +295,8 @@ public class TopologyProducer {
                 //         (see edgePartitioner)
                 // ---------------------------------------------------
                 .addSink(
-                        SinkNames.PROJECT_EDGE_PUBLIC_SINK,
-                        outputTopicNames.projectEdgesPublic(),
+                        SinkNames.PUBLIC_PROJECT_EDGE_SINK,
+                        outputTopicNames.publicProjectEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
                         ProcessorNames.FORK_EDGES
@@ -290,11 +309,11 @@ public class TopologyProducer {
                 //         (see edgePartitioner)
                 // ---------------------------------------------------
                 .addSink(
-                        SinkNames.COMMUNITY_EDGE_TOOLBOX_SINK,
-                        outputTopicNames.communityEdgesToolbox(),
+                        SinkNames.TOOLBOX_COMMUNITY_EDGE_SINK,
+                        outputTopicNames.toolboxCommunityEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
-                        ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES
+                        ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES
                 )
                 // ---------------------------------------------------
                 // Create Edges for community public rdf
@@ -304,11 +323,11 @@ public class TopologyProducer {
                 //         (see edgePartitioner)
                 // ---------------------------------------------------
                 .addSink(
-                        SinkNames.COMMUNITY_EDGE_PUBLIC_SINK,
-                        outputTopicNames.communityEdgesPublic(),
+                        SinkNames.PUBLIC_COMMUNITY_EDGE_SINK,
+                        outputTopicNames.publicCommunityEdges(),
                         Serdes.String().serializer(), as.<EdgeValue>value().serializer(),
                         new CustomPartitioner<>(as, (kv) -> Fn.createProjectEntityKeyOfSource(kv.value)),
-                        ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES
+                        ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES
                 )
 
                 // ---------------------------------------------------
@@ -322,10 +341,11 @@ public class TopologyProducer {
                 .addStateStore(sObStore.createPersistentKeyValueStore(), ProcessorNames.JOIN_PE_S_OB, ProcessorNames.JOIN_S_OB_PE, ProcessorNames.JOIN_OB_WITH_SUB)
                 .addStateStore(sCompleteStore.createPersistentKeyValueStore(), ProcessorNames.JOIN_SUB_WITH_OB, ProcessorNames.JOIN_OB_WITH_SUB)
                 .addStateStore(edgeVisibilityStore.createPersistentKeyValueStore(), ProcessorNames.FORK_EDGES)
-                .addStateStore(edgeOrdNumStore.createPersistentKeyValueStore(), ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES, ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES)
-                .addStateStore(edgeCountStore.createPersistentKeyValueStore(), ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES, ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES)
-                .addStateStore(edgeSumStore.createPersistentKeyValueStore(), ProcessorNames.CREATE_COMMUNITY_TOOLBOX_EDGES, ProcessorNames.CREATE_COMMUNITY_PUBLIC_EDGES)
-                ;
+                .addStateStore(edgeOrdNumStore.createPersistentKeyValueStore(), ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES, ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES)
+                .addStateStore(edgeCountStore.createPersistentKeyValueStore(), ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES, ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES)
+                .addStateStore(edgeSumStore.createPersistentKeyValueStore(), ProcessorNames.TOOLBOX_CREATE_COMMUNITY_EDGES, ProcessorNames.PUBLIC_CREATE_COMMUNITY_EDGES)
+                .addStateStore(entityIntStore.createPersistentKeyValueStore(), ProcessorNames.FORK_ENTITIES)
+                .addStateStore(entityBoolStore.createPersistentKeyValueStore(), ProcessorNames.FORK_ENTITIES, ProcessorNames.FORK_EDGES);
     }
 
     private static void createTopologyDocumentation(Topology topology) {
