@@ -58,8 +58,6 @@ public class ForkEdgesTest {
         Properties config = new Properties();
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "testApplicationId");
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        //as.schemaRegistryUrl = "mock://" + TestJoinProjectStatementsWithObject.class;
-
         testDriver = new TopologyTestDriver(topology, config);
         irpInputTopic = testDriver.createInputTopic(
                 inputTopicNames.proInfProjRel(),
