@@ -38,9 +38,9 @@ class CommunityEntityClassMetadataTest {
     @ConfigProperty(name = "kafka-streams.state.dir")
     public String stateDir;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<CommunityEntityKey, CommunityEntityValue> communityEntityTopic;
+    private TestInputTopic<ProjectEntityKey, ProjectEntityValue> communityEntityTopic;
     private TestInputTopic<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTopic;
-    private TestOutputTopic<CommunityEntityKey, CommunityEntityClassMetadataValue> outputTopic;
+    private TestOutputTopic<ProjectEntityKey, ProjectEntityClassMetadataValue> outputTopic;
 
     @BeforeEach
     void setup() {
@@ -50,8 +50,6 @@ class CommunityEntityClassMetadataTest {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-
-        testDriver = new TopologyTestDriver(topology, props);
 
         testDriver = new TopologyTestDriver(topology, props);
 
@@ -87,8 +85,8 @@ class CommunityEntityClassMetadataTest {
 
 
         // add an entity
-        var kE = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
-        var vE = CommunityEntityValue.newBuilder().setEntityId(entityId).setProjectCount(1).setClassId(3).build();
+        var kE = ProjectEntityKey.newBuilder().setEntityId(entityId).setProjectId(0).build();
+        var vE = ProjectEntityValue.newBuilder().setEntityId(entityId).setProjectId(0).setDeleted$1(false).setClassId(3).build();
         communityEntityTopic.pipeInput(kE, vE);
 
         // add ontome class metadata
@@ -103,13 +101,13 @@ class CommunityEntityClassMetadataTest {
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
-        var resultingKey = CommunityEntityKey.newBuilder()
-                .setEntityId(entityId)
+        var resultingKey = ProjectEntityKey.newBuilder()
+                .setEntityId(entityId).setProjectId(0)
                 .build();
         var record = outRecords.get(resultingKey);
         assertThat(record.getParentClasses()).contains(1, 2, 3);
         assertThat(record.getAncestorClasses()).contains(4, 5, 6);
-        assertThat(record.getProjectCount()).isEqualTo(1);
+        assertThat(record.getDeleted$1()).isEqualTo(false);
 
     }
 
