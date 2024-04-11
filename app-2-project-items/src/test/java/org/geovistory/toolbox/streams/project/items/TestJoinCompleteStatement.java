@@ -54,7 +54,7 @@ public class TestJoinCompleteStatement {
                 as.<ProjectStatementKey>key().serializer(), as.<StatementWithObValue>value().serializer()
         );
         edgesOutputTopic = testDriver.createOutputTopic(
-                outputTopicNames.projectEdgesToolbox(),
+                outputTopicNames.toolboxProjectEdges(),
                 Serdes.String().deserializer(), as.<EdgeValue>value().deserializer()
         );
     }

@@ -1,6 +1,8 @@
 package org.geovistory.toolbox.streams.project.items.lib;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.streams.processor.api.Record;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.Utils;
 import org.geovistory.toolbox.streams.lib.jsonmodels.CommunityVisibility;
@@ -527,4 +529,55 @@ public class Fn {
         return hexString;
     }
 
+    /**
+     * Determines the operation to be performed based on the provided parameters.
+     * The return value can be used to forward records to publication targets.
+     *
+     * @param boolStore  The key-value store used to check and update the presence of the target key.
+     * @param record     The record containing the value to be analyzed.
+     * @param visibility The extractor for determining visibility of the value in the publication target.
+     * @param targetKey  The key to be checked and updated in the key-value store.
+     * @param modified   A boolean indicating whether the value has been modified.
+     * @param deleted    A boolean indicating whether the value has been marked for deletion.
+     * @param <K>        The type of the key in the record.
+     * @param <V>        The type of the value in the record.
+     * @return An {@link Op} representing the operation to be performed.
+     */
+    public static <K, V> Op getOperation(
+            KeyValueStore<String, Boolean> boolStore,
+            Record<K, V> record,
+            ExtractVisiblity<V> visibility,
+            String targetKey,
+            boolean modified,
+            boolean deleted) {
+
+        var v = record.value();
+
+        // get info if this item is present on target
+        var wasInSlug = boolStore.get(targetKey);
+        wasInSlug = wasInSlug != null && wasInSlug;
+        var visibleInSlug = visibility.get(v);
+
+        // if it has to be deleted
+        if (wasInSlug && (!visibleInSlug || deleted)) {
+            // mark as not in target
+            boolStore.put(targetKey, false);
+            // forward message for deletion
+            return Op.DELETE;
+        }
+        // if it has to be added
+        else if (!wasInSlug && visibleInSlug && !deleted) {
+            // mark as present in target
+            boolStore.put(targetKey, true);
+            // forward message for adding
+            return Op.INSERT;
+        }
+        // if the class changed
+        else if (visibleInSlug && !deleted && modified) {
+            // forward update
+            return Op.UPDATE;
+        }
+
+        return Op.NOTHING;
+    }
 }
