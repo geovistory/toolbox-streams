@@ -3,6 +3,9 @@
  */
 package org.geovistory.toolbox.streams.entity.preview;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -11,10 +14,8 @@ import org.geovistory.toolbox.streams.entity.preview.processors.community.Commun
 import org.geovistory.toolbox.streams.entity.preview.processors.project.ProjectEntityPreview;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
-import jakarta.inject.Inject;
 import java.util.ArrayList;
+import java.util.Objects;
 
 
 @ApplicationScoped
@@ -25,7 +26,7 @@ public class App {
     @ConfigProperty(name = "ts.output.topic.replication.factor")
     short outputTopicReplicationFactor;
 
-    @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
+    @ConfigProperty(name = "kafka.bootstrap.servers")
     String bootstrapServers;
     @Inject
     ProjectEntityPreview projectEntityPreview;
@@ -36,11 +37,11 @@ public class App {
     @Inject
     BuilderSingleton builderSingleton;
     @Inject
-    RegisterInputTopic registerInputTopic;
-    @Inject
     RegisterInnerTopic registerInnerTopic;
     @Inject
     OutputTopicNames outputTopicNames;
+    @ConfigProperty(name = "auto.create.output.topics")
+    String autoCreateOutputTopics;
 
 
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
@@ -54,8 +55,8 @@ public class App {
         // add processors of sub-topologies
         topology = addSubTopologies();
 
-        // create topics in advance to ensure correct configuration (partition, compaction, ect.)
-        createTopics();
+        // create output topics in advance to ensure correct configuration (partition, compaction, ect.)
+        if (Objects.equals(autoCreateOutputTopics, "enabled")) createTopics();
 
         // build the topology
         return topology;

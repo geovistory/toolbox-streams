@@ -1,11 +1,17 @@
-package org.geovistory.toolbox.streams.entity.preview.processors.project;
+package org.geovistory.toolbox.streams.entity.preview.processors;
 
 
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.*;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.preview.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.preview.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
+import org.geovistory.toolbox.streams.testlib.FileRemover;
+import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,10 +21,23 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@QuarkusTest
+@TestProfile(TopologyTestDriverProfile.class)
 class ProjectEntityPreviewTest {
 
-    private static final String SCHEMA_REGISTRY_SCOPE = ProjectEntityPreviewTest.class.getName();
-    private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
+
+    @Inject
+    Topology topology;
+
+    @Inject
+    ConfiguredAvroSerde as;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+    @Inject
+    InputTopicNames inputTopicNames;
+    @ConfigProperty(name = "kafka-streams.state.dir")
+    public String stateDir;
     private TopologyTestDriver testDriver;
     private TestInputTopic<ProjectEntityKey, ProjectEntityValue> projectEntityTopic;
     private TestInputTopic<ProjectEntityKey, ProjectEntityLabelValue> projectEntityLabelTopic;
@@ -36,61 +55,48 @@ class ProjectEntityPreviewTest {
         Properties props = new Properties();
         var appId = "test";
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        var avroSerdes = new AvroSerdes();
-        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
-        var inputTopicNames = new InputTopicNames();
-        var outputTopicNames = new OutputTopicNames();
-        var projectEntityPreview2 = new ProjectEntityPreview(avroSerdes, inputTopicNames, outputTopicNames);
-        var topology = new Topology();
-        projectEntityPreview2.addProcessors(topology);
+
         testDriver = new TopologyTestDriver(topology, props);
 
         projectEntityTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntity(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityValue().serializer());
+                as.kS(), as.vS());
 
         projectEntityLabelTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntityLabel(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityLabelValue().serializer());
+                as.kS(), as.vS());
 
         projectEntityClassLabelTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntityClassLabel(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityClassLabelValue().serializer());
+                as.kS(), as.vS());
 
         projectEntityTypeTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntityType(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityTypeValue().serializer());
+                as.kS(), as.vS());
 
         projectEntityTimeSpanTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntityTimeSpan(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.TimeSpanValue().serializer());
+                as.kS(), as.vS());
 
         projectEntityFulltextTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntityFulltext(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityFulltextValue().serializer());
+                as.kS(), as.vS());
 
         projectEntityClassMetadataTopic = testDriver.createInputTopic(
                 inputTopicNames.getProjectEntityClassMetadata(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.ProjectEntityClassMetadataValue().serializer());
+                as.kS(), as.vS());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.projectEntityPreview(),
-                avroSerdes.ProjectEntityKey().deserializer(),
-                avroSerdes.EntityPreviewValue().deserializer());
+                as.kD(), as.vD());
     }
 
     @AfterEach
     void teardown() {
         testDriver.close();
+        FileRemover.removeDir(this.stateDir);
     }
 
 

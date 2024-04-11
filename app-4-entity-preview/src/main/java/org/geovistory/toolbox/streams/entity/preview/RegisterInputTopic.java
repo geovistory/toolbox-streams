@@ -1,12 +1,11 @@
 
 package org.geovistory.toolbox.streams.entity.preview;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * This class provides helper methods to register
@@ -17,26 +16,21 @@ import jakarta.inject.Inject;
 public class RegisterInputTopic extends TsRegisterInputTopic {
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde avroSerdes;
     @Inject
     public BuilderSingleton builderSingleton;
 
     @Inject
     public InputTopicNames inputTopicNames;
 
-    public RegisterInputTopic(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames) {
-        this.avroSerdes = avroSerdes;
-        this.builderSingleton = builderSingleton;
-        this.inputTopicNames = inputTopicNames;
-    }
 
 
     public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getProjectEntity(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -44,8 +38,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getProjectEntityLabel(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityLabelValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -53,8 +47,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getProjectEntityType(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityTypeValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -62,8 +56,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getProjectEntityTimeSpan(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.TimeSpanValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -71,8 +65,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getProjectEntityFulltext(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityFulltextValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -80,8 +74,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getProjectEntityClassLabel(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityClassLabelValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -89,8 +83,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getProjectEntityClassMetadata(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityClassMetadataValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -99,8 +93,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getCommunityEntity(),
-                avroSerdes.CommunityEntityKey(),
-                avroSerdes.CommunityEntityValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -108,8 +102,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getCommunityEntityLabel(),
-                avroSerdes.CommunityEntityKey(),
-                avroSerdes.CommunityEntityLabelValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -117,8 +111,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getCommunityEntityType(),
-                avroSerdes.CommunityEntityKey(),
-                avroSerdes.CommunityEntityTypeValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -126,8 +120,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getCommunityEntityTimeSpan(),
-                avroSerdes.CommunityEntityKey(),
-                avroSerdes.TimeSpanValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -135,8 +129,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getCommunityEntityFulltext(),
-                avroSerdes.CommunityEntityKey(),
-                avroSerdes.CommunityEntityFulltextValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -144,8 +138,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getCommunityEntityClassLabel(),
-                avroSerdes.CommunityEntityKey(),
-                avroSerdes.CommunityEntityClassLabelValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -153,8 +147,8 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
         return getTable(
                 builderSingleton.builder,
                 inputTopicNames.getCommunityEntityClassMetadata(),
-                avroSerdes.CommunityEntityKey(),
-                avroSerdes.CommunityEntityClassMetadataValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 

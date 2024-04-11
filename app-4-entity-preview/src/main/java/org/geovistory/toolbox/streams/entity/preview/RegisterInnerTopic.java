@@ -1,14 +1,13 @@
 
 package org.geovistory.toolbox.streams.entity.preview;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.kstream.KStream;
 import org.geovistory.toolbox.streams.avro.CommunityEntityKey;
 import org.geovistory.toolbox.streams.avro.EntityPreviewValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * This class provides helper methods to register
@@ -19,31 +18,25 @@ import jakarta.inject.Inject;
 public class RegisterInnerTopic extends TsRegisterInputTopic {
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde avroSerdes;
     @Inject
     public BuilderSingleton builderSingleton;
     @Inject
     OutputTopicNames outputTopicNames;
-
-    public RegisterInnerTopic(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
-        this.builderSingleton = builderSingleton;
-        this.outputTopicNames = outputTopicNames;
-    }
 
 
     public KStream<ProjectEntityKey, EntityPreviewValue> projectEntityPreviewStream() {
         return getStream(
                 builderSingleton.builder,
                 outputTopicNames.projectEntityPreview(),
-                avroSerdes.ProjectEntityKey(), avroSerdes.EntityPreviewValue());
+                avroSerdes.key(), avroSerdes.value());
     }
 
     public KStream<CommunityEntityKey, EntityPreviewValue> communityEntityPreviewStream() {
         return getStream(
                 builderSingleton.builder,
                 outputTopicNames.communityEntityPreview(),
-                avroSerdes.CommunityEntityKey(), avroSerdes.EntityPreviewValue());
+                avroSerdes.key(), avroSerdes.value());
     }
 
 }

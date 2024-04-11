@@ -1,18 +1,18 @@
 package org.geovistory.toolbox.streams.entity.preview.processors;
 
 
-import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.TestInputTopic;
-import org.apache.kafka.streams.TestOutputTopic;
-import org.apache.kafka.streams.TopologyTestDriver;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
+import jakarta.inject.Inject;
+import org.apache.kafka.streams.*;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.CommunityEntityKey;
 import org.geovistory.toolbox.streams.avro.EntityPreviewValue;
 import org.geovistory.toolbox.streams.avro.ProjectEntityKey;
-import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
-import org.geovistory.toolbox.streams.entity.preview.BuilderSingleton;
+import org.geovistory.toolbox.streams.entity.preview.ConfiguredAvroSerde;
+import org.geovistory.toolbox.streams.entity.preview.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
-import org.geovistory.toolbox.streams.entity.preview.RegisterInnerTopic;
-import org.geovistory.toolbox.streams.lib.AppConfig;
+import org.geovistory.toolbox.streams.testlib.TopologyTestDriverProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,10 +21,21 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@QuarkusTest
+@TestProfile(TopologyTestDriverProfile.class)
 class EntityPreviewTest {
+    @Inject
+    Topology topology;
 
-    private static final String SCHEMA_REGISTRY_SCOPE = EntityPreviewTest.class.getName();
-    private static final String MOCK_SCHEMA_REGISTRY_URL = "mock://" + SCHEMA_REGISTRY_SCOPE;
+    @Inject
+    ConfiguredAvroSerde as;
+
+    @Inject
+    OutputTopicNames outputTopicNames;
+    @Inject
+    InputTopicNames inputTopicNames;
+    @ConfigProperty(name = "kafka-streams.state.dir")
+    public String stateDir;
     private TopologyTestDriver testDriver;
     private TestInputTopic<ProjectEntityKey, EntityPreviewValue> projectEntityPreviewTopic;
     private TestInputTopic<CommunityEntityKey, EntityPreviewValue> communityEntityPreviewTopic;
@@ -34,38 +45,26 @@ class EntityPreviewTest {
     void setup() {
 
 
-        Properties props = new Properties();
-        var appId = "test";
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, appId);
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
-        props.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams-test");
-        AppConfig.INSTANCE.setSchemaRegistryUrl(MOCK_SCHEMA_REGISTRY_URL);
+        Properties config = new Properties();
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "testApplicationId");
+        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        testDriver = new TopologyTestDriver(topology, config);
 
-
-        var builderSingleton = new BuilderSingleton();
-        var avroSerdes = new AvroSerdes();
-        avroSerdes.QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL = MOCK_SCHEMA_REGISTRY_URL;
-        var outputTopicNames = new OutputTopicNames();
-        var registerInnerTopic = new RegisterInnerTopic(avroSerdes, builderSingleton, outputTopicNames);
-        var entityPreview = new EntityPreview(avroSerdes, registerInnerTopic, outputTopicNames);
-        entityPreview.addProcessorsStandalone();
-        var topology = builderSingleton.builder.build();
-        testDriver = new TopologyTestDriver(topology, props);
 
         projectEntityPreviewTopic = testDriver.createInputTopic(
                 outputTopicNames.projectEntityPreview(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.EntityPreviewValue().serializer());
+                as.kS(),
+                as.vS());
 
         communityEntityPreviewTopic = testDriver.createInputTopic(
                 outputTopicNames.communityEntityPreview(),
-                avroSerdes.CommunityEntityKey().serializer(),
-                avroSerdes.EntityPreviewValue().serializer());
+                as.kS(),
+                as.vS());
 
         outputTopic = testDriver.createOutputTopic(
                 outputTopicNames.entityPreview(),
-                avroSerdes.ProjectEntityKey().deserializer(),
-                avroSerdes.EntityPreviewValue().deserializer());
+                as.kD(),
+                as.vD());
     }
 
     @AfterEach

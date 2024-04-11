@@ -1,5 +1,7 @@
 package org.geovistory.toolbox.streams.entity.preview.processors.project;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.processor.api.Processor;
 import org.apache.kafka.streams.processor.api.ProcessorContext;
@@ -8,14 +10,12 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.preview.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.preview.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.preview.InputTopicNames;
 import org.geovistory.toolbox.streams.entity.preview.Klass;
 import org.geovistory.toolbox.streams.entity.preview.OutputTopicNames;
 import org.geovistory.toolbox.streams.lib.Utils;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +28,7 @@ public class ProjectEntityPreview {
 
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde avroSerdes;
 
     @Inject
     InputTopicNames inputTopicNames;
@@ -37,12 +37,6 @@ public class ProjectEntityPreview {
     @Inject
     OutputTopicNames outputTopicNames;
 
-
-    public ProjectEntityPreview(AvroSerdes avroSerdes, InputTopicNames inputTopicNames, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
-        this.inputTopicNames = inputTopicNames;
-        this.outputTopicNames = outputTopicNames;
-    }
 
     public void addProcessors(
             Topology topology
@@ -53,55 +47,55 @@ public class ProjectEntityPreview {
         registerSourceTopics(
                 topology,
                 inputTopicNames.getProjectEntity(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
 
         registerSourceTopics(
                 topology,
                 inputTopicNames.getProjectEntityLabel(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityLabelValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
 
 
         registerSourceTopics(
                 topology,
                 inputTopicNames.getProjectEntityType(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityTypeValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
 
 
         registerSourceTopics(
                 topology,
                 inputTopicNames.getProjectEntityTimeSpan(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.TimeSpanValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
 
 
         registerSourceTopics(
                 topology,
                 inputTopicNames.getProjectEntityFulltext(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityFulltextValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
 
 
         registerSourceTopics(
                 topology,
                 inputTopicNames.getProjectEntityClassLabel(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityClassLabelValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
 
 
         registerSourceTopics(
                 topology,
                 inputTopicNames.getProjectEntityClassMetadata(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityClassMetadataValue()
+                avroSerdes.key(),
+                avroSerdes.value()
         );
 
 
@@ -111,8 +105,9 @@ public class ProjectEntityPreview {
         StoreBuilder<KeyValueStore<ProjectEntityKey, EntityPreviewValue>> storeSupplier =
                 Stores.keyValueStoreBuilder(
                                 Stores.persistentKeyValueStore(stateStoreName),
-                                avroSerdes.ProjectEntityKey(),
-                                avroSerdes.EntityPreviewValue())
+                                avroSerdes.<ProjectEntityKey>key(),
+                                avroSerdes.<EntityPreviewValue>value()
+                        )
                         .withLoggingEnabled(changelogConfig);
 
 
@@ -134,16 +129,16 @@ public class ProjectEntityPreview {
         addStateStore(
                 topology,
                 inputTopicNames.getProjectEntity(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityValue(),
+                avroSerdes.key(),
+                avroSerdes.value(),
                 joinProcessorName
         );
 
         addStateStore(
                 topology,
                 inputTopicNames.getProjectEntityLabel(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityLabelValue(),
+                avroSerdes.key(),
+                avroSerdes.value(),
                 joinProcessorName
         );
 
@@ -151,8 +146,8 @@ public class ProjectEntityPreview {
         addStateStore(
                 topology,
                 inputTopicNames.getProjectEntityType(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityTypeValue(),
+                avroSerdes.key(),
+                avroSerdes.value(),
                 joinProcessorName
         );
 
@@ -160,8 +155,8 @@ public class ProjectEntityPreview {
         addStateStore(
                 topology,
                 inputTopicNames.getProjectEntityTimeSpan(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.TimeSpanValue(),
+                avroSerdes.key(),
+                avroSerdes.value(),
                 joinProcessorName
         );
 
@@ -169,8 +164,8 @@ public class ProjectEntityPreview {
         addStateStore(
                 topology,
                 inputTopicNames.getProjectEntityFulltext(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityFulltextValue(),
+                avroSerdes.key(),
+                avroSerdes.value(),
                 joinProcessorName
         );
 
@@ -178,8 +173,8 @@ public class ProjectEntityPreview {
         addStateStore(
                 topology,
                 inputTopicNames.getProjectEntityClassLabel(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityClassLabelValue(),
+                avroSerdes.key(),
+                avroSerdes.value(),
                 joinProcessorName
         );
 
@@ -187,8 +182,8 @@ public class ProjectEntityPreview {
         addStateStore(
                 topology,
                 inputTopicNames.getProjectEntityClassMetadata(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityClassMetadataValue(),
+                avroSerdes.key(),
+                avroSerdes.value(),
                 joinProcessorName
         );
 
@@ -196,8 +191,8 @@ public class ProjectEntityPreview {
         topology.addSink(
                 outputTopicNames.projectEntityPreview() + "-sink",
                 outputTopicNames.projectEntityPreview(),
-                avroSerdes.ProjectEntityKey().serializer(),
-                avroSerdes.EntityPreviewValue().serializer(),
+                avroSerdes.kS(),
+                avroSerdes.vS(),
                 joinProcessorName
         );
 
