@@ -1,16 +1,15 @@
 package org.geovistory.toolbox.streams.entity.processors.community;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
-import org.geovistory.toolbox.streams.entity.AvroSerdes;
+import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
-import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityClassMetadataReturnValue;
+import org.geovistory.toolbox.streams.lib.Utils;
 
 
 @ApplicationScoped
@@ -18,39 +17,19 @@ public class CommunityEntityClassMetadata {
 
 
     @Inject
-    AvroSerdes avroSerdes;
-
-    @Inject
-    RegisterInputTopic registerInputTopic;
-
+    ConfiguredAvroSerde avroSerdes;
 
     @Inject
     OutputTopicNames outputTopicNames;
 
-    @ConfigProperty(name = "ts.community.slug", defaultValue = "")
-    private String communitySlug;
 
-
-    public CommunityEntityClassMetadata(AvroSerdes avroSerdes, RegisterInputTopic registerInputTopic, OutputTopicNames outputTopicNames) {
-        this.avroSerdes = avroSerdes;
-        this.registerInputTopic = registerInputTopic;
-        this.outputTopicNames = outputTopicNames;
-    }
-
-    public void addProcessorsStandalone() {
-        addProcessors(
-                registerInputTopic.communityEntityTable(),
-                registerInputTopic.ontomeClassMetadataTable()
-        );
-    }
-
-    public CommunityEntityClassMetadataReturnValue addProcessors(
-            KTable<CommunityEntityKey, CommunityEntityValue> projectEntityTable,
+    public ProjectEntityClassMetadataReturnValue addProcessors(
+            KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,
             KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
     ) {
 
 
-        var joinName = "communtiy_" + communitySlug + "_entity_joins_class_metadata";
+        var joinName = "communtiy_entity_joins_class_metadata";
 
         /* STREAM PROCESSORS */
         // 2)
@@ -60,15 +39,15 @@ public class CommunityEntityClassMetadata {
                 projectEntityValue -> OntomeClassKey.newBuilder()
                         .setClassId(projectEntityValue.getClassId())
                         .build(),
-                (value1, value2) -> CommunityEntityClassMetadataValue.newBuilder()
+                (value1, value2) -> ProjectEntityClassMetadataValue.newBuilder()
                         .setParentClasses(value2.getParentClasses())
                         .setAncestorClasses(value2.getAncestorClasses())
-                        .setProjectCount(value1.getProjectCount())
+                        .setDeleted$1(Utils.booleanIsEqualTrue(value1.getDeleted$1()))
                         .build(),
                 TableJoined.as(joinName + "-fk-join"),
-                Materialized.<CommunityEntityKey, CommunityEntityClassMetadataValue, KeyValueStore<Bytes, byte[]>>as(joinName)
-                        .withKeySerde(avroSerdes.CommunityEntityKey())
-                        .withValueSerde(avroSerdes.CommunityEntityClassMetadataValue())
+                Materialized.<ProjectEntityKey, ProjectEntityClassMetadataValue, KeyValueStore<Bytes, byte[]>>as(joinName)
+                        .withKeySerde(avroSerdes.key())
+                        .withValueSerde(avroSerdes.value())
         );
 
 
@@ -78,11 +57,11 @@ public class CommunityEntityClassMetadata {
         /* SINK PROCESSORS */
 
         projectEntityClassMetadataStream.to(outputTopicNames.communityEntityClassMetadata(),
-                Produced.with(avroSerdes.CommunityEntityKey(), avroSerdes.CommunityEntityClassMetadataValue())
+                Produced.with(avroSerdes.<ProjectEntityKey>key(), avroSerdes.<ProjectEntityClassMetadataValue>value())
                         .withName(outputTopicNames.communityEntityClassMetadata() + "-to-producer")
         );
 
-        return new CommunityEntityClassMetadataReturnValue(projectEntityClassMetadataTable, projectEntityClassMetadataStream);
+        return new ProjectEntityClassMetadataReturnValue(projectEntityClassMetadataTable, projectEntityClassMetadataStream);
 
     }
 
