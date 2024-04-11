@@ -6,22 +6,23 @@ package org.geovistory.toolbox.streams.entity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KTable;
-import org.apache.kafka.streams.kstream.Named;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.geovistory.toolbox.streams.avro.HasTypePropertyKey;
-import org.geovistory.toolbox.streams.avro.HasTypePropertyValue;
 import org.geovistory.toolbox.streams.avro.OntomeClassKey;
 import org.geovistory.toolbox.streams.avro.OntomeClassMetadataValue;
+import org.geovistory.toolbox.streams.entity.names.ProcessorNames;
+import org.geovistory.toolbox.streams.entity.names.SinkNames;
+import org.geovistory.toolbox.streams.entity.names.SourceNames;
+import org.geovistory.toolbox.streams.entity.processors.CreateTimeSpans;
 import org.geovistory.toolbox.streams.entity.processors.community.CommunityEntityClassLabel;
 import org.geovistory.toolbox.streams.entity.processors.community.CommunityEntityClassMetadata;
-import org.geovistory.toolbox.streams.entity.processors.community.CommunityEntityTimeSpan;
-import org.geovistory.toolbox.streams.entity.processors.community.CommunityEntityType;
 import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityClassLabel;
 import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityClassMetadata;
-import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityTimeSpan;
-import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityType;
+import org.geovistory.toolbox.streams.entity.stores.TimePrimitiveSortKeyStore;
+import org.geovistory.toolbox.streams.entity.stores.TimePrimitiveStore;
 import org.geovistory.toolbox.streams.lib.TsAdmin;
 
 import java.util.ArrayList;
@@ -39,17 +40,13 @@ public class App {
     @ConfigProperty(name = "quarkus.kafka.streams.bootstrap.servers")
     String bootstrapServers;
     @Inject
-    ProjectEntityTimeSpan projectEntityTimeSpan;
-    @Inject
-    ProjectEntityType projectEntityType;
+    ConfiguredAvroSerde as;
+
     @Inject
     ProjectEntityClassLabel projectEntityClassLabel;
     @Inject
     ProjectEntityClassMetadata projectEntityClassMetadata;
-    @Inject
-    CommunityEntityTimeSpan communityEntityTimeSpan;
-    @Inject
-    CommunityEntityType communityEntityType;
+
     @Inject
     CommunityEntityClassLabel communityEntityClassLabel;
     @Inject
@@ -61,45 +58,58 @@ public class App {
     RegisterInputTopic registerInputTopic;
     @Inject
     OutputTopicNames outputTopicNames;
+    @Inject
+    InputTopicNames inputTopicNames;
+
+    @Inject
+    TimePrimitiveSortKeyStore timePrimitiveSortKeyStore;
+
+    @Inject
+    TimePrimitiveStore timePrimitiveStore;
 
     @ConfigProperty(name = "auto.create.output.topics")
     String autoCreateOutputTopics;
-
-
-    Boolean buildTopologyCalled = false;
 
 
     //  All we need to do for that is to declare a CDI producer method which returns the Kafka Streams Topology; the Quarkus extension will take care of configuring, starting and stopping the actual Kafka Streams engine.
     @Produces
     public Topology buildTopology() {
 
-        if (!buildTopologyCalled) {
-            buildTopologyCalled = true;
+        builderSingleton.builder = new StreamsBuilder();
 
-            // add processors of sub-topologies
-            addSubTopologies();
+        // add processors of sub-topologies
+        var t = addSubTopologies();
 
-            // create output topics in advance to ensure correct configuration (partition, compaction, ect.)
-            if (Objects.equals(autoCreateOutputTopics, "enabled")) createTopics();
-        }
+        // create output topics in advance to ensure correct configuration (partition, compaction, ect.)
+        if (Objects.equals(autoCreateOutputTopics, "enabled")) createTopics();
 
         // build the topology
-        return builderSingleton.builder.build();
+        return t;
     }
 
 
-    private void addSubTopologies() {
+    private Topology addSubTopologies() {
 
-        var hasTypePropertyTable = registerInputTopic.hasTypePropertyTable();
         var ontomeClassMetadataTable = registerInputTopic.ontomeClassMetadataTable();
-        addProjectView(
-                hasTypePropertyTable,
-                ontomeClassMetadataTable
-        );
-        addCommunityToolboxView(
-                hasTypePropertyTable,
-                ontomeClassMetadataTable
-        );
+        addProjectView(ontomeClassMetadataTable);
+        addCommunityToolboxView(ontomeClassMetadataTable);
+        var topology = builderSingleton.builder.build();
+
+        topology
+                // Project Time Spans
+                .addSource(SourceNames.PROJECT_EDGES, Serdes.String().deserializer(), as.vD(), inputTopicNames.getProjectEdges())
+                .addProcessor(ProcessorNames.CREATE_PROJECT_TIME_SPAN, () -> new CreateTimeSpans("p"), SourceNames.PROJECT_EDGES)
+                .addSink(SinkNames.SINK_TIME_SPAN_PROJECT, outputTopicNames.projectEntityTimeSpan(), as.kS(), as.vS(), ProcessorNames.CREATE_PROJECT_TIME_SPAN)
+                // Community Time Spans
+                .addSource(SourceNames.COMMUNITY_EDGES, Serdes.String().deserializer(), as.vD(), inputTopicNames.getCommunityEdges())
+                .addProcessor(ProcessorNames.CREATE_COMMUNITY_TIME_SPAN, () -> new CreateTimeSpans("c"), SourceNames.COMMUNITY_EDGES)
+                .addSink(SinkNames.SINK_TIME_SPAN_COMMUNITY, outputTopicNames.communityEntityTimeSpan(), as.kS(), as.vS(), ProcessorNames.CREATE_COMMUNITY_TIME_SPAN)
+                // Stores
+                .addStateStore(timePrimitiveSortKeyStore.createPersistentKeyValueStore(), ProcessorNames.CREATE_COMMUNITY_TIME_SPAN, ProcessorNames.CREATE_PROJECT_TIME_SPAN)
+                .addStateStore(timePrimitiveStore.createPersistentKeyValueStore(), ProcessorNames.CREATE_COMMUNITY_TIME_SPAN, ProcessorNames.CREATE_PROJECT_TIME_SPAN);
+
+
+        return topology;
 
     }
 
@@ -112,27 +122,14 @@ public class App {
     }
 
     private void addProjectView(
-            KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
             KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
     ) {
         // register input topics as KTables
         var projectEntityTable = registerInputTopic.projectEntityTable();
-        var projectTopOutgoingStatementsTable = registerInputTopic.projectTopOutgoingStatementsTable();
 
         // register input topics as KStreams
         var projectClassLabelTable = registerInputTopic.projectClassLabelTable();
 
-        // add sub-topology ProjectEntityTimeSpan
-        projectEntityTimeSpan.addProcessors(
-                projectTopOutgoingStatementsTable.toStream(Named.as("project_top_outgoing_statements_table_to_stream"))
-        );
-
-        // add sub-topology ProjectEntityType
-        projectEntityType.addProcessors(
-                projectEntityTable,
-                hasTypePropertyTable,
-                projectTopOutgoingStatementsTable
-        );
 
         // add sub-topology ProjectEntityClassLabel
         projectEntityClassLabel.addProcessors(
@@ -148,29 +145,15 @@ public class App {
     }
 
     private void addCommunityToolboxView(
-            KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable,
             KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable
     ) {
         // register input topics as KTables
-        var communityEntityTable = App.this.registerInputTopic.communityEntityTable();
-        var communityTopOutgoingStatementsTable = App.this.registerInputTopic.communityTopOutgoingStatementsTable();
+        var communityEntityTable = registerInputTopic.communityEntityTable();
 
 
         // register input topics as KStreams
-        var communityClassLabelTable = App.this.registerInputTopic.communityClassLabelTable();
+        var communityClassLabelTable = registerInputTopic.communityClassLabelTable();
 
-
-        // add sub-topology CommunityEntityTimeSpan
-        communityEntityTimeSpan.addProcessors(
-                communityTopOutgoingStatementsTable.toStream(Named.as("community_top_outgoing_statements_table_to_stream"))
-        );
-
-        // add sub-topology CommunityEntityType
-        communityEntityType.addProcessors(
-                communityEntityTable,
-                hasTypePropertyTable,
-                communityTopOutgoingStatementsTable
-        );
 
         // add sub-topology CommunityEntityClassLabel
         communityEntityClassLabel.addProcessors(

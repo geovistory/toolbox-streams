@@ -1,8 +1,7 @@
 package org.geovistory.toolbox.streams.entity;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class InputTopicNames {
@@ -13,14 +12,14 @@ public class InputTopicNames {
     public String hasTypeProperty = "has.type.property";
     @ConfigProperty(name = "ts.topic.project.entity", defaultValue = "")
     public String projectEntity = "project.entity";
-    @ConfigProperty(name = "ts.topic.project.top.outgoing.statements", defaultValue = "")
-    public String projectTopOutgoingStatements = "project.top.outgoing.statements";
+    @ConfigProperty(name = "ts.topic.project.edges", defaultValue = "")
+    public String projectEdges = "project.edges";
     @ConfigProperty(name = "ts.topic.project.class.label", defaultValue = "")
     public String projectClassLabel = "project.class.label";
     @ConfigProperty(name = "ts.topic.community.entity", defaultValue = "")
     public String communityEntity = "community.entity";
-    @ConfigProperty(name = "ts.topic.community.top.outgoing.statements", defaultValue = "")
-    public String communityTopOutgoingStatements = "community.top.outgoing.statements";
+    @ConfigProperty(name = "ts.topic.community.edges", defaultValue = "")
+    public String communityEdges = "community.edges";
 
     @ConfigProperty(name = "ts.topic.community.class.label", defaultValue = "")
     public String communityClassLabel = "community.class.label";
@@ -37,8 +36,8 @@ public class InputTopicNames {
         return projectEntity;
     }
 
-    public String getProjectTopOutgoingStatements() {
-        return projectTopOutgoingStatements;
+    public String getProjectEdges() {
+        return projectEdges;
     }
 
     public String getProjectClassLabel() {
@@ -49,8 +48,8 @@ public class InputTopicNames {
         return communityEntity;
     }
 
-    public String getCommunityTopOutgoingStatements() {
-        return communityTopOutgoingStatements;
+    public String getCommunityEdges() {
+        return communityEdges;
     }
 
     public String getCommunityClassLabel() {

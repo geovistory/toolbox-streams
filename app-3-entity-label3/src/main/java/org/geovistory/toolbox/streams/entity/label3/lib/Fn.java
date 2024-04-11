@@ -183,35 +183,6 @@ public class Fn {
         return ProjectEntityKey.newBuilder().setProjectId(e.getProjectId()).setEntityId(e.getSourceId()).build();
     }
 
-    public static String createLabelEdgeUniqueKey(
-            LabelEdge e
-    ) {
-        return createLabelEdgeUniqueKey(
-                e.getProjectId(),
-                e.getSourceId(),
-                e.getPropertyId(),
-                e.getIsOutgoing(),
-                e.getTargetId()
-        );
-    }
-
-    public static String createLabelEdgeUniqueKey(
-            Integer projectId,
-            String sourceId,
-            Integer propertyId,
-            boolean isOutgoing,
-            String targetId
-    ) {
-
-        return String.join("_", new String[]{
-                Integer.toString(projectId),
-                sourceId,
-                Integer.toString(propertyId),
-                isOutgoing ? "o" : "i",
-                targetId
-        });
-    }
-
 
     /**
      * Creates a LabelEdge object based on the provided EdgeValue.

@@ -23,7 +23,7 @@ public class TimeSpanFactory {
     }
 
 
-    private static class Parser {
+    public static class Parser {
         TimeSpan.Builder timeSpan = TimeSpan.newBuilder();
         long firstSecond = Long.MAX_VALUE;
         long lastSecond = Long.MIN_VALUE;
@@ -41,7 +41,7 @@ public class TimeSpanFactory {
         }
 
 
-        private TimeSpanValue getTimeSpanValue() {
+        public TimeSpanValue getTimeSpanValue() {
             if (isEmpty) return null;
 
             return TimeSpanValue.newBuilder()
@@ -51,7 +51,7 @@ public class TimeSpanFactory {
                     .build();
         }
 
-        private void processTimePrimitive(int key, TimePrimitive tp) {
+        public void processTimePrimitive(int key, TimePrimitive tp) {
             if (tp != null) {
                 isEmpty = false;
                 // create NewTimePrimitive

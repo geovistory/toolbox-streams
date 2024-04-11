@@ -60,7 +60,7 @@ class ProjectEntityTypeTest {
                 as.vS());
 
         projectTopOutgoingStatements = testDriver.createInputTopic(
-                inputTopicNames.getProjectTopOutgoingStatements(),
+                inputTopicNames.getProjectEdges(),
                 as.kS(),
                 as.vS());
 

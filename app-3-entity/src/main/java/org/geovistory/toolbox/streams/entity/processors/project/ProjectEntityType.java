@@ -6,9 +6,9 @@ import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
 import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
-import org.geovistory.toolbox.streams.entity.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 
@@ -25,14 +25,6 @@ public class ProjectEntityType {
     OutputTopicNames outputTopicNames;
 
 
-    public void addProcessorsStandalone() {
-
-        addProcessors(
-                registerInputTopic.projectEntityTable(),
-                registerInputTopic.hasTypePropertyTable(),
-                registerInputTopic.projectTopOutgoingStatementsTable()
-        );
-    }
 
     public ProjectEntityTypeReturnValue addProcessors(
             KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable,

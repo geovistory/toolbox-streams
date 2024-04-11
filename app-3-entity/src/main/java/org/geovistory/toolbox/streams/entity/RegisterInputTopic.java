@@ -1,12 +1,10 @@
 package org.geovistory.toolbox.streams.entity;
 
-import org.apache.kafka.streams.kstream.KStream;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.streams.kstream.KTable;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.lib.TsRegisterInputTopic;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * This class provides helper methods to register
@@ -16,7 +14,7 @@ import jakarta.inject.Inject;
 public class RegisterInputTopic extends TsRegisterInputTopic {
 
     @Inject
-    AvroSerdes avroSerdes;
+    ConfiguredAvroSerde avroSerdes;
     @Inject
     public BuilderSingleton builderSingleton;
 
@@ -24,27 +22,21 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public InputTopicNames inputTopicNames;
 
 
-    public RegisterInputTopic(AvroSerdes avroSerdes, BuilderSingleton builderSingleton, InputTopicNames inputTopicNames) {
-        this.avroSerdes = avroSerdes;
-        this.builderSingleton = builderSingleton;
-        this.inputTopicNames = inputTopicNames;
-    }
-
     public KTable<OntomeClassKey, OntomeClassMetadataValue> ontomeClassMetadataTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. getOntomeClassMetadata(),
-                avroSerdes.OntomeClassKey(),
-                avroSerdes.OntomeClassMetadataValue()
+                inputTopicNames.getOntomeClassMetadata(),
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
     public KTable<HasTypePropertyKey, HasTypePropertyValue> hasTypePropertyTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. getHasTypeProperty(),
-                avroSerdes.HasTypePropertyKey(),
-                avroSerdes.HasTypePropertyValue()
+                inputTopicNames.getHasTypeProperty(),
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -52,64 +44,28 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<ProjectEntityKey, ProjectEntityValue> projectEntityTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. getProjectEntity(),
-                avroSerdes.ProjectEntityKey(),
-                avroSerdes.ProjectEntityValue()
-        );
-    }
-
-    public KTable<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsTable() {
-        return getTable(
-                builderSingleton.builder,
-                inputTopicNames. getProjectTopOutgoingStatements(),
-                avroSerdes.ProjectTopStatementsKey(),
-                avroSerdes.ProjectTopStatementsValue()
-        );
-    }
-
-    public KStream<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsStream() {
-        return getStream(
-                builderSingleton.builder,
-                inputTopicNames. getProjectTopOutgoingStatements(),
-                avroSerdes.ProjectTopStatementsKey(),
-                avroSerdes.ProjectTopStatementsValue()
+                inputTopicNames.getProjectEntity(),
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
     public KTable<ProjectClassLabelKey, ProjectClassLabelValue> projectClassLabelTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. getProjectClassLabel(),
-                avroSerdes.ProjectClassLabelKey(),
-                avroSerdes.ProjectClassLabelValue()
+                inputTopicNames.getProjectClassLabel(),
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
 
-    public KTable<CommunityEntityKey, CommunityEntityValue> communityEntityTable() {
+    public KTable<ProjectEntityKey, ProjectEntityValue> communityEntityTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. getCommunityEntity(),
-                avroSerdes.CommunityEntityKey(),
-                avroSerdes.CommunityEntityValue()
-        );
-    }
-
-    public KTable<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsTable() {
-        return getTable(
-                builderSingleton.builder,
-                inputTopicNames. getCommunityTopOutgoingStatements(),
-                avroSerdes.CommunityTopStatementsKey(),
-                avroSerdes.CommunityTopStatementsValue()
-        );
-    }
-
-    public KStream<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsStream() {
-        return getStream(
-                builderSingleton.builder,
-                inputTopicNames. getCommunityTopOutgoingStatements(),
-                avroSerdes.CommunityTopStatementsKey(),
-                avroSerdes.CommunityTopStatementsValue()
+                inputTopicNames.getCommunityEntity(),
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 
@@ -117,9 +73,9 @@ public class RegisterInputTopic extends TsRegisterInputTopic {
     public KTable<OntomeClassLabelKey, CommunityClassLabelValue> communityClassLabelTable() {
         return getTable(
                 builderSingleton.builder,
-                inputTopicNames. getCommunityClassLabel(),
-                avroSerdes.OntomeClassLabelKey(),
-                avroSerdes.CommunityClassLabelValue()
+                inputTopicNames.getCommunityClassLabel(),
+                avroSerdes.key(),
+                avroSerdes.value()
         );
     }
 

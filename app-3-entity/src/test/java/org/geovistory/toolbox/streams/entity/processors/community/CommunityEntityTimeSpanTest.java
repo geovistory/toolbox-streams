@@ -4,6 +4,7 @@ package org.geovistory.toolbox.streams.entity.processors.community;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
@@ -16,14 +17,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.geovistory.toolbox.streams.lib.Utils.createEdgeUniqueKey;
 
 @QuarkusTest
 @TestProfile(TopologyTestDriverProfile.class)
 class CommunityEntityTimeSpanTest {
+
     @Inject
     Topology topology;
 
@@ -37,13 +39,14 @@ class CommunityEntityTimeSpanTest {
     @ConfigProperty(name = "kafka-streams.state.dir")
     public String stateDir;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<CommunityTopStatementsKey, CommunityTopStatementsValue> communityTopOutgoingStatementsTopic;
+    private TestInputTopic<String, EdgeValue> edgeInputTopic;
 
-    private TestOutputTopic<CommunityEntityKey, TimeSpanValue> outputTopic;
+    private TestOutputTopic<ProjectEntityKey, TimeSpanValue> outputTopic;
 
 
     @BeforeEach
     void setup() {
+
 
         Properties props = new Properties();
         var appId = "test";
@@ -53,11 +56,9 @@ class CommunityEntityTimeSpanTest {
 
         testDriver = new TopologyTestDriver(topology, props);
 
-        testDriver = new TopologyTestDriver(topology, props);
-
-        communityTopOutgoingStatementsTopic = testDriver.createInputTopic(
-                inputTopicNames.getCommunityTopOutgoingStatements(),
-                as.kS(),
+        edgeInputTopic = testDriver.createInputTopic(
+                inputTopicNames.getCommunityEdges(),
+                Serdes.String().serializer(),
                 as.vS());
 
 
@@ -72,49 +73,23 @@ class CommunityEntityTimeSpanTest {
         testDriver.close();
         FileRemover.removeDir(this.stateDir);
     }
+
     @Test
     void testTopology() {
-        var classId = 2;
+        var projectId = 0;
         var entityId = "foo";
         long expectedFirstSec = 204139785600L;
         long expectedLastSec = 204139871999L;
 
 
         int ongoingThroughout = 71;
-        var k = CommunityTopStatementsKey.newBuilder()
-                .setEntityId(entityId)
-                .setPropertyId(ongoingThroughout)
-                .setIsOutgoing(true)
-                .build();
-        var v = CommunityTopStatementsValue.newBuilder()
-                .setClassId(classId).setPropertyId(ongoingThroughout)
-                .setEntityId(entityId).setIsOutgoing(true).setStatements(List.of(
-                        CommunityStatementValue.newBuilder().setStatementId(1)
-                                .setAvgOrdNumOfDomain(1f)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(ongoingThroughout)
-                                        .setObject(NodeValue.newBuilder()
-                                                .setClassId(0)
-                                                .setTimePrimitive(TimePrimitive.newBuilder()
-                                                        .setJulianDay(2362729)
-                                                        .setDuration("1 day")
-                                                        .setCalendar("gregorian")
-                                                        .build())
-                                                .build()
-                                        ).build()
-                                ).build()
-                )).build();
-
-
-        communityTopOutgoingStatementsTopic.pipeInput(k, v);
+        sendEdge(projectId, entityId, ongoingThroughout, "i2", 2362729);
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
         assertThat(outRecords).hasSize(1);
 
-        var entityKey = CommunityEntityKey.newBuilder().setEntityId(entityId).build();
+        var entityKey = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
         var record = outRecords.get(entityKey);
 
         assertThat(record.getTimeSpan().getP81().getDuration()).isEqualTo("1 day");
@@ -123,43 +98,73 @@ class CommunityEntityTimeSpanTest {
     }
 
     @Test
-    void testTopologyWithoutTemproalData() {
-        var classId = 2;
+    void testTopologyWithoutTemporalData() {
+        var projectId = 0;
         var entityId = "foo";
         var nonTemporalProperty = 1;
 
-        var k = CommunityTopStatementsKey.newBuilder()
-                .setEntityId(entityId)
-                .setPropertyId(nonTemporalProperty)
-                .setIsOutgoing(true)
-                .build();
+        sendEdge(projectId, entityId, nonTemporalProperty, "i2", 2362729);
+        var outRecords = outputTopic.readKeyValuesToMap();
 
-        var v = CommunityTopStatementsValue.newBuilder()
-                .setClassId(classId).setPropertyId(nonTemporalProperty)
-                .setEntityId(entityId).setIsOutgoing(true).setStatements(List.of(
-                        CommunityStatementValue.newBuilder().setStatementId(1)
-                                .setAvgOrdNumOfDomain(1f)
-                                .setStatement(StatementEnrichedValue.newBuilder()
-                                        .setSubjectId(entityId)
-                                        .setObjectId(entityId)
-                                        .setPropertyId(nonTemporalProperty)
-                                        .setObject(NodeValue.newBuilder()
-                                                .setClassId(0)
-                                                .setTimePrimitive(TimePrimitive.newBuilder()
-                                                        .setJulianDay(2362729)
-                                                        .setDuration("1 day")
-                                                        .setCalendar("gregorian")
-                                                        .build())
-                                                .build()
-                                        ).build()
-                                ).build()
-                )).build();
-
-
-        communityTopOutgoingStatementsTopic.pipeInput(k, v);
-
-        assertThat(outputTopic.isEmpty()).isTrue();
+        var entityKey = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
+        var record = outRecords.get(entityKey);
+        assertThat(record).isNull();
     }
 
+
+    public String sendEdge(int pid, String sourceId, int propertyId, String targetId, int julianDay) {
+        var v = createEdgeWithTimePrimitive(pid, sourceId, propertyId, targetId, julianDay);
+        var k = createEdgeUniqueKey(v);
+        this.edgeInputTopic.pipeInput(k, v);
+        return k;
+    }
+
+
+    private static EdgeValue createEdgeWithTimePrimitive(int pid, String sourceId, int propertyId, String targetId, int julianDay) {
+        var e = createEdge(pid, sourceId, propertyId, targetId);
+        e.getTargetNode().setLabel("Foo");
+        e.getTargetNode().setTimePrimitive(
+                TimePrimitive.newBuilder()
+                        .setJulianDay(julianDay)
+                        .setDuration("1 day")
+                        .setCalendar("gregorian")
+                        .build()
+        );
+        return e;
+    }
+
+    private static EdgeValue createEdge(int pid, String sourceId, int propertyId, String targetId) {
+        return EdgeValue.newBuilder()
+                .setProjectId(pid)
+                .setStatementId(0)
+                .setProjectCount(0)
+                .setOrdNum(0f)
+                .setSourceId(sourceId)
+                .setSourceEntity(Entity.newBuilder()
+                        .setFkClass(0)
+                        .setCommunityVisibilityWebsite(false)
+                        .setCommunityVisibilityDataApi(false)
+                        .setCommunityVisibilityToolbox(false)
+                        .build())
+                .setSourceProjectEntity(EntityValue.newBuilder()
+                        .setProjectId(0)
+                        .setEntityId("0")
+                        .setClassId(0)
+                        .setCommunityVisibilityToolbox(true)
+                        .setCommunityVisibilityDataApi(true)
+                        .setCommunityVisibilityWebsite(true)
+                        .setProjectVisibilityDataApi(true)
+                        .setProjectVisibilityWebsite(true)
+                        .setDeleted(false)
+                        .build())
+                .setPropertyId(propertyId)
+                .setIsOutgoing(true)
+                .setTargetId(targetId)
+                .setTargetNode(NodeValue.newBuilder().setLabel("").setId(targetId).setClassId(0).build())
+                .setTargetProjectEntity(null)
+                .setModifiedAt("0")
+                .setDeleted(false)
+                .build();
+    }
 
 }

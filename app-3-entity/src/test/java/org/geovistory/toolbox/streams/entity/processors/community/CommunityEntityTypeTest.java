@@ -60,7 +60,7 @@ class CommunityEntityTypeTest {
                 as.vS());
 
         communityTopOutgoingStatements = testDriver.createInputTopic(
-                inputTopicNames.getCommunityTopOutgoingStatements(),
+                inputTopicNames.getCommunityEdges(),
                 as.kS(),
                 as.vS());
 

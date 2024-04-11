@@ -4,6 +4,7 @@ package org.geovistory.toolbox.streams.entity.processors.project;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
@@ -16,10 +17,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.geovistory.toolbox.streams.lib.Utils.createEdgeUniqueKey;
 
 @QuarkusTest
 @TestProfile(TopologyTestDriverProfile.class)
@@ -38,7 +39,7 @@ class ProjectEntityTimeSpanTest {
     @ConfigProperty(name = "kafka-streams.state.dir")
     public String stateDir;
     private TopologyTestDriver testDriver;
-    private TestInputTopic<ProjectTopStatementsKey, ProjectTopStatementsValue> projectTopOutgoingStatementsTopic;
+    private TestInputTopic<String, EdgeValue> edgeInputTopic;
 
     private TestOutputTopic<ProjectEntityKey, TimeSpanValue> outputTopic;
 
@@ -55,9 +56,9 @@ class ProjectEntityTimeSpanTest {
 
         testDriver = new TopologyTestDriver(topology, props);
 
-        projectTopOutgoingStatementsTopic = testDriver.createInputTopic(
-                inputTopicNames.getProjectTopOutgoingStatements(),
-                as.kS(),
+        edgeInputTopic = testDriver.createInputTopic(
+                inputTopicNames.getProjectEdges(),
+                Serdes.String().serializer(),
                 as.vS());
 
 
@@ -72,43 +73,17 @@ class ProjectEntityTimeSpanTest {
         testDriver.close();
         FileRemover.removeDir(this.stateDir);
     }
+
     @Test
     void testTopology() {
         var projectId = 1;
-        var classId = 2;
         var entityId = "foo";
         long expectedFirstSec = 204139785600L;
         long expectedLastSec = 204139871999L;
 
 
         int ongoingThroughout = 71;
-        var k = ProjectTopStatementsKey.newBuilder()
-                .setProjectId(projectId)
-                .setEntityId(entityId)
-                .setPropertyId(ongoingThroughout)
-                .setIsOutgoing(true)
-                .build();
-        var v = ProjectTopStatementsValue.newBuilder()
-                .setClassId(classId).setProjectId(projectId).setPropertyId(ongoingThroughout)
-                .setEntityId(entityId).setIsOutgoing(true).setEdges(List.of(
-                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNum(1)
-                                .setSourceId(entityId)
-                                .setTargetId(entityId)
-                                .setPropertyId(ongoingThroughout)
-                                .setTargetNode(NodeValue.newBuilder()
-                                        .setClassId(0)
-                                        .setTimePrimitive(TimePrimitive.newBuilder()
-                                                .setJulianDay(2362729)
-                                                .setDuration("1 day")
-                                                .setCalendar("gregorian")
-                                                .build())
-                                        .build()
-                                ).build()
-                )).build();
-
-
-        projectTopOutgoingStatementsTopic.pipeInput(k, v);
+        sendEdge(projectId, entityId, ongoingThroughout, "i2", 2362729);
 
         assertThat(outputTopic.isEmpty()).isFalse();
         var outRecords = outputTopic.readKeyValuesToMap();
@@ -123,43 +98,73 @@ class ProjectEntityTimeSpanTest {
     }
 
     @Test
-    void testTopologyWithoutTemproalData() {
+    void testTopologyWithoutTemporalData() {
         var projectId = 1;
-        var classId = 2;
         var entityId = "foo";
         var nonTemporalProperty = 1;
 
-        var k = ProjectTopStatementsKey.newBuilder()
-                .setProjectId(projectId)
-                .setEntityId(entityId)
-                .setPropertyId(nonTemporalProperty)
-                .setIsOutgoing(true)
-                .build();
+        sendEdge(projectId, entityId, nonTemporalProperty, "i2", 2362729);
+        var outRecords = outputTopic.readKeyValuesToMap();
 
-        var v = ProjectTopStatementsValue.newBuilder()
-                .setClassId(classId).setProjectId(projectId).setPropertyId(nonTemporalProperty)
-                .setEntityId(entityId).setIsOutgoing(true).setEdges(List.of(
-                        ProjectEdgeValue.newBuilder().setProjectId(projectId).setStatementId(1)
-                                .setOrdNum(1)
-                                .setSourceId(entityId)
-                                .setTargetId(entityId)
-                                .setPropertyId(nonTemporalProperty)
-                                .setTargetNode(NodeValue.newBuilder()
-                                        .setClassId(0)
-                                        .setTimePrimitive(TimePrimitive.newBuilder()
-                                                .setJulianDay(2362729)
-                                                .setDuration("1 day")
-                                                .setCalendar("gregorian")
-                                                .build())
-                                        .build()
-                                ).build()
-                )).build();
-
-
-        projectTopOutgoingStatementsTopic.pipeInput(k, v);
-
-        assertThat(outputTopic.isEmpty()).isTrue();
+        var entityKey = ProjectEntityKey.newBuilder().setProjectId(projectId).setEntityId(entityId).build();
+        var record = outRecords.get(entityKey);
+        assertThat(record).isNull();
     }
 
+
+    public String sendEdge(int pid, String sourceId, int propertyId, String targetId, int julianDay) {
+        var v = createEdgeWithTimePrimitive(pid, sourceId, propertyId, targetId, julianDay);
+        var k = createEdgeUniqueKey(v);
+        this.edgeInputTopic.pipeInput(k, v);
+        return k;
+    }
+
+
+    private static EdgeValue createEdgeWithTimePrimitive(int pid, String sourceId, int propertyId, String targetId, int julianDay) {
+        var e = createEdge(pid, sourceId, propertyId, targetId);
+        e.getTargetNode().setLabel("Foo");
+        e.getTargetNode().setTimePrimitive(
+                TimePrimitive.newBuilder()
+                        .setJulianDay(julianDay)
+                        .setDuration("1 day")
+                        .setCalendar("gregorian")
+                        .build()
+        );
+        return e;
+    }
+
+    private static EdgeValue createEdge(int pid, String sourceId, int propertyId, String targetId) {
+        return EdgeValue.newBuilder()
+                .setProjectId(pid)
+                .setStatementId(0)
+                .setProjectCount(0)
+                .setOrdNum(0f)
+                .setSourceId(sourceId)
+                .setSourceEntity(Entity.newBuilder()
+                        .setFkClass(0)
+                        .setCommunityVisibilityWebsite(false)
+                        .setCommunityVisibilityDataApi(false)
+                        .setCommunityVisibilityToolbox(false)
+                        .build())
+                .setSourceProjectEntity(EntityValue.newBuilder()
+                        .setProjectId(0)
+                        .setEntityId("0")
+                        .setClassId(0)
+                        .setCommunityVisibilityToolbox(true)
+                        .setCommunityVisibilityDataApi(true)
+                        .setCommunityVisibilityWebsite(true)
+                        .setProjectVisibilityDataApi(true)
+                        .setProjectVisibilityWebsite(true)
+                        .setDeleted(false)
+                        .build())
+                .setPropertyId(propertyId)
+                .setIsOutgoing(true)
+                .setTargetId(targetId)
+                .setTargetNode(NodeValue.newBuilder().setLabel("").setId(targetId).setClassId(0).build())
+                .setTargetProjectEntity(null)
+                .setModifiedAt("0")
+                .setDeleted(false)
+                .build();
+    }
 
 }

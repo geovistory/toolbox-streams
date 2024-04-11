@@ -7,9 +7,8 @@ import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
+import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
-import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
-import org.geovistory.toolbox.streams.entity.lib.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 
@@ -20,9 +19,6 @@ public class CommunityEntityType {
     @Inject
     ConfiguredAvroSerde avroSerdes;
 
-    @Inject
-    RegisterInputTopic registerInputTopic;
-
 
     @Inject
     OutputTopicNames outputTopicNames;
@@ -30,14 +26,6 @@ public class CommunityEntityType {
     @ConfigProperty(name = "ts.community.slug", defaultValue = "")
     private String communitySlug;
 
-
-    public void addProcessorsStandalone() {
-        addProcessors(
-                registerInputTopic.communityEntityTable(),
-                registerInputTopic.hasTypePropertyTable(),
-                registerInputTopic.communityTopOutgoingStatementsTable()
-        );
-    }
 
     public CommunityEntityTypeReturnValue addProcessors(
             KTable<ProjectEntityKey, ProjectEntityValue> communityEntityTable,

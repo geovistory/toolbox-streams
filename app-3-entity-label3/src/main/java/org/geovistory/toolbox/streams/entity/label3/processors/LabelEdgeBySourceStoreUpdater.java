@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
+import static org.geovistory.toolbox.streams.lib.Utils.createEdgeUniqueKey;
+
 // Processor that keeps the label edges by source store updated.
 public class LabelEdgeBySourceStoreUpdater implements Processor<String, LabelEdge, String, LabelEdge> {
     private static final Logger LOG = LoggerFactory.getLogger(LabelEdgeBySourceStoreUpdater.class);
@@ -34,7 +36,7 @@ public class LabelEdgeBySourceStoreUpdater implements Processor<String, LabelEdg
     public void process(final Record<String, LabelEdge> record) {
         LOG.debug("process() called with record: {}", record);
         if (record.value() == null) return;
-        var edgeId = Fn.createLabelEdgeUniqueKey(record.value());
+        var edgeId = createEdgeUniqueKey(record.value());
         var sortKeyOld = sortKeyStore.get(edgeId);
         var sortKeyNew = Fn.createLabelEdgeSortableKey(record.value());
         var positionChanged = !Objects.equals(sortKeyOld, sortKeyNew);
@@ -54,6 +56,7 @@ public class LabelEdgeBySourceStoreUpdater implements Processor<String, LabelEdg
         }
         context.forward(record.withKey(sortKeyNew));
     }
+
 
     @Override
     public void close() {

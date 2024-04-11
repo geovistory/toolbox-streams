@@ -15,6 +15,7 @@ import org.geovistory.toolbox.streams.lib.Utils;
 public class ProjectEntityClassLabel {
 
 
+    @Inject
     ConfiguredAvroSerde avroSerdes;
 
     @Inject
