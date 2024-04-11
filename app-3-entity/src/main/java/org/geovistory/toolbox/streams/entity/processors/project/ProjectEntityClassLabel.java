@@ -8,7 +8,6 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
-import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
 import org.geovistory.toolbox.streams.lib.Utils;
 
 @ApplicationScoped
@@ -17,9 +16,6 @@ public class ProjectEntityClassLabel {
 
 
     ConfiguredAvroSerde avroSerdes;
-
-    @Inject
-    RegisterInputTopic registerInputTopic;
 
     @Inject
     OutputTopicNames outputTopicNames;
@@ -47,8 +43,8 @@ public class ProjectEntityClassLabel {
                         .build(),
                 TableJoined.as(inner.TOPICS.project_entity_with_class_label + "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityClassLabelValue, KeyValueStore<Bytes, byte[]>>as(inner.TOPICS.project_entity_with_class_label)
-                        .withKeySerde(avroSerdes.<ProjectEntityKey>key())
-                        .withValueSerde(avroSerdes.<ProjectEntityClassLabelValue>value())
+                        .withKeySerde(avroSerdes.key())
+                        .withValueSerde(avroSerdes.value())
         );
 
 

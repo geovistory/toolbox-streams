@@ -5,12 +5,10 @@ import jakarta.inject.Inject;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.ConfiguredAvroSerde;
 import org.geovistory.toolbox.streams.entity.I;
 import org.geovistory.toolbox.streams.entity.OutputTopicNames;
-import org.geovistory.toolbox.streams.entity.RegisterInputTopic;
 import org.geovistory.toolbox.streams.entity.processors.project.ProjectEntityClassLabelReturnValue;
 import org.geovistory.toolbox.streams.lib.Utils;
 
@@ -22,15 +20,10 @@ public class CommunityEntityClassLabel {
     @Inject
     ConfiguredAvroSerde avroSerdes;
 
-    @Inject
-    RegisterInputTopic registerInputTopic;
-
 
     @Inject
     OutputTopicNames outputTopicNames;
 
-    @ConfigProperty(name = "ts.community.slug", defaultValue = "")
-    private String communitySlug;
 
 
     public ProjectEntityClassLabelReturnValue addProcessors(
@@ -41,7 +34,7 @@ public class CommunityEntityClassLabel {
         /* STREAM PROCESSORS */
         // 2)
 
-        var joinName = "communtiy_" + communitySlug + "_entity_with_class_label";
+        var joinName = "communtiy_entity_with_class_label";
 
         var communityEntityClassLabelTable = communityEntityTable.join(
                 communityClassLabelTable,
@@ -58,8 +51,8 @@ public class CommunityEntityClassLabel {
                         .build(),
                 TableJoined.as(joinName + "-fk-join"),
                 Materialized.<ProjectEntityKey, ProjectEntityClassLabelValue, KeyValueStore<Bytes, byte[]>>as(joinName)
-                        .withKeySerde(avroSerdes.<ProjectEntityKey>key())
-                        .withValueSerde(avroSerdes.<ProjectEntityClassLabelValue>value())
+                        .withKeySerde(avroSerdes.key())
+                        .withValueSerde(avroSerdes.value())
         );
 
 
