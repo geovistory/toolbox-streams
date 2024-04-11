@@ -4,9 +4,7 @@ import org.geovistory.toolbox.streams.avro.*;
 import org.geovistory.toolbox.streams.entity.label3.names.Processors;
 import org.geovistory.toolbox.streams.entity.label3.names.PubTargets;
 
-import java.time.Instant;
-
-import static org.geovistory.toolbox.streams.lib.Utils.getLanguageFromId;
+import static org.geovistory.toolbox.streams.lib.Utils.*;
 
 /**
  * Class to collect static functions
@@ -113,7 +111,7 @@ public class Fn {
      * @param targetId   The ID of the target.
      * @return A string representing the edge key.
      */
-    public static String createLabelEdgeSourceKey(
+    public static String createLabelEdgeSortableKey(
             Integer classId,
             Integer projectId,
             String sourceId,
@@ -133,20 +131,6 @@ public class Fn {
         return createLabelEdgePrefix3(classId, projectId, sourceId, propertyId, isOutgoing) + String.join("_", strings);
     }
 
-    public static String convertAndDivideTimestamp(String inputTime) {
-        try {
-            // Parse the input string to Instant
-            Instant instant = Instant.parse(inputTime);
-
-            // Convert Instant to milliseconds since the epoch
-            long milliseconds = instant.toEpochMilli();
-
-            // Divide 1 by the number of milliseconds
-            return (1.0f / milliseconds) + "";
-        } catch (Exception e) {
-            return "z";
-        }
-    }
 
     public static String createLabelEdgePrefix1(Integer classId) {
 
@@ -176,8 +160,8 @@ public class Fn {
      * @param e LabelEdge
      * @return the key
      */
-    public static String createLabelEdgeSourceKey(LabelEdge e) {
-        return createLabelEdgeSourceKey(
+    public static String createLabelEdgeSortableKey(LabelEdge e) {
+        return createLabelEdgeSortableKey(
                 e.getSourceClassId(),
                 e.getProjectId(),
                 e.getSourceId(),
@@ -199,23 +183,35 @@ public class Fn {
         return ProjectEntityKey.newBuilder().setProjectId(e.getProjectId()).setEntityId(e.getSourceId()).build();
     }
 
-    /**
-     * Converts a float to its hexadecimal representation as a string.
-     * This method can be used to create strings that can be lexicographically ordered,
-     * as long as the input float is not negative.
-     *
-     * @param f the float value to convert to hexadecimal
-     * @return the hexadecimal representation of the float as a string
-     */
-    public static String floatToHexString(float f) {
-        // Convert float to hexadecimal representation
-        int floatBits = Float.floatToIntBits(f);
-        String hexString = Integer.toHexString(floatBits);
-
-        // Pad the hexadecimal string with zeros to ensure it has 8 characters
-        hexString = String.format("%8s", hexString).replace(' ', '0');
-        return hexString;
+    public static String createLabelEdgeUniqueKey(
+            LabelEdge e
+    ) {
+        return createLabelEdgeUniqueKey(
+                e.getProjectId(),
+                e.getSourceId(),
+                e.getPropertyId(),
+                e.getIsOutgoing(),
+                e.getTargetId()
+        );
     }
+
+    public static String createLabelEdgeUniqueKey(
+            Integer projectId,
+            String sourceId,
+            Integer propertyId,
+            boolean isOutgoing,
+            String targetId
+    ) {
+
+        return String.join("_", new String[]{
+                Integer.toString(projectId),
+                sourceId,
+                Integer.toString(propertyId),
+                isOutgoing ? "o" : "i",
+                targetId
+        });
+    }
+
 
     /**
      * Creates a LabelEdge object based on the provided EdgeValue.

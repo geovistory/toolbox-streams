@@ -221,7 +221,7 @@ public class JoinTest {
                 .setTargetLabelLanguage(target_label_language)
                 .setTargetIsInProject(target_is_in_project)
                 .setDeleted(deleted).build();
-        var k = Fn.createLabelEdgeSourceKey(v);
+        var k = Fn.createLabelEdgeSortableKey(v);
         this.edgeInputTopic.pipeInput(k, v);
         return k;
     }

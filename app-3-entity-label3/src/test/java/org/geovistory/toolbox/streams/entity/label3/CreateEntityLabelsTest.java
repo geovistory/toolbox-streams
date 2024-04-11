@@ -91,6 +91,24 @@ public class CreateEntityLabelsTest {
 
     }
 
+    @Test
+    public void testEdgeOrder() {
+        // Publish test input
+        sendConfig(1, 365, 1L,
+                new EntityLabelConfigPartField[]{
+                        new EntityLabelConfigPartField(1113, true, 1)
+                });
+        sendLabelEdge(1, 365, "i1", 1113, true, 1f, "", "i2", "Foo", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, 2f, "", "i3", "Bar", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, 3f, "", "i2", "Foo", "en", true, false);
+
+        var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
+        // test label edge by source
+        assertEquals(2, entityLabels.size());
+        assertEquals("Bar", entityLabels.get(new ProjectEntityKey(1, "i1")).getLabel());
+
+    }
+
     // Assure, statement order is respected also with large ord nums (assert that 10 comes after 2)
     @Test
     public void testOrdNum() {
@@ -100,8 +118,8 @@ public class CreateEntityLabelsTest {
                         new EntityLabelConfigPartField(1113, true, 3)
                 });
         sendLabelEdge(1, 365, "i1", 1113, true, 10f, "", "i2", "Bar", "en", true, false);
-        sendLabelEdge(1, 365, "i1", 1113, true, 0.32f, "", "i2", "Foo", "en", true, false);
-        sendLabelEdge(1, 365, "i1", 1113, true, 11f, "", "i2", "Baz", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, 0.32f, "", "i3", "Foo", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, 11f, "", "i4", "Baz", "en", true, false);
 
 
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
@@ -121,11 +139,11 @@ public class CreateEntityLabelsTest {
                         new EntityLabelConfigPartField(1113, true, 6)
                 });
         sendLabelEdge(1, 365, "i1", 1113, true, 10f, "2020-02-26T10:38:11.262940Z", "i2", "Bar", "en", true, false);
-        sendLabelEdge(1, 365, "i1", 1113, true, 0.32f, "2020-02-26T10:38:11.262940Z", "i2", "Foo", "en", true, false);
-        sendLabelEdge(1, 365, "i1", 1113, true, null, "2016-02-26T10:38:11.262940Z", "i2", "Baz", "en", true, false);
-        sendLabelEdge(1, 365, "i1", 1113, true, null, "2140-02-26T10:38:11.262940Z", "i2", "Li", "en", true, false);
-        sendLabelEdge(1, 365, "i1", 1113, true, null, "2024-02-26T10:38:11.262940Z", "i2", "La", "en", true, false);
-        sendLabelEdge(1, 365, "i1", 1113, true, null, "2023-02-26T10:38:11.262940Z", "i2", "Lo", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, 0.32f, "2020-02-26T10:38:11.262940Z", "i3", "Foo", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, null, "2016-02-26T10:38:11.262940Z", "i4", "Baz", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, null, "2140-02-26T10:38:11.262940Z", "i5", "Li", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, null, "2024-02-26T10:38:11.262940Z", "i6", "La", "en", true, false);
+        sendLabelEdge(1, 365, "i1", 1113, true, null, "2023-02-26T10:38:11.262940Z", "i7", "Lo", "en", true, false);
 
 
         var entityLabels = entityLabelsOutputTopic.readKeyValuesToMap();
